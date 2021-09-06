@@ -9,18 +9,18 @@ import sys
 import pyrosm
 
 
-def main(pbf_path):
+def main(pbf_path, outputs_path):
     osm = pyrosm.OSM(pbf_path)
     slug = os.path.basename(pbf_path).replace(".osm.pbf", "")
     nodes, edges = osm.get_network(nodes=True, network_type="driving")
 
     # Write direct from pyrosm driving
-    logging.info("Nodes:", len(nodes))
+    logging.info("Nodes: %d", len(nodes))
     nodes.to_parquet(
         os.path.join(
             outputs_path,
             f'{slug}-roads-edges.geoparquet'))
-    logging.info("Edges:", len(edges))
+    logging.info("Edges: %d", len(edges))
     edges.to_parquet(
         os.path.join(
             outputs_path,
@@ -39,7 +39,7 @@ def main(pbf_path):
         'tertiary',
     )
     core_edges = edges[edges.highway.isin(core)]
-    logging.info("Core edges:", len(core_edges))
+    logging.info("Core edges: %d", len(core_edges))
 
     select_columns = [
         'bridge', 'highway', 'lanes', 'maxspeed', 'oneway',
@@ -56,6 +56,12 @@ def main(pbf_path):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+
+    # Ignore geopandas parquet implementation warnings
+    # NB though that .geoparquet is not the format to use for archiving.
+    import warnings
+    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
+
     print(sys.argv)
     pbf_path, outputs_path = sys.argv[1:]
     main(pbf_path, outputs_path)
