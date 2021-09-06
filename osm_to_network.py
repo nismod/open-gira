@@ -62,6 +62,6 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
 
-    print(sys.argv)
+    logging.info("Start")
     pbf_path, outputs_path = sys.argv[1:]
     main(pbf_path, outputs_path)
