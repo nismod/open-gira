@@ -63,13 +63,16 @@ def main(network_edges_path, flood_data_path, outputs_path):
 
     # Add cell indices
     logging.info("Find indices")
-    core_splits['cell_index'] = core_splits.geometry.progress_apply(
-        lambda geom: list(
-            get_cell_indices(
-                geom,
-                raster_width,
-                raster_height,
-                raster_transform)))
+    def get_indices(geom): 
+        x, y = get_cell_indices(
+            geom,
+            raster_width,
+            raster_height,
+            raster_transform)
+        x = x % raster_width
+        y = y % raster_height
+        return [x, y]
+    core_splits['cell_index'] = core_splits.geometry.progress_apply(get_indices)
 
     # Add depth values
     logging.info("Add depth values")
