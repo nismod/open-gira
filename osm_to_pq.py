@@ -17,8 +17,12 @@ class WayHandler(osmium.SimpleHandler):
         self.output_data = []
 
     def way(self, w):
-        wkb = wkbfab.create_linestring(w)
-        line = wkblib.loads(wkb, hex=True)
+        try:
+            wkb = wkbfab.create_linestring(w)
+            line = wkblib.loads(wkb, hex=True)
+        except RuntimeError as e:
+            print("Ignoring", e)
+            return
         highway = w.tags['highway'] if 'highway' in w.tags else None
         id = w.tags['id'] if 'id' in w.tags else None
         feature = {
