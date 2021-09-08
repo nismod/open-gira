@@ -43,7 +43,7 @@ def main(network_edges_path, flood_data_path, outputs_path):
     # Split edges
     logging.info("Split edges")
     core_splits = []
-    for edge in tqdm(core_edges.itertuples()):
+    for edge in tqdm(core_edges.itertuples(), total=len(core_edges)):
         # split edge
         splits = split(
             edge.geometry,
@@ -73,7 +73,7 @@ def main(network_edges_path, flood_data_path, outputs_path):
 
     # Add depth values
     logging.info("Add depth values")
-    for raster in tqdm(subset.itertuples(), number=len(subset)):
+    for raster in tqdm(subset.itertuples(), total=len(subset)):
         associate_raster(
             core_splits,
             raster.key,
