@@ -8,6 +8,11 @@ Goals:
 - map of a large area showing exposure at different return periods
 - charts/stats of exposure per admin region (by road/rail) per hazard type, scenario, epoch
 
+## Running the pipeline
+
+$ pip install snakemake
+$ snakemake tanzania-latest-highway-core_splits.geoparquet
+
 ## Data
 
 ### Gridfinder
