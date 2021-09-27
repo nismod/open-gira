@@ -20,6 +20,13 @@ rule filter_osm_data:
     output: os.path.join(DATA_DIR, '{pbf_file}-highway-core.osm.pbf')
     shell: 'osmium tags-filter {input} w/highway={filters} -o {output}'
 
+
+rule convert_to_geoparquet:
+    input:
+        cmd='osm_to_pq.py',
+        data=os.path.join(DATA_DIR, '{pbf_file}-highway-core.osm.pbf')
+    output: os.path.join(DATA_DIR, '{pbf_file}-highway-core.geoparquet')
+    shell: 'python {input.cmd} {input.data} {OUTPUT_DIR}'
+
 rule clean:
-    shell: 'rm data/*-highway-core.osm.pbf'
-        
+    shell: 'rm -f data/*-highway-core.osm.pbf data/*.geoparquet'
