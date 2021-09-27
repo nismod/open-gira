@@ -28,5 +28,17 @@ rule convert_to_geoparquet:
     output: os.path.join(DATA_DIR, '{pbf_file}-highway-core.geoparquet')
     shell: 'python {input.cmd} {input.data} {OUTPUT_DIR}'
 
+
+rule network_hazard_intersection:
+    input:
+        cmd='network_hazard_intersection.py',
+        network=os.path.join(DATA_DIR, '{slug}-highway-core.geoparquet'),
+        csv=os.path.join(AQUEDUCT_DIR, 'aqueduct_river.csv')
+    output:
+        geoparquet=os.path.join(OUTPUT_DIR, '{slug}-highway-core_splits.geoparquet'),
+        parquet=os.path.join(OUTPUT_DIR, '{slug}-highway-core_splits.parquet')
+    shell: 'python {input.cmd} {input.network} {AQUEDUCT_DIR} {OUTPUT_DIR}'
+
+
 rule clean:
-    shell: 'rm -f data/*-highway-core.osm.pbf data/*.geoparquet'
+    shell: 'rm -rf data/*-highway-core.osm.pbf data/*.geoparquet outputs/'
