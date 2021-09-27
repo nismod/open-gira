@@ -1,6 +1,6 @@
 configfile: 'config.yaml'
 
-INPUT_DIR = config['input_dir']
+data_DIR = config['data_dir']
 OUTPUT_DIR = config['output_dir']
 
 links = [
@@ -14,9 +14,10 @@ links = [
 ]
 filters = ','.join(links)
 
+
 rule filter_osm_data:
-    input: os.path.join(INPUT_DIR, '{pbf_file}.osm.pbf')
-    output: os.path.join(OUTPUT_DIR, '{pbf_file}-highway-core.osm.pbf')    
+    input: os.path.join(DATA_DIR, '{pbf_file}.osm.pbf')
+    output: os.path.join(DATA_DIR, '{pbf_file}-highway-core.osm.pbf')
     shell: 'osmium tags-filter {input} w/highway={filters} -o {output}'
 
 rule clean:
