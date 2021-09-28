@@ -15,6 +15,12 @@ GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
 PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 
+rule all:
+    input:
+        os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.geoparquet"),
+        os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.parquet"),
+
+
 rule filter_osm_data:
     input:
         "filters.txt",
