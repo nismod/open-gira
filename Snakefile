@@ -1,41 +1,59 @@
+# ------
+# Read directories from config file
 configfile: "config.yaml"
 
 DATA_DIR = config["data_dir"]
 OUTPUT_DIR = config["output_dir"]
 AQUEDUCT_DIR = config["aqueduct_dir"]
 
-FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
-PBF_FILE = os.path.join(DATA_DIR, "{slug}.highway-core.osm.pbf")
-GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
-
-GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
-    ".geoparquet", ".splits.geoparquet"
-).replace(DATA_DIR, OUTPUT_DIR)
-
-PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
-
+# ------
+# Define ratio for slicing osm data into smaller areas
 RATIO = 3
 NSLICES = RATIO * RATIO
 
-ALL_SPLITS_FILES = [
+# ------
+# Define naming of inputs/outputs at various stages of the
+# pipeline
+ALL_SLICE_FILES = [
     os.path.join(
-        OUTPUT_DIR, f"tanzania-latest-slice{s}.highway-core.splits.geoparquet"
+        OUTPUT_DIR, f"tanzania-latest-slice{s}.osm.pbf"
     )
     for s in range(1, NSLICES+1)
 ]
+ALL_GEOPARQUET_SPLITS_FILES = [slice_filename.replace(".osm.pbf", ".highway-core.geoparquet") for slice_filename in ALL_SLICE_FILES]
+ALL_PARQUET_SPLITS_FILES = [slice_filename.replace(".osm.pbf", ".highway-core.parquet") for slice_filename in ALL_SLICE_FILES]
 
+# Variables for pattern rules
 
+# For instance a full (unfiltered) osm dataset is named like {slug}
+# where {slug} is e.g. tanzania-latest or
+# tanzania-latest.highway-core. Defining the general structure of
+# names using wildcards is useful to write general rules instead of
+# hardcoding names. See
+# https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards
+FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
+PBF_FILE = os.path.join(DATA_DIR, "{slug}.highway-core.osm.pbf")
+GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
+GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
+    ".geoparquet", ".splits.geoparquet"
+).replace(DATA_DIR, OUTPUT_DIR)
+PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
+
+# Initial and final input file
+
+INPUT_FILE=os.path.join(DATA_DIR, "tanzania-latest.osm.pbf")
+OUTPUT_FILE=os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
 
 rule all:
     input:
-        os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
+        OUTPUT_FILE
 
 
 rule slice:
     input:
-        data="data/tanzania-latest.osm.pbf",
+        data=INPUT_FILE,
         cmd="split_to_bounding_boxes.sh"
-    output: [f"data/tanzania-latest-slice{i}.osm.pbf" for i in range(1, NSLICES+1)]
+    output: ALL_SLICE_FILES
     shell: "bash {input.cmd} {input.data} {RATIO}"
 
 
@@ -73,9 +91,9 @@ rule network_hazard_intersection:
 
 rule join_data:
     input:
-        data=ALL_SPLITS_FILES,
+        data=ALL_GEOPARQUET_SPLITS_FILES,
         cmd="join_data.py"
-    output: os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
+    output: OUTPUT_FILE
     shell: "python {input.cmd} {input.data}"
 
 
