@@ -6,3 +6,6 @@ __pycache__/*
 # Data
 data/*
 outputs/*
+
+# snakemake
+.snakemake/
