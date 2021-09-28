@@ -27,7 +27,8 @@ ALL_SPLITS_FILES = [
 
 
 rule all:
-    input: ALL_SPLITS_FILES
+    input:
+        os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
 
 
 rule slice:
@@ -68,6 +69,11 @@ rule network_hazard_intersection:
         parquet=PARQUET_SPLITS_FILE,
     shell:
         "python {input.cmd} {input.network} {AQUEDUCT_DIR} {OUTPUT_DIR}"
+
+
+rule join_data:
+    input: ALL_SPLITS_FILES
+    output: os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
 
 
 rule clean:
