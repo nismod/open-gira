@@ -5,6 +5,7 @@ configfile: "config.yaml"
 DATA_DIR = config["data_dir"]
 OUTPUT_DIR = config["output_dir"]
 AQUEDUCT_DIR = config["aqueduct_dir"]
+DATASET = config["dataset"]
 
 # ------
 # Define ratio for slicing osm data into smaller areas
@@ -16,7 +17,7 @@ NSLICES = RATIO * RATIO
 # pipeline
 ALL_SLICE_FILES = [
     os.path.join(
-        OUTPUT_DIR, f"tanzania-latest-slice{s}.osm.pbf"
+        OUTPUT_DIR, f"{DATASET}-slice{s}.osm.pbf"
     )
     for s in range(1, NSLICES+1)
 ]
@@ -41,8 +42,8 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 # Initial and final input file
 
-INPUT_FILE=os.path.join(DATA_DIR, "tanzania-latest.osm.pbf")
-OUTPUT_FILE=os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
+INPUT_FILE=os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
+OUTPUT_FILE=os.path.join(OUTPUT_DIR, f"{DATASET}.splits.geoparquet")
 
 rule all:
     input:
