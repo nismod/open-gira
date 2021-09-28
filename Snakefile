@@ -2,6 +2,7 @@
 # Read directories from config file
 configfile: "config.yaml"
 
+
 DATA_DIR = config["data_dir"]
 OUTPUT_DIR = config["output_dir"]
 AQUEDUCT_DIR = config["aqueduct_dir"]
@@ -16,13 +17,17 @@ NSLICES = RATIO * RATIO
 # Define naming of inputs/outputs at various stages of the
 # pipeline
 ALL_SLICE_FILES = [
-    os.path.join(
-        OUTPUT_DIR, f"{DATASET}-slice{s}.osm.pbf"
-    )
-    for s in range(1, NSLICES+1)
+    os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
+    for s in range(1, NSLICES + 1)
 ]
-ALL_GEOPARQUET_SPLITS_FILES = [slice_filename.replace(".osm.pbf", ".highway-core.geoparquet") for slice_filename in ALL_SLICE_FILES]
-ALL_PARQUET_SPLITS_FILES = [slice_filename.replace(".osm.pbf", ".highway-core.parquet") for slice_filename in ALL_SLICE_FILES]
+ALL_GEOPARQUET_SPLITS_FILES = [
+    slice_filename.replace(".osm.pbf", ".highway-core.splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
+    for slice_filename in ALL_SLICE_FILES
+]
+ALL_PARQUET_SPLITS_FILES = [
+    slice_filename.replace(".osm.pbf", ".highway-core.splits.parquet").replace(DATA_DIR, OUTPUT_DIR)
+    for slice_filename in ALL_SLICE_FILES
+]
 
 # Variables for pattern rules
 
