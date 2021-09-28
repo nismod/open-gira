@@ -72,8 +72,11 @@ rule network_hazard_intersection:
 
 
 rule join_data:
-    input: ALL_SPLITS_FILES
+    input:
+        data=ALL_SPLITS_FILES,
+        cmd="join_data.py"
     output: os.path.join(OUTPUT_DIR, "tanzania-latest.splits.geoparquet")
+    shell: "python {input.cmd} {input.data}"
 
 
 rule clean:
