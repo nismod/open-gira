@@ -1,7 +1,8 @@
 configfile: 'config.yaml'
 
-data_DIR = config['data_dir']
+DATA_DIR = config['data_dir']
 OUTPUT_DIR = config['output_dir']
+AQUEDUCT_DIR = config['aqueduct_dir']
 
 links = [
     "motorway",
@@ -26,7 +27,7 @@ rule convert_to_geoparquet:
         cmd='osm_to_pq.py',
         data=os.path.join(DATA_DIR, '{pbf_file}-highway-core.osm.pbf')
     output: os.path.join(DATA_DIR, '{pbf_file}-highway-core.geoparquet')
-    shell: 'python {input.cmd} {input.data} {OUTPUT_DIR}'
+    shell: 'python {input.cmd} {input.data} {DATA_DIR}'
 
 
 rule network_hazard_intersection:

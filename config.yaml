@@ -1,0 +1,4 @@
+data_dir: 'data'
+output_dir: 'outputs'
+aqueduct_dir: 'data/aqueduct'
+
