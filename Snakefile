@@ -47,20 +47,23 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 # Initial and final input file
 
-INPUT_FILE=os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
-OUTPUT_FILE=os.path.join(OUTPUT_DIR, f"{DATASET}.splits.geoparquet")
+INPUT_FILE = os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.splits.geoparquet")
+
 
 rule all:
     input:
-        OUTPUT_FILE
+        OUTPUT_FILE,
 
 
 rule slice:
     input:
         data=INPUT_FILE,
-        cmd="split_to_bounding_boxes.sh"
-    output: ALL_SLICE_FILES
-    shell: "bash {input.cmd} {input.data} {RATIO}"
+        cmd="split_to_bounding_boxes.sh",
+    output:
+        ALL_SLICE_FILES,
+    shell:
+        "bash {input.cmd} {input.data} {RATIO}"
 
 
 rule filter_osm_data:
@@ -98,9 +101,11 @@ rule network_hazard_intersection:
 rule join_data:
     input:
         data=ALL_GEOPARQUET_SPLITS_FILES,
-        cmd="join_data.py"
-    output: OUTPUT_FILE
-    shell: "python {input.cmd} {input.data}"
+        cmd="join_data.py",
+    output:
+        OUTPUT_FILE,
+    shell:
+        "python {input.cmd} {input.data}"
 
 
 rule clean:
