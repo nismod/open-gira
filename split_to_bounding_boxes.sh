@@ -20,7 +20,7 @@ for i in $(seq 1 $ratio); do
 
         slug=${datafile%.osm.pbf}
         n=$((j + ratio * $((i - 1))))
-        outputfile=${slug}_slice${n}.osm.pbf
+        outputfile=${slug}-slice${n}.osm.pbf
         echo "Slicing slice $n"
         osmium extract --no-progress --bbox \
             $xmin,$ymin,$xmax,$ymax $datafile -o $outputfile

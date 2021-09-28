@@ -11,8 +11,8 @@ import pandas
 import rasterio
 import snail
 
-from snail.intersections import split
-from snail.intersections import get_cell_indices
+from snail.core.intersections import split_linestring
+from snail.core.intersections import get_cell_indices
 from tqdm import tqdm
 
 
@@ -45,7 +45,7 @@ def main(network_edges_path, flood_data_path, outputs_path):
     core_splits = []
     for edge in tqdm(core_edges.itertuples(), total=len(core_edges)):
         # split edge
-        splits = split(
+        splits = split_linestring(
             edge.geometry,
             raster_width,
             raster_height,
@@ -84,11 +84,11 @@ def main(network_edges_path, flood_data_path, outputs_path):
 
     # Write data
     logging.info("Write data")
-    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}_splits.geoparquet'))
+    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}.splits.geoparquet'))
 
     logging.info("Write data without geometry")
     pandas.DataFrame(core_splits.drop(columns=['geometry'])) \
-        .to_parquet(os.path.join(outputs_path, f'{slug}_splits.parquet'))
+        .to_parquet(os.path.join(outputs_path, f'{slug}.splits.parquet'))
 
     logging.info("Done.")
 
