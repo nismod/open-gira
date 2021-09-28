@@ -17,11 +17,18 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 RATIO = 3
 NSLICES = RATIO * RATIO
 
+ALL_SPLITS_FILES = [
+    os.path.join(
+        OUTPUT_DIR, f"tanzania-latest-slice{s}.highway-core.splits.geoparquet"
+    )
+    for s in range(NSLICES)
+]
+
+
 
 rule all:
-    input:
-        os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.geoparquet"),
-        os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.parquet"),
+    input: ALL_SPLITS_FILES
+
 
 rule slice:
     input: "data/tanzania-latest.osm.pbf"
