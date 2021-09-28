@@ -14,12 +14,19 @@ GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
 
 PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
+RATIO = 3
+NSLICES = RATIO * RATIO
+
 
 rule all:
     input:
         os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.geoparquet"),
         os.path.join(OUTPUT_DIR, "tanzania-latest-highway-core_splits.parquet"),
 
+rule slice:
+    input: "data/tanzania-latest.osm.pbf"
+    output: [f"data/tanzania-latest-slice{i}.osm.pbf" for i in range(NSLICES)]
+    shell: "bash split_to_bounding_boxes.sh {input} {RATIO}"
 
 rule filter_osm_data:
     input:
