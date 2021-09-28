@@ -1,20 +1,8 @@
 configfile: "config.yaml"
 
-
 DATA_DIR = config["data_dir"]
 OUTPUT_DIR = config["output_dir"]
 AQUEDUCT_DIR = config["aqueduct_dir"]
-
-links = [
-    "motorway",
-    "motorway_link",
-    "trunk",
-    "trunk_link",
-    "primary_link",
-    "secondary",
-    "secondary_link",
-]
-filters = ",".join(links)
 
 FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
 PBF_FILE = os.path.join(DATA_DIR, "{slug}-highway-core.osm.pbf")
@@ -29,11 +17,12 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 rule filter_osm_data:
     input:
+        "filters.txt",
         FULL_PBF_FILE,
     output:
         PBF_FILE,
     shell:
-        "osmium tags-filter {input} w/highway={filters} -o {output}"
+        "osmium tags-filter {input[1]} w/highway=$(cat filters.txt) -o {output}"
 
 
 rule convert_to_geoparquet:
