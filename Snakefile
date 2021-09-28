@@ -5,11 +5,11 @@ OUTPUT_DIR = config["output_dir"]
 AQUEDUCT_DIR = config["aqueduct_dir"]
 
 FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
-PBF_FILE = os.path.join(DATA_DIR, "{slug}-highway-core.osm.pbf")
+PBF_FILE = os.path.join(DATA_DIR, "{slug}.highway-core.osm.pbf")
 GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
 
 GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
-    ".geoparquet", "_splits.geoparquet"
+    ".geoparquet", ".splits.geoparquet"
 ).replace(DATA_DIR, OUTPUT_DIR)
 
 PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
