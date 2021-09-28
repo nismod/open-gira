@@ -78,4 +78,10 @@ rule join_data:
 
 rule clean:
     shell:
-        "rm -rf data/*-highway-core.osm.pbf data/*.geoparquet outputs/"
+        """
+        rm -f data/*-slice?.osm.pbf &&
+        rm -f data/*-slice?.highway-core.osm.pbf &&
+        rm -f data/*-slice?.highway-core.geoparquet &&
+        rm -f outputs/*-slice?.highway-core.splits.geoparquet
+        rm -f outputs/*-slice?.highway-core.splits.parquet
+        """
