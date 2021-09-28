@@ -1,8 +1,9 @@
-configfile: 'config.yaml'
+configfile: "config.yaml"
 
-DATA_DIR = config['data_dir']
-OUTPUT_DIR = config['output_dir']
-AQUEDUCT_DIR = config['aqueduct_dir']
+
+DATA_DIR = config["data_dir"]
+OUTPUT_DIR = config["output_dir"]
+AQUEDUCT_DIR = config["aqueduct_dir"]
 
 links = [
     "motorway",
@@ -11,9 +12,9 @@ links = [
     "trunk_link",
     "primary_link",
     "secondary",
-    "secondary_link"
+    "secondary_link",
 ]
-filters = ','.join(links)
+filters = ",".join(links)
 
 FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
 PBF_FILE = os.path.join(DATA_DIR, "{slug}-highway-core.osm.pbf")
@@ -27,32 +28,36 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 
 rule filter_osm_data:
-    shell: 'osmium tags-filter {input} w/highway={filters} -o {output}'
     input:
         FULL_PBF_FILE,
     output:
         PBF_FILE,
+    shell:
+        "osmium tags-filter {input} w/highway={filters} -o {output}"
 
 
 rule convert_to_geoparquet:
     input:
-        cmd='osm_to_pq.py',
-    shell: 'python {input.cmd} {input.data} {DATA_DIR}'
+        cmd="osm_to_pq.py",
         data=PBF_FILE,
     output:
         GEOPARQUET_FILE,
+    shell:
+        "python {input.cmd} {input.data} {DATA_DIR}"
 
 
 rule network_hazard_intersection:
     input:
-        cmd='network_hazard_intersection.py',
-        csv=os.path.join(AQUEDUCT_DIR, 'aqueduct_river.csv')
+        cmd="network_hazard_intersection.py",
         network=GEOPARQUET_FILE,
+        csv=os.path.join(AQUEDUCT_DIR, "aqueduct_river.csv"),
     output:
-    shell: 'python {input.cmd} {input.network} {AQUEDUCT_DIR} {OUTPUT_DIR}'
         geoparquet=GEOPARQUET_SPLITS_FILE,
         parquet=PARQUET_SPLITS_FILE,
+    shell:
+        "python {input.cmd} {input.network} {AQUEDUCT_DIR} {OUTPUT_DIR}"
 
 
 rule clean:
-    shell: 'rm -rf data/*-highway-core.osm.pbf data/*.geoparquet outputs/'
+    shell:
+        "rm -rf data/*-highway-core.osm.pbf data/*.geoparquet outputs/"
