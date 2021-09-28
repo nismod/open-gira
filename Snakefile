@@ -21,7 +21,7 @@ ALL_SPLITS_FILES = [
     os.path.join(
         OUTPUT_DIR, f"tanzania-latest-slice{s}.highway-core.splits.geoparquet"
     )
-    for s in range(NSLICES)
+    for s in range(1, NSLICES+1)
 ]
 
 
@@ -31,9 +31,12 @@ rule all:
 
 
 rule slice:
-    input: "data/tanzania-latest.osm.pbf"
-    output: [f"data/tanzania-latest-slice{i}.osm.pbf" for i in range(NSLICES)]
-    shell: "bash split_to_bounding_boxes.sh {input} {RATIO}"
+    input:
+        data="data/tanzania-latest.osm.pbf",
+        cmd="split_to_bounding_boxes.sh"
+    output: [f"data/tanzania-latest-slice{i}.osm.pbf" for i in range(1, NSLICES+1)]
+    shell: "bash {input.cmd} {input.data} {RATIO}"
+
 
 rule filter_osm_data:
     input:
