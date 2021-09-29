@@ -10,8 +10,12 @@ Goals:
 
 ## Running the pipeline
 
+```
 $ pip install snakemake
-$ snakemake tanzania-latest-highway-core_splits.geoparquet
+$ snakemake
+# Clean byproducts (optional)
+$ snakemake clean
+```
 
 ## Data
 
