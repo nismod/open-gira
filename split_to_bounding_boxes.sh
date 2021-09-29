@@ -1,3 +1,10 @@
+# Takes a OpenStreetmap dataset and slices it into smaller rectangle
+# areas.
+# Usage: bash split_to_bounding_boxes [data] [ratio]
+# Example: bash split_to_bounding_boxes france-latest.osm.pbf 3
+# Would generate 9 dataset slices of size L/3 * K/3 where L * K is the
+# area of the original bounding box of france-latest.osm.pbf
+
 datafile=$1
 ratio=$2
 
