@@ -105,7 +105,7 @@ rule join_data:
     output:
         OUTPUT_FILE,
     shell:
-        "python {input.cmd} {input.data}"
+        "python {input.cmd} {input.data} {output}"
 
 
 rule clean:
