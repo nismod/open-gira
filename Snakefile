@@ -10,7 +10,7 @@ DATASET = config["dataset"]
 
 # ------
 # Define ratio for slicing osm data into smaller areas
-RATIO = 3
+RATIO = config['ratio']
 NSLICES = RATIO * RATIO
 
 # ------
@@ -90,7 +90,7 @@ rule network_hazard_intersection:
     input:
         cmd="network_hazard_intersection.py",
         network=GEOPARQUET_FILE,
-        csv=os.path.join(AQUEDUCT_DIR, "aqueduct_river.csv"),
+        csv=os.path.join(AQUEDUCT_DIR, config['datafiles_list']),
     output:
         geoparquet=GEOPARQUET_SPLITS_FILE,
         parquet=PARQUET_SPLITS_FILE,
