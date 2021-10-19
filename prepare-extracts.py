@@ -41,16 +41,11 @@ def slice_subextracts(initial_bbox, ratio):
             yield [xmin, ymin, xmax, ymax]
 
 
-ratio = sys.argv[2]
+ratio = int(sys.argv[2])
 with open(sys.argv[1], "r") as fp:
     originaljsonfile = json.load(fp)
 
-output_dir = join(originaljsonfile["directory"], "extracts")
-try:
-    mkdir(output_dir)
-except FileExistsError:
-    pass
-
+output_dir = originaljsonfile["directory"]
 subextractsjson = {"directory": output_dir, "extracts": []}
 for extract in originaljsonfile["extracts"]:
     dataset, ext = splitext(extract["output"])
