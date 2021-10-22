@@ -29,9 +29,9 @@ import geopandas as gpd
 def append_data(base, slice_files):
     slice_files.pop()
     if len(slice_files) == 0:
-        return
+        return base
     base = base.append(gpd.read_parquet(slice_files[-1]))
-    append_data(base, slice_files)
+    return append_data(base, slice_files)
 
 
 slice_files = sys.argv[1:-1]
@@ -42,6 +42,6 @@ output_file = sys.argv[-1]
 slice_files = slice_files[::-1]
 
 base = gpd.read_parquet(slice_files[-1])
-append_data(base, slice_files)
+base = append_data(base, slice_files)
 base.to_parquet(output_file)
 
