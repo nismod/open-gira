@@ -49,21 +49,22 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 INPUT_FILE = os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core.splits.geoparquet")
+INPUT_JSON_FILE = INPUT_FILE.replace(".osm.pbf", ".geojson")
+EXTRACTS_CONFIG_FILE = INPUT_FILE.replace(".osm.pbf", "-extracts.geojson"),
 
 
 rule all:
     input:
         OUTPUT_FILE,
 
-
 rule slice:
     input:
         data=INPUT_FILE,
-        cmd="split_to_bounding_boxes.sh",
+        config=EXTRACTS_CONFIG_FILE
     output:
         ALL_SLICE_FILES,
     shell:
-        "bash {input.cmd} {input.data} {RATIO}"
+        "osmium extract --no-progress --config {input.config} {input.data}"
 
 
 rule filter_osm_data:
