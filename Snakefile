@@ -18,7 +18,7 @@ NSLICES = RATIO * RATIO
 # pipeline
 ALL_SLICE_FILES = [
     os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
-    for s in range(1, NSLICES + 1)
+    for s in range(0, NSLICES)
 ]
 ALL_GEOPARQUET_SPLITS_FILES = [
     slice_filename.replace(".osm.pbf", ".highway-core.splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
