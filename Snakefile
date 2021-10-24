@@ -48,7 +48,7 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 # Initial and final input file
 
 INPUT_FILE = os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.splits.geoparquet")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core.splits.geoparquet")
 
 
 rule all:
