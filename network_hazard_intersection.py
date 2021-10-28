@@ -11,27 +11,25 @@ import pandas
 import rasterio
 import snail
 
-from snail.intersections import split
-from snail.intersections import get_cell_indices
+from pyproj import Geod
+from snail.core.intersections import split_linestring as split
+from snail.core.intersections import get_cell_indices
 from tqdm import tqdm
 
 
-def main(network_edges_path, flood_data_path, outputs_path):
+def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_path):
     # Filename to use for output
-    slug = os.path.basename(network_edges_path).replace(".geoparquet", "")
+    network_slug = os.path.basename(network_edges_path).replace(".geoparquet", "")
+    hazard_slug = os.path.basename(hazard_data_csv).replace(".csv", "")
+    slug = f"{network_slug}_{hazard_slug}"
 
-    # Read flood data metadata
-    # TODO think of this as a config/steering file for this script, don't do
-    # the subsetting here, do it outside (make this script more generic)
-    #coastal = pandas.read_csv(os.path.join(flood_data_path, 'aqueduct_coastal.csv'))
-    river = pandas.read_csv(os.path.join(flood_data_path, 'aqueduct_river.csv'))
-    subset = river[
-        river.year.isin((1980, 2080))
-        & river.return_period.isin((50, 100, 500, 1000))
-    ]
+    # Read hazard metadata
+    # This is a config/steering file for this script, assumes hazards are all on the same
+    # grid, and hazards and networks are in the same CRS.
+    hazards = pandas.read_csv(hazard_data_csv)
 
     # Read metadata for a single raster
-    with rasterio.open(os.path.join(flood_data_path, river.iloc[0].filename)) as dataset:
+    with rasterio.open(os.path.join(hazard_data_path, hazards.iloc[0].filename)) as dataset:
         raster_width = dataset.width
         raster_height = dataset.height
         raster_transform = list(dataset.transform)
@@ -53,15 +51,16 @@ def main(network_edges_path, flood_data_path, outputs_path):
         )
         # add to collection
         for s in splits:
-            core_splits.append({
-            'id': edge.id,
-            'geometry': s
-        })
+            split_data = {
+                'geometry': s
+            }
+            for attr in attrs:
+                split_data[attr] = getattr(edge, attr)
+            core_splits.append(split_data)
     core_splits = geopandas.GeoDataFrame(core_splits)
 
     logging.info("Split %d edges into %d pieces", len(core_edges), len(core_splits))
 
-    # Add cell indices
     logging.info("Find indices")
     def get_indices(geom): 
         x, y = get_cell_indices(
@@ -74,15 +73,17 @@ def main(network_edges_path, flood_data_path, outputs_path):
         return [x, y]
     core_splits['cell_index'] = core_splits.geometry.progress_apply(get_indices)
 
-    # Add depth values
-    logging.info("Add depth values")
-    for raster in tqdm(subset.itertuples(), total=len(subset)):
+    logging.info("Segment length")
+    geod = Geod(ellps="WGS84")
+    core_splits['length_km'] = core_splits.geometry.progress_apply(geod.geometry_length) / 1e3
+
+    logging.info("Add hazard values")
+    for raster in tqdm(hazards.itertuples(), total=len(hazards)):
         associate_raster(
             core_splits,
             raster.key,
-            os.path.join(flood_data_path, raster.filename))
+            os.path.join(hazard_data_path, raster.filename))
 
-    # Write data
     logging.info("Write data")
     core_splits.to_parquet(os.path.join(outputs_path, f'{slug}_splits.geoparquet'))
 
@@ -103,5 +104,6 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tqdm.pandas()
     print(sys.argv)
-    network_edges_path, flood_data_path, outputs_path = sys.argv[1:]
-    main(network_edges_path, flood_data_path, outputs_path)
+    network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path = sys.argv[1:]
+    attrs = attrs.split(",")
+    main(network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path)
