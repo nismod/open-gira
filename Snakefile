@@ -79,12 +79,11 @@ rule filter_osm_data:
 
 rule convert_to_geoparquet:
     input:
-        cmd="osm_to_pq.py",
-        data=PBF_FILE,
+        PBF_FILE,
     output:
         GEOPARQUET_FILE,
-    shell:
-        "python {input.cmd} {input.data} {DATA_DIR}"
+    script:
+        "osm_to_pq.py"
 
 
 rule network_hazard_intersection:
