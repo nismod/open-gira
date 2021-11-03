@@ -99,11 +99,10 @@ rule network_hazard_intersection:
 rule join_data:
     input:
         data=ALL_GEOPARQUET_SPLITS_FILES,
-        cmd="join_data.py",
     output:
         OUTPUT_FILE,
-    shell:
-        "python {input.cmd} {input.data} {output}"
+    script:
+        "join_data.py"
 
 
 rule clean:
