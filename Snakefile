@@ -88,14 +88,12 @@ rule convert_to_geoparquet:
 
 rule network_hazard_intersection:
     input:
-        cmd="network_hazard_intersection.py",
         network=GEOPARQUET_FILE,
-        csv=os.path.join(AQUEDUCT_DIR, config['datafiles_list']),
     output:
         geoparquet=GEOPARQUET_SPLITS_FILE,
         parquet=PARQUET_SPLITS_FILE,
-    shell:
-        "python {input.cmd} {input.network} {AQUEDUCT_DIR} {OUTPUT_DIR}"
+    script:
+        "network_hazard_intersection.py"
 
 
 rule join_data:

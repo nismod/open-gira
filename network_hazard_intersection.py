@@ -16,14 +16,12 @@ from snail.core.intersections import get_cell_indices
 from tqdm import tqdm
 
 
-def main(network_edges_path, flood_data_path, outputs_path):
-    # Filename to use for output
-    slug = os.path.basename(network_edges_path).replace(".geoparquet", "")
-
-    # Read flood data metadata
-    # TODO think of this as a config/steering file for this script, don't do
-    # the subsetting here, do it outside (make this script more generic)
-    #coastal = pandas.read_csv(os.path.join(flood_data_path, 'aqueduct_coastal.csv'))
+def main(
+    network_edges_path,
+    flood_data_path,
+    output_path_geopq,
+    output_path_pq,
+):
     river = pandas.read_csv(os.path.join(flood_data_path, 'aqueduct_river.csv'))
     subset = river[
         river.year.isin((1980, 2080))
@@ -84,11 +82,12 @@ def main(network_edges_path, flood_data_path, outputs_path):
 
     # Write data
     logging.info("Write data")
-    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}.splits.geoparquet'))
+    core_splits.to_parquet(output_path_geopq)
 
     logging.info("Write data without geometry")
-    pandas.DataFrame(core_splits.drop(columns=['geometry'])) \
-        .to_parquet(os.path.join(outputs_path, f'{slug}.splits.parquet'))
+    pandas.DataFrame(core_splits.drop(columns=["geometry"])).to_parquet(
+        output_path_pq
+    )
 
     logging.info("Done.")
 
@@ -102,6 +101,18 @@ def associate_raster(df, key, fname, band_number=1):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tqdm.pandas()
-    print(sys.argv)
-    network_edges_path, flood_data_path, outputs_path = sys.argv[1:]
-    main(network_edges_path, flood_data_path, outputs_path)
+    try:
+        network_edges_path = snakemake.input["network"]
+        flood_data_path = snakemake.config["aqueduct_dir"]
+        output_path_geopq = snakemake.output["geoparquet"]
+        output_path_pq = snakemake.output["parquet"]
+    except NameError:
+        (
+            network_edges_path,
+            flood_data_path,
+            output_path_geopq,
+            output_path_pq,
+        ) = sys.argv[1:]
+    main(
+        network_edges_path, flood_data_path, output_path_geopq, output_path_pq
+    )
