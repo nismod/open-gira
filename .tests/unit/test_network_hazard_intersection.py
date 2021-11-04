@@ -20,6 +20,7 @@ def test_network_hazard_intersection():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copytree("data/aqueduct", workdir / "data/aqueduct")
         shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
