@@ -28,7 +28,11 @@ class OutputChecker:
         for path, subdirs, files in os.walk(self.workdir):
             for f in files:
                 f = (Path(path) / f).relative_to(self.workdir)
-                if str(f).startswith(".snakemake") or str(f) == "config.yaml":
+                if (
+                    str(f).startswith(".snakemake")
+                    or str(f).startswith("data/aqueduct")
+                    or str(f) == "config.yaml"
+                ):
                     continue
                 if f in expected_files:
                     self.compare_files(self.workdir / f, self.expected_path / f)
