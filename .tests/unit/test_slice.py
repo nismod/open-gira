@@ -20,6 +20,7 @@ def test_slice():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
         print("data/northeast-oxford-slice0.osm.pbf data/northeast-oxford-slice1.osm.pbf data/northeast-oxford-slice2.osm.pbf data/northeast-oxford-slice3.osm.pbf", file=sys.stderr)

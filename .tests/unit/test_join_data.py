@@ -20,6 +20,7 @@ def test_join_data():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
         print("outputs/northeast-oxford.highway-core.splits.geoparquet", file=sys.stderr)

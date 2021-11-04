@@ -20,6 +20,7 @@ def test_network_hazard_intersection():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
         print("outputs/northeast-oxford-slice0.highway-core.splits.geoparquet outputs/northeast-oxford-slice0.highway-core.splits.parquet", file=sys.stderr)

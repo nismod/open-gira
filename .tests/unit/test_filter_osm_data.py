@@ -20,6 +20,7 @@ def test_filter_osm_data():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
         print("data/northeast-oxford-slice0.highway-core.osm.pbf", file=sys.stderr)

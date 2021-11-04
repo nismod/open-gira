@@ -20,6 +20,7 @@ def test_convert_to_geoparquet():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
         print("data/northeast-oxford-slice0.highway-core.geoparquet", file=sys.stderr)
