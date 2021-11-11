@@ -23,10 +23,7 @@ def main(
     output_path_pq,
 ):
     river = pandas.read_csv(os.path.join(flood_data_path, 'aqueduct_river.csv'))
-    subset = river[
-        river.year.isin((1980, 2080))
-        & river.return_period.isin((50, 100, 500, 1000))
-    ]
+    subset = river
 
     # Read metadata for a single raster
     with rasterio.open(os.path.join(flood_data_path, river.iloc[0].filename)) as dataset:
