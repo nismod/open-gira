@@ -18,7 +18,7 @@ NSLICES = RATIO * RATIO
 # pipeline
 ALL_SLICE_FILES = [
     os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
-    for s in range(1, NSLICES + 1)
+    for s in range(0, NSLICES)
 ]
 ALL_GEOPARQUET_SPLITS_FILES = [
     slice_filename.replace(".osm.pbf", ".highway-core.splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
@@ -49,21 +49,22 @@ PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 INPUT_FILE = os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core.splits.geoparquet")
+INPUT_JSON_FILE = INPUT_FILE.replace(".osm.pbf", ".geojson")
+EXTRACTS_CONFIG_FILE = INPUT_FILE.replace(".osm.pbf", "-extracts.geojson"),
 
 
 rule all:
     input:
         OUTPUT_FILE,
 
-
 rule slice:
     input:
         data=INPUT_FILE,
-        cmd="split_to_bounding_boxes.sh",
+        config=EXTRACTS_CONFIG_FILE
     output:
         ALL_SLICE_FILES,
     shell:
-        "bash {input.cmd} {input.data} {RATIO}"
+        "osmium extract --no-progress --config {input.config} {input.data}"
 
 
 rule filter_osm_data:
