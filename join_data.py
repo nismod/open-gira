@@ -22,7 +22,6 @@
 # Example: python join_data file1.geoparguet file2.geoparguet joined.geoparguet
 
 import sys
-from os.path import join, dirname
 import geopandas as gpd
 
 
@@ -34,14 +33,18 @@ def append_data(base, slice_files):
     return append_data(base, slice_files)
 
 
-slice_files = sys.argv[1:-1]
-output_file = sys.argv[-1]
+if __name__ == "__main__":
+    try:
+        slice_files = snakemake.input
+        output_file = snakemake.output[0]
+    except NameError:
+        slice_files = sys.argv[1:-1]
+        output_file = sys.argv[-1]
 
-# We're reading the different files as a stack from the top.  Let's
-# reverse the order of files to keep the first file on top.
-slice_files = slice_files[::-1]
+    # We're reading the different files as a stack from the top.  Let's
+    # reverse the order of files to keep the first file on top.
+    slice_files = slice_files[::-1]
 
-base = gpd.read_parquet(slice_files[-1])
-base = append_data(base, slice_files)
-base.to_parquet(output_file)
-
+    base = gpd.read_parquet(slice_files[-1])
+    base = append_data(base, slice_files)
+    base.to_parquet(output_file)
