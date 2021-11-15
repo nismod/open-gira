@@ -6,6 +6,9 @@ from pathlib import Path
 import subprocess as sp
 import os
 
+import geopandas
+import pandas
+from pandas.testing import assert_frame_equal
 
 class OutputChecker:
     def __init__(self, data_path, expected_path, workdir):
@@ -49,4 +52,14 @@ class OutputChecker:
             )
 
     def compare_files(self, generated_file, expected_file):
-        sp.check_output(["cmp", generated_file, expected_file])
+        if ".geoparquet" == generated_file.suffix:
+            actual = geopandas.read_parquet(generated_file)
+            expected = geopandas.read_parquet(expected_file)
+            assert_frame_equal(actual, expected)
+        #elif ".parquet" == generated_file.suffix:
+        #    actual = pandas.read_parquet(generated_file)
+        #    expected = pandas.read_parquet(expected_file)
+        #    assert_frame_equal(actual, expected)
+        else:
+            sp.check_output(["cp", generated_file, "/tmp/"])
+            sp.check_output(["cmp", generated_file, expected_file])
