@@ -36,8 +36,13 @@ class WayHandler(osmium.SimpleHandler):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     logging.info("Start")
-    pbf_path, outputs_path = sys.argv[1:]
-    slug = os.path.basename(pbf_path).replace(".osm.pbf", "")
+    try:
+        pbf_path = snakemake.input[0]
+        output_path = snakemake.output[0]
+    except NameError:
+        # If "snakemake" doesn't exist then must be running from the
+        # command line.
+        pbf_path, output_path = sys.argv[1:]
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
@@ -47,6 +52,5 @@ if __name__ == '__main__':
     h = WayHandler()
     h.apply_file(pbf_path, locations=True)
     geopandas.GeoDataFrame(h.output_data).to_parquet(
-        os.path.join(
-            outputs_path,
-            f'{slug}.geoparquet'))
+        output_path
+    )

@@ -84,11 +84,11 @@ def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_p
             os.path.join(hazard_data_path, raster.filename))
 
     logging.info("Write data")
-    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}.splits.geoparquet'))
+    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}_splits.geoparquet'))
 
     logging.info("Write data without geometry")
     pandas.DataFrame(core_splits.drop(columns=['geometry'])) \
-        .to_parquet(os.path.join(outputs_path, f'{slug}.splits.parquet'))
+        .to_parquet(os.path.join(outputs_path, f'{slug}_splits.parquet'))
 
     logging.info("Done.")
 
@@ -102,7 +102,22 @@ def associate_raster(df, key, fname, band_number=1):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tqdm.pandas()
-    print(sys.argv)
-    network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path = sys.argv[1:]
+    try:
+        network_edges_path = snakemake.input["network"]
+        attrs = snakemake.config["edge_attrs"]
+        hazard_data_path = snakemake.config["aqueduct_dir"]
+        hazard_csv = snakemake.config["hazard_csv"]
+        output_paths = os.path.dirname(snakemake.output["geoparquet"])
+    except NameError:
+        print(sys.argv)
+        (
+            network_edges_path,
+            attrs,
+            hazard_data_path,
+            hazard_csv,
+            output_paths,
+        ) = sys.argv[1:]
     attrs = attrs.split(",")
-    main(network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path)
+    main(
+        network_edges_path, hazard_data_path, hazard_csv, output_paths
+    )
