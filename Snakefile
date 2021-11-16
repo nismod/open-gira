@@ -1,3 +1,4 @@
+from glob import glob
 # ------
 # Read directories from config file
 configfile: "config.yaml"
@@ -5,7 +6,7 @@ configfile: "config.yaml"
 
 DATA_DIR = config["data_dir"]
 OUTPUT_DIR = config["output_dir"]
-AQUEDUCT_DIR = config["aqueduct_dir"]
+HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 
 # ------
@@ -90,6 +91,8 @@ rule convert_to_geoparquet:
 rule network_hazard_intersection:
     input:
         network=GEOPARQUET_FILE,
+        tifs=glob(os.path.join(HAZARD_DATA_DIR, "*.tif")),
+        hazard_csv=config["hazard_csv"]
     output:
         geoparquet=GEOPARQUET_SPLITS_FILE,
         parquet=PARQUET_SPLITS_FILE,
