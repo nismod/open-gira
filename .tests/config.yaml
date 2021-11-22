@@ -1,11 +1,11 @@
 # Input data and output locations
 data_dir: 'data'
-hazard_data_dir: 'data/aqueduct'
+hazard_data_dir: 'test_aqueduct_data'
 output_dir: 'outputs'
 
 # Directory <aqueduct_dir> is expected to contain a csv file
 # <datafiles_list> describing the raster data files.
-hazard_csv: 'data/aqueduct/aqueduct_river.csv'
+hazard_csv: 'test_aqueduct_data/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'northeast-oxford'
