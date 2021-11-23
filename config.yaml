@@ -1,15 +1,17 @@
 # Input data and output locations
 data_dir: 'data'
-aqueduct_dir: 'data/aqueduct'
+hazard_data_dir: 'data/aqueduct'
 output_dir: 'outputs'
 
 # Directory <aqueduct_dir> is expected to contain a csv file
 # <datafiles_list> describing the raster data files.
-datafiles_list: 'aqueduct_river.csv'
+hazard_csv: 'data/aqueduct/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'tanzania-latest'
 # Ratio for slicing original OSM dataset
 ratio: 3
+# Edge attributes list for network/hazard intersection.
+edge_attrs: 'id'
 
 
