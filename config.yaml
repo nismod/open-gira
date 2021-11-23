@@ -9,8 +9,6 @@ hazard_csv: 'data/aqueduct/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'tanzania-latest'
-# Ratio for slicing original OSM dataset
-ratio: 3
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 

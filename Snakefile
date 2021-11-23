@@ -9,28 +9,6 @@ OUTPUT_DIR = config["output_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 
-# ------
-# Define ratio for slicing osm data into smaller areas
-RATIO = config['ratio']
-NSLICES = RATIO * RATIO
-
-# ------
-# Define naming of inputs/outputs at various stages of the
-# pipeline
-ALL_SLICE_FILES = [
-    os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
-    for s in range(0, NSLICES)
-]
-hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
-ALL_GEOPARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
-    for slice_filename in ALL_SLICE_FILES
-]
-ALL_PARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.parquet").replace(DATA_DIR, OUTPUT_DIR)
-    for slice_filename in ALL_SLICE_FILES
-]
-
 # Variables for pattern rules
 
 # For instance a full (unfiltered) osm dataset is named like {slug}
@@ -42,6 +20,7 @@ ALL_PARQUET_SPLITS_FILES = [
 FULL_PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.osm.pbf")
 PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.highway-core.osm.pbf")
 GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
     ".geoparquet", f"_{hazard_slug}_splits.geoparquet"
 ).replace(DATA_DIR, OUTPUT_DIR)
