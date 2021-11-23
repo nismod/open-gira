@@ -9,3 +9,6 @@ outputs/*
 
 # snakemake
 .snakemake/
+
+# Logs
+*.out
