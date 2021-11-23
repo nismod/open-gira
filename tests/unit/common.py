@@ -56,10 +56,10 @@ class OutputChecker:
             actual = geopandas.read_parquet(generated_file)
             expected = geopandas.read_parquet(expected_file)
             assert_frame_equal(actual, expected)
-        #elif ".parquet" == generated_file.suffix:
-        #    actual = pandas.read_parquet(generated_file)
-        #    expected = pandas.read_parquet(expected_file)
-        #    assert_frame_equal(actual, expected)
+        elif ".parquet" == generated_file.suffix:
+            actual = pandas.read_parquet(generated_file)
+            expected = pandas.read_parquet(expected_file)
+            assert_frame_equal(actual, expected)
         else:
             sp.check_output(["cp", generated_file, "/tmp/"])
             sp.check_output(["cmp", generated_file, expected_file])
