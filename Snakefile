@@ -20,12 +20,13 @@ ALL_SLICE_FILES = [
     os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
     for s in range(0, NSLICES)
 ]
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 ALL_GEOPARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", ".highway-core.splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
+    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
     for slice_filename in ALL_SLICE_FILES
 ]
 ALL_PARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", ".highway-core.splits.parquet").replace(DATA_DIR, OUTPUT_DIR)
+    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.parquet").replace(DATA_DIR, OUTPUT_DIR)
     for slice_filename in ALL_SLICE_FILES
 ]
 
@@ -41,14 +42,14 @@ FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
 PBF_FILE = os.path.join(DATA_DIR, "{slug}.highway-core.osm.pbf")
 GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
 GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
-    ".geoparquet", ".splits.geoparquet"
+    ".geoparquet", f"_{hazard_slug}_splits.geoparquet"
 ).replace(DATA_DIR, OUTPUT_DIR)
 PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 # Initial and final input file
 
 INPUT_FILE = os.path.join(DATA_DIR, f"{DATASET}.osm.pbf")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core.splits.geoparquet")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core_{hazard_slug}_splits.geoparquet")
 INPUT_JSON_FILE = INPUT_FILE.replace(".osm.pbf", ".geojson")
 EXTRACTS_CONFIG_FILE = INPUT_FILE.replace(".osm.pbf", "-extracts.geojson"),
 

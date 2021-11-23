@@ -119,5 +119,5 @@ if __name__ == '__main__':
         ) = sys.argv[1:]
     attrs = attrs.split(",")
     main(
-        network_edges_path, hazard_data_path, hazard_csv, output_paths
+        network_edges_path, attrs, hazard_data_path, hazard_csv, output_paths
     )
