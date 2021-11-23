@@ -28,7 +28,7 @@ instructions there. Tests run with versions:
 Workflow steps are tested using a small sample dataset. Run:
 
 ```
-python -m pytest tests
+python -m pytest .tests
 ```
 
 
