@@ -11,7 +11,7 @@ jobs:
 
     - name: Build osmium-tool
       run: |
-        apt install build-essential cmake libboost-program-options-dev \
+        sudo apt install build-essential cmake libboost-program-options-dev \
                     libexpat1-dev zlib1g-dev libbz2-dev
         git clone https://github.com/mapbox/protozero
         git clone --branch v2.17.1 --depth 1 https://github.com/osmcode/libosmium
