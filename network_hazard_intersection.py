@@ -105,8 +105,8 @@ if __name__ == '__main__':
     try:
         network_edges_path = snakemake.input["network"]
         attrs = snakemake.config["edge_attrs"]
-        hazard_data_path = snakemake.config["aqueduct_dir"]
-        hazard_csv = snakemake.config["hazard_csv"]
+        hazard_data_path = snakemake.config["hazard_data_dir"]
+        hazard_csv = snakemake.input["hazard_csv"]
         output_paths = os.path.dirname(snakemake.output["geoparquet"])
     except NameError:
         print(sys.argv)
