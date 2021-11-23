@@ -1,0 +1,40 @@
+name: Run tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build osmium-tool
+      run: |
+        apt install build-essential cmake libboost-program-options-dev \
+                    libexpat1-dev zlib1g-dev libbz2-dev
+        git clone https://github.com/mapbox/protozero
+        git clone --branch v2.17.1 --depth 1 https://github.com/osmcode/libosmium
+        git clone --branch v1.13.2 --depth 1 https://github.com/osmcode/osmium-tool
+        cd osmium-tool
+        mkdir build
+        cd build
+        cmake ..
+        make
+        cd ../..
+        export PATH="$PATH:./osmium-tool/build/osmium"
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        python -m pytest tests
