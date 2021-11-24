@@ -46,6 +46,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        export PATH="$PATH:./osmium-tool/build"
+        export PATH="$PATH:$(pwd)/osmium-tool/build"
+        osmium --version
         pip install pytest
         python -m pytest .tests
