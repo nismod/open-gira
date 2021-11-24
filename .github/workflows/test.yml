@@ -36,7 +36,7 @@ jobs:
 
     - name: Add osmium-tool to PATH
       run: |
-        export PATH="$PATH:./osmium-tool/build/osmium"
+        export PATH="$PATH:./osmium-tool/build"
 
     - name: Set up Python
       uses: actions/setup-python@v2
