@@ -89,7 +89,7 @@ def aggregate_input_geoparquet(wildcards):
             "slices",
             f"{DATASET}-slice{{i}}.highway-core_{hazard_slug}_splits.geoparquet",
         ),
-        i=glob_wildcards(os.path.join(checkpoint_output, f"{DATASET}-slice{{i,\d}}.osm.pbf")).i
+        i=glob_wildcards(os.path.join(checkpoint_output, f"{DATASET}-slice{{i,\d+}}.osm.pbf")).i
     )
 
 rule join_data:
