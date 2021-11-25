@@ -12,8 +12,7 @@ import rasterio
 import snail
 
 from pyproj import Geod
-from snail.core.intersections import split_linestring as split
-from snail.core.intersections import get_cell_indices
+from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
 
 
@@ -43,7 +42,7 @@ def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_p
     core_splits = []
     for edge in tqdm(core_edges.itertuples(), total=len(core_edges)):
         # split edge
-        splits = split(
+        splits = split_linestring(
             edge.geometry,
             raster_width,
             raster_height,
@@ -103,7 +102,22 @@ def associate_raster(df, key, fname, band_number=1):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     tqdm.pandas()
-    print(sys.argv)
-    network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path = sys.argv[1:]
+    try:
+        network_edges_path = snakemake.input["network"]
+        attrs = snakemake.config["edge_attrs"]
+        hazard_data_path = snakemake.config["hazard_data_dir"]
+        hazard_csv = snakemake.input["hazard_csv"]
+        output_paths = os.path.dirname(snakemake.output["geoparquet"])
+    except NameError:
+        print(sys.argv)
+        (
+            network_edges_path,
+            attrs,
+            hazard_data_path,
+            hazard_csv,
+            output_paths,
+        ) = sys.argv[1:]
     attrs = attrs.split(",")
-    main(network_edges_path, attrs, hazard_data_path, hazard_csv, outputs_path)
+    main(
+        network_edges_path, attrs, hazard_data_path, hazard_csv, output_paths
+    )

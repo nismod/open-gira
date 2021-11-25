@@ -1,0 +1,7 @@
+nismod-snail
+tqdm
+osmium
+pyarrow
+snakemake
+pytest
+
