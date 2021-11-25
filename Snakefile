@@ -52,12 +52,12 @@ checkpoint slice:
 
 rule filter_osm_data:
     input:
-        "filters.txt",
+        config["osmium_tags_filters_file"],
         FULL_PBF_FILE,
     output:
         PBF_FILE,
     shell:
-        "osmium tags-filter {input[1]} w/highway=$(cat filters.txt) -o {output}"
+        "osmium tags-filter {input[1]} w/highway=$(cat {input[0]}) -o {output}"
 
 
 rule convert_to_geoparquet:
