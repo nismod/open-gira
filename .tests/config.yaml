@@ -9,8 +9,6 @@ hazard_csv: 'test_aqueduct_data/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'northeast-oxford'
-# Ratio for slicing original OSM dataset
-ratio: 2
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 

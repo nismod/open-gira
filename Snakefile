@@ -9,28 +9,6 @@ OUTPUT_DIR = config["output_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 
-# ------
-# Define ratio for slicing osm data into smaller areas
-RATIO = config['ratio']
-NSLICES = RATIO * RATIO
-
-# ------
-# Define naming of inputs/outputs at various stages of the
-# pipeline
-ALL_SLICE_FILES = [
-    os.path.join(DATA_DIR, f"{DATASET}-slice{s}.osm.pbf")
-    for s in range(0, NSLICES)
-]
-hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
-ALL_GEOPARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.geoparquet").replace(DATA_DIR, OUTPUT_DIR)
-    for slice_filename in ALL_SLICE_FILES
-]
-ALL_PARQUET_SPLITS_FILES = [
-    slice_filename.replace(".osm.pbf", f".highway-core_{hazard_slug}_splits.parquet").replace(DATA_DIR, OUTPUT_DIR)
-    for slice_filename in ALL_SLICE_FILES
-]
-
 # Variables for pattern rules
 
 # For instance a full (unfiltered) osm dataset is named like {slug}
@@ -39,9 +17,10 @@ ALL_PARQUET_SPLITS_FILES = [
 # names using wildcards is useful to write general rules instead of
 # hardcoding names. See
 # https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards
-FULL_PBF_FILE = os.path.join(DATA_DIR, "{slug}.osm.pbf")
-PBF_FILE = os.path.join(DATA_DIR, "{slug}.highway-core.osm.pbf")
+FULL_PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.osm.pbf")
+PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.highway-core.osm.pbf")
 GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
     ".geoparquet", f"_{hazard_slug}_splits.geoparquet"
 ).replace(DATA_DIR, OUTPUT_DIR)
@@ -59,14 +38,16 @@ rule all:
     input:
         OUTPUT_FILE,
 
-rule slice:
+checkpoint slice:
     input:
         data=INPUT_FILE,
         config=EXTRACTS_CONFIG_FILE
     output:
-        ALL_SLICE_FILES,
+        slices=directory(os.path.join(DATA_DIR, "slices"))
     shell:
-        "osmium extract --no-progress --config {input.config} {input.data}"
+        """mkdir {output.slices} &&
+        osmium extract --no-progress --config {input.config} {input.data} --directory {output.slices}
+        """
 
 
 rule filter_osm_data:
@@ -100,9 +81,20 @@ rule network_hazard_intersection:
         "network_hazard_intersection.py"
 
 
+def aggregate_input_geoparquet(wildcards):
+    checkpoint_output = checkpoints.slice.get(**wildcards).output[0]
+    return expand(
+        os.path.join(
+            OUTPUT_DIR,
+            "slices",
+            f"{DATASET}-slice{{i}}.highway-core_{hazard_slug}_splits.geoparquet",
+        ),
+        i=glob_wildcards(os.path.join(checkpoint_output, f"{DATASET}-slice{{i,\d+}}.osm.pbf")).i
+    )
+
 rule join_data:
     input:
-        data=ALL_GEOPARQUET_SPLITS_FILES,
+        aggregate_input_geoparquet
     output:
         OUTPUT_FILE,
     script:
@@ -112,9 +104,6 @@ rule join_data:
 rule clean:
     shell:
         """
-        rm -f data/*-slice?.osm.pbf &&
-        rm -f data/*-slice?.highway-core.osm.pbf &&
-        rm -f data/*-slice?.highway-core.geoparquet &&
-        rm -f outputs/*-slice?.highway-core.splits.geoparquet
-        rm -f outputs/*-slice?.highway-core.splits.parquet
+        rm -rf data/slices &&
+        rm -rf outputs/slices
         """
