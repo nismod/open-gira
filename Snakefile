@@ -38,17 +38,7 @@ rule all:
     input:
         OUTPUT_FILE,
 
-checkpoint slice:
-    input:
-        data=INPUT_FILE,
-        config=EXTRACTS_CONFIG_FILE
-    output:
-        slices=directory(os.path.join(DATA_DIR, "slices"))
-    shell:
-        """mkdir {output.slices} &&
-        osmium extract --no-progress --config {input.config} {input.data} --directory {output.slices}
-        """
-
+include: "rules/slice.smk"
 
 rule filter_osm_data:
     input:
