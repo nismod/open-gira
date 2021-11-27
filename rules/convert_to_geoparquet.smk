@@ -4,4 +4,4 @@ rule convert_to_geoparquet:
     output:
         os.path.join(DATA_DIR, "slices", "{slug}.highway-core.geoparquet")
     script:
-        "osm_to_pq.py"
+        "../scripts/osm_to_pq.py"

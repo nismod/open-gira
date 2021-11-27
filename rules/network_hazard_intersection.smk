@@ -7,4 +7,4 @@ rule network_hazard_intersection:
         geoparquet=os.path.join(OUTPUT_DIR, "slices", "{slug}.highway-core_{hazard_slug}_splits.geoparquet"),
         parquet=os.path.join(OUTPUT_DIR, "slices", "{slug}.highway-core_{hazard_slug}_splits.parquet")
     script:
-        "network_hazard_intersection.py"
+        "../scripts/network_hazard_intersection.py"

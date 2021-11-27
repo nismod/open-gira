@@ -15,4 +15,4 @@ rule join_data:
     output:
         os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core_{hazard_slug}_splits.geoparquet")
     script:
-        "join_data.py"
+        "../scripts/join_data.py"
