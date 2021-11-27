@@ -38,14 +38,7 @@ rule all:
 
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
-
-rule convert_to_geoparquet:
-    input:
-        PBF_FILE,
-    output:
-        GEOPARQUET_FILE,
-    script:
-        "osm_to_pq.py"
+include: "rules/convert_to_geoparquet.smk"
 
 
 rule network_hazard_intersection:
