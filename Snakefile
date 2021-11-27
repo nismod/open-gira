@@ -17,8 +17,6 @@ DATASET = config["dataset"]
 # names using wildcards is useful to write general rules instead of
 # hardcoding names. See
 # https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards
-FULL_PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.osm.pbf")
-PBF_FILE = os.path.join(DATA_DIR, "slices", "{slug}.highway-core.osm.pbf")
 GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
@@ -39,16 +37,7 @@ rule all:
         OUTPUT_FILE,
 
 include: "rules/slice.smk"
-
-rule filter_osm_data:
-    input:
-        config["osmium_tags_filters_file"],
-        FULL_PBF_FILE,
-    output:
-        PBF_FILE,
-    shell:
-        "osmium tags-filter {input[1]} w/highway=$(cat {input[0]}) -o {output}"
-
+include: "rules/filter_osm_data.smk"
 
 rule convert_to_geoparquet:
     input:
