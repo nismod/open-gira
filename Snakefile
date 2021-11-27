@@ -17,12 +17,7 @@ DATASET = config["dataset"]
 # names using wildcards is useful to write general rules instead of
 # hardcoding names. See
 # https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards
-GEOPARQUET_FILE = PBF_FILE.replace(".osm.pbf", ".geoparquet")
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
-GEOPARQUET_SPLITS_FILE = GEOPARQUET_FILE.replace(
-    ".geoparquet", f"_{hazard_slug}_splits.geoparquet"
-).replace(DATA_DIR, OUTPUT_DIR)
-PARQUET_SPLITS_FILE = GEOPARQUET_SPLITS_FILE.replace(".geoparquet", ".parquet")
 
 # Initial and final input file
 
@@ -39,18 +34,8 @@ rule all:
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/convert_to_geoparquet.smk"
+include: "rules/network_hazard_intersection.smk"
 
-
-rule network_hazard_intersection:
-    input:
-        network=GEOPARQUET_FILE,
-        tifs=glob(os.path.join(HAZARD_DATA_DIR, "*.tif")),
-        hazard_csv=config["hazard_csv"]
-    output:
-        geoparquet=GEOPARQUET_SPLITS_FILE,
-        parquet=PARQUET_SPLITS_FILE,
-    script:
-        "network_hazard_intersection.py"
 
 
 def aggregate_input_geoparquet(wildcards):
