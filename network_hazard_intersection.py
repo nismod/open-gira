@@ -35,7 +35,15 @@ def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_p
 
     # Read network edges
     logging.info("Read edges")
-    core_edges = geopandas.read_parquet(network_edges_path)
+    try:
+        core_edges = geopandas.read_parquet(network_edges_path)
+    except ValueError:
+        logging.info("No data in geometry column, writing empty files.")
+        columns = ["id", "geometry", "cell_index"] + [
+            raster.key for raster in hazards.itertuples()
+        ]
+        write_empty_files(columns, slug, outputs_path)
+        return
 
     # Split edges
     logging.info("Split edges")
@@ -99,8 +107,25 @@ def associate_raster(df, key, fname, band_number=1):
         df[key] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+def write_empty_files(columns, slug, outputs_path):
+    try:
+        empty_geodf = geopandas.GeoDataFrame(
+            columns=columns, geometry="geometry"
+        )
+    except ValueError:
+        raise ValueError("Empty dataframe must contain a geometry column")
+    logging.info("Write data")
+    empty_geodf.to_parquet(
+        os.path.join(outputs_path, f"{slug}_splits.geoparquet")
+    )
+    logging.info("Write data without geometry")
+    pandas.DataFrame(empty_geodf.drop(columns=["geometry"])).to_parquet(
+        os.path.join(outputs_path, f"{slug}_splits.parquet")
+    )
+
+
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
         network_edges_path = snakemake.input["network"]

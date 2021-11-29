@@ -33,6 +33,7 @@ class OutputChecker:
                 f = (Path(path) / f).relative_to(self.workdir)
                 if (
                     str(f).startswith(".snakemake")
+                    or str(f).startswith("data/slices/.snakemake")
                     or str(f).startswith("data/aqueduct")
                     or str(f) == "config.yaml"
                 ):

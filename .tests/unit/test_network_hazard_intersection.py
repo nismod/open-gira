@@ -23,15 +23,15 @@ def test_network_hazard_intersection():
         shutil.copy(".tests/config.yaml", workdir)
 
         # dbg
-        print("outputs/northeast-oxford-slice0.highway-core_aqueduct_river_splits.geoparquet outputs/northeast-oxford-slice0.highway-core_aqueduct_river_splits.parquet", file=sys.stderr)
+        print("outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.geoparquet outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.parquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "outputs/northeast-oxford-slice0.highway-core_aqueduct_river_splits.geoparquet",
-            "outputs/northeast-oxford-slice0.highway-core_aqueduct_river_splits.parquet",
+            "outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.geoparquet",
+            "outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.parquet",
             "-F", 
             "-j1",
             "--keep-target-files",
