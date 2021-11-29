@@ -15,8 +15,8 @@ def test_convert_to_geoparquet():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath(".tests/unit/convert_to_geoparquet/data")
-        expected_path = PurePosixPath(".tests/unit/convert_to_geoparquet/expected")
+        data_path = PurePosixPath("tests/unit/convert_to_geoparquet/data")
+        expected_path = PurePosixPath("tests/unit/convert_to_geoparquet/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)

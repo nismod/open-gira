@@ -15,8 +15,8 @@ def test_join_data():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath(".tests/unit/join_data/data")
-        expected_path = PurePosixPath(".tests/unit/join_data/expected")
+        data_path = PurePosixPath("tests/unit/join_data/data")
+        expected_path = PurePosixPath("tests/unit/join_data/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)

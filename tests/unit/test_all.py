@@ -15,8 +15,8 @@ def test_all():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath(".tests/unit/all/data")
-        expected_path = PurePosixPath(".tests/unit/all/expected")
+        data_path = PurePosixPath("tests/unit/all/data")
+        expected_path = PurePosixPath("tests/unit/all/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
