@@ -15,12 +15,12 @@ def test_filter_osm_data():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath(".tests/unit/filter_osm_data/data")
-        expected_path = PurePosixPath(".tests/unit/filter_osm_data/expected")
+        data_path = PurePosixPath("tests/unit/filter_osm_data/data")
+        expected_path = PurePosixPath("tests/unit/filter_osm_data/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copy(".tests/config.yaml", workdir)
+        shutil.copy("tests/config.yaml", workdir)
 
         # dbg
         print("data/slices/northeast-oxford-slice3.highway-core.osm.pbf", file=sys.stderr)

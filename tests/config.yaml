@@ -1,17 +1,17 @@
 # Input data and output locations
 data_dir: 'data'
-hazard_data_dir: 'test_aqueduct_data'
+hazard_data_dir: 'tests/test_aqueduct_data'
 output_dir: 'outputs'
 
 # Directory <aqueduct_dir> is expected to contain a csv file
 # <datafiles_list> describing the raster data files.
-hazard_csv: 'test_aqueduct_data/aqueduct_river.csv'
+hazard_csv: 'tests/test_aqueduct_data/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'northeast-oxford'
 # Path (relative to root-dir) to file containing comma separated list
 # of filters for 'osmium tags-filter' command
-osmium_tags_filters_file: 'test_filters.txt'
+osmium_tags_filters_file: 'tests/test_osm_filters.txt'
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 
