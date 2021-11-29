@@ -41,6 +41,10 @@ if __name__ == "__main__":
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
 
+    # When getting the input files from snakemake, there is no
+    # garantee that they will always in the same order. Sort them for
+    # consistency. Makes testing easier.
+    slice_files = sorted(slice_files)
     # We're reading the different files as a stack from the top.  Let's
     # reverse the order of files to keep the first file on top.
     slice_files = slice_files[::-1]
