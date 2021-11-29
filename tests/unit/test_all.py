@@ -20,7 +20,7 @@ def test_all():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copy(".tests/config.yaml", workdir)
+        shutil.copy("tests/config.yaml", workdir)
 
         # dbg
         print("all", file=sys.stderr)
