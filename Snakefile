@@ -10,11 +10,11 @@ hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 
 ##### load rules #####
 
-include: "rules/slice.smk"
-include: "rules/filter_osm_data.smk"
-include: "rules/convert_to_geoparquet.smk"
-include: "rules/network_hazard_intersection.smk"
-include: "rules/join_data.smk"
+include: "workflow/rules/slice.smk"
+include: "workflow/rules/filter_osm_data.smk"
+include: "workflow/rules/convert_to_geoparquet.smk"
+include: "workflow/rules/network_hazard_intersection.smk"
+include: "workflow/rules/join_data.smk"
 
 ##### target rules #####
 
