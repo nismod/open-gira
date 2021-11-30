@@ -25,14 +25,14 @@ def test_join_data():
         shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("outputs/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet", file=sys.stderr)
+        print("results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "outputs/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet",
+            "results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet",
             "-F", 
             "-j1",
             "--keep-target-files",

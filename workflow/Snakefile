@@ -3,7 +3,6 @@ from glob import glob
 configfile: "config/config.yaml"
 
 DATA_DIR = config["data_dir"]
-OUTPUT_DIR = config["output_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
@@ -20,7 +19,7 @@ include: "rules/join_data.smk"
 
 rule all:
     input:
-        os.path.join(OUTPUT_DIR, f"{DATASET}.highway-core_{hazard_slug}_splits.geoparquet")
+        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet"
 
 rule clean:
     shell:
