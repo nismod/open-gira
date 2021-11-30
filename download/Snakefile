@@ -1,0 +1,75 @@
+# Snakemake file for data download
+
+import requests
+import os
+
+		
+# Inputs
+cwd = os.getcwd()
+lets = ["EP","NA","NI","SI","SP","WP"]
+r = requests.get("https://www.worldpop.org/ajax/geolisting/doi?doi=10.5258/SOTON/WP00685")
+
+out_fixed = expand(cwd+"""/data/stormtracks/fixed/STORM_FIXED_{param}_{let}.nc""", let = lets, param = ["RETURN_PERIODS","TC_WIND_SPEEDS"])
+out_events = expand(cwd+"""/data/stormtracks/events/STORM_DATA_IBTRACS_{let}_1000_YEARS_{num}.txt""", let = lets, num=list(range(0,10)))
+out_population = expand(cwd+"/data/population/{country}_ppp_2020_UNadj_constrained.tif", country = [x['file_img'][:3] for x in r.json()])
+out_GDP = cwd+"/data/GDP/admin_areas_GDP_HDI.nc" # unsure whether to add more (manual)
+out_powerplant = cwd+"/data/powerplants/global_power_plant_database.csv"
+out_gridfinder = cwd+"/data/gridfinder/grid.gpkg"
+
+
+# rule to ensure all downloaded
+rule all:
+    input: [out_fixed,\
+			out_events,\
+			out_population,\
+			out_GDP,\
+			out_powerplant,\
+			out_gridfinder]
+
+
+
+# download storm tracks data
+rule download_stormtracks_fixed:
+	output: out_fixed
+	shell: """wget -P data/stormtracks/fixed -N -i data/stormtracks/storm_fixed_return.txt --no-check-certificate"""
+
+
+rule download_stormtracks_events:
+	output: out_events
+	shell: """wget -P data/stormtracks/events -N -i data/stormtracks/storm_tracks.txt --no-check-certificate --content-disposition &&
+			  unzip -o data/stormtracks/events/STORM_DATA3.zip -d data/stormtracks/events"""
+			  
+
+# download population data
+rule download_population:
+	output: out_population
+	shell: """mkdir -p data/population &&
+			cd data/population &&
+			python3 scrape_url.py"""
+	
+
+# download GDP data
+rule download_GDP:
+	output: out_GDP
+	shell: """mkdir -p data/GDP &&
+			  cd data/GDP &&
+			  wget https://datadryad.org/api/v2/datasets/doi%3A10.5061%2Fdryad.dk1j0/download --output-document=doi_10.5061_dryad.dk1j0__v2.zip &&
+			  unzip -o doi_10.5061_dryad.dk1j0__v2.zip"""
+			  
+	
+# download powerplants data
+rule download_powerplants:
+	output: out_powerplant
+	shell: """mkdir -p data/powerplants &&
+			  cd data/powerplants &&
+			  wget https://wri-dataportal-prod.s3.amazonaws.com/manual/global_power_plant_database_v_1_3.zip --output-document=global_power_plant_database_v_1_3.zip &&
+			  unzip -o global_power_plant_database_v_1_3.zip"""
+	
+
+# download gridfinder data
+rule download_gridfinder:
+	output: out_gridfinder
+	shell: """pip install zenodo_get &&
+			  mkdir -p data/gridfinder &&
+			  cd data/gridfinder &&
+			  zenodo_get 10.5281/zenodo.3628142"""
