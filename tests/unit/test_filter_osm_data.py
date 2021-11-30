@@ -25,14 +25,14 @@ def test_filter_osm_data():
         shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("data/slices/northeast-oxford-slice3.highway-core.osm.pbf", file=sys.stderr)
+        print("results/filtered/northeast-oxford-slice3.highway-core.osm.pbf", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "data/slices/northeast-oxford-slice3.highway-core.osm.pbf",
+            "results/filtered/northeast-oxford-slice3.highway-core.osm.pbf",
             "-F", 
             "-j1",
             "--keep-target-files",
