@@ -15,12 +15,14 @@ def test_network_hazard_intersection():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
+        configdir = workdir / "config"
         data_path = PurePosixPath("tests/unit/network_hazard_intersection/data")
         expected_path = PurePosixPath("tests/unit/network_hazard_intersection/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copy("tests/config.yaml", workdir)
+        configdir.mkdir()
+        shutil.copy("tests/config.yaml", configdir)
 
         # dbg
         print("outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.geoparquet outputs/slices/northeast-oxford-slice0.highway-core_aqueduct_river_splits.parquet", file=sys.stderr)

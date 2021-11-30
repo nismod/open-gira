@@ -35,7 +35,7 @@ class OutputChecker:
                     str(f).startswith(".snakemake")
                     or str(f).startswith("data/slices/.snakemake")
                     or str(f).startswith("data/aqueduct")
-                    or str(f) == "config.yaml"
+                    or str(f) == "config/config.yaml"
                 ):
                     continue
                 if f in expected_files:
