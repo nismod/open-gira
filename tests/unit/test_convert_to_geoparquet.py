@@ -25,14 +25,14 @@ def test_convert_to_geoparquet():
         shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("data/slices/northeast-oxford-slice0.highway-core.geoparquet", file=sys.stderr)
+        print("results/geoparquet/northeast-oxford-slice0.highway-core.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "data/slices/northeast-oxford-slice0.highway-core.geoparquet",
+            "results/geoparquet/northeast-oxford-slice0.highway-core.geoparquet",
             "-F", 
             "-j1",
             "--keep-target-files",
