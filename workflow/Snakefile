@@ -1,0 +1,29 @@
+from glob import glob
+
+configfile: "config/config.yaml"
+
+DATA_DIR = config["data_dir"]
+HAZARD_DATA_DIR = config["hazard_data_dir"]
+DATASET = config["dataset"]
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
+
+##### load rules #####
+
+include: "rules/slice.smk"
+include: "rules/filter_osm_data.smk"
+include: "rules/convert_to_geoparquet.smk"
+include: "rules/network_hazard_intersection.smk"
+include: "rules/join_data.smk"
+
+##### target rules #####
+
+rule all:
+    input:
+        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet"
+
+rule clean:
+    shell:
+        """
+        rm -rf data/slices &&
+        rm -rf outputs/slices
+        """

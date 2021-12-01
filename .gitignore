@@ -6,7 +6,7 @@ venv/*
 
 # Data
 data/*
-outputs/*
+results/*
 
 # snakemake
 .snakemake/
