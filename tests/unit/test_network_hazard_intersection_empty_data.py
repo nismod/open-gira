@@ -15,23 +15,25 @@ def test_network_hazard_intersection():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
+        configdir = workdir / "config"
         data_path = PurePosixPath("tests/unit/network_hazard_intersection_empty_data/data")
         expected_path = PurePosixPath("tests/unit/network_hazard_intersection_empty_data/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copy("tests/config.yaml", workdir)
+        configdir.mkdir()
+        shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("outputs/northeast-oxford-slice3.highway-core_aqueduct_river_splits.geoparquet outputs/northeast-oxford-slice3.highway-core_aqueduct_river_splits.parquet", file=sys.stderr)
+        print("results/splits/northeast-oxford-slice3.highway-core_aqueduct_river_splits.geoparquet results/splits/northeast-oxford-slice3.highway-core_aqueduct_river_splits.parquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "outputs/slices/northeast-oxford-slice3.highway-core_aqueduct_river_splits.geoparquet",
-            "outputs/slices/northeast-oxford-slice3.highway-core_aqueduct_river_splits.parquet",
+            "results/splits/northeast-oxford-slice3.highway-core_aqueduct_river_splits.geoparquet",
+            "results/splits/northeast-oxford-slice3.highway-core_aqueduct_river_splits.parquet",
             "-F", 
             "-j1",
             "--keep-target-files",
