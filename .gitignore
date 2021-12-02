@@ -13,3 +13,6 @@ results/*
 
 # Logs
 *.out
+
+# Tester files
+tester/*
