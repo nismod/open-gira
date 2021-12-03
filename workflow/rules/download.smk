@@ -49,3 +49,15 @@ rule download_adminboundaries:
 			  cd data/adminboundaries &&
 			  wget https://biogeo.ucdavis.edu/data/gadm3.6/gadm36_gpkg.zip --output-document=gadm36_gpkg.zip &&
 			  unzip -o gadm36_gpkg.zip"""	
+			  
+
+# download admin boundaries (per country)
+rule download_adminboundaries_codes:
+	output: out_adminboundaries_codes
+	run: 
+		for code in COUNTRY_CODES:
+			shell("""wget https://biogeo.ucdavis.edu/data/gadm3.6/gpkg/gadm36_{code}_gpkg.zip --output-document=data/adminboundaries/gadm36_{code}_gpkg.zip &&
+			  unzip -o data/adminboundaries/gadm36_{code}_gpkg.zip -d data/adminboundaries""")
+	
+	
+			  

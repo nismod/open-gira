@@ -7,10 +7,11 @@ DATA_DIR = config["data_dir"]
 
 CYCLONE_REGIONS = ["EP","NA","NI","SI","SP","WP"]
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
+COUNTRY_CODES = [row['iso3'] for row in r.json()['data']]
 
 out_fixed = expand(os.path.join(DATA_DIR, "stormtracks", "fixed", "STORM_FIXED_{param}_{let}.nc"), let = CYCLONE_REGIONS, param = ["RETURN_PERIODS","TC_WIND_SPEEDS"])
 out_events = expand(os.path.join(DATA_DIR, "stormtracks", "events", "STORM_DATA_IBTRACS_{let}_1000_YEARS_{num}.txt"), let = CYCLONE_REGIONS, num=list(range(0,10)))
-out_population = expand(os.path.join(DATA_DIR, "population", "{country}_ppp_2020_UNadj_constrained.tif"), country = [row['iso3'] for row in r.json()['data']])
+out_population = expand(os.path.join(DATA_DIR, "population", "{country}_ppp_2020_UNadj_constrained.tif"), country = COUNTRY_CODES)
 out_GDP = expand(os.path.join(DATA_DIR, "GDP", "{filename}"), filename = ["admin_areas_GDP_HDI.nc", 
 																					"GDP_per_capita_PPP_1990_2015_v2.nc",
 																					"GDP_PPP_30arcsec_v3.nc",
@@ -21,6 +22,7 @@ out_GDP = expand(os.path.join(DATA_DIR, "GDP", "{filename}"), filename = ["admin
 out_powerplant = os.path.join(DATA_DIR, "powerplants", "global_power_plant_database.csv")
 out_gridfinder = os.path.join(DATA_DIR, "gridfinder", "grid.gpkg")
 out_adminboundaries = os.path.join(DATA_DIR, "adminboundaries", "gadm36.gpkg")
+out_adminboundaries_codes = expand(os.path.join(DATA_DIR, "adminboundaries", "gadm36_{code}.gpkg"),code = COUNTRY_CODES)
 
 ##### load rules #####
 
@@ -39,5 +41,5 @@ rule all:
 		out_GDP,
 		out_powerplant,
 		out_gridfinder,
-		out_adminboundaries
+		out_adminboundaries_codes  # choose between out_adminboundaries and out_adminboundaries_codes (latter is per country)
 
