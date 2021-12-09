@@ -1,12 +1,12 @@
 # download storm tracks data
 rule download_stormtracks_fixed:
 	output: out_fixed
-	shell: "wget -P data/stormtracks/fixed -N -i data/stormtracks/storm_fixed_return.txt --no-check-certificate"
+	shell: "wget -P data/stormtracks/fixed -N -i workflow/scripts/storm_fixed_return.txt --no-check-certificate"
 
 
 rule download_stormtracks_events:
 	output: out_events
-	shell: """wget -P data/stormtracks/events -N -i data/stormtracks/storm_tracks.txt --no-check-certificate --content-disposition &&
+	shell: """wget -P data/stormtracks/events -N -i workflow/scripts/storm_tracks.txt --no-check-certificate --content-disposition &&
 			  unzip -o data/stormtracks/events/STORM_DATA3.zip -d data/stormtracks/events"""
 			  
 
