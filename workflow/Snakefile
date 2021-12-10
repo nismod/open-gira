@@ -9,6 +9,7 @@ hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 
 ##### load rules #####
 
+include: "rules/download.smk"
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/convert_to_geoparquet.smk"
@@ -27,3 +28,4 @@ rule clean:
         rm -rf data/slices &&
         rm -rf outputs/slices
         """
+
