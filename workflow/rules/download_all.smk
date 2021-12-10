@@ -3,8 +3,9 @@
 Run all of the download rules, whether or not any futher rules in the pipeline require the data.
 """
 
+
 rule download_all:
-    input: 
+    input:
         out_fixed,
         out_events,
         out_population,
@@ -12,4 +13,4 @@ rule download_all:
         out_powerplant,
         out_gridfinder,
         out_adminboundaries,
-        out_adminboundaries_codes
+        out_adminboundaries_codes,

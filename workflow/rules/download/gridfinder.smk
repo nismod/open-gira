@@ -7,9 +7,11 @@ https://gridfinder.org/
 
 out_gridfinder = os.path.join(DATA_DIR, "gridfinder", "grid.gpkg")
 
+
 rule download_gridfinder:
-    output: out_gridfinder
-    shell: 
+    output:
+        out_gridfinder,
+    shell:
         """
         mkdir -p data/gridfinder
         cd data/gridfinder

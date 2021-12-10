@@ -1,6 +1,8 @@
 from glob import glob
 
+
 configfile: "config/config.yaml"
+
 
 DATA_DIR = config["data_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
@@ -8,11 +10,13 @@ DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
 
 import requests
+
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
-COUNTRY_CODES = [row['iso3'] for row in r.json()['data']]
+COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 
 ##### load rules #####
+
 
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
@@ -21,18 +25,20 @@ include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download_all.smk"
-
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/convert_to_geoparquet.smk"
 include: "rules/network_hazard_intersection.smk"
 include: "rules/join_data.smk"
 
+
 ##### target rules #####
+
 
 rule all:
     input:
-        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet"
+        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+
 
 rule clean:
     shell:
@@ -40,4 +46,3 @@ rule clean:
         rm -rf data/slices &&
         rm -rf outputs/slices
         """
-

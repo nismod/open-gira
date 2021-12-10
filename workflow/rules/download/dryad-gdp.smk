@@ -6,20 +6,23 @@ https://doi.org/10.5061/dryad.dk1j0
 """
 
 out_GDP = expand(
-    os.path.join(DATA_DIR, "GDP", "{filename}"), 
+    os.path.join(DATA_DIR, "GDP", "{filename}"),
     filename=[
-        "admin_areas_GDP_HDI.nc", 
+        "admin_areas_GDP_HDI.nc",
         "GDP_per_capita_PPP_1990_2015_v2.nc",
         "GDP_PPP_30arcsec_v3.nc",
         "GDP_PPP_1990_2015_5arcmin_v2.nc",
         "HDI_1990_2015_v2.nc",
         "pedigree_GDP_per_capita_PPP_1990_2015_v2.nc",
-        "pedigree_HDI_1990_2015_v2.nc"
-    ])
+        "pedigree_HDI_1990_2015_v2.nc",
+    ],
+)
+
 
 rule download_GDP:
-    output: out_GDP
-    shell: 
+    output:
+        out_GDP,
+    shell:
         """
         mkdir -p data/GDP
         cd data/GDP

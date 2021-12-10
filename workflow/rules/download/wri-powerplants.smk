@@ -5,11 +5,15 @@ Reference
 https://www.wri.org/research/global-database-power-plants
 """
 
-out_powerplant = os.path.join(DATA_DIR, "powerplants", "global_power_plant_database.csv")
+out_powerplant = os.path.join(
+    DATA_DIR, "powerplants", "global_power_plant_database.csv"
+)
+
 
 rule download_powerplants:
-    output: out_powerplant
-    shell: 
+    output:
+        out_powerplant,
+    shell:
         """
         mkdir -p data/powerplants
         cd data/powerplants
