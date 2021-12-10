@@ -1,12 +1,8 @@
-# OpenStreetMap / Aqueduct Flood exposure
-
-Use `nismod/snail` to demonstrate infrastructure network intersections with hazards as an
-exposure calculation.
+# Open Global Infrastructure Risk/Resilience Analysis
 
 Goals: 
 - automated pipeline for reproducible exposure analysis anywhere in the world.
-- map of a large area showing exposure at different return periods
-- charts/stats of exposure per admin region (by road/rail) per hazard type, scenario, epoch
+- maps, charts and stats of risk for infrastructure networks and multiple climate hazards
 
 ## Setup
 
@@ -37,7 +33,7 @@ python -m pytest .tests
 The exposure analysis pipeline can be run automatically using snakemake:
 
 ```
-cd osm-aqueduct && snakemake
+snakemake
 ```
 
 The analysis starts from a OpenStreetMap dataset (_e.g._ `africa-latest`) and
