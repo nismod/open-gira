@@ -11,5 +11,6 @@ hazard_csv: 'data/aqueduct/aqueduct_river.csv'
 dataset: 'tanzania-latest'
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
-
+# Filters definition
+osmium_tags_filters_file: "config/filters.txt"
 
