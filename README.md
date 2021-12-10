@@ -19,12 +19,13 @@ instructions there. Tests run with versions:
 - osmium-tool v1.13.2
 - libosmium v2.17.1
 
+
 ## Running tests
 
 Workflow steps are tested using a small sample dataset. Run:
 
 ```
-python -m pytest .tests
+python -m pytest tests
 ```
 
 
