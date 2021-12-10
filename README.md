@@ -115,24 +115,7 @@ snakemake clean
 Note that this will *not* remove the final data files
 `<output_dir>/<dataset>.highway-core.splits.[geoparquet, parquet]`.
 
-## Data
-
-### Gridfinder
-
-```
-pip install zenodo_get mkdir -p data/gridfinder cd data/gridfinder
-zenodo_get -d 10.5281/zenodo.3628142
-```
-
-### WRI Aqueduct
-
-Use `nismod/aqueduct`.
-
-TODO update to provide snail raster dataset metadata.
-
-### OpenStreetMap
-
-Testing with downloads from http://download.geofabrik.de/asia.html - Laos and Bangladesh.
-
-TODO consider planet and diffs.
+Snakemake has utilities to improve the workflow code quality:
+- `snakemake --lint` suggests improvements and fixes for common problems
+- `snakefmt .` reformats files according to a code style guide, similar to `black` for Python code.
 
