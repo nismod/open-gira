@@ -45,4 +45,5 @@ jobs:
       run: |
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
+        conda activate open-gira
         python -m pytest tests
