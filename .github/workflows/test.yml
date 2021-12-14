@@ -42,8 +42,12 @@ jobs:
         environment-file: workflow/envs/environment.yml
 
     - name: Test with pytest
+      # Bash shells do not use ~/.profile or ~/.bashrc so these shells
+      # need to be explicitely declared as shell: bash -l {0} on steps
+      # that need to be properly activated. See
+      # https://github.com/marketplace/actions/setup-miniconda#IMPORTANT
+      shell: bash -l {0}
       run: |
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
-        conda activate open-gira
         python -m pytest tests
