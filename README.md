@@ -79,26 +79,31 @@ specify a configuration to be used in place of the default
 snakemake --cores 8 --configfile config/my_other_config.yml
 ```
 
+## Step-by-step description of the pipeline
+
+The pipeline starts from a OpenStreetMap dataset (_e.g._
+`europe-latest`) and produces network/flood hazard intersection data,
+associating road splits to corresponding flood levels.
 
 The pipeline consists in the following steps:
 
-1. Slices the initial OSM dataset into areas of equal size
-   (`<data_dir>/<dataset>-slice<N>.osm.pbf`).
+1. The initial OSM dataset is sliced into areas of equal size
+   (`results/slices/<dataset>-slice<N>.osm.pbf`).
 2. Filters down each OSM data slice keeping only relevant tags for road links
    (using `osmium tags-filter`. This results in files
-   `<data_dir>/<dataset>-slice<N>.highway-core.osm.pbf`.
+   `results/filtered/<dataset>-slice<N>.highway-core.osm.pbf`.
 3. Each filtered OSM dataset is then converted to the GeoParquet data format,
-   resulting in `<data_dir>/<dataset>-slice<N>.highway-core.geoparquet`.
+   resulting in `results/geoparquet-slice<N>.highway-core.geoparquet`.
 4. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
    raster data files. The network/hazard intersection results in data
-   `<output_dir>/<dataset>-slice<N>.highway-core.splits.geoparquet` describing
+   `results/splits/<dataset>-slice<N>.highway-core.splits.geoparquet` describing
    roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
 5. Split data (one file per slice, see step 1) is then joined into a unique
    dataset describing splits and associated flood level values for the whole
    original OSM dataset. This results in
-   `<dataset>.highway-core.splits.geoparquet`.
+   `results/<dataset>.highway-core.splits.geoparquet`.
 
 ### Configuration
 
