@@ -14,7 +14,7 @@ Goals:
 
 This repository comes with a `environment.yml` file describing the conda and pip packages required to run `open-gira`.
 
-First, create the `open-gira` conda environment:
+Create the `open-gira` conda environment:
 ```
 conda env create -f workflow/envs/environment.yml
 ```
@@ -54,22 +54,23 @@ python -m pytest .tests
 
 Start by making your own copy of `config/config_template.yml` named
 `config/config.yml`. You can edit the latter to set the target OSM
-dataset, number of slices and hazard data. See
+dataset, number of slices and hazard data location. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
 for details on the configuration variables.
 
 The second step is to create a configuration file for `osmium
 extract`, describing the bounding box of each OSM dataset slice.  This
 configuration file is expected to be found next to the OSM data at the
-locatin specified by the `data_dir` configuration variable, with a
-filename of the form `<dataset>-extracts.json` where `<dataset>` is
-specified by the `dataset` configuration variable. See [Creating
-multiple extracts in one
+location specified by the `data_dir` configuration variable. Its
+filename should be of the form `<dataset>-extracts.json` where
+`<dataset>` is specified by the `dataset` configuration variable. See
+[Creating multiple extracts in one
 go](https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts)
 on the `osmium-tool` docs for more details on how to write config
 files for `osmium extract`. A common task is to slice the OSM dataset
-into areas of equal height and width, see Automatically generating the
-osmium extract confgiuratin file.
+into areas of equal height and width, see [Automatically generating
+the osmium extract confgiuration
+file.](https://github.com/nismod/open-gira/tree/update_readme#step-by-step-description-of-the-pipeline)
 
 You can then run the exposure analysis pipeline automatically using
 snakemake, like so
@@ -96,10 +97,11 @@ snakemake --cores 8 --configfile config/my_other_config.yml
 
 A common task is to slice the OSM dataset into areas of equal height
 and width. Script `scripts/prepare-extracts.py` automates this
-process, given a JSON file describing the original dataset. For
-instance, say you want to slice `europe-latest.osm.pbf` into 6 slices
-of equal height and equal width. First, write a `osmium extract`
-config file describing the `europe-latest` as a single extract:
+process, given a JSON file describing the original dataset. 
+
+Say that you want to slice `europe-latest.osm.pbf` into 6 slices of equal
+height and equal width. First, write a `osmium extract` config file
+describing the `europe-latest` as a single extract:
 
 ```json
 {
@@ -112,7 +114,7 @@ config file describing the `europe-latest` as a single extract:
                 -1.175,
                 51.805
             ],
-		    "output": "europe-latest.osm.pbf"
+            "output": "europe-latest.osm.pbf"
         },
 	]
 }
