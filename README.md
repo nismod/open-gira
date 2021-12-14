@@ -52,15 +52,33 @@ python -m pytest .tests
 
 ## Running the pipeline
 
-The exposure analysis pipeline can be run automatically using snakemake:
+Start by making your own copy of `config/config_template.yml` named
+`config/config.yml`. You can edit the latter to set the target OSM
+dataset, number of slices and hazard data. See **??** for details on
+the configuration.
+
+You can then run the exposure analysis pipeline automatically using
+snakemake, like so
 
 ```
-cd osm-aqueduct && snakemake
+snakemake --cores 8
 ```
 
-The analysis starts from a OpenStreetMap dataset (_e.g._ `africa-latest`) and
-produces network/flood hazard intersection data, associating road  splits to
-corresponding flood levels. 
+Individual configuration parameters can be overriden from the command
+line, for instance
+
+```
+snakemake --cores 1 --config dataset=tanzania-latest data_dir=osm-data
+```
+
+It is often useful to maintain several configuration files. You can
+specify a configuration to be used in place of the default
+`config/config.yml` like so
+
+```
+snakemake --cores 8 --configfile config/my_other_config.yml
+```
+
 
 The pipeline consists in the following steps:
 
