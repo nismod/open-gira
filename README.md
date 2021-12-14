@@ -8,15 +8,33 @@ Goals:
 - map of a large area showing exposure at different return periods
 - charts/stats of exposure per admin region (by road/rail) per hazard type, scenario, epoch
 
-## Setup
+## Installation
 
-Install python requirements as listed in `requirements.txt` - for example using a venv:
+### conda
+
+This repository comes with a `environment.yml` file describing the conda and pip packages required to run `open-gira`.
+
+First, create the `open-gira` conda environment:
+```
+conda env create -f workflow/envs/environment.yml
+```
+and activate it
+```
+conda activate open-gira
+```
+
+### pip
+
+Install python requirements as listed in `requirements.txt` - for
+example using a venv:
 
 ```
 python3 -m venv ./venv
 . venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### Install osmium-tool
 
 Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according to the
 instructions there. Tests run with versions:
