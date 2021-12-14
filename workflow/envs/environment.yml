@@ -1,4 +1,4 @@
-name: test_env
+name: open-gira
 channels:
   - conda-forge
   - defaults
