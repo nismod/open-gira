@@ -8,6 +8,7 @@ DATA_DIR = config["data_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
+WORKFLOW_DIR = config['workflow_dir']
 
 import requests
 
@@ -25,6 +26,7 @@ include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download_all.smk"
+include: "rules/process/plants-targets.smk"
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/convert_to_geoparquet.smk"
