@@ -22,7 +22,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: osmium-tool/build
-        key: open-gira-osmium-v1.13.2-libosmium-v2.17.1
+        key: osmium-v1.13.2-libosmium-v2.17.1-cache_bust-v3
 
     - name: Build osmium-tool
       if: steps.cache-osmium-tool.outputs.cache-hit != 'true'
