@@ -1,9 +1,9 @@
 # Testing
 
 The pipeline is tested on a small sample of OpenStreetMap data
-representing a region northeast of Oxford, UK. For each rule use in
+representing a region northeast of Oxford, UK. For each rule used in
 `workflow/Snakefile` there is a unit test ensuring that the expected
-outputs are generated given inputs based on the northeast Oxford
+outputs are generated, given inputs based on the northeast Oxford
 dataset. Unit tests are automatically generated unsing `snakemake
 --generate-unit-tests`, see [Automatically generating unit tests](https://snakemake.readthedocs.io/en/stable/snakefiles/testing.html) on the Snakemake docs.
 
