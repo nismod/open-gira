@@ -22,10 +22,10 @@ target file.
     "extracts": [
         {
             "bbox": [
-                -1.3,
-                51.72,
-                -1.08,
-                51.87
+                -1.23,
+                51.78,
+                -1.12,
+                51.83
             ],
             "output": "northeast-oxford.osm.pbf"
         }
