@@ -4,7 +4,13 @@ functions and data required to perform preprocessing
 
 
 from importing_modules import *
+import shapely.wkt as sw
 
+
+def changedir():
+    """For use on personal pc"""
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 def timer(s):
     print("timer : ",round((time.time() - s)/60, 2)," mins\n")
@@ -124,18 +130,31 @@ def get_gdp(targets):
     return targets
 
 
-def get_lines():
+def get_lines(code=None):
     """Read gridfinder lines"""
 
     s = time.time()
 
     features = []
     with fiona.open(os.path.join("data","gridfinder","grid.gpkg")) as src:
+
+
+
         for jj,feature in tqdm(enumerate(src), desc='grid.gpkg features', total=len(src)):
             # gridfinder GeoPackage stores an "fid" which GeoPandas ignores
             # and fiona reads as "id", not to feature['properties']
             # see https://github.com/geopandas/geopandas/issues/1035
             geom = shape(feature['geometry'])
+
+            # if code != None:
+            #     check = code_geoms_gpd.within(geom)
+            #     if True in check:
+            #         continue
+            #     else:
+            #         break
+
+
+
             features.append({
                 'source_id': feature['id'],
                 'source': feature['properties']['source'],
@@ -146,7 +165,15 @@ def get_lines():
 
     gdf_world = gpd.GeoDataFrame(features)
 
+    if code != None:  # preload
+        with fiona.open(os.path.join("data","adminboundaries",f"gadm36_{code}.gpkg")) as src_code:
+            code_geoms = []
+            for feature in src_code:
+                code_geoms.append(shape(feature['geometry']))
+            code_geoms_gpd = gpd.GeoDataFrame({'geometry':code_geoms})
+        gdf_world = gdf_world.overlay(code_geoms_gpd, how='intersection')
 
+        print(gdf_world)
     return gdf_world
 
 
@@ -155,7 +182,17 @@ def patch_nearest_edge(point, edges):
 
     Find nearest edge to a point
     """
-    geom = point.buffer(1e-2) # include buffer to catch nearest line
+
+
+    if type(point) == str:
+        point = sw.loads(point)  # if point is found as string -> convert to Point(# #)
+        print("changed to point")
+    geom = point.buffer(1e-2)
+    #print(point, " : ", type(point))
+
+
+
+
     matches_idx = edges.sindex.nearest(geom.bounds)
     nearest_geom = min(
         [edges.iloc[match_idx] for match_idx in matches_idx],

@@ -14,7 +14,7 @@ import requests
 
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
-
+COUNTRY_CODES = ['PHL']
 
 ##### load rules #####
 

@@ -3,12 +3,18 @@ Creates the network from the plants and targets data
 """
 
 from importing_modules import *
+from process_power_functions import *
 
+#codes = COUNTRY_CODES
+codes = sys.argv[1]
+print(codes)
+codes = ast.literal_eval(codes)  # convert to list
 
 #%%
 print("combining all intermediate files")
 initial = False
 for ii, code in enumerate(codes):
+    print(code)
     plantsfile = os.path.join("data","processed",f"{code.upper()}_plants.csv")
     targetsfile = os.path.join("data","processed",f"{code.upper()}_targets.csv")
 
@@ -25,7 +31,7 @@ for ii, code in enumerate(codes):
         plants = plants.append(plants_country)
         targets = targets.append(targets_country)
 
-plants['geometry'] = plants['geometry'].apply(wkt.loads)
+plants['geometry'] = plants['geometry'].apply(wkt.loads)  # TODO wont need this if using gpkg (later fix, works for now)
 plants = gpd.GeoDataFrame(plants)
 
 targets['geometry'] = targets['geometry'].apply(wkt.loads)
@@ -34,10 +40,10 @@ targets = gpd.GeoDataFrame(targets)
 #print("resetting indices")  # not needed
 plants = plants.reset_index().copy()
 plants['id'] = [f"source_{i}" for i in range(len(plants))]
-plants = plants[['id', 'source_id', 'type', 'geometry']]
+plants = plants[['id', 'source_id', 'capacity_mw', 'type', 'geometry']]
 
 targets = targets.reset_index().copy()
-targets['id'] = [f"source_{i}" for i in range(len(targets))]
+targets['id'] = [f"target_{i}" for i in range(len(targets))]
 
 
 #%%
@@ -45,13 +51,13 @@ print("\n-- countries processed --\n")
 # write to file
 
 print("writing to world_plants.gpkg")
-plants.to_file(os.path.join("data","gridfinder","world_plants.gpkg"),driver='GPKG')
+plants.to_file(os.path.join("data","processed","world_plants.gpkg"),driver='GPKG')
 timer(start)
-a
+
 print("writing to world_targets.gpkg")
 if len(targets) == 0:
     raise RuntimeError("targets file is empty, program will quit.")
-targets.drop(columns=['centroid']).to_file(os.path.join("data","gridfinder","world_targets.gpkg"), driver='GPKG')
+targets.drop(columns=['centroid']).to_file(os.path.join("data","processed","world_targets.gpkg"), driver='GPKG')
 timer(start)
 
 print("processing targets GeoData")
@@ -66,17 +72,20 @@ timer(start)
 
 # Edges
 print("getting gridfinder lines")
-edges = get_lines()
+if len(codes) == 1:  # TODO for testing purposes, one country
+    edges = get_lines(codes[0])
+else:
+    edges = get_lines()
 timer(start)
 
 print('processing lines')
 edges['type'] = 'transmission'
-edges['id'] = targets.reset_index()['index'].apply(lambda i: f"plant_{i}")
+edges['id'] = targets.reset_index()['index'].apply(lambda i: f"target_{i}")
 
 timer(start)
 print("writing to world_edges.gpkg")
 edges.to_file(
-    os.path.join("data","gridfinder","world_edges.gpkg"),
+    os.path.join("data","processed","world_edges.gpkg"),
     driver='GPKG'
 )
 timer(start)
@@ -89,19 +98,26 @@ timer(start)
 print("creating network")
 network = snkit.network.Network(nodes, edges)
 timer(start)
+a
 
-print("processing network")
-network = snkit.network.split_multilinestrings(network)
-timer(start)
+# fix str when should be Point(# #)
+network.nodes['geometry'] = [sw.loads(x) if type(x) == str else x for x in network.nodes['geometry']]
+network.edges['geometry'] = [sw.loads(x) if type(x) == str else x for x in network.edges['geometry']]
 
-geod = Geod(ellps="WGS84")
-edge_limit = 20_000 # meters
+
 
 # Connect power plants
 print("connecting powerplants")
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
     warnings.simplefilter(action='ignore', category=FutureWarning)
+
+    print("processing network")
+    network = snkit.network.split_multilinestrings(network)
+    timer(start)
+
+    geod = Geod(ellps="WGS84")
+    edge_limit = 20_000 # meters
 
     network = snkit.network.link_nodes_to_nearest_edge(
         network,
@@ -162,7 +178,7 @@ with warnings.catch_warnings():
 timer(start)
 
 # output
-out_fname = os.path.join("data","gridfinder","world_network.gpkg")
+out_fname = os.path.join("data","processed","world_network.gpkg")
 print("writing edges to ", out_fname)
 network.edges.to_file(out_fname, layer='edges', driver='GPKG')
 timer(start)
