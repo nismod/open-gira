@@ -12,6 +12,7 @@ def changedir():
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
 
+
 def timer(s):
     print("timer : ",round((time.time() - s)/60, 2)," mins\n")
 
@@ -43,7 +44,7 @@ def get_powerplants(code):
 def get_target_areas(code):
     code = code.upper()
     # open .gpkg file and extract geometry of boundary data
-    with fiona.open(os.path.join("data","adminboundaries", f"gadm36_{code}.gpkg"), "r") as src:
+    with fiona.open(os.path.join("data","adminboundaries", f"gadm36_{code}.gpkg"), "r", layer=3) as src:
         shapes = [feature["geometry"] for feature in src]
 
     geod = Geod(ellps="WGS84")  # choice from https://gadm.org/download_country.html
@@ -166,7 +167,7 @@ def get_lines(code=None):
     gdf_world = gpd.GeoDataFrame(features)
 
     if code != None:  # preload
-        with fiona.open(os.path.join("data","adminboundaries",f"gadm36_{code}.gpkg")) as src_code:
+        with fiona.open(os.path.join("data","adminboundaries",f"gadm36_{code}.gpkg"), "r", layer=3) as src_code:
             code_geoms = []
             for feature in src_code:
                 code_geoms.append(shape(feature['geometry']))

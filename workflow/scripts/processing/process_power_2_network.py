@@ -9,7 +9,8 @@ from process_power_functions import *
 codes = sys.argv[1]
 print(codes)
 codes = ast.literal_eval(codes)  # convert to list
-
+# codes = ["PHL"]
+# changedir()
 #%%
 print("combining all intermediate files")
 initial = False
@@ -98,7 +99,6 @@ timer(start)
 print("creating network")
 network = snkit.network.Network(nodes, edges)
 timer(start)
-a
 
 # fix str when should be Point(# #)
 network.nodes['geometry'] = [sw.loads(x) if type(x) == str else x for x in network.nodes['geometry']]

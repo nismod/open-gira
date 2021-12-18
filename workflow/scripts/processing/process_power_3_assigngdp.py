@@ -12,8 +12,6 @@ from process_power_functions import *
 fname = os.path.join("data","processed","world_network.gpkg")
 
 
-#changedir()  # todo remove
-
 def read_network(fname):
     # read edges
     edges = gpd.read_file(fname, layer='edges')
@@ -61,18 +59,22 @@ def assign_node_edge_gdp(G):
     components = list(nx.connected_components(G))
     node_gdps = []
     edge_gdps = []
+    component_lst = []
 
     for component in tqdm(components):
-        c_node_gdp, c_edge_gdp = assign_component_gdp(G, component)
+        c_node_gdp, c_edge_gdp, c_component = assign_component_gdp(G, component)  # c_components returns sources and sinks for each edge
         if len(c_node_gdp):
             node_gdps.append(c_node_gdp)
         if len(c_edge_gdp):
             edge_gdps.append(c_edge_gdp)
+        if len(c_component):
+            component_lst.append(c_component)
 
     node_gdp = pd.concat(node_gdps)
     edge_gdp = pd.concat(edge_gdps)
+    component_lst = pd.concat(component_lst)
 
-    return node_gdp, edge_gdp
+    return node_gdp, edge_gdp, component_lst
 
 
 def edge_link_ids_from_nodes(G, route_nodes):
@@ -105,20 +107,33 @@ def assign_component_gdp(G, component):
     # assign GDP "flow" along shortest path from source to target, sharing source
     # gdp proportionally between targets
     edge_links = defaultdict(int)
+    comp_source = defaultdict(list)  # for an edge what is its source
+    comp_sink = defaultdict(list)  # for an edge where is it going
+
     sources = c_nodes[c_nodes.type == 'source'].copy()
     targets = c_nodes[c_nodes.type == 'target'].copy()
     if len(sources) and len(targets):
         for u in tqdm(sources.itertuples(), total=len(sources)):
             paths = nx.shortest_path(c, source=u.id)
             for v in targets.itertuples():
-                path = paths[v.id]
+                path = paths[v.id]  # path is the route from source to target
                 path_gdp = u.gdp * (v.gdp / c_gdp)
                 for link_id in edge_link_ids_from_nodes(c, path):
-                    edge_links[link_id] += path_gdp
+                    edge_links[link_id] += path_gdp  # each edge is given the assosiated gdp
+                    if path[0] not in comp_source[link_id]:
+                        comp_source[link_id].append(path[0])
+                    if path[-1] not in comp_sink[link_id]:
+                        comp_sink[link_id].append(path[-1])
+
+
+    if len(comp_source) != len(comp_sink):
+        raise RuntimeError("Issue with network.")
 
     c_edges = pd.DataFrame({'link': k, 'gdp': v} for k, v in edge_links.items())
 
-    return c_nodes[['id', 'gdp']], c_edges
+    c_components = pd.DataFrame({'link': k, 'comp_source': v, 'comp_sink': comp_sink[k]} for k, v in comp_source.items())
+
+    return c_nodes[['id', 'gdp']], c_edges, c_components
 
 
 #%% run
@@ -132,7 +147,7 @@ G = create_graph(nodes, edges)
 timer(start)
 
 print("assigning node edges gdp")
-node_gdp, edge_gdp = assign_node_edge_gdp(G)
+node_gdp, edge_gdp, comp_sink_source = assign_node_edge_gdp(G)
 timer(start)
 
 out_fname = fname.replace('network', 'network_with_gdp')
@@ -149,8 +164,13 @@ nodes.to_file(
 timer(start)
 
 print("merging edges")
+edge_gdp = edge_gdp.merge(comp_sink_source, on='link')  # merge the component sink source info for each edge
 edges = edges.merge(edge_gdp, on='link')
 timer(start)
+
+print("cleaning data")
+edges['comp_source'] = [str(source) for source in edges['comp_source']]
+edges['comp_sink'] = [str(sink) for sink in edges['comp_sink']]
 
 print("writing edges to file")
 edges.to_file(
