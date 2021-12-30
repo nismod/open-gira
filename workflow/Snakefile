@@ -12,8 +12,8 @@ WORKFLOW_DIR = config['workflow_dir']
 
 import requests
 
-r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
-COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
+#r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
+#COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 COUNTRY_CODES = ['PHL']
 
 ##### load rules #####
@@ -27,6 +27,7 @@ include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download_all.smk"
 include: "rules/process/plants-targets.smk"
+include: "rules/intersect/intsersect-storm.smk"
 include: "rules/slice.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/convert_to_geoparquet.smk"

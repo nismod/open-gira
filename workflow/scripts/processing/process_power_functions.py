@@ -6,11 +6,12 @@ functions and data required to perform preprocessing
 from importing_modules import *
 import shapely.wkt as sw
 
-
+# TODO: remove below lines once testing complete and solely on linux
 def changedir():
     """For use on personal pc"""
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+    if "linux" not in sys.platform:
+        path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+        os.chdir(path)
 
 
 def timer(s):
@@ -116,13 +117,20 @@ def get_gdp(targets):
     fn = os.path.join("data","GDP","GDP_per_capita_PPP_1990_2015_v2.nc")
     ds = nc4.Dataset(fn)
     gdp_pc_lst = []
-    for ii in range(len(targets)):  # TODO vectorise
-        lat_idx = round(np.interp(targets.centroid[ii].y,[-90,90],[0,2160]),0)  # convert latitude to GDP nc file
-        lon_idx = round(np.interp(targets.centroid[ii].x,[-180,180],[0,4320]),0)  # convert longitude to GDP nc file
+    # for ii in range(len(targets)):  # TODO vectorise
+    #     lat_idx = round(np.interp(targets.centroid[ii].y,[-90,90],[2160, 0]),0)  # convert latitude to GDP nc file
+    #     lon_idx = round(np.interp(targets.centroid[ii].x,[-180,180],[0,4320]),0)  # convert longitude to GDP nc file
 
-        #print(lat_idx,lon_idx)
-        # Find value
-        gdp_pc_lst.append(ds['GDP_per_capita_PPP'][-1,lat_idx,lon_idx])  # returns gdp of centroid of the target area (2015)
+
+
+    lat_idx_arr = np.interp(targets.centroid.y,[-90,90],[2160, 0])  # convert latitude to GDP nc file
+    lon_idx_arr = np.interp(targets.centroid.x,[-180,180],[0,4320])  # convert longitude to GDP nc file
+
+
+
+    # Find value
+    assert len(lat_idx_arr) == len(lon_idx_arr)
+    gdp_pc_lst = [ds['GDP_per_capita_PPP'][-1,lat_idx_arr[jj],lon_idx_arr[jj]] for jj in range(len(lat_idx_arr))]  # returns gdp of centroid of the target area (2015)
 
     gdp_pc_lst = [float(x) if numpy.ma.is_masked(x) == False else 0 for x in gdp_pc_lst]  # set masked to 0 (later removed)
     #print("sum", sum(gdp_pc_lst))
@@ -241,8 +249,10 @@ def write_plants_targets(code, plantsfile, targetsfile):
         targets_country.to_csv(targetsfile)
 
 #%% start
-r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
-COUNTRY_CODES = [row['iso3'] for row in r.json()['data']]
+#r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
+#COUNTRY_CODES = [row['iso3'] for row in r.json()['data']]
+COUNTRY_CODES = ['PHL']  # TODO i think can remove these and two lines above
+
 
 start = time.time()
 

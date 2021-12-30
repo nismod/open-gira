@@ -32,6 +32,7 @@ rule download_stormtracks_fixed:
         out_fixed,
     shell:
         """
+        mkdir -p data/stormtracks/fixed/extracted
         wget \
             --input-file=workflow/scripts/storm_fixed_return.txt \
             --directory-prefix=data/stormtracks/fixed \

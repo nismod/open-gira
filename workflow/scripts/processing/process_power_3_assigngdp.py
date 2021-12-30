@@ -1,13 +1,23 @@
 import os
 from collections import defaultdict
-from glob import glob
+import sys
 
 import geopandas as gpd
 import networkx as nx
 import pandas as pd
+import json
 from tqdm.notebook import tqdm
 from importing_modules import *
 from process_power_functions import *
+from collections import ChainMap
+
+
+
+# TODO: remove below lines once testing complete and solely on linux
+if "linux" not in sys.platform:
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
+
 
 fname = os.path.join("data","processed","world_network.gpkg")
 
@@ -60,21 +70,28 @@ def assign_node_edge_gdp(G):
     node_gdps = []
     edge_gdps = []
     component_lst = []
+    target_sources_lst = []
+    edge_gdp_sorted = {}
 
     for component in tqdm(components):
-        c_node_gdp, c_edge_gdp, c_component = assign_component_gdp(G, component)  # c_components returns sources and sinks for each edge
+        c_node_gdp, c_edge_gdp, c_component, target_sources, edge_gdp_indiv = assign_component_gdp(G, component)  # c_components returns sources and sinks for each edge
         if len(c_node_gdp):
             node_gdps.append(c_node_gdp)
         if len(c_edge_gdp):
             edge_gdps.append(c_edge_gdp)
         if len(c_component):
             component_lst.append(c_component)
+        if len(target_sources):
+            target_sources_lst.append(target_sources)
+
+        edge_gdp_sorted = {**edge_gdp_sorted, **edge_gdp_indiv}  # add new dictionary on the end. Each edge contains the target within the flows of itself
 
     node_gdp = pd.concat(node_gdps)
     edge_gdp = pd.concat(edge_gdps)
-    component_lst = pd.concat(component_lst)
+    component_df = pd.concat(component_lst)
+    target_sources_df = pd.concat(target_sources_lst)
 
-    return node_gdp, edge_gdp, component_lst
+    return node_gdp, edge_gdp, component_df, target_sources_df.fillna(0), edge_gdp_sorted
 
 
 def edge_link_ids_from_nodes(G, route_nodes):
@@ -107,37 +124,46 @@ def assign_component_gdp(G, component):
     # assign GDP "flow" along shortest path from source to target, sharing source
     # gdp proportionally between targets
     edge_links = defaultdict(int)
-    comp_source = defaultdict(list)  # for an edge what is its source
-    comp_sink = defaultdict(list)  # for an edge where is it going
+    comp_path = defaultdict(list)  # keeps track of source and sink nodes for each edge
+
 
     sources = c_nodes[c_nodes.type == 'source'].copy()
     targets = c_nodes[c_nodes.type == 'target'].copy()
+
+    target_sources = pd.DataFrame({'id':targets['id']})
+
+    edge_gdp_indiv = dict()
+
     if len(sources) and len(targets):
         for u in tqdm(sources.itertuples(), total=len(sources)):
             paths = nx.shortest_path(c, source=u.id)
             for v in targets.itertuples():
                 path = paths[v.id]  # path is the route from source to target
                 path_gdp = u.gdp * (v.gdp / c_gdp)
+                target_sources.loc[target_sources['id']==v.id, u.id] = u.capacity_mw/c_cap  # for each target (each row), we have a fraction of the power coming from each source (each column)
+
                 for link_id in edge_link_ids_from_nodes(c, path):
                     edge_links[link_id] += path_gdp  # each edge is given the assosiated gdp
-                    if path[0] not in comp_source[link_id]:
-                        comp_source[link_id].append(path[0])
-                    if path[-1] not in comp_sink[link_id]:
-                        comp_sink[link_id].append(path[-1])
+                    comp_path[link_id].append([path[0], path[-1]])  # [source, target]
 
+                    route_id = path[0]+"_"+path[-1]  # source_sink unique for a flow
+                    if link_id not in edge_gdp_indiv:
+                        edge_gdp_indiv[link_id] = {}  # add link_id dict to edge_gdp_indiv if not yet there
 
-    if len(comp_source) != len(comp_sink):
-        raise RuntimeError("Issue with network.")
+                    if route_id in edge_gdp_indiv[link_id]:
+                        edge_gdp_indiv[link_id][route_id] += path_gdp  # add path_gdp to target (source unknown) if target in edge_gdp_indiv[link_id]
+                    else:
+                        edge_gdp_indiv[link_id][route_id] = path_gdp  # create path_gdp for target (source unknown) if target not in edge_gdp_indiv[link_id]
+
 
     c_edges = pd.DataFrame({'link': k, 'gdp': v} for k, v in edge_links.items())
 
-    c_components = pd.DataFrame({'link': k, 'comp_source': v, 'comp_sink': comp_sink[k]} for k, v in comp_source.items())
+    c_components = pd.DataFrame({'link': k, 'path': v} for k, v in comp_path.items())
 
-    return c_nodes[['id', 'gdp']], c_edges, c_components
+    return c_nodes[['id', 'gdp']], c_edges, c_components, target_sources, edge_gdp_indiv
 
 
 #%% run
-
 print("importing")
 nodes, edges = read_network(fname)
 timer(start)
@@ -147,8 +173,14 @@ G = create_graph(nodes, edges)
 timer(start)
 
 print("assigning node edges gdp")
-node_gdp, edge_gdp, comp_sink_source = assign_node_edge_gdp(G)
+node_gdp, edge_gdp, comp_path, target_sources_df, edge_gdp_sorted = assign_node_edge_gdp(G)
 timer(start)
+
+
+print("saving edge_gdps_sorted")
+with open(os.path.join("data","processed","edge_gdp_sorted.txt"), 'w') as sortedjson:
+    json.dump(edge_gdp_sorted, sortedjson)
+
 
 out_fname = fname.replace('network', 'network_with_gdp')
 
@@ -163,18 +195,26 @@ nodes.to_file(
     driver='GPKG')
 timer(start)
 
+print("writing source allocation fo targets")
+target_sources_df.to_csv(os.path.join("data","processed", "target_source_allocation.csv"))
+fname_targets = os.path.join("data","processed", "world_targets.gpkg")
+targets = gpd.read_file(fname_targets, layer='world_targets')
+
+target_sources_df['allocation'] = [str(dict(ChainMap(*[{x[0]:x[1]} for x in list(target_sources_df.iloc[i].items())[1:] if x[1]>0]))) for i in range(len(target_sources_df))]  # merges all the data into lists
+targets.to_file(os.path.join("data","processed","world_targets.gpkg"), driver='GPKG')
+
+
 print("merging edges")
-edge_gdp = edge_gdp.merge(comp_sink_source, on='link')  # merge the component sink source info for each edge
+edge_gdp = edge_gdp.merge(comp_path, on='link')  # merge the component sink source info for each edge
 edges = edges.merge(edge_gdp, on='link')
 timer(start)
 
 print("cleaning data")
-edges['comp_source'] = [str(source) for source in edges['comp_source']]
-edges['comp_sink'] = [str(sink) for sink in edges['comp_sink']]
+edges['path'] = [str(path) for path in edges['path']]
 
 print("writing edges to file")
 edges.to_file(
-    fname.replace('network', 'network_with_gdp'),
+    out_fname,  # fname.replace('network', 'network_with_gdp')
     layer='edges',
     driver='GPKG')
 

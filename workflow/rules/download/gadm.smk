@@ -32,3 +32,8 @@ rule download_gadm_by_country:
             --directory-prefix=data/adminboundaries
         unzip -o data/adminboundaries/gadm36_{wildcards.code}_gpkg.zip -d data/adminboundaries
         """
+
+
+# rule download_all_per_country__masterrule:
+#     input:
+#         expand(os.path.join(DATA_DIR, "adminboundaries", "gadm36_{code}.gpkg"), code=COUNTRY_CODES)

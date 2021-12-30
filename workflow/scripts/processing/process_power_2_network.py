@@ -9,6 +9,8 @@ from process_power_functions import *
 codes = sys.argv[1]
 print(codes)
 codes = ast.literal_eval(codes)  # convert to list
+
+
 # codes = ["PHL"]
 # changedir()
 #%%
@@ -81,7 +83,7 @@ timer(start)
 
 print('processing lines')
 edges['type'] = 'transmission'
-edges['id'] = targets.reset_index()['index'].apply(lambda i: f"target_{i}")
+edges['id'] = targets.reset_index()['index'].apply(lambda i: f"edge_{i}")
 
 timer(start)
 print("writing to world_edges.gpkg")
