@@ -10,9 +10,6 @@ codes = sys.argv[1]
 print(codes)
 codes = ast.literal_eval(codes)  # convert to list
 
-
-# codes = ["PHL"]
-# changedir()
 #%%
 print("combining all intermediate files")
 initial = False

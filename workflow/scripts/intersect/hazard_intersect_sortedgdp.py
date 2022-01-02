@@ -14,6 +14,8 @@ import json
 from tqdm import tqdm
 import sys
 
+from damage_calculator import applythreshold
+
 
 # TODO: remove below lines once testing complete and solely on linux
 if "linux" not in sys.platform:
@@ -68,17 +70,6 @@ def gridarea(code):
     gdf_area['ID_point'] = gdf_area.index
     return gdf_area
 
-
-def applythreshold(winds_df):  # TODO some threshold [for now just takes top 4]
-    """Returns locations where wind is 'severe' enough to affect the power lines. Based on some condition [needs work]"""
-
-    if len(winds_df) > 4:
-        thrval = winds_df.sort_values('wind_location')['wind_location'].iloc[-4]  # take highest 4 vals
-        winds_df = winds_df[winds_df['wind_location'] >= thrval]
-
-    #winds_df = winds_df[winds_df['wind_location'] > 999]  # filter all (data testing)
-
-    return winds_df
 
 
 def t_op(lower, upper):
