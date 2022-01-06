@@ -1,12 +1,25 @@
-# OpenStreetMap / Aqueduct Flood exposure
+# Open Global Infrastructure Risk/Resilience Analysis
 
-A snakemake workflow based on `nismod/snail` to demonstrate infrastructure network
-intersections with hazards as an exposure calculation.
+This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow will 
+analyse physical climate risks to infrastructure networks using global open data. 
 
-Goals: 
-- automated pipeline for reproducible exposure analysis anywhere in the world.
-- map of a large area showing exposure at different return periods
-- charts/stats of exposure per admin region (by road/rail) per hazard type, scenario, epoch
+The related open-source Python library [snail](https://github.com/nismod/snail) provides
+some of the core functionality.
+
+> Work in Progress
+>
+> Goals: 
+> - automated pipeline for reproducible analysis anywhere in the world
+> - maps per-country and of larger areas
+> - charts/stats of exposure per admin region, per hazard type, scenario, epoch
+> - consider transport, electricity, water, communications systems
+> - consider river flooding, storm surge coastal flooding, tropical cyclones
+> - estimate direct damages to physical networks
+> - estimate indirect effects of disruption - people affected, economic activity disrupted
+>
+> Non-goals:
+> - will not build on closed data sources, which may be appropriate for other projects or use-cases
+> - long-term planning or detailed operational simulation
 
 ## Installation
 
@@ -166,25 +179,3 @@ snakemake clean
 
 Note that this will *not* remove the final data files
 `<output_dir>/<dataset>.highway-core.splits.[geoparquet, parquet]`.
-
-## Data
-
-### Gridfinder
-
-```
-pip install zenodo_get mkdir -p data/gridfinder cd data/gridfinder
-zenodo_get -d 10.5281/zenodo.3628142
-```
-
-### WRI Aqueduct
-
-Use `nismod/aqueduct`.
-
-TODO update to provide snail raster dataset metadata.
-
-### OpenStreetMap
-
-Testing with downloads from http://download.geofabrik.de/asia.html - Laos and Bangladesh.
-
-TODO consider planet and diffs.
-
