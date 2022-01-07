@@ -155,6 +155,7 @@ def run_intersect(nh):
     if len(edges_affected) == 0:  # to prevent writing empty dataframe
         edges_affected['id'] = ['None']
     if len(polys_affected) == 0:  # to prevent writing empty dataframe
+        print('None affected')
         polys_affected['ID_point'] = ['None']
 
     edges_affected.to_file(os.path.join("data","intersection", "storm_data", f"storm_{nh}", f"world_edges_affected__storm_c{code}_r{region}_s{sample}_n{nh}_p.gpkg"), driver='GPKG')
@@ -199,6 +200,8 @@ def main():
     nodesuse = max(1,cpu_count()-2)
     if "linux" not in sys.platform:
         nodesuse = 2
+    else:
+        nodesuse = 4 # for cluster
 
     #pool = multiprocessing.Pool()
     pool = ProcessPool(nodes=nodesuse)

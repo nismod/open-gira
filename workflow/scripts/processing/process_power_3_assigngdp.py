@@ -195,7 +195,7 @@ nodes.to_file(
     driver='GPKG')
 timer(start)
 
-print("writing source allocation fo targets")
+print("writing source allocation for targets")
 target_sources_df.to_csv(os.path.join("data","processed", "target_source_allocation.csv"))
 fname_targets = os.path.join("data","processed", "world_targets.gpkg")
 targets = gpd.read_file(fname_targets, layer='world_targets')

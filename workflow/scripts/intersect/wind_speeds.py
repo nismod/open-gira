@@ -14,6 +14,7 @@ from shapely.geometry import shape, Polygon, Point
 import time
 import fiona
 from pathos.multiprocessing import ProcessPool, cpu_count
+from tqdm import tqdm
 
 
 # TODO: remove below lines once testing complete and solely on linux
@@ -119,12 +120,10 @@ def make_grid_points_nc2(country_gs, region):
 
     point_df = pd.DataFrame()
     tot = len(lats)*len(lons)
-    count = 0
-    for lat in lats:
+
+    for lat in tqdm(lats, desc='Manual Overlay', total=len(lats)):
         for lon in lons:
-            count += 1
-            if count%100 == 0:
-                print(round(100*count/tot,4))
+
             p = Point(lon, lat)
             bv = p.within(country_gs)
             if bv:
@@ -180,7 +179,7 @@ def TC_analysis(lat, lon, name, country, region, sample, idx, totpoints):
     TC['lon'][mask] = TC['lon']-360.0
 
     ### add unique number to cyclone data
-    TC['number_hur'] = TC["year"].astype(int).astype(str) +'_'+ TC["number"].astype(int).astype(str)
+    TC['number_hur'] = sample+"_"+TC["year"].astype(int).astype(str) +'_'+ TC["number"].astype(int).astype(str)
     TC['sample'] = str(sample)
 
     #print(name,country,region,sample)
@@ -250,6 +249,7 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     print("processing")
     grid_code = make_grid_points_nc2(shape(feature['geometry']), region)
 
+
     grid_code = grid_code.reset_index(drop = True)
     grid_code['ID_point'] = grid_code.index
 
@@ -266,7 +266,7 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
 
     nodesuse = max(1,cpu_count()-2)
     if "linux" not in sys.platform:
-        nodesuse = 1
+        nodesuse = 3
 
     print("running wind analysis...")
     pool = ProcessPool(nodes=nodesuse)
@@ -274,4 +274,11 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
 
     print("finalising")
     output_files = pd.concat(output)
-    output_files.to_csv(os.path.join("data","intersection", f'TC_c{code}_r{region}_s{sample}.csv'), index=False)
+    all_winds_path = os.path.join("data","intersection", "storm_data", "all_winds")
+    if not os.path.exists(all_winds_path):
+        os.makedirs(all_winds_path)
+    for nh_, csv_nh in output_files.groupby('number_hur'):  #
+        p = os.path.join(all_winds_path, f'TC_c{code}_r{region}_s{sample}_n{nh_}.csv')
+        csv_nh.to_csv(p, index=False)
+
+    #output_files.to_csv(os.path.join("data","intersection", f'TC_c{code}_r{region}_s{sample}.csv'), index=False)

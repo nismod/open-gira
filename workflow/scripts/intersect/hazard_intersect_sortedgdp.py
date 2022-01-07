@@ -24,7 +24,7 @@ if "linux" not in sys.platform:
 
     code = "PHL"
     region = "WP"
-    nh = "0_13"  #number of hurr to examine
+    nh = "0_0_0"  #number of hurr to examine
     sample = 0
     operationfind = True  # Includes the operational values of the target areas (makes about 38% to 55% slower)
 
@@ -88,8 +88,8 @@ print("- targets")
 targets = opentargets()
 
 print("- wind")
-windfile = os.path.join("data", "intersection", f'TC_c{code}_r{region}_s{sample}.csv')
-winds = pd.read_csv(windfile)
+windfile = os.path.join("data", "intersection", "storm_data", "all_winds", f'TC_c{code}_r{region}_s{sample}_n{nh}.csv')
+winds_ev = pd.read_csv(windfile)
 
 print("- gdp flow")
 with open(os.path.join("data","processed","edge_gdp_sorted.txt"), 'r') as sortedjson:
@@ -97,7 +97,6 @@ with open(os.path.join("data","processed","edge_gdp_sorted.txt"), 'r') as sorted
 
 
 print("\nFiltering...")
-winds_ev = winds[winds['number_hur'] == nh]  # winds for nh event
 
 winds_ev_filtered = applythreshold(winds_ev)
 
@@ -155,20 +154,21 @@ targets.to_file(os.path.join("data","intersection","storm_data", f"storm_{nh}", 
 today = date.today()
 
 stats_add = {'Storm ID':[nh], 'Country':[code], 'Storm Region':[region], 'Damages (gdp)':[totdamage], 'fraction of total targets affected':[len(targetsdamaged)/len(targets)], 'targets affected':[len(targetsdamaged)], 'targets operational 100%>op>=75%': [t_op(75,100)], 'targets operational 75%>op>=50%': [t_op(50,75)], 'targets operational 50%>op>=25%': [t_op(25,50)], 'targets operational 25%>op>=0%': [t_op(0.0001,25)], 'targets not operational (op=0%)': [t_op(-0.0001,0.0001)], 'sim_run_date':[today.strftime("%d/%m/%Y")]}
+
 damagescsvpath = os.path.join("data", "intersection","storm_data", f"storm_{nh}", f"storm_c{code}_r{region}_s{sample}_n{nh}.txt")
 with open(damagescsvpath, 'w') as stormfile:  # open (overwrite) file for each storm
     json.dump(stats_add, stormfile)
 
 
-# add to combined stats csv file, check if already exists and if already in the data (if so, remove and replace with newer)
-stat_csv_path = os.path.join("data", "intersection", "combined_storm_statistics.csv")
-if os.path.exists(stat_csv_path):
-    df_stat = pd.read_csv(stat_csv_path)
-    if nh in list(df_stat['Storm ID']):
-        df_stat = df_stat.drop(df_stat[df_stat['Storm ID']==nh].index)
-    df_add = pd.DataFrame(stats_add)
-    df_stat = df_stat.append(df_add, ignore_index=True)
-else:
-    df_stat = pd.DataFrame(stats_add)
-df_stat.fillna("re-run me", inplace=True)  # if any empty cells put N/A
-df_stat.to_csv(stat_csv_path, index=False)
+# # add to combined stats csv file, check if already exists and if already in the data (if so, remove and replace with newer)
+# stat_csv_path = os.path.join("data", "intersection", "combined_storm_statistics.csv")
+# if os.path.exists(stat_csv_path):
+#     df_stat = pd.read_csv(stat_csv_path)
+#     if nh in list(df_stat['Storm ID']):
+#         df_stat = df_stat.drop(df_stat[df_stat['Storm ID']==nh].index)
+#     df_add = pd.DataFrame(stats_add)
+#     df_stat = df_stat.append(df_add, ignore_index=True)
+# else:
+#     df_stat = pd.DataFrame(stats_add)
+# df_stat.fillna("re-run me", inplace=True)  # if any empty cells put N/A
+# df_stat.to_csv(stat_csv_path, index=False)

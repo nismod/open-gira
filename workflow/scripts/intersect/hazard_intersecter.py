@@ -77,8 +77,8 @@ def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_p
             raster_width,
             raster_height,
             raster_transform)
-        x = x % raster_width
-        y = y % raster_height
+        #x = x % raster_width # just in case x or y outside bounds then
+        #y = y % raster_height
         return [x, y]
     core_splits['cell_index'] = core_splits.geometry.progress_apply(get_indices)
 

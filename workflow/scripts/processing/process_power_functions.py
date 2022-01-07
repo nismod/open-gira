@@ -172,14 +172,22 @@ def get_lines(code=None):
 
     print("time for grid.gpkg processing: ",round((time.time() - s)/60, 2)," mins")
 
+
     gdf_world = gpd.GeoDataFrame(features)
 
     if code != None:  # preload
+        print(f'using {code}')
         with fiona.open(os.path.join("data","adminboundaries",f"gadm36_{code}.gpkg"), "r", layer=3) as src_code:
+
             code_geoms = []
             for feature in src_code:
                 code_geoms.append(shape(feature['geometry']))
+            print('create dataframe')
             code_geoms_gpd = gpd.GeoDataFrame({'geometry':code_geoms})
+        print("overlay")
+        xmin, ymin, xmax, ymax = code_geoms_gpd.bounds.values[0]
+        gdf_world = gdf_world.cx[xmin:xmax,ymin:ymax]  # speed up
+
         gdf_world = gdf_world.overlay(code_geoms_gpd, how='intersection')
 
         print(gdf_world)

@@ -83,12 +83,12 @@ edges['type'] = 'transmission'
 edges['id'] = targets.reset_index()['index'].apply(lambda i: f"edge_{i}")
 
 timer(start)
-print("writing to world_edges.gpkg")
-edges.to_file(
-    os.path.join("data","processed","world_edges.gpkg"),
-    driver='GPKG'
-)
-timer(start)
+# print("writing to world_edges.gpkg")
+# edges.to_file(
+#     os.path.join("data","processed","world_edges.gpkg"),
+#     driver='GPKG'
+# )
+# timer(start)
 
 print("processing edges GeoData")
 edges = edges[['id', 'source_id', 'type', 'geometry']]

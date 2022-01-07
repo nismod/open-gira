@@ -12,5 +12,5 @@ rule download_all:
         out_GDP,
         out_powerplant,
         out_gridfinder,
-        out_adminboundaries,
+        #out_adminboundaries,
         out_adminboundaries_codes,

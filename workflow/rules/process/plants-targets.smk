@@ -69,5 +69,6 @@ rule process_3:
         ),
     output:
         out_world_network_with_gdp,
+        os.path.join("data","processed","edge_gdp_sorted.txt"),
     shell:
         "python3 " + pyfile(3)
