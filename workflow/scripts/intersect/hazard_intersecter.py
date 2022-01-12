@@ -128,7 +128,7 @@ def write_empty_files(columns, slug, outputs_path):
 network_edges_path = os.path.join("data", "processed", "world_network_with_gdp.gpkg")
 attrs = 'id'
 hazard_data_path = os.path.join("data", "intersection", "test_int")
-hazard_csv = os.path.join("data", "intersection", "TC_PHL_WP_0.csv")
+hazard_csv = os.path.join("data", "intersection", "storm_data","all_winds", "TC_cPHL_rWP_s0_n0_0_0.csv")
 output_paths = os.path.join("data", "intersection", "test_int")
 
 main(network_edges_path, attrs, hazard_data_path, hazard_csv, output_paths)
