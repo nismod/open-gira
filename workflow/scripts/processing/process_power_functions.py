@@ -4,7 +4,7 @@ functions and data required to perform preprocessing
 
 
 from importing_modules import *
-import shapely.wkt as sw
+
 
 # TODO: remove below lines once testing complete and solely on linux
 def changedir():
@@ -18,13 +18,41 @@ def changedir():
 
 def idx(lat, lon):
     """Returns box index.
+    input:
+        lat: np array, list or float
+        lon: np array, list or float
+    returns
+        array
+
     boxlen - height and width of box
     lat_max - max lat value
     num_cols - number of cols (i.e. number of boxes across the equator
     lon_min - min lon value (lon_min can be negative)
+    tot_boxes - total number of boxes
 
     Note top left is (-,+), top right is (+,+), bottom right is (+,-) bottom left is (-,-)"""
-    return (-np.round(lat/boxlen+1/2)+lat_max/boxlen)*num_cols+np.round(lon/boxlen-1/2)-lon_min/boxlen
+    if type(lat) == list:
+        lat = np.array(lat)
+    if type(lon) == list:
+        lon = np.array(lon)
+    assert type(lat) == type(lon)
+    # preprocess
+    eps = 1e-8
+    lon = np.where(lon!=lon_min, lon, lon+eps)  # ensure correct box for left boundary
+    lon = np.where(lon!=lon_min+num_cols*boxlen, lon, lon-eps)  # ensure correct box for right boundary
+    lat = np.where(lat!=lat_max, lat, lat-eps)  # ensure correct box for top boundary
+    lat = np.where(lat!=lat_max-(tot_boxes/num_cols), lat, lat+eps)   # ensure correct box for bottom boundary
+
+    # compute
+    ret = (-np.round(lat/boxlen+1/2)+lat_max/boxlen)*num_cols+np.round(lon/boxlen-1/2)-lon_min/boxlen  # find indices
+
+
+    if ret.size == 1:
+        assert 0 <= ret <= tot_boxes-1
+    else:
+        assert 0 <= min(ret) and max(ret) <= tot_boxes-1  # check all indices
+
+    return ret
 
 
 def idxbox(lats, lons):
@@ -33,7 +61,7 @@ def idxbox(lats, lons):
     return [f"box_{int(elem)}" for elem in boxes]
 
 
-def adjbox(idx):
+def adj(idx):
     """Returns the indices of all boxes that touch the idx box (incl at corners). Note the top and bottom are cut offs but either left or right side is connected
     num_cols - number of cols (i.e. number of boxes across the equator
     tot_boxes - total number of boxes
@@ -80,6 +108,14 @@ def adjbox(idx):
         assert len(adjacent) == 8
     adjacent.sort()
     return adjacent
+
+
+def adjbox(box_idx):
+    """Returns a list of box_id values for the corresponding adjacent box"""
+    boxes = adj(box_idx)
+    return [f"box_{int(elem)}" for elem in boxes]
+
+
 #
 # def get_lines(code=None):
 #     """Read gridfinder lines"""

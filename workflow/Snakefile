@@ -18,7 +18,7 @@ COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 boxlen = 5  # width and height of boxes
 all_boxes = [f"box_{int(idx)}" for idx in range(0, int((180--180)*(90--90)/boxlen**2))]
-all_boxes = [f"box_{idx}" for idx in [1940, 1941, 1942]]
+all_boxes = [f"box_{idx}" for idx in [1797, 1798, 1799, 1869, 1870, 1871, 1941, 1942, 1943, 2013, 2014, 2015, 2085, 2086, 2087, 1720, 1721, 1722, 1792, 1793, 1794, 1864, 1865, 1866, 1936, 1937]]
 
 
 ##### load rules #####
@@ -37,6 +37,7 @@ include: "rules/process/targets.smk"
 include: "rules/process/split-gridfinder.smk"
 include: "rules/process/network.smk"
 include: "rules/process/connector.smk"
+include: "rules/process/assign-gdp.smk"
 include: "rules/process_all.smk"
 include: "rules/intersect/intsersect-storm.smk"
 include: "rules/slice.smk"

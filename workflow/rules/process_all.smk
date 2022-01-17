@@ -5,4 +5,4 @@
 
 rule process_all:
     input:
-        out_connector
+        out_assigngdp

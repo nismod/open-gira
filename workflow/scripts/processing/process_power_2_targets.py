@@ -10,7 +10,8 @@ from process_power_functions import changedir, idx
 if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
-    box_id = "box_1941"
+    box_id = "box_1789"
+    #box_id = "box_1941"
 
 else:  # linux
     box_id = sys.argv[1]
@@ -52,9 +53,13 @@ def combine(lsts):
 
 
 def get_target_areas(box_id):
-    world_boxes_path = os.path.join('data', 'processed', 'world_boxes.gpkg')
+    #world_boxes_path = os.path.join('data', 'processed', 'world_boxes.gpkg')
+    #gdf = gpd.read_file(world_boxes_path)
+    #box = gdf.loc[gdf.box_id==box_id]['geometry']
+
+    world_boxes_path = os.path.join('data', 'processed', 'all_boxes', box_id, f'geom_{box_id}.gpkg')
     gdf = gpd.read_file(world_boxes_path)
-    box = gdf.loc[gdf.box_id==box_id]['geometry']
+    box = gdf['geometry']
 
     geod = Geod(ellps="WGS84")
 
@@ -108,18 +113,6 @@ def get_population(box_id, targets):
         populations = [
             d['nansum']
             for d in tqdm(gen, desc=f"{code} population progress", total=len(targets.geometry))]
-
-        # populations = [
-        #     d['nansum']
-        #     for d in zonal_stats(
-        #         targets.geometry,
-        #         os.path.join("data","population",f"{code}_ppp_2020_UNadj_constrained.tif"),
-        #         stats=[],
-        #         add_stats={'nansum': np.nansum},  # count NaN as zero for summation
-        #         all_touched=True  # possible overestimate, but targets grid is narrower than pop
-        #     )
-        # ]
-        # below: find population density at centroid of target areas
         ss = time.time()
         population_density = point_query(
             targets.centroid,
@@ -139,8 +132,10 @@ def get_population(box_id, targets):
         pop_all = combine(pop_all)
         pop_d_all = combine(pop_d_all)
 
+    #pop_all = [np.nan if numpy.ma.is_masked(x)==True else x for x in pop_all]  # replace masked with nan
     targets['population'] = pop_all
     targets['population_density_at_centroid'] = pop_d_all
+    targets['population_density_at_centroid'].fillna(np.nan, inplace=True)  # change None to
     def estimate_population_from_density(row):
         if row.population is numpy.ma.masked:
             return row.area_km2 * row.population_density_at_centroid
@@ -186,10 +181,10 @@ if __name__ == '__main__':
 
     if len(targets_box) == 0:
         cols = ["area_km2", "centroid", "geometry", "population", "population_density_at_centroid", "gdp_pc", "gdp", "type"]
-        targets_box = gpd.GeoDataFrame(columns=cols)
-        targets_box.loc[0,:] = [None]*len(cols)
-        targets_box['box_id'] = box_id
-    else:
+        targets_box = gpd.GeoDataFrame(columns=cols+['box_id'])
+        #targets_box.loc[0,:] = [None]*len(cols)
+        #targets_box['box_id'] = box_id
+    if len(targets_box) != 0:
         #print("getting target population")
         targets_box = get_population(box_id, targets_box)
 

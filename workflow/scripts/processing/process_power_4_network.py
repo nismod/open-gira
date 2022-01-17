@@ -19,7 +19,7 @@ from importing_modules import *
 if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
-    box_id = "box_1941"
+    box_id = "box_1940"
 
 else:  # linux
     box_id = sys.argv[1]
@@ -52,6 +52,8 @@ if __name__ == '__main__':
     plants['geometry'] = plants['geometry'].apply(wkt.loads)
     plants = gpd.GeoDataFrame(plants)
 
+
+
     targets['geometry'] = targets['geometry'].apply(wkt.loads)
     targets = gpd.GeoDataFrame(targets)
 
@@ -75,7 +77,7 @@ if __name__ == '__main__':
 
     targets = targets.reset_index().copy()
     targets['id'] = [f"target_{i}_{box_id}" for i in range(len(targets))]
-    targets['connected'] = False  # bool, will be set to true if edges available to be connected to
+    #targets['connected'] = False  # bool, will be set to true if edges available to be connected to
 
     timer(start)
 

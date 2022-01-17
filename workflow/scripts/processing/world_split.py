@@ -69,6 +69,9 @@ if __name__ == '__main__':
         if not os.path.exists(all_boxes_path):
             os.makedirs(all_boxes_path)
 
-    print('writing to gpkg')
+    for box_id, gdf_box in tqdm(gdf_area.groupby('box_id'), desc='saving each box', total=len(gdf_area)):  # separately so that world_boxes.gpkg can be opened on QGIS without having to rerun snakemake
+        gdf_box.to_file(os.path.join('data', 'processed', 'all_boxes', box_id, f'geom_{box_id}.gpkg'), driver='GPKG')
+
+    print('writing full to gpkg')
     gdf_area.to_file(os.path.join('data', 'processed', 'world_boxes.gpkg'), driver = 'GPKG')
 

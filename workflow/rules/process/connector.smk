@@ -7,7 +7,7 @@ out_connector = expand(os.path.join("data","processed","all_boxes", "{box_id}", 
 
 rule process_connector:
     input:
-        #os.path.join('data', 'processed', 'all_boxes', "{box_id}", 'network_{box_id}.gpkg'),
+        expand(os.path.join('data', 'processed', 'all_boxes', "{box_id}", 'network_{box_id}.gpkg'), box_id=all_boxes),
         os.path.join('data', 'processed', 'world_boxes_metadata.txt'),
     output:
         out_connector,
