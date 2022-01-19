@@ -34,19 +34,20 @@ jobs:
         make
         cd ../..
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Set up Python (Miniconda)
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: '3.8'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        auto-update-conda: true
+        python-version: '3.9'
+        environment-file: workflow/envs/environment.yml
 
     - name: Test with pytest
+      # Bash shells do not use ~/.profile or ~/.bashrc so these shells
+      # need to be explicitely declared as shell: bash -l {0} on steps
+      # that need to be properly activated. See
+      # https://github.com/marketplace/actions/setup-miniconda#IMPORTANT
+      shell: bash -l {0}
       run: |
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
-        pip install pytest
         python -m pytest tests
