@@ -1,15 +1,15 @@
 # Configuration
 
-The pipeline is configured from `config/config.yaml` file. If you
-cloned the GitHub repository, this file does not exist yet and you
-will have to create it. We provide a template config file
-`config/config_template.yml` that you can modify to this purpose.
+The pipeline is configured from `config/config.yaml` file. 
+We provide a basic config file `config/config.yml` with explanatory comments that you can modify.
 
 The configuration file is meant to specify the location of input data
 and outputs, as well as initial OSM dataset and its slicing.
 
 - `data_dir`: Relative or absolute path to directory containing initial OSM dataset.
 - `hazard_data_dir`: Relative or absolute path to directory containing aqueduct data files.
+- `output_dir`: Relative or absolute path where the output should be placed. Will be created if it does not exist.
+
 - `hazard_csv`: Name of CSV file describing aqueduct dataset. Example:
 
   |key|climate\_scenario|model|year|return\_period|filename|
@@ -18,9 +18,10 @@ and outputs, as well as initial OSM dataset and its slicing.
   |1|inunriver\_rcp4p5\_00000NorESM1-M\_2030\_rp00005|rcp4p5|NorESM1-M|2030|5|inunriver\_rcp4p5\_00000NorESM1-M\_2030\_rp00005.tif|
   |...|...|...|...|...|...|
 
-  Filename should be relative to `<aqueduct_dir>`.
-- `dataset`: Name of initial OpenStreetMap dataset, _e.g._ `spain-latest`.
+  Filename should be relative to `<hazard_data_dir>`.
+- `dataset`: Name of initial OpenStreetMap dataset, _e.g._ `tanzania-latest`.
 - `edge_attrs`: Edge attributes list for network/hazard intersection.
+- `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
 
 Modifying the configuration file will *not* trigger a re-run of the pipeline by
 snakemake. If you wish to rerun the whole pipeline after altering the

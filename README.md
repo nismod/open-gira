@@ -63,14 +63,24 @@ Workflow steps are tested using a small sample dataset. Run:
 python -m pytest tests
 ```
 
+## Downloading datasets
+
+New users can follow through the remaining steps in this guide using the Tanzania OpenStreetMap data, available from 
+[https://download.geofabrik.de/africa/tanzania.html](https://download.geofabrik.de/africa/tanzania.html) (~500MB).
+This file should be placed in ./data.
+
+There should also be a hazard file in the location specified by `hazard_csv` in `config/config.yml`.
+For an initial run, users can copy the files in `./tests/test_aqueduct_data` to the `<hazard_csv>` location 
+(by default `./data/aqueduct`).
 
 ## Running the pipeline
 
-Start by making your own copy of `config/config_template.yml` named
-`config/config.yml`. You can edit the latter to set the target OSM
+The snakemake configuration details are in `config/config.yml`. 
+You can edit this to set the target OSM
 dataset, number of slices and hazard data location. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
 for details on the configuration variables.
+For new users, the default values should suffice.
 
 The second step is to create a configuration file for `osmium
 extract`, describing the bounding box of each OSM dataset slice.  This
@@ -85,6 +95,7 @@ files for `osmium extract`. A common task is to slice the OSM dataset
 into areas of equal height and width, see [Automatically generating
 the osmium extract confgiuration
 file.](https://github.com/nismod/open-gira/tree/update_readme#step-by-step-description-of-the-pipeline)
+New users should follow those steps to create `./tanzania-latests.json`.
 
 You can then run the exposure analysis pipeline automatically using
 snakemake, like so
@@ -113,11 +124,12 @@ A common task is to slice the OSM dataset into areas of equal height
 and width. Script `scripts/prepare-extracts.py` automates this
 process, given a JSON file describing the original dataset. 
 
-Say that you want to slice `europe-latest.osm.pbf` into 6 slices of equal
+Say that you want to slice `tanzania-latest.osm.pbf` into 6 slices of equal
 height and equal width. First, write a `osmium extract` config file
-describing the `europe-latest` as a single extract:
+describing the `tanzania-latest` as a single extract:
 
-```json
+```json5
+// ./tanzania-latest.json
 {
     "directory": "./data",
     "extracts": [
@@ -128,8 +140,8 @@ describing the `europe-latest` as a single extract:
                 -1.175,
                 51.805
             ],
-            "output": "europe-latest.osm.pbf"
-        },
+            "output": "tanzania-latest.osm.pbf"
+        }
 	]
 }
 ```
@@ -138,10 +150,10 @@ Next, use `prepare-extracts.py` to generate the `osmium extract`
 configuration file for the 6 slices. For instance:
 
 ```
-python scripts/prepare-extracts.py europe-latest.json --width 3 --height 2
+python prepare-extracts.py tanzania-latest.json --width 3 --height 2
 ```
 
-This generates a file `./data/europe-latest-extracts.json` describing
+This generates a file `./data/tanzania-latest-extracts.json` describing
 the 6 slices to be created by `osmium extract`.
 
 ## Step-by-step description of the pipeline
@@ -153,22 +165,22 @@ associating road splits to corresponding flood levels.
 The pipeline consists in the following steps:
 
 1. The initial OSM dataset is sliced into areas of equal size
-   (`results/slices/<dataset>-slice<N>.osm.pbf`).
+   (`<output_dir>/slices/<dataset>-slice<N>.osm.pbf`).
 2. Filters down each OSM data slice keeping only relevant tags for road links
    (using `osmium tags-filter`. This results in files
-   `results/filtered/<dataset>-slice<N>.highway-core.osm.pbf`.
+   `<output_dir>/filtered/<dataset>-slice<N>.highway-core.osm.pbf`.
 3. Each filtered OSM dataset is then converted to the GeoParquet data format,
-   resulting in `results/geoparquet-slice<N>.highway-core.geoparquet`.
+   resulting in `<output_dir>/geoparquet-slice<N>.highway-core.geoparquet`.
 4. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
    raster data files. The network/hazard intersection results in data
-   `results/splits/<dataset>-slice<N>.highway-core.splits.geoparquet` describing
+   `<output_dir>/splits/<dataset>-slice<N>.highway-core.splits.geoparquet` describing
    roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
 5. Split data (one file per slice, see step 1) is then joined into a unique
    dataset describing splits and associated flood level values for the whole
    original OSM dataset. This results in
-   `results/<dataset>.highway-core.splits.geoparquet`.
+   `<output_dir>/<dataset>.highway-core.splits.geoparquet`.
 
 ### Keeping things tidy
 

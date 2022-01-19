@@ -16,3 +16,6 @@ results/*
 
 # Tester files
 tester/*
+
+# IDE
+.idea
