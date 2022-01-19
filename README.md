@@ -54,12 +54,13 @@ instructions there. Tests run with versions:
 - osmium-tool v1.13.2
 - libosmium v2.17.1
 
+
 ## Running tests
 
 Workflow steps are tested using a small sample dataset. Run:
 
 ```
-python -m pytest .tests
+python -m pytest tests
 ```
 
 
@@ -179,3 +180,8 @@ snakemake clean
 
 Note that this will *not* remove the final data files
 `<output_dir>/<dataset>.highway-core.splits.[geoparquet, parquet]`.
+
+Snakemake has utilities to improve the workflow code quality:
+- `snakemake --lint` suggests improvements and fixes for common problems
+- `snakefmt .` reformats files according to a code style guide, similar to `black` for Python code.
+
