@@ -5,6 +5,7 @@ configfile: "config/config.yaml"
 
 
 DATA_DIR = config["data_dir"]
+OUTPUT_DIR = config["output_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
@@ -37,12 +38,12 @@ include: "rules/join_data.smk"
 
 rule all:
     input:
-        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{OUTPUT_DIR}/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
 
 
 rule clean:
     shell:
         """
-        rm -rf data/slices &&
-        rm -rf outputs/slices
+        rm -rf {DATA_DIR}/slices &&
+        rm -rf {OUTPUT_DIR}/slices
         """
