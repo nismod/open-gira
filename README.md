@@ -150,7 +150,7 @@ Next, use `prepare-extracts.py` to generate the `osmium extract`
 configuration file for the 6 slices. For instance:
 
 ```
-python prepare-extracts.py tanzania-latest.json --width 3 --height 2
+python prepare-extracts.py tanzania-latest.json 3
 ```
 
 This generates a file `./data/tanzania-latest-extracts.json` describing
