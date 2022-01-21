@@ -1,7 +1,7 @@
 # Input data and output locations
 data_dir: 'data'
 hazard_data_dir: 'tests/test_aqueduct_data'
-output_dir: 'outputs'
+output_dir: 'results'
 
 # Directory <aqueduct_dir> is expected to contain a csv file
 # <datafiles_list> describing the raster data files.
