@@ -13,6 +13,8 @@ import os
 from shapely.geometry import shape, Polygon, Point
 import time
 import fiona
+import json
+from shapely.geometry import box
 from pathos.multiprocessing import ProcessPool, cpu_count
 from tqdm import tqdm
 
@@ -23,15 +25,12 @@ if "linux" not in sys.platform:
     os.chdir(path)
     #list_years = [0,1,2,3,4,5,6,7,8,9]
     sample = 0  # smaller sample size for testing
-    code = "PHL"
-    region = "WP"
+    region = "SP"
 
 
 else:  # linux
-    code = sys.argv[1]
-    region = sys.argv[2]
-    sample = sys.argv[3]
-
+    region = sys.argv[1]
+    sample = sys.argv[2]
 
 
 def t(num, t):
@@ -45,32 +44,32 @@ def return_lat_lon_bound(geometry_polygon):
     return np.min(lon),np.max(lon),np.min(lat),np.max(lat)
 
 
-def make_grid_points(country_geodata,res = 0.25):
+def make_grid_points(box_id_geodata,res = 0.25):
     """By J Verschuur, for equispaced grid with res as element grid width."""
-    country_df = country_geodata.explode(index_parts=True)  # added index_parts=True due to FutureWarning
+    box_id_df = box_id_geodata.explode(index_parts=True)  # added index_parts=True due to FutureWarning
     lon_min_list = []
     lon_max_list = []
     lat_min_list = []
     lat_max_list = []
-    for i in range(0,len(country_df)):
-        lon_min,lon_max,lat_min,lat_max = return_lat_lon_bound(country_df.iloc[i].geometry)
+    for i in range(0,len(box_id_df)):
+        lon_min,lon_max,lat_min,lat_max = return_lat_lon_bound(box_id_df.iloc[i].geometry)
         lon_min_list.append(lon_min)
         lon_max_list.append(lon_max)
         lat_min_list.append(lat_min)
         lat_max_list.append(lat_max)
-    country_df['lon_min'] =  lon_min_list
-    country_df['lon_max'] =  lon_max_list
-    country_df['lat_min'] =  lat_min_list
-    country_df['lat_max'] =  lat_max_list
+    box_id_df['lon_min'] =  lon_min_list
+    box_id_df['lon_max'] =  lon_max_list
+    box_id_df['lat_min'] =  lat_min_list
+    box_id_df['lat_max'] =  lat_max_list
     ### find the max and min
-    min_lat_c = country_df['lat_min'].min()
-    max_lat_c = country_df['lat_max'].max()
-    min_lon_c = country_df['lon_min'].min()
-    max_lon_c = country_df['lon_max'].max()
+    min_lat_c = box_id_df['lat_min'].min()
+    max_lat_c = box_id_df['lat_max'].max()
+    min_lon_c = box_id_df['lon_min'].min()
+    max_lon_c = box_id_df['lon_max'].max()
 
     #### get the number of grids, assume a grid cell is around 30km, or around 0.25 degree
     vertical_grid = np.ceil((max_lat_c - min_lat_c)/res)  ### round upwards
-    horizontal_grid = np.ceil((max_lon_c - min_lon_c)/res) ### round upwards
+    horizontal_grid = np.ceil((max_lon_c - min_lon_c)/res)  ### round upwards
 
     delta_vertical = (max_lat_c - min_lat_c)/vertical_grid
     delta_horizontal = (max_lon_c - min_lon_c)/horizontal_grid
@@ -90,8 +89,7 @@ def make_grid_points(country_geodata,res = 0.25):
     return gdf
 
 
-
-def make_grid_points_nc2(country_gs, region):
+def make_grid_points_nc2(box_id, region):
     """Updated grid point maker, uses return period maps
     Performs manual overlay, remember to not do this later then."""
 
@@ -100,7 +98,12 @@ def make_grid_points_nc2(country_gs, region):
     lons = np.array(ds['lon'])
     lats = np.array(ds['lat'])
 
-    lon_min, lat_min, lon_max, lat_max = country.bounds.values[0]
+    box_gs = gpd.read_file(os.path.join("data", "processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"))
+    lon_min, lat_min, lon_max, lat_max = box_gs.bounds.values[0]
+
+    lon_diff = lons[1]-lons[0]
+    lat_diff = lats[1]-lats[0]
+
     lons = lons[lons>lon_min]
     lons = lons[lons<lon_max]
     lats = lats[lats>lat_min]
@@ -109,28 +112,43 @@ def make_grid_points_nc2(country_gs, region):
     assert len(lons) != 0
     assert len(lats) != 0
 
-    ## Old method below ##
-    # point_df = pd.DataFrame()
-    # for lat in lats:
-    #     for lon in lons:
-    #         point_df_add = pd.DataFrame({'longitude':[lon],'latitude':[lat]})
-    #         point_df = pd.concat([point_df,point_df_add])
-    # gdf = gpd.GeoDataFrame(point_df, geometry=gpd.points_from_xy(point_df.longitude, point_df.latitude))
-    ## ##
-
     point_df = pd.DataFrame()
     tot = len(lats)*len(lons)
 
-    for lat in tqdm(lats, desc='Manual Overlay', total=len(lats)):
-        for lon in lons:
+    box_infrastructure = gpd.read_file(os.path.join("data", "processed", "all_boxes", box_id, f"gridfinder_{box_id}.gpkg"))
 
-            p = Point(lon, lat)
-            bv = p.within(country_gs)
-            if bv:
+
+    for lat in tqdm(lats, desc='Manual Overlay', total=len(lats)):
+    #for lat in lats:
+        for lon in lons:
+            if len(box_infrastructure[box_infrastructure['geometry'].within(box(lon-lon_diff/2, lat-lat_diff/2, lon+lon_diff/2, lat+lat_diff/2))]) !=0:  # if there are elemetns of infrastructure within box, keep, check this length, if 0 then nothing there, don't include, else include
                 point_df_add = pd.DataFrame({'longitude':[lon],'latitude':[lat]})
                 point_df = pd.concat([point_df,point_df_add])
-    gdf = gpd.GeoDataFrame(point_df, geometry=gpd.points_from_xy(point_df.longitude, point_df.latitude))
-    return gdf
+    try:
+        gdf = gpd.GeoDataFrame(point_df, geometry=gpd.points_from_xy(point_df.longitude, point_df.latitude))
+        return gdf
+    except:  # no points at all
+        return []
+
+
+
+def create_grid_box(box_id, idx, totboxes):
+    print(f"{idx}/{totboxes}")
+
+    ### create grid
+    grid_box_indiv = make_grid_points_nc2(box_id, region)
+    if len(grid_box_indiv) != 0:  # exclude empty boxes
+        grid_box_indiv = grid_box_indiv.reset_index(drop = True)
+        grid_box_indiv['ID_point'] = grid_box_indiv.index
+
+        ### extract points inside
+        grid_box_indiv['box_id'] = box_id
+
+        grid_box_indiv['region'] = region
+
+        grid_box_indiv['sample_num'] = str(sample)
+        return grid_box_indiv
+
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -164,7 +182,8 @@ def holland_wind_field(r,wind,pressure,pressure_env,distance,lat):
     return Vg
 
 
-def TC_analysis(lat, lon, name, country, region, sample, idx, totpoints):
+def TC_analysis(lat, lon, name, box_id, region, sample, idx, totpoints):
+    print(f"{idx}/{totpoints}")
     list_regions = ['NI','SA','NA','EP','SI','SP','WP']
     environmental_pressure = [1006.5,1014.1,1014.1,1008.8,1010.6,1008.1,1008.3]
     environ_df = pd.DataFrame({'region':list_regions,'pressure':environmental_pressure})
@@ -183,8 +202,8 @@ def TC_analysis(lat, lon, name, country, region, sample, idx, totpoints):
     TC['sample'] = str(sample)
 
     #print(name,country,region,sample)
-    if "linux" not in sys.platform:  # print on windows (when testing)
-        print(str(idx)+"/"+str(totpoints), "--", sample, "-", lat, lon, name, country, region)
+    # if "linux" not in sys.platform:  # print on windows (when testing)
+    #     print(str(idx)+"/"+str(totpoints), "--", sample, "-", lat, lon, name, box_id, region)
 
     ### background environmental pressure
     pressure_env = environ_df[environ_df['region']==str(region)]
@@ -222,7 +241,7 @@ def TC_analysis(lat, lon, name, country, region, sample, idx, totpoints):
     TC_sample_maximum = TC_sample_maximum.merge(above20ms , on = 'number_hur', how = 'outer').replace(np.nan,0)
     TC_sample_maximum = TC_sample_maximum.merge(above15ms , on = 'number_hur', how = 'outer').replace(np.nan,0)
     TC_sample_maximum['basin'] = str(region)
-    TC_sample_maximum['country'] = str(country)
+    TC_sample_maximum['box_id'] = str(box_id)
     TC_sample_maximum['ID_point'] = str(name)
 
     # below 3 lines are useful for testing but too computationally expensive for full data set
@@ -235,42 +254,40 @@ def TC_analysis(lat, lon, name, country, region, sample, idx, totpoints):
 
 
 if __name__ == '__main__':  # for windows (due to parallel processing)
-    print("opening files")
-
-    grid_code_path = os.path.join("data","intersection", f"grid_{code}.gpkg")
-
-    with fiona.open(os.path.join("data","adminboundaries", f"gadm36_{code}.gpkg"), "r", layer=3) as src:
-        code_geoms = []
-        for feature in src:
-            code_geoms.append(shape(feature['geometry']))
-        country = gpd.GeoDataFrame({'geometry':code_geoms})
-
-    ### create grid
-    print("processing")
-    grid_code = make_grid_points_nc2(shape(feature['geometry']), region)
-
-
-    grid_code = grid_code.reset_index(drop = True)
-    grid_code['ID_point'] = grid_code.index
-
-    ### extract points inside
-    grid_code['country'] = code
-
-    grid_code['region'] = region
-
-    grid_code['sample_num'] = str(sample)
-
-    grid_code.to_file(grid_code_path,driver = 'GPKG')  # save
-
-    totpoints = [len(grid_code)]*len(grid_code)  # for console progress purposes
-
     nodesuse = max(1,cpu_count()-2)
     if "linux" not in sys.platform:
-        nodesuse = 3
+        nodesuse = 8
+
+
+    with open(os.path.join('data', 'processed', 'regions', f'{region}_boxes.txt'), 'r') as src:
+        box_ids = json.load(src)
+    totboxes = [len(box_ids)]*len(box_ids)
+    idx_bxs = list(range(len(totboxes)))
+
+    # created_gdf = False
+    #
+    #     if not created_gdf:
+    #         grid_box = grid_box_indiv
+    #         created_gdf = True
+    #         continue
+    #
+    #     grid_box = grid_box.append(grid_box_indiv)
+
+
+    pool_grid = ProcessPool(nodes=nodesuse)
+    output_grid = pool_grid.map(create_grid_box, box_ids, idx_bxs, totboxes)
+    grid_box = pd.concat(output_grid).reset_index(drop=True)
+
+
+
+    totpoints = [len(grid_box)]*len(grid_box)  # for console progress purposes
+    idx_pts = list(range(len(totpoints)))
+
+
 
     print("running wind analysis...")
     pool = ProcessPool(nodes=nodesuse)
-    output = pool.map(TC_analysis, grid_code.latitude, grid_code.longitude, grid_code.ID_point, grid_code.country, grid_code.region, grid_code.sample_num, grid_code.ID_point, totpoints)#, grid_code.idx)
+    output = pool.map(TC_analysis, grid_box.latitude, grid_box.longitude, grid_box.ID_point, grid_box.box_id, grid_box.region, grid_box.sample_num, idx_pts, totpoints)#, grid_code.idx)
 
     print("finalising")
     output_files = pd.concat(output)
@@ -278,7 +295,7 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     if not os.path.exists(all_winds_path):
         os.makedirs(all_winds_path)
     for nh_, csv_nh in output_files.groupby('number_hur'):  #
-        p = os.path.join(all_winds_path, f'TC_c{code}_r{region}_s{sample}_n{nh_}.csv')
+        p = os.path.join(all_winds_path, f'TC_r{region}_s{sample}_n{nh_}.csv')
         csv_nh.to_csv(p, index=False)
 
     #output_files.to_csv(os.path.join("data","intersection", f'TC_c{code}_r{region}_s{sample}.csv'), index=False)

@@ -19,7 +19,7 @@ include_paths = False  # if True will include paths running through edge (in the
 if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
-    box_id = "box_1942"
+    box_id = "box_1941"
     box_id = "box_1864"
 
 else:
@@ -118,12 +118,13 @@ def combine_networks(box_id_orig):  # NOTE THAT THIS WILL HAVE TO RE-WORK OUT AL
                     if test_box_conn in conn_comp:  # if it contains a connection to base_box
                         print(f'Found connections to base_box')
                         test_components_keep+=conn_comp  # add it to the list
-            # todo include which get added and make sure no duplciate check see checked list
+
             test_nodes_keep = test_nodes[test_nodes['id'].isin(test_components_keep)]  # keep only subgraphs connected to base_box
             test_edges_keep = test_edges[np.maximum(test_edges['from_id'].isin(test_components_keep), test_edges['to_id'].isin(test_components_keep))]  # keep only subgraphs connected to base_box either from_id or to_id (note max(True, False) = True)
 
             nodes = nodes.append(test_nodes_keep)  # add to network
             edges = edges.append(test_edges_keep)  # add to network
+            
 
             test_box_base_connections_keep = [item for item in test_box_base_connections if item[5] in list(nodes['id'])]  # only keen if in the subgraph
 
@@ -261,8 +262,10 @@ def assign_component_gdp(G, component):
 
     edge_gdp_indiv = dict()
 
+    print(f"{box_id} -- Sources: {len(sources)}, targets: {len(targets)}")
     if len(sources) and len(targets):
-        for u in sources.itertuples():
+        #for u in sources.itertuples():
+        for u in tqdm(sources.itertuples(), desc='sources', total=len(sources)):
             paths = nx.shortest_path(c, source=u.id)
             for v in targets.itertuples():
                 path = paths[v.id]  # path is the route from source to target
@@ -320,7 +323,7 @@ node_gdp, edge_gdp, comp_path, target_sources_df, edge_gdp_sorted = assign_node_
 print(f'time: {round((time.time()-s)/60,2)}')
 
 
-print("saving edge_gdps_sorted")
+print(f"{box_id} -- saving edge_gdps_sorted")
 edge_gdp_sorted_copy = edge_gdp_sorted.copy()
 for dict_entry in edge_gdp_sorted_copy:
     if dict_entry not in links_in_base_box:
@@ -381,7 +384,7 @@ if export_full_subgraph == True:
 
 if len(edges) != 1 and edges['id'].iloc[0] != None:
     edges = edges[edges['orig']==True]  # keep only in the base box
-if len(nodes) != 1 and nodes['id'].iloc[0] == None:
+if len(nodes) != 1 and nodes['id'].iloc[0] != None:
     nodes = nodes[nodes['orig']==True]  # keep only in the base box
 edges.drop('orig', axis=1, inplace=True)
 nodes.drop('orig', axis=1, inplace=True)
@@ -400,4 +403,4 @@ edges.to_file(
     layer='edges',
     driver='GPKG')
 
-print(f"\nTime to run file: {(time.time() - s)/60:0.2f} minutes")
+print(f"\n{box_id} -- Time to run file: {(time.time() - s)/60:0.2f} minutes")

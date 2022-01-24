@@ -18,7 +18,7 @@ COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 boxlen = 5  # width and height of boxes
 all_boxes = [f"box_{int(idx)}" for idx in range(0, int((180--180)*(90--90)/boxlen**2))]
-all_boxes = [f"box_{idx}" for idx in [1797, 1798, 1799, 1869, 1870, 1871, 1941, 1942, 1943, 2013, 2014, 2015, 2085, 2086, 2087, 1720, 1721, 1722, 1792, 1793, 1794, 1864, 1865, 1866, 1936, 1937]]
+all_boxes = ["box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1719", "box_1720", "box_1721", "box_1722", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014"]
 
 
 ##### load rules #####

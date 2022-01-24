@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     points_gdf = gpd.GeoDataFrame({'geometry': points})
     gdf_area = points_gdf.buffer(boxlen/2, cap_style=3)
-    gdf_area = gpd.GeoDataFrame({"geometry":gdf_area,'box_id':[f"box_{idx_}" for idx_ in range(len(gdf_area))]})
+    gdf_area = gpd.GeoDataFrame({"geometry":gdf_area,'box_id':[f"box_{idx_}" for idx_ in range(len(gdf_area))]},crs="EPSG:4326")
 
     print('loading country layer=0')
     with fiona.open(os.path.join("data","adminboundaries",f"gadm36_levels.gpkg"), "r", layer=0) as src_code:
