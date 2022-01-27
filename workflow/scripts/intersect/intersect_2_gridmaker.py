@@ -68,7 +68,7 @@ def make_grid_points_nc2(box_id, region, ps):
 
     for lat in tqdm(lats, desc=ps+' Manual Overlay', total=len(lats)):
     #for lat in lats:
-        for lon in lons:  # TODO check line below - option is to save which geoms are within then use this later rather than overlay again
+        for lon in lons:  # another option is to save which geoms are within then use this later rather than overlay again
             if len(box_infrastructure[box_infrastructure['geometry'].intersects(box(lon-squarehalfwidth, lat-squarehalfwidth, lon+squarehalfwidth, lat+squarehalfwidth))]) !=0:  # if there are elemetns of infrastructure within/intersects box, keep, check this length, if 0 then nothing there, don't include, else include
                 point_df_add = pd.DataFrame({'longitude':[lon],'latitude':[lat]})
                 point_df = pd.concat([point_df,point_df_add])
@@ -121,6 +121,6 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     grid_boxes_area = grid_boxes.assign(geometry=grid_boxes_area_series)
 
     grid_boxes_area['centroid'] = grid_boxes_area['centroid'].astype(str)
-    grid_boxes_area.to_file(os.path.join("data", "intersection", "regions", f"{region}_grid.gpkg"),driver = 'GPKG')  # TODO
+    grid_boxes_area.to_file(os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg"),driver = 'GPKG')  # TODO
 
 

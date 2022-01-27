@@ -73,7 +73,7 @@ for nh in winds_ev_all['number_hur'].unique():
     box_id_affected = winds_ev_filtered['box_id'].unique()
 
     print("- grid")
-    grid_data = gpd.read_file(os.path.join("data", "intersection", "regions", f"{region}_grid.gpkg"))
+    grid_data = gpd.read_file(os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg"))
     #grid_data['centroid'] = [sw.loads(x) for x in grid_data['centroid']]
 
     polys_affected = grid_data[grid_data['ID_point'].isin(ID_affected)]
@@ -110,12 +110,13 @@ for nh in winds_ev_all['number_hur'].unique():
         for edge in tqdm(box_edges_affected['link'], desc='affected edges', total=len(box_edges_affected)):
             s1 = time.time()
 
-            edge_dict = sorted_gdp[edge]  # returns a dictionary of all source_sink paths running through that edge  (could speed up by using component dictionaries)
+
+            edge_dict = sorted_gdp[edge]  # returns a dictionary of all source_sink paths running through that edge
             s2 = time.time()
-            #print('1', s2-s1)
+
             dmg = [v for route_id_, v in edge_dict.items() if route_id_ not in routeid_damaged]  # count gdp damage if that source_sink hasnt already been damaged (to avoid double counting)
             s3 = time.time()
-            #print('2', s3-s2, ",dmg len", len(dmg))
+
             if operationfind:  # if the operation value of the target is desired
                 tgdp = [[route_id_[-route_id_[::-1].find('_'):], v] for route_id_, v in edge_dict.items() if route_id_ not in routeid_damaged]  # list of lists containing [targetnumber, gdp] only if not already damaged
                 tdam = list(set([t[0] for t in tgdp]))
@@ -131,7 +132,7 @@ for nh in winds_ev_all['number_hur'].unique():
 
             totdamage += sum(dmg)
             s4 = time.time()
-            #print('3', s4-s3, ",rd len", len(routeid_damaged))
+
         edges_affected = edges_affected.append(box_edges_affected)
         targets = targets.append(box_targets)
 

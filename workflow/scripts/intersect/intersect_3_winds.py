@@ -157,7 +157,7 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     if "linux" not in sys.platform:
         nodesuse = 7
 
-    grid_box = gpd.read_file(os.path.join("data", "intersection", "regions", f"{region}_grid.gpkg"))
+    grid_box = gpd.read_file(os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg"))
 
     totpoints = [len(grid_box)]*len(grid_box)  # for console progress purposes
     idx_pts = list(range(len(totpoints)))
