@@ -2,7 +2,6 @@ import json
 import geopandas as gpd
 import numpy as np
 from shapely.geometry import Point, shape
-import geoparquet as gpq
 import sys
 import os
 import fiona
@@ -46,6 +45,7 @@ if __name__ == '__main__':
         print('create dataframe')
         code_geoms_gpd = gpd.GeoDataFrame({'geometry':code_geoms, 'code': code_GIDs})
 
+    print(f"country length: {len(code_geoms_gpd)}")
     print('Country for each box...')
     box_country_dict = {}
     for jj, box in tqdm(enumerate(gdf_area['geometry']), desc='intersecting countries', total=len(gdf_area)):  # find countries that are in the boxes

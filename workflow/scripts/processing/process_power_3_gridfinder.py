@@ -3,7 +3,6 @@ import fiona, time, os, sys
 import geopandas as gpd
 from tqdm import tqdm
 from shapely.geometry import shape
-import geoparquet as gpq
 import json
 import numpy as np
 

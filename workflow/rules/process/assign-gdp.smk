@@ -18,4 +18,4 @@ rule process_assigngdp:
         os.path.join("data","processed","all_boxes", "{box_id}", "edge_gdp_sorted_{box_id}.txt"),
         os.path.join("data","processed", "all_boxes", "{box_id}", "targets_with_allocation_{box_id}.gpkg")
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_6_assigngdp.py')+" {wildcards.box_id}"
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_6_assigngdp.py')+" {wildcards.box_id}"

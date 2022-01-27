@@ -11,4 +11,4 @@ rule world_splitter:
         all_box_geoms,
         os.path.join(DATA_DIR, 'processed', 'world_boxes_metadata.txt'),
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'world_split.py')+f" {boxlen}"
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'world_split.py')+f" {boxlen}"

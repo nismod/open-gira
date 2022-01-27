@@ -12,4 +12,4 @@ rule process_connector:
     output:
         out_connector,
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_5_connector.py')
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_5_connector.py')

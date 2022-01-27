@@ -21,4 +21,4 @@ rule process_target_box:
     output:
         os.path.join(DATA_DIR, 'processed', 'all_boxes', "{box_id}", "targets_{box_id}.csv"),
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_2_targets.py')+" {wildcards.box_id}"
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_2_targets.py')+" {wildcards.box_id}"

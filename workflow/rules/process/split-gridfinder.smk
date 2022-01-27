@@ -12,4 +12,4 @@ rule process_gridfinder:
     output:
         out_gridfinder,
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_3_gridfinder.py')
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_3_gridfinder.py')

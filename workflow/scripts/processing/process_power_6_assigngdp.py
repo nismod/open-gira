@@ -20,7 +20,7 @@ if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
     box_id = "box_1941"
-    box_id = "box_1864"
+    box_id = "box_1431"
 
 else:
     box_id = sys.argv[1]
@@ -124,7 +124,7 @@ def combine_networks(box_id_orig):  # NOTE THAT THIS WILL HAVE TO RE-WORK OUT AL
 
             nodes = nodes.append(test_nodes_keep)  # add to network
             edges = edges.append(test_edges_keep)  # add to network
-            
+
 
             test_box_base_connections_keep = [item for item in test_box_base_connections if item[5] in list(nodes['id'])]  # only keen if in the subgraph
 
@@ -183,7 +183,7 @@ def create_graph_simple(nodes, edges):
     return G
 
 
-def assign_node_edge_gdp(G):
+def assign_node_edge_gdp(G, links_in_base_box):
     components = list(nx.connected_components(G))
     node_gdps = []
     edge_gdps = []
@@ -192,7 +192,7 @@ def assign_node_edge_gdp(G):
     edge_gdp_sorted = {}
 
     for component in tqdm(components, desc='assigning gdp', total=len(components)):
-        c_node_gdp, c_edge_gdp, c_component, target_sources, edge_gdp_indiv = assign_component_gdp(G, component)  # c_components returns sources and sinks for each edge
+        c_node_gdp, c_edge_gdp, c_component, target_sources, edge_gdp_indiv = assign_component_gdp(G, component, links_in_base_box)  # c_components returns sources and sinks for each edge
         if len(c_node_gdp):
             node_gdps.append(c_node_gdp)
         if len(c_edge_gdp):
@@ -230,7 +230,7 @@ def edge_link_ids_from_nodes(G, route_nodes):
     ]
 
 
-def assign_component_gdp(G, component):
+def assign_component_gdp(G, component, links_in_base_box):
     # create connected component subgraph
     c = G.subgraph(component).copy()
     # nodes dataframe
@@ -273,19 +273,20 @@ def assign_component_gdp(G, component):
                 target_sources.loc[target_sources['id']==v.id, u.id] = u.capacity_mw/c_cap  # for each target (each row), we have a fraction of the power coming from each source (each column)
 
                 for link_id in edge_link_ids_from_nodes(c, path):
-                    edge_links[link_id] += path_gdp  # each edge is given the assosiated gdp
+                    if link_id in links_in_base_box:
+                        edge_links[link_id] += path_gdp  # each edge is given the assosiated gdp
 
-                    if include_paths:  # only do if include in gpkg
-                        comp_path[link_id].append([path[0], path[-1]])  # [source, target]
+                        if include_paths:  # only do if include in gpkg
+                            comp_path[link_id].append([path[0], path[-1]])  # [source, target]
 
-                    route_id = path[0]+"_"+path[-1]  # source_sink unique for a flow
-                    if link_id not in edge_gdp_indiv:
-                        edge_gdp_indiv[link_id] = {}  # add link_id dict to edge_gdp_indiv if not yet there
+                        route_id = path[0]+"_"+path[-1]  # source_sink unique for a flow
+                        if link_id not in edge_gdp_indiv:
+                            edge_gdp_indiv[link_id] = {}  # add link_id dict to edge_gdp_indiv if not yet there
 
-                    if route_id in edge_gdp_indiv[link_id]:
-                        edge_gdp_indiv[link_id][route_id] += path_gdp  # add path_gdp to target (source unknown) if target in edge_gdp_indiv[link_id]
-                    else:
-                        edge_gdp_indiv[link_id][route_id] = path_gdp  # create path_gdp for target (source unknown) if target not in edge_gdp_indiv[link_id]
+                        if route_id in edge_gdp_indiv[link_id]:
+                            edge_gdp_indiv[link_id][route_id] += path_gdp  # add path_gdp to target (source unknown) if target in edge_gdp_indiv[link_id]
+                        else:
+                            edge_gdp_indiv[link_id][route_id] = path_gdp  # create path_gdp for target (source unknown) if target not in edge_gdp_indiv[link_id]
 
 
     c_edges = pd.DataFrame({'link': k, 'gdp': v} for k, v in edge_links.items())
@@ -319,15 +320,16 @@ G = create_graph(nodes, edges)
 print(f'time: {round((time.time()-s)/60,2)}')
 
 print("assigning node edges gdp")
-node_gdp, edge_gdp, comp_path, target_sources_df, edge_gdp_sorted = assign_node_edge_gdp(G)
+node_gdp, edge_gdp, comp_path, target_sources_df, edge_gdp_sorted = assign_node_edge_gdp(G, links_in_base_box)
 print(f'time: {round((time.time()-s)/60,2)}')
 
 
 print(f"{box_id} -- saving edge_gdps_sorted")
-edge_gdp_sorted_copy = edge_gdp_sorted.copy()
-for dict_entry in edge_gdp_sorted_copy:
-    if dict_entry not in links_in_base_box:
-        edge_gdp_sorted.pop(dict_entry) # keep only keys in base_box
+# edge_gdp_sorted_copy = edge_gdp_sorted.copy()
+# for dict_entry in edge_gdp_sorted_copy:
+#     if dict_entry not in links_in_base_box:
+#         edge_gdp_sorted.pop(dict_entry) # keep only keys in base_box
+# assert len(edge_gdp_sorted_copy) == len(edge_gdp_sorted)
 with open(os.path.join("data","processed","all_boxes", box_id, f"edge_gdp_sorted_{box_id}.txt"), 'w') as sortedjson:
     json.dump(edge_gdp_sorted, sortedjson)
 

@@ -44,7 +44,7 @@ for box_id in boxes_in_region_copy:
         boxes_in_region.remove(box_id)
         print(f"{box_id} contains land but is empty")
 
-region_path = os.path.join('data', 'processed', 'regions')
+region_path = os.path.join('data', 'intersection', 'regions')
 if not os.path.exists(region_path):
     os.makedirs(region_path)
 

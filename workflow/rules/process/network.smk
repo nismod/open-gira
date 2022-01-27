@@ -18,4 +18,4 @@ rule process_network:
         os.path.join("data","processed", "all_boxes", "{box_id}", "network_{box_id}.gpkg"),
         os.path.join("data","processed", "all_boxes", "{box_id}", "targets_{box_id}.gpkg"),
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_4_network.py')+" {wildcards.box_id}"
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_4_network.py')+" {wildcards.box_id}"

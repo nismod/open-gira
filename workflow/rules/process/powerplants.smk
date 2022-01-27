@@ -11,4 +11,4 @@ rule process_powerplants:
     output:
         out_powerplants,
     shell:
-        "python3 "+os.path.join(WORKFLOW_DIR, 'scripts', 'processing', 'process_power_1_powerplants.py')
+        "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_1_powerplants.py')
