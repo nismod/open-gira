@@ -48,10 +48,9 @@ It does have a return period of 1000 years, though, so perhaps that's not too su
 We can use QGIS to inspect what these data look like, albeit one scenario at a time.
 The data we're looking at in the column chosen above we can see by enabling the
 roads lines and hazard raster in QGIS. 
-Here's what it looks like for the port area of slice 32 -- you can see that much of
-the coastline is underwater.
+In the example below I've chosen somewhat arbitrary colours for different flood depths.
 
-![QGIS mapping of Dar es Salaam under extreme flooding.](../img/QGIS-intersection.png)
+![QGIS mapping of Dar es Salaam under extreme flooding.](../../img/QGIS-intersection.png)
 
 ## Further analysis
 
