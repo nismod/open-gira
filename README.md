@@ -128,7 +128,7 @@ Say that you want to slice `tanzania-latest.osm.pbf` into 6 slices of equal
 height and equal width. First, write a `osmium extract` config file
 describing the `tanzania-latest` as a single extract:
 
-```json5
+```json
 // ./tanzania-latest.json
 {
     "directory": "./data",
