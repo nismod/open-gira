@@ -1,5 +1,5 @@
 # open-gira
-- [Quick-start README]()
+- [Quick-start README](./README.md)
 # User Guide
 - [Installation](./ug/installation.md)
   - [open-gira](./ug/inst/open-gira.md)
