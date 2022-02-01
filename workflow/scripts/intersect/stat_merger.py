@@ -7,20 +7,24 @@ import glob
 import sys
 
 
-# TODO: remove below lines once testing complete and solely on linux
 if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
 
-years_data_path = os.path.join("data", "intersection", "storm_data", "damages")
+storm_data_path = os.path.join("data", "intersection", "storm_data", "individual_storms")
+stormfolders = os.listdir(storm_data_path)
+stormfolders = [foldername for foldername in stormfolders if foldername[:6]=='storm_']  # keep only storm ones
 
-year_files = glob.glob(os.path.join(years_data_path, "*.txt"))
 df = pd.DataFrame()
-for year in year_files:
-    with open(year, 'r') as file:
-        storm_stats = json.load(file)
-        for stats_add in list(storm_stats.values()):
-            df_toadd = pd.DataFrame(stats_add)
+for ii, storm in enumerate(stormfolders):
+    storm_file = glob.glob(os.path.join(storm_data_path, storm,"*.txt"))
+    if len(storm_file) == 1:
+        with open(storm_file[0], 'r') as file:
+            storm_stats = json.load(file)
+            df_toadd = pd.DataFrame(storm_stats)
             df = df.append(df_toadd, ignore_index=True)
-if len(df) != 0:
-    df.to_csv(os.path.join("data", "intersection", "combined_storm_statistics.csv"), index=False)
+df.to_csv(os.path.join("data", "intersection", "combined_storm_statistics.csv"), index=False)
+if len(df) == 0:
+    print('Merged, len=0')
+else:
+    print('Merged')

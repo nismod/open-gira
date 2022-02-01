@@ -19,3 +19,8 @@ rule process_assigngdp:
         os.path.join("data","processed", "all_boxes", "{box_id}", "targets_with_allocation_{box_id}.gpkg")
     shell:
         "python3 "+os.path.join("workflow", 'scripts', 'processing', 'process_power_6_assigngdp.py')+" {wildcards.box_id}"
+
+
+rule process_assigngdp_all:
+    input:
+        out_assigngdp

@@ -1,4 +1,4 @@
-"""Adapted wind speed file from J Verschuur. Processes stormtracks data and returns the wind speed at each grid location."""
+"""Creates unit grid at resolution of the return period maps."""
 
 #!/usr/bin/env python
 # coding: utf-8
@@ -10,12 +10,12 @@ import netCDF4 as nc4
 import sys
 import geopandas as gpd
 import os
-from shapely.geometry import shape, Polygon, Point
 import time
-import fiona
 import json
 from shapely.geometry import box
+
 from pathos.multiprocessing import ProcessPool, cpu_count
+
 from tqdm import tqdm
 
 
@@ -23,7 +23,6 @@ from tqdm import tqdm
 if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
-    #list_years = [0,1,2,3,4,5,6,7,8,9]
     region = "SP"
 
 
@@ -64,19 +63,26 @@ def make_grid_points_nc2(box_id, region, ps):
     tot = len(lats)*len(lons)
 
     box_infrastructure = gpd.read_file(os.path.join("data", "processed", "all_boxes", box_id, f"gridfinder_{box_id}.gpkg"))
+    containing_box_dict = {}
 
-
+    unit = 0
     for lat in tqdm(lats, desc=ps+' Manual Overlay', total=len(lats)):
     #for lat in lats:
         for lon in lons:  # another option is to save which geoms are within then use this later rather than overlay again
-            if len(box_infrastructure[box_infrastructure['geometry'].intersects(box(lon-squarehalfwidth, lat-squarehalfwidth, lon+squarehalfwidth, lat+squarehalfwidth))]) !=0:  # if there are elemetns of infrastructure within/intersects box, keep, check this length, if 0 then nothing there, don't include, else include
-                point_df_add = pd.DataFrame({'longitude':[lon],'latitude':[lat]})
+
+            box_infrastructure_indiv = box_infrastructure[box_infrastructure['geometry'].intersects(box(lon-squarehalfwidth, lat-squarehalfwidth, lon+squarehalfwidth, lat+squarehalfwidth))]  # DataFrame of which gridfinder lines are within the unit
+
+            if len(box_infrastructure_indiv) !=0:  # if there are elemetns of infrastructure within/intersects unit, keep, check this length, if 0 then nothing there, don't include, else include
+                ID_point = f"{region}_{box_id}_{unit}"
+                containing_box_dict[ID_point] = list(box_infrastructure_indiv['source_id'])  # add the elements which are in the unit
+                point_df_add = pd.DataFrame({'longitude':[lon],'latitude':[lat],'ID_point':[ID_point]})
                 point_df = pd.concat([point_df,point_df_add])
+            unit += 1
     try:
         gdf = gpd.GeoDataFrame(point_df, geometry=gpd.points_from_xy(point_df.longitude, point_df.latitude))
-        return gdf
+        return gdf, containing_box_dict
     except:  # no points at all
-        return []
+        return [], containing_box_dict
 
 
 
@@ -85,7 +91,7 @@ def create_grid_box (box_id, idx, totboxes):
     ps = f"{idx}/{totboxes}"  #print statement
     print(ps)
     ### create grid
-    grid_box_indiv = make_grid_points_nc2(box_id, region, ps)
+    grid_box_indiv, containing_box_dict = make_grid_points_nc2(box_id, region, ps)
     if len(grid_box_indiv) != 0:  # exclude empty boxes
 
         grid_box_indiv = grid_box_indiv.reset_index(drop = True)
@@ -96,7 +102,7 @@ def create_grid_box (box_id, idx, totboxes):
 
         grid_box_indiv['region'] = region
 
-        return grid_box_indiv
+        return grid_box_indiv, containing_box_dict
 
 
 if __name__ == '__main__':  # for windows (due to parallel processing)
@@ -111,9 +117,11 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     idx_bxs = list(range(len(totboxes)))
 
     pool_grid = ProcessPool(nodes=nodesuse)
-    output_grid = pool_grid.map(create_grid_box, box_ids, idx_bxs, totboxes)
+    output = pool_grid.map(create_grid_box, box_ids, idx_bxs, totboxes)
+
+    output_grid = [item[0] for item in output]  # extract dataframes
     grid_boxes = pd.concat(output_grid).reset_index(drop=True)
-    grid_boxes['ID_point'] = [f"{region}{ptx}" for ptx in range(len(grid_boxes))]
+
 
     grid_boxes_area_series = grid_boxes.geometry.buffer(squarehalfwidth, cap_style = 3)
     grid_boxes.rename(columns={'geometry':'centroid'}, inplace=True)
@@ -124,3 +132,9 @@ if __name__ == '__main__':  # for windows (due to parallel processing)
     grid_boxes_area.to_file(os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg"),driver = 'GPKG')  # TODO
 
 
+    output_contains = [item[1] for item in output]  # extract dictionaries
+    unit_contains = {}
+    for dict_indiv in output_contains:  # join the dictionaries
+        unit_contains.update(dict_indiv)
+    with open(os.path.join("data", "intersection", "regions", f"{region}_unit_contains.txt"), 'w') as writefile:
+        json.dump(unit_contains, writefile)

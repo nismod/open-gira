@@ -1,7 +1,6 @@
 """Calculates the gdp losses through the storm damage.
 
 """
-import os
 
 
 rule intersection_gdploss:
@@ -11,8 +10,7 @@ rule intersection_gdploss:
             "intersection",
             "storm_data",
             "all_winds",
-            "log",
-            "__winds_completed_r{region}_s{sample}_y{year}.txt",  # TODO issue -> will redo all years
+            "TC_r{region}_s{sample}_n{nh}.csv",
         ),
         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
         [
@@ -42,16 +40,11 @@ rule intersection_gdploss:
             for box_id in all_boxes
         ],
     output:
-        os.path.join(
-            "data",
-            "intersection",
-            "storm_data",
-            "damages",
-            "storm_r{region}_s{sample}_y{year}.txt",
-        ),
+        os.path.join("data","intersection","storm_data", "individual_storms", "storm_{nh}", "storm_r{region}_s{sample}_n{nh}.txt"),
+        os.path.join("data","intersection","storm_data", "individual_storms", "storm_{nh}", "storm_track_r{region}_s{sample}_n{nh}.gpkg")
     shell:
         (
             "python3 "
             + os.path.join("workflow", "scripts", "intersect", "intersect_4_gdploss.py")
-            + " {wildcards.region} {wildcards.sample} {wildcards.year} {operationfind}"
+            + " {wildcards.region} {wildcards.sample} {wildcards.nh} {operationfind}"
         )

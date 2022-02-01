@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     timer(start)
 
-    print("writing to world_targets.gpkg")
+    print("writing to targets.gpkg")
     # if len(targets) == 0:
     #     raise RuntimeError("targets file is empty, program will quit.")
 

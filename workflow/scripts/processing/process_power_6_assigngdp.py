@@ -325,11 +325,7 @@ print(f'time: {round((time.time()-s)/60,2)}')
 
 
 print(f"{box_id} -- saving edge_gdps_sorted")
-# edge_gdp_sorted_copy = edge_gdp_sorted.copy()
-# for dict_entry in edge_gdp_sorted_copy:
-#     if dict_entry not in links_in_base_box:
-#         edge_gdp_sorted.pop(dict_entry) # keep only keys in base_box
-# assert len(edge_gdp_sorted_copy) == len(edge_gdp_sorted)
+edge_gdp_sorted = {k:{k2.replace('source_','s').replace('_box_','b').replace('target_','t'): i2 for k2, i2 in i.items()} for k, i in edge_gdp_sorted.items()}  # shorten keys
 with open(os.path.join("data","processed","all_boxes", box_id, f"edge_gdp_sorted_{box_id}.txt"), 'w') as sortedjson:
     json.dump(edge_gdp_sorted, sortedjson)
 

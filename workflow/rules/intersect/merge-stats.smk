@@ -6,23 +6,31 @@ import os
 stat_csv = os.path.join("data", "intersection", "combined_storm_statistics.csv")
 
 
-rule merge_all_stats:
-    """Use this rule for the combined stats file"""
-    input:
-        TC_years,
-        region_grid,
-        expand(
-            os.path.join(
+storm_details_all = expand([os.path.join(
                 "data",
                 "intersection",
                 "storm_data",
-                "damages",
-                "storm_r{region}_s{sample}_y{year}.txt",
+                "individual_storms",
+                "storm_{nh}",
+                "storm_r{region}_s{sample}_n{nh}.txt",
             ),
-            region=REGIONS,
-            sample=SAMPLES,
-            year=YEARS,
-        ),
+os.path.join(
+                "data",
+                "intersection",
+                "storm_data",
+                "individual_storms",
+                "storm_{nh}",
+                "storm_track_r{region}_s{sample}_n{nh}.gpkg",
+            )],
+        region=REGIONS,
+        sample=SAMPLES,
+        nh=find_nh_mult(YEARS, REGIONS, SAMPLES)[2])
+
+
+rule merge_all_stats:
+    """Use this rule for the combined stats file"""
+    input:
+        storm_details_all
     output:
         stat_csv,
     shell:

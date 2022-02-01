@@ -182,8 +182,7 @@ if __name__ == '__main__':
     if len(targets_box) == 0:
         cols = ["area_km2", "centroid", "geometry", "population", "population_density_at_centroid", "gdp_pc", "gdp", "type"]
         targets_box = gpd.GeoDataFrame(columns=cols+['box_id'])
-        #targets_box.loc[0,:] = [None]*len(cols)
-        #targets_box['box_id'] = box_id
+
     if len(targets_box) != 0:
         #print("getting target population")
         targets_box = get_population(box_id, targets_box)
