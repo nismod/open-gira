@@ -6,7 +6,10 @@ https://gadm.org/data.html
 """
 
 out_adminboundaries = os.path.join(DATA_DIR, "adminboundaries", "gadm36.gpkg")
-out_adminboundaries_levels = os.path.join(DATA_DIR, "adminboundaries", "gadm36_levels.gpkg")
+out_adminboundaries_levels = os.path.join(
+    DATA_DIR, "adminboundaries", "gadm36_levels.gpkg"
+)
+
 
 rule download_gadm:
     output:

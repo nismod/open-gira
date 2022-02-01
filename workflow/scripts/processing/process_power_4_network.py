@@ -13,7 +13,8 @@ targets, plants, edges -> all files
 """
 
 from importing_modules import *
-#from process_power_functions import *
+
+# from process_power_functions import *
 
 # TODO: remove below lines once testing complete and solely on linux
 if "linux" not in sys.platform:
@@ -26,58 +27,56 @@ else:  # linux
 
 
 def timer(s):
-    print("timer : ",round((time.time() - s)/60, 2)," mins\n")
-
-
-
-
+    print("timer : ", round((time.time() - s) / 60, 2), " mins\n")
 
 
 #%%
-if __name__ == '__main__':
+if __name__ == "__main__":
     edges_empty = False
     plants_empty = False
     targets_empty = False
 
     print("opening files")
     start = time.time()
-    plantsfile = os.path.join("data","processed", "all_boxes", box_id, f"powerplants_{box_id}.csv")
-    targetsfile = os.path.join("data","processed", "all_boxes", box_id, f"targets_{box_id}.csv")
-
+    plantsfile = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"powerplants_{box_id}.csv"
+    )
+    targetsfile = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"targets_{box_id}.csv"
+    )
 
     plants = pd.read_csv(plantsfile)
     targets = pd.read_csv(targetsfile)
 
-
-    plants['geometry'] = plants['geometry'].apply(wkt.loads)
+    plants["geometry"] = plants["geometry"].apply(wkt.loads)
     plants = gpd.GeoDataFrame(plants)
 
-
-
-    targets['geometry'] = targets['geometry'].apply(wkt.loads)
+    targets["geometry"] = targets["geometry"].apply(wkt.loads)
     targets = gpd.GeoDataFrame(targets)
 
     plants = plants.reset_index().copy()
-    plants['id'] = [f"source_{i}_{box_id}" for i in range(len(plants))]
-    plant_cols = ['id', 'source_id', 'capacity_mw', 'type', 'box_id', 'geometry']
+    plants["id"] = [f"source_{i}_{box_id}" for i in range(len(plants))]
+    plant_cols = ["id", "source_id", "capacity_mw", "type", "box_id", "geometry"]
     plants = plants[plant_cols]
-    plants['connected'] = False  # bool, will be set to true if edges available to be connected to
+    plants[
+        "connected"
+    ] = False  # bool, will be set to true if edges available to be connected to
     print(f"writing to plants_{box_id}.gpkg")
-    plants_file_name = os.path.join("data","processed","all_boxes", box_id, f"plants_{box_id}.gpkg")
+    plants_file_name = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"plants_{box_id}.gpkg"
+    )
     if len(plants) == 0:  # if empty, write dummy
         plants_empty_df = gpd.GeoDataFrame(columns=plants.columns)
-        plants_empty_df.loc[0,:] = [None]*len(plants.columns)
-        plants_empty_df['box_id'] = box_id
-        plants_empty_df.to_file(plants_file_name,driver='GPKG')
+        plants_empty_df.loc[0, :] = [None] * len(plants.columns)
+        plants_empty_df["box_id"] = box_id
+        plants_empty_df.to_file(plants_file_name, driver="GPKG")
         plants_empty = True
     else:
-        plants.to_file(plants_file_name,driver='GPKG')
-
-
+        plants.to_file(plants_file_name, driver="GPKG")
 
     targets = targets.reset_index().copy()
-    targets['id'] = [f"target_{i}_{box_id}" for i in range(len(targets))]
-    #targets['connected'] = False  # bool, will be set to true if edges available to be connected to
+    targets["id"] = [f"target_{i}_{box_id}" for i in range(len(targets))]
+    # targets['connected'] = False  # bool, will be set to true if edges available to be connected to
 
     timer(start)
 
@@ -85,22 +84,25 @@ if __name__ == '__main__':
     # if len(targets) == 0:
     #     raise RuntimeError("targets file is empty, program will quit.")
 
-    targets_file_name = os.path.join("data","processed", "all_boxes", box_id, f"targets_{box_id}.gpkg")
+    targets_file_name = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"targets_{box_id}.gpkg"
+    )
     target_cols = list(targets.columns)
-    target_cols.remove('centroid')
+    target_cols.remove("centroid")
     if len(targets) == 0:  # if empty, write dummy file
         targets_empty_df = gpd.GeoDataFrame(columns=target_cols)
-        targets_empty_df.loc[0,:] = [None]*len(target_cols)
-        targets_empty_df['box_id'] = box_id
-        targets_empty_df.to_file(targets_file_name,driver='GPKG')
+        targets_empty_df.loc[0, :] = [None] * len(target_cols)
+        targets_empty_df["box_id"] = box_id
+        targets_empty_df.to_file(targets_file_name, driver="GPKG")
         targets_empty = True
     else:
-        targets.drop(columns=['centroid']).to_file(targets_file_name, driver='GPKG')
+        targets.drop(columns=["centroid"]).to_file(targets_file_name, driver="GPKG")
     timer(start)
 
     print("processing targets GeoData")
-    targets = targets[['id', 'type', 'box_id', 'centroid']] \
-        .rename(columns={'centroid': 'geometry'})
+    targets = targets[["id", "type", "box_id", "centroid"]].rename(
+        columns={"centroid": "geometry"}
+    )
     timer(start)
 
     # Combine to nodes
@@ -111,23 +113,28 @@ if __name__ == '__main__':
     # Edges
     print("getting gridfinder lines")
 
-    edges = gpd.read_file(os.path.join('data', 'processed', 'all_boxes', f"{box_id}", f'gridfinder_{box_id}.gpkg'))
+    edges = gpd.read_file(
+        os.path.join(
+            "data", "processed", "all_boxes", f"{box_id}", f"gridfinder_{box_id}.gpkg"
+        )
+    )
 
-
-    if len(edges)==1 and edges['geometry'].any() == None:  # catch empty
+    if len(edges) == 1 and edges["geometry"].any() == None:  # catch empty
         edges = gpd.GeoDataFrame(columns=edges.columns)
         edges_empty = True
 
     timer(start)
 
-    print('processing lines')
-    edges['type'] = 'transmission'
-    edges['id'] = edges.reset_index()['index'].apply(lambda i: f"edge_{i}_{box_id}")  # changed to edges, was targets (?)
+    print("processing lines")
+    edges["type"] = "transmission"
+    edges["id"] = edges.reset_index()["index"].apply(
+        lambda i: f"edge_{i}_{box_id}"
+    )  # changed to edges, was targets (?)
 
     timer(start)
 
     print("processing edges GeoData")
-    edges = edges[['id', 'source_id', 'box_id', 'type', 'geometry']]
+    edges = edges[["id", "source_id", "box_id", "type", "geometry"]]
     timer(start)
 
     # Process network
@@ -136,59 +143,68 @@ if __name__ == '__main__':
     timer(start)
 
     # fix str when should be Point(# #)
-    network.nodes['geometry'] = [sw.loads(x) if type(x) == str else x for x in network.nodes['geometry']]
-    network.edges['geometry'] = [sw.loads(x) if type(x) == str else x for x in network.edges['geometry']]
+    network.nodes["geometry"] = [
+        sw.loads(x) if type(x) == str else x for x in network.nodes["geometry"]
+    ]
+    network.edges["geometry"] = [
+        sw.loads(x) if type(x) == str else x for x in network.edges["geometry"]
+    ]
 
-    network.nodes['connected'] = False  # default
+    network.nodes["connected"] = False  # default
 
     if not edges_empty:
-
 
         # Connect power plants
         print("connecting powerplants")
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
-            warnings.simplefilter(action='ignore', category=FutureWarning)
+            warnings.simplefilter(action="ignore", category=FutureWarning)
 
             print("processing network")
             network = snkit.network.split_multilinestrings(network)
             timer(start)
 
             geod = Geod(ellps="WGS84")
-            edge_limit = 20_000 # meters
+            edge_limit = 20_000  # meters
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
-                lambda node, edge: node.type == 'source' and geod.geometry_length(edge.geometry) < edge_limit)
+                lambda node, edge: node.type == "source"
+                and geod.geometry_length(edge.geometry) < edge_limit,
+            )
 
-        network.nodes.loc[network.nodes.id.isnull(), 'type'] = 'conn_source'
+        network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
         timer(start)
 
         print("resetting indices")
-        network.nodes['id'] = network.nodes.reset_index() \
-            .apply(
-                lambda row: f"conn_source_{row['index']}_{box_id}" if type(row.id) is float else row.id,
-                axis=1
-            )
+        network.nodes["id"] = network.nodes.reset_index().apply(
+            lambda row: f"conn_source_{row['index']}_{box_id}"
+            if type(row.id) is float
+            else row.id,
+            axis=1,
+        )
 
         # Connect targets
         print("connecting targets")
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
-            warnings.simplefilter(action='ignore', category=FutureWarning)
+            warnings.simplefilter(action="ignore", category=FutureWarning)
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
-                lambda node, edge: node.type == 'target' and geod.geometry_length(edge.geometry) < edge_limit)
-        network.nodes.loc[network.nodes.id.isnull(), 'type'] = 'conn_target'
+                lambda node, edge: node.type == "target"
+                and geod.geometry_length(edge.geometry) < edge_limit,
+            )
+        network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
         timer(start)
 
         print("resetting indices")
-        network.nodes['id'] = network.nodes.reset_index() \
-            .apply(
-                lambda row: f"conn_target_{row['index']}_{box_id}" if type(row.id) is float else row.id,
-                axis=1
-            )
+        network.nodes["id"] = network.nodes.reset_index().apply(
+            lambda row: f"conn_target_{row['index']}_{box_id}"
+            if type(row.id) is float
+            else row.id,
+            axis=1,
+        )
         timer(start)
 
         # Add nodes at line endpoints
@@ -197,51 +213,57 @@ if __name__ == '__main__':
         timer(start)
 
         print("processing network")
-        network.nodes.loc[network.nodes.id.isnull(), 'type'] = 'intermediate'
+        network.nodes.loc[network.nodes.id.isnull(), "type"] = "intermediate"
         timer(start)
 
         print("resetting indices")
-        network.nodes['id'] = network.nodes.reset_index() \
-            .apply(
-                lambda row: f"intermediate_{row['index']}_{box_id}" if type(row.id) is float else row.id,
-                axis=1
-            )
+        network.nodes["id"] = network.nodes.reset_index().apply(
+            lambda row: f"intermediate_{row['index']}_{box_id}"
+            if type(row.id) is float
+            else row.id,
+            axis=1,
+        )
         timer(start)
 
         # add from/to ids
         print("adding from/to ids")
         with warnings.catch_warnings():
-            warnings.simplefilter(action='ignore', category=FutureWarning)
-            network = snkit.network.add_topology(network, id_col='id')
+            warnings.simplefilter(action="ignore", category=FutureWarning)
+            network = snkit.network.add_topology(network, id_col="id")
         timer(start)
 
-        network.edges['box_id'] = box_id
+        network.edges["box_id"] = box_id
 
-        network.nodes['box_id'] = box_id
-        network.nodes['connected'] = True  # since can be connected to network (edges available)
+        network.nodes["box_id"] = box_id
+        network.nodes[
+            "connected"
+        ] = True  # since can be connected to network (edges available)
     else:  # empty edges
         network.edges = gpd.GeoDataFrame(columns=network.edges.columns)
-        network.edges.loc[0,:] = [None]*len(network.edges.columns)
-        network.edges['box_id'] = box_id
+        network.edges.loc[0, :] = [None] * len(network.edges.columns)
+        network.edges["box_id"] = box_id
 
     # output
-    out_fname = os.path.join("data","processed", "all_boxes", box_id, f"network_{box_id}.gpkg")
+    out_fname = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+    )
     print("writing edges to ", out_fname)
-    network.edges.to_file(out_fname, layer='edges', driver='GPKG')
+    network.edges.to_file(out_fname, layer="edges", driver="GPKG")
     timer(start)
 
     if targets_empty and plants_empty:
         network.nodes = gpd.GeoDataFrame(columns=network.nodes.columns)
-        network.nodes.loc[0,:] = [None]*len(network.nodes.columns)
-        network.nodes['box_id'] = box_id
+        network.nodes.loc[0, :] = [None] * len(network.nodes.columns)
+        network.nodes["box_id"] = box_id
 
     print("writing nodes to ", out_fname)
-    network.nodes.to_file(out_fname, layer='nodes', driver='GPKG')
+    network.nodes.to_file(out_fname, layer="nodes", driver="GPKG")
     timer(start)
 
-    print("\nnote that ShapelyDepreciationWarnings (shapely) and FutureWarning (geopandas) were supressed. Also newer pandas versions can cause issues (1.1.5 works).")  # remove if fixed
+    print(
+        "\nnote that ShapelyDepreciationWarnings (shapely) and FutureWarning (geopandas) were supressed. Also newer pandas versions can cause issues (1.1.5 works)."
+    )  # remove if fixed
     end = time.time()
     print(f"\nTime to run file: {(end - start)/60:0.2f} minutes")
 
-    #print(targets_empty, plants_empty, edges_empty)
-
+    # print(targets_empty, plants_empty, edges_empty)

@@ -8,4 +8,4 @@ rule intersect_all:
     input:
         TC_all,
         stat_csv,
-        storm_details_all
+        storm_details_all,

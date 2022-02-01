@@ -40,8 +40,22 @@ rule intersection_gdploss:
             for box_id in all_boxes
         ],
     output:
-        os.path.join("data","intersection","storm_data", "individual_storms", "storm_{nh}", "storm_r{region}_s{sample}_n{nh}.txt"),
-        os.path.join("data","intersection","storm_data", "individual_storms", "storm_{nh}", "storm_track_r{region}_s{sample}_n{nh}.gpkg")
+        os.path.join(
+            "data",
+            "intersection",
+            "storm_data",
+            "individual_storms",
+            "storm_{nh}",
+            "storm_r{region}_s{sample}_n{nh}.txt",
+        ),
+        os.path.join(
+            "data",
+            "intersection",
+            "storm_data",
+            "individual_storms",
+            "storm_{nh}",
+            "storm_track_r{region}_s{sample}_n{nh}.gpkg",
+        ),
     shell:
         (
             "python3 "

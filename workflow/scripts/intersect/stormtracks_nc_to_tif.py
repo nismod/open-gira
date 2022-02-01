@@ -31,15 +31,18 @@ def main():
             for var in list(ds):
                 for rp in list(ds["mean"].rp.data):
                     out_fname = fname.replace(".nc", f"_rp{int(rp)}_{var}.tif")
-                    out_fname = out_fname.replace("fixed", os.path.join("fixed", "extracted"))
+                    out_fname = out_fname.replace(
+                        "fixed", os.path.join("fixed", "extracted")
+                    )
                     print(out_fname)
                     ds[var].sel(rp=rp).rio.to_raster(out_fname)
 
 
-
 def get_fnames(storm_path):
     return [
-        fname for fname in glob(os.path.join(storm_path, "*.nc")) if f"RETURN_PERIODS_{region}" in fname and "withmeta" not in fname
+        fname
+        for fname in glob(os.path.join(storm_path, "*.nc"))
+        if f"RETURN_PERIODS_{region}" in fname and "withmeta" not in fname
     ]
 
 
@@ -54,6 +57,7 @@ def add_meta(ds):
     ds.rio.write_crs("epsg:4326", inplace=True)
     return ds
 
+
 main()
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    main()
