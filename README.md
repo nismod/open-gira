@@ -121,14 +121,14 @@ snakemake --cores 8 --configfile config/my_other_config.yml
 ## Automatically generating the `osmium extract` configuration file
 
 A common task is to slice the OSM dataset into areas of equal height
-and width. Script `scripts/prepare-extracts.py` automates this
+and width. Script `prepare-extracts.py` automates this
 process, given a JSON file describing the original dataset. 
 
 Say that you want to slice `tanzania-latest.osm.pbf` into 6 slices of equal
 height and equal width. First, write a `osmium extract` config file
 describing the `tanzania-latest` as a single extract:
 
-```json5
+```json
 // ./tanzania-latest.json
 {
     "directory": "./data",
@@ -147,14 +147,14 @@ describing the `tanzania-latest` as a single extract:
 ```
 
 Next, use `prepare-extracts.py` to generate the `osmium extract`
-configuration file for the 6 slices. For instance:
+configuration file for the 9 slices. For instance:
 
 ```
 python prepare-extracts.py tanzania-latest.json 3
 ```
 
 This generates a file `./data/tanzania-latest-extracts.json` describing
-the 6 slices to be created by `osmium extract`.
+the 9 slices to be created by `osmium extract`.
 
 ## Step-by-step description of the pipeline
 
@@ -170,7 +170,7 @@ The pipeline consists in the following steps:
    (using `osmium tags-filter`. This results in files
    `<output_dir>/filtered/<dataset>-slice<N>.highway-core.osm.pbf`.
 3. Each filtered OSM dataset is then converted to the GeoParquet data format,
-   resulting in `<output_dir>/geoparquet-slice<N>.highway-core.geoparquet`.
+   resulting in `<output_dir>/geoparquet/<dataset>-slice<N>.highway-core.geoparquet`.
 4. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
    raster data files. The network/hazard intersection results in data
@@ -180,7 +180,7 @@ The pipeline consists in the following steps:
 5. Split data (one file per slice, see step 1) is then joined into a unique
    dataset describing splits and associated flood level values for the whole
    original OSM dataset. This results in
-   `<output_dir>/<dataset>.highway-core.splits.geoparquet`.
+   `<output_dir>/<dataset>.highway-core_aqueduct_river_splits.geoparquet`.
 
 ### Keeping things tidy
 
