@@ -65,9 +65,5 @@ RUN cd open-gira && \
     python3 prepare-extracts.py tanzania-latest.json 3
 
 # Showtime
-#RUN cd open-gira && snakemake --cores all -R slice
-#RUN cd open-gira && snakemake --cores all -R filter_osm_data
-#RUN cd open-gira && snakemake --cores all -R convert_to_geoparquet
-#RUN cd open-gira && snakemake --cores all -R network_hazard_intersection
-#RUN cd open-gira && snakemake --cores all -R join_data
+#RUN cd open-gira && snakemake --cores all -R all
 #RUN cd open-gira && snakemake --cores all -R clean

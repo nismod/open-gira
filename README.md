@@ -167,12 +167,12 @@ associating road splits to corresponding flood levels.
 
 The pipeline consists in the following steps:
 
-1. The initial OSM dataset is sliced into areas of equal size
+1. The initial OSM dataset is filtered, keeping only relevant tags for road links
+   (using `osmium tags-filter`. This results in a smaller file
+   `<output_dir>/<dataset>.highway-core.osm.pbf`.
+2. The filtered OSM file is sliced into areas of equal size
    (`<output_dir>/slices/<dataset>-slice<N>.osm.pbf`).
-2. Filters down each OSM data slice keeping only relevant tags for road links
-   (using `osmium tags-filter`. This results in files
-   `<output_dir>/filtered/<dataset>-slice<N>.highway-core.osm.pbf`.
-3. Each filtered OSM dataset is then converted to the GeoParquet data format,
+3. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
    resulting in `<output_dir>/geoparquet/<dataset>-slice<N>.highway-core.geoparquet`.
 4. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
