@@ -55,7 +55,7 @@ cd osmium-tool && \
 The last step to installing osmium is to create a symlink so we can access it from anywhere on the command line:
 
 ```shell
-cp -s /osmium-tool/build/osmium /usr/bin/osmium
+cp -s osmium-tool/build/osmium /usr/bin/osmium
 ```
 
 ## open-gira
