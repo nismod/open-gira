@@ -18,7 +18,7 @@ else:  # linux
 
 
 def combine(lsts):
-    """combines lists where not masked, takes average if mulitple not masked values"""
+    """combines lists where not masked, takes average if multiple non-masked values"""
     if len({len(i) for i in lsts}) != 1:  # must be ame length
         raise RuntimeWarning("Lists not same length")
     llen = len(lsts[0])
@@ -59,10 +59,6 @@ def combine(lsts):
 
 
 def get_target_areas(box_id):
-    # world_boxes_path = os.path.join('data', 'processed', 'world_boxes.gpkg')
-    # gdf = gpd.read_file(world_boxes_path)
-    # box = gdf.loc[gdf.box_id==box_id]['geometry']
-
     world_boxes_path = os.path.join(
         "data", "processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"
     )
@@ -154,7 +150,7 @@ def get_population(box_id, targets):
     targets["population_density_at_centroid"] = pop_d_all
     targets["population_density_at_centroid"].fillna(
         np.nan, inplace=True
-    )  # change None to
+    )
 
     def estimate_population_from_density(row):
         if row.population is numpy.ma.masked:
@@ -172,7 +168,6 @@ def get_gdp(targets):
     gdp_pc = []
     fn = os.path.join("data", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc")
     ds = nc4.Dataset(fn)
-    gdp_pc_lst = []
 
     lat_idx_arr = np.interp(
         targets.centroid.y, [-90, 90], [2160, 0]
@@ -186,12 +181,12 @@ def get_gdp(targets):
     gdp_pc_lst = [
         ds["GDP_per_capita_PPP"][-1, lat_idx_arr[jj], lon_idx_arr[jj]]
         for jj in range(len(lat_idx_arr))
-    ]  # returns gdp of centroid of the target area (2015)
+    ]  # returns gdp_pc of centroid of the target area (2015)
 
     gdp_pc_lst = [
         float(x) if numpy.ma.is_masked(x) == False else 0 for x in gdp_pc_lst
     ]  # set masked to 0 (later removed)
-    # print("sum", sum(gdp_pc_lst))
+
     targets["gdp_pc"] = gdp_pc_lst
     targets["gdp"] = targets.gdp_pc * targets.population
     return targets

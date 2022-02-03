@@ -1,12 +1,8 @@
-import os
-from collections import defaultdict
-import sys
+"""Assigns each edge its gdp flow and notes the source-sink paths passing through it"""
 
-import shapely.wkt as sw
-import geopandas as gpd
+
+from collections import defaultdict
 import networkx as nx
-import pandas as pd
-import json
 from tqdm.notebook import tqdm
 from importing_modules import *
 from process_power_functions import adj, adjbox
@@ -57,7 +53,7 @@ def read_network(fname):
 
 def combine_networks(
     box_id_orig,
-):  # NOTE THAT THIS WILL HAVE TO RE-WORK OUT ALL SURROUNDING BOXES
+):
     """finds adjacent boxes which are connected to original box_id and adds to nodes and edges.
     Returns all nodes and edges (both connected into base_box) and a list of links in the base_box"""
     fname = os.path.join(
@@ -68,11 +64,11 @@ def combine_networks(
     nodes["orig"] = True  # note that these are from the base box
     edges["orig"] = True  # note that these are from the base box
 
-    links_in_base_box = list(edges["link"])
+    links_in_base_box = list(edges["link"])  # notes the links in the base box
 
     to_test = [int(box_id_orig[4:])]  # start with
     edge_cols = list(edges.columns)
-    checked = []
+    checked = []  # list of checked boxes (to note not to recheck)
     while len(to_test) >= 1:
 
         to_test = list(set(to_test))  # get rid of duplicates
@@ -299,12 +295,11 @@ def assign_component_gdp(G, component, links_in_base_box):
 
     print(f"{box_id} -- Sources: {len(sources)}, targets: {len(targets)}")
     if len(sources) and len(targets):
-        # for u in sources.itertuples():
         for u in tqdm(sources.itertuples(), desc="sources", total=len(sources)):
             paths = nx.shortest_path(c, source=u.id)
             for v in targets.itertuples():
                 path = paths[v.id]  # path is the route from source to target
-                path_gdp = u.gdp * (v.gdp / c_gdp)
+                path_gdp = u.gdp * (v.gdp / c_gdp)  # (source gdp) * ( (target gdp)/(total component gdp) ) = (target gdp) * ( (source MW) / (total MW) )
                 target_sources.loc[target_sources["id"] == v.id, u.id] = (
                     u.capacity_mw / c_cap
                 )  # for each target (each row), we have a fraction of the power coming from each source (each column)
@@ -313,7 +308,7 @@ def assign_component_gdp(G, component, links_in_base_box):
                     if link_id in links_in_base_box:
                         edge_links[
                             link_id
-                        ] += path_gdp  # each edge is given the assosiated gdp
+                        ] += path_gdp  # each edge is given the associated gdp
 
                         if include_paths:  # only do if include in gpkg
                             comp_path[link_id].append(

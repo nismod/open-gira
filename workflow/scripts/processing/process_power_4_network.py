@@ -1,7 +1,7 @@
 """
 Creates the network from the plants and targets data
 
-If:
+If box has:
 no targets, no plants, no edges -> dummy file for all [checked]
 no targets, no plants, edges -> dummy file for targets and plants, edges file [checked]
 no targets, plants, no edges -> dummy target file, plants file but connected=False, dummy edges file [checked]

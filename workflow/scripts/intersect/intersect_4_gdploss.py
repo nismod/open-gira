@@ -20,7 +20,7 @@ if "linux" not in sys.platform:
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
     region = "SP"
-    nh = "0_0_1"  # number of hurr to examine
+    nh = "0_945_1"  # number of hurr to examine
     sample = 0
     operationfind = True  # Includes the operational values of the target areas (makes about 50% slower)
 
@@ -66,7 +66,7 @@ TC.columns = [
     "dis_land",
 ]  # https://www.nature.com/articles/s41597-020-0381-2.pdf
 TC = TC[["year", "number", "lat", "lon"]]
-
+TC['number_hur'] = str(sample)+"_"+TC['year'].astype(int).astype(str)+"_"+TC['number'].astype(int).astype(str)
 
 print("Loading wind")
 windfile = os.path.join(
@@ -182,6 +182,7 @@ for jj, box_id in enumerate(box_id_affected):
             dmg += v
         # print('time for t1 ', time.time()-t1)
 
+
         # find target operations
         if (
             operationfind
@@ -213,8 +214,10 @@ for jj, box_id in enumerate(box_id_affected):
         )  # add new keys
         for jj, source in enumerate(sources):
             if sinks[jj] not in routeid_damaged[source]:
-                routeid_damaged[source] += [sinks[jj]]
+                #routeid_damaged[source] += [sinks[jj]]
+                routeid_damaged[source] = routeid_damaged[source].copy()+[str(sinks[jj])]
         # print('time for t2 ', time.time()-t2)
+
 
         totdamage += dmg  # add to overall storm damage
 
@@ -241,7 +244,7 @@ if len(edges_affected) != 0:  # to prevent writing empty dataframe
 if len(polys_affected) != 0:  # to prevent writing empty dataframe
     polys_affected.to_file(
         os.path.join(
-            storm_path, f"region_affected__storm_r{region}_s{sample}_n{nh}.gpkg"
+            storm_path, f"units_affected__storm_r{region}_s{sample}_n{nh}.gpkg"
         ),
         driver="GPKG",
     )
@@ -274,9 +277,9 @@ if operationfind:
 
 
 if operationfind and len(targets) != 0:
-    targets["gdp_loss"] = targets["id"].map(targetsdamaged).fillna(0)
+    targets["gdp_loss"] = targets["id"].map(targetsdamaged).fillna(0)  # map targets that are damaged, if not in list -> no damage (.fillna(0))
     targets["operation_frac"] = round(
-        (targets["gdp"] - targets["gdp_loss"]) / targets["gdp"], 15
+        (targets["gdp"] - targets["gdp_loss"]) / targets["gdp"], 10
     )
 
 target_cols = [
@@ -304,8 +307,9 @@ targets.to_file(
 # write storm track file
 if len(TC) != 0:
     print(f"- writing {nh} to storm track file")
-    coords_lat = list(TC["lat"])
-    coords_lon = list(TC["lon"])
+    TC_nh = TC[TC['number_hur']==nh]
+    coords_lat = list(TC_nh["lat"])
+    coords_lon = list(TC_nh["lon"])
     coords = [((coords_lon[i], coords_lat[i])) for i in range(len(coords_lat))]
     storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})
     storm_track.to_file(
@@ -318,7 +322,6 @@ if len(TC) != 0:
 today = date.today()
 
 if operationfind:
-    frac_damage = len(targetsdamaged) / len(targets)
     targets_damaged_num = len(targetsdamaged)
 else:
     frac_damage = "N/A"
@@ -329,13 +332,12 @@ stats_add = {
     "Storm ID": [nh],
     "Storm Region": [region],
     "Damages (gdp)": [totdamage],
-    "fraction of total targets affected": [frac_damage],
     "targets affected": [targets_damaged_num],
     "targets operational 100%>op>=75%": [t_op(75, 100, targets)],
     "targets operational 75%>op>=50%": [t_op(50, 75, targets)],
     "targets operational 50%>op>=25%": [t_op(25, 50, targets)],
-    "targets operational 25%>op>=0%": [t_op(0.0001, 25, targets)],
-    "targets not operational (op=0%)": [t_op(-0.0001, 0.0001, targets)],
+    "targets operational 25%>op>0%": [t_op(0.000001, 25, targets)],
+    "targets not operational (op=0%)": [t_op(-0.000001, 0.000001, targets)],
     "sim_run_date": [today.strftime("%d/%m/%Y")],
 }
 
