@@ -22,7 +22,7 @@ target file.
 
 ```json
 {
-    "directory": "./data",
+    "directory": "./results/slices",
     "extracts": [
         {
             "bbox": [

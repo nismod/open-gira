@@ -11,3 +11,6 @@ Each of these will be the result of one of the steps in the workflow process:
 
 These steps, along with the output produced at each stage, 
 are described in the subsections of this chapter.
+
+These steps are summarised in the digital acyclic graph for `slice_count: 4`:
+![DAG of the workflow for 4 slices of the Tanzania dataset](../img/DAG.png)

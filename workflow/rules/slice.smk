@@ -4,10 +4,8 @@ rule slice:
         data=os.path.join(f"{OUTPUT_DIR}",f"{DATASET}.highway-core.osm.pbf"),
         extracts_config=os.path.join(f"{DATA_DIR}", f"{DATASET}-extracts.geojson"),
     output:
-        slices=directory(f"{OUTPUT_DIR}/slices"),
+        "{OUTPUT_DIR}/slices/{slug}.osm.pbf",
     shell:
         """
-        mkdir {output.slices} &&
-        osmium extract --no-progress --config {input.extracts_config} {input.data} \
-            --directory {output.slices}
+        osmium extract --overwrite --no-progress --config {input.extracts_config} {input.data}
         """

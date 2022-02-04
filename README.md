@@ -134,7 +134,7 @@ describing the `tanzania-latest` as a single extract:
 ```json
 // ./tanzania-latest.json
 {
-    "directory": "./data",
+    "directory": "./results/slices",
     "extracts": [
         {
             "bbox": [

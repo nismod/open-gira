@@ -21,7 +21,7 @@ To do this, we create a new file, `./data/tanzania-latest.json` which looks like
 
 ```json
 {
-    "directory": "./data",
+    "directory": "./results/slices",
     "extracts": [
         {
             "bbox": [
