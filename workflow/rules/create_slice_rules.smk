@@ -4,7 +4,5 @@ rule create_slice_rules:
         os.path.join(f"{DATA_DIR}", f"{DATASET}.json"),
     output:
         os.path.join(f"{DATA_DIR}", f"{DATASET}-extracts.geojson"),
-    shell:
-        """
-        python workflow/scripts/prepare-extracts.py {input} {config[slice_count]} {config[data_dir]}
-        """
+    script:
+        "../scripts/prepare-extracts.py"
