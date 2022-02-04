@@ -1,7 +1,7 @@
 # Open Global Infrastructure Risk/Resilience Analysis
 
-[![mdBook Documentation](https://github.com/nismod/open-gira/actions/workflows/docs.yml/badge.svg)](https://nismod.github.io/open-gira)
-[![pyTest](https://github.com/nismod/open-gira/actions/workflows/test.yml/badge.svg)](https://github.com/nismod/open-gira/actions/workflows/test.yml)
+[![mdBook Documentation](https://github.com/nismod/open-gira/actions/workflows/docs.yml/badge.svg?branch=main)](https://nismod.github.io/open-gira)
+[![pyTest](https://github.com/nismod/open-gira/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nismod/open-gira/actions/workflows/test.yml)
 
 This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow will 
 analyse physical climate risks to infrastructure networks using global open data. 
