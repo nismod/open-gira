@@ -1,11 +1,12 @@
+# Use osmium to cut a .osm.pbf file into several .osm.pbf files as defined by bounding boxes
 rule slice:
     input:
         # data=os.path.join(DATA_DIR, f"{DATASET}.osm.pbf"),
-        data=os.path.join(f"{OUTPUT_DIR}",f"{DATASET}.highway-core.osm.pbf"),
-        extracts_config=os.path.join(f"{OUTPUT_DIR}", "json", f"{DATASET}-extracts.geojson"),
+        data=os.path.join(f"{config['output_dir']}",f"{config['dataset']}.highway-core.osm.pbf"),
+        extracts_config=os.path.join(f"{config['output_dir']}", "json", f"{config['dataset']}-extracts.geojson"),
     output:
         expand(
-            os.path.join(f"{OUTPUT_DIR}", "slices", f"{DATASET}-slice{{i}}.highway-core.osm.pbf"),
+            os.path.join(f"{config['output_dir']}", "slices", f"{config['dataset']}-slice{{i}}.highway-core.osm.pbf"),
             i=range(config['slice_count'])
         ),
     shell:

@@ -1,14 +1,15 @@
+# Take .geoparquet files and output a single, unified .geoparquet file
 rule join_data:
     input:
         expand(
             os.path.join(
-                f"{OUTPUT_DIR}",
+                f"{config['output_dir']}",
                 "splits",
-                f"{DATASET}-slice{{i}}.highway-core_{hazard_slug}_splits.geoparquet"
+                f"{config['dataset']}-slice{{i}}.highway-core_{hazard_slug}_splits.geoparquet"
             ),
             i=range(config['slice_count'])
         ),
     output:
-        f"{OUTPUT_DIR}/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{config['output_dir']}/{config['dataset']}.highway-core_{hazard_slug}_splits.geoparquet",
     script:
         "../scripts/join_data.py"

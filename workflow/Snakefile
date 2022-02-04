@@ -1,24 +1,14 @@
 from glob import glob
-
+import requests
 
 configfile: "config/config.yaml"
 
-
-DATA_DIR = config["data_dir"]
-OUTPUT_DIR = config["output_dir"]
-HAZARD_DATA_DIR = config["hazard_data_dir"]
-DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
-
-import requests
 
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
-
 ##### load rules #####
-
-
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
 include: "rules/download/gridfinder.smk"
@@ -34,19 +24,19 @@ include: "rules/convert_to_geoparquet.smk"
 include: "rules/network_hazard_intersection.smk"
 include: "rules/join_data.smk"
 
-
 ##### target rules #####
 
-
+# Require the completed single .geoparquet file to be present
 rule all:
     input:
-        f"{OUTPUT_DIR}/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{config['output_dir']}/{config['dataset']}.highway-core_{hazard_slug}_splits.geoparquet",
 
-
+# Remove intermediate directories
 rule clean:
     shell:
         """
-        rm -rf {OUTPUT_DIR}/geoparquet &&
-        rm -rf {OUTPUT_DIR}/slices &&
-        rm -rf {OUTPUT_DIR}/splits
+        rm -rm {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/geoparquet &&
+        rm -rf {config[output_dir]}/slices &&
+        rm -rf {config[output_dir]}/splits
         """

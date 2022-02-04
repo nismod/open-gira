@@ -6,7 +6,7 @@ https://doi.org/10.5061/dryad.dk1j0
 """
 
 out_GDP = expand(
-    os.path.join(DATA_DIR, "GDP", "{filename}"),
+    os.path.join(config['data_dir'], "GDP", "{filename}"),
     filename=[
         "admin_areas_GDP_HDI.nc",
         "GDP_per_capita_PPP_1990_2015_v2.nc",
