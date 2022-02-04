@@ -1,5 +1,5 @@
 {
-    "directory": "./data",
+    "directory": "./results/slices",
     "extracts": [
         {
             "bbox": [

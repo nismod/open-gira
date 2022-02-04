@@ -76,31 +76,10 @@ copy the test configuration file under the `config` directory inside
 the temporary test directory. As such it will be picked up by
 Snakemake as the default configuration file.
 
-```diff
-@@ -15,11 +15,14 @@
- 
-     with TemporaryDirectory() as tmpdir:
-         workdir = Path(tmpdir) / "workdir"
-+        configdir = workdir / "config"
-         data_path = PurePosixPath("tests/unit/filter_osm_data/data")
-         expected_path = PurePosixPath("tests/unit/filter_osm_data/expected")
- 
-         # Copy data to the temporary workdir.
-         shutil.copytree(data_path, workdir)
-+        configdir.mkdir()
-+        shutil.copy("tests/config.yaml", configdir)
- 
-         # dbg
-         print("results/filtered/northeast-oxford-slice3.highway-core.osm.pbf", file=sys.stderr)
-@@ -33,9 +36,6 @@
-             "-F", 
-             "-j1",
-             "--keep-target-files",
--            "--configfile",
--            /mnt/shared/scratch/repos/osm-aqueduct/tests/config.yaml
--            config/config.yaml
-     
-             "--directory",
-             workdir,
-```
+We search those files for where `sp.check_output` specifies the config file
+and replace the syntax error bit with a nice string specifying the location
+of our config file: `"test/config.yaml"`.
+
+We also need to edit the extracts file in `slice/dta/data/northeast-oxford-extracts.geojson`
+to remove all slices apart from slice0.
 

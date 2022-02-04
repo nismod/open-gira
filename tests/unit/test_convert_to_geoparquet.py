@@ -15,14 +15,11 @@ def test_convert_to_geoparquet():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        configdir = workdir / "config"
         data_path = PurePosixPath("tests/unit/convert_to_geoparquet/data")
         expected_path = PurePosixPath("tests/unit/convert_to_geoparquet/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        configdir.mkdir()
-        shutil.copy("tests/config.yaml", configdir)
 
         # dbg
         print("results/geoparquet/northeast-oxford-slice0.highway-core.geoparquet", file=sys.stderr)
@@ -36,6 +33,8 @@ def test_convert_to_geoparquet():
             "-F", 
             "-j1",
             "--keep-target-files",
+            "--configfile",
+            "tests/config.yaml",
     
             "--directory",
             workdir,

@@ -11,25 +11,25 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common
 
 
-def test_join_data():
+def test_create_slice_rules():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath("tests/unit/join_data/data")
-        expected_path = PurePosixPath("tests/unit/join_data/expected")
+        data_path = PurePosixPath("tests/unit/create_slice_rules/data")
+        expected_path = PurePosixPath("tests/unit/create_slice_rules/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet", file=sys.stderr)
+        print("data/northeast-oxford-extracts.geojson", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet",
+            "data/northeast-oxford-extracts.geojson",
             "-F", 
             "-j1",
             "--keep-target-files",
