@@ -22,14 +22,14 @@ def test_create_slice_rules():
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("data/northeast-oxford-extracts.geojson", file=sys.stderr)
+        print("results/json/northeast-oxford-extracts.geojson", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "data/northeast-oxford-extracts.geojson",
+            "results/json/northeast-oxford-extracts.geojson",
             "-F", 
             "-j1",
             "--keep-target-files",
