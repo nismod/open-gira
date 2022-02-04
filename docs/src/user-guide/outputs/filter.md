@@ -1,4 +1,4 @@
-# 2. Filter each slice by infrastructure
+# Filter each slice by infrastructure
 
 The original data (`./data/tanzania-latest.osm.pbf`) contains lots and lots of information 
 about points of interest, waterways, etc.

@@ -13,6 +13,7 @@
 - [Configuration](user-guide/configuration.md)
 - [Running](user-guide/running.md)
 - [Workflow](user-guide/workflow.md)
+  - [Calculate bounding boxes](user-guide/outputs/extracts.md)
   - [Filter OSM data](user-guide/outputs/filter.md)
   - [Slice OSM data](user-guide/outputs/slice.md)
   - [Convert to GeoParquet](user-guide/outputs/geoparquet.md)

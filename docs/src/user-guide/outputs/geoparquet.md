@@ -1,4 +1,4 @@
-# 3. Convert Osmium files to GeoParquet format
+# Convert Osmium files to GeoParquet format
 
 Geoparquet files are files that contain geographic data alongside other information.
 They are loaded into Python as dataframes (`geopandas.GeoDataFrame`).

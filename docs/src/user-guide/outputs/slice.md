@@ -1,4 +1,4 @@
-# 1. Slice OSM dataset
+# Slice OSM dataset
 
 The filtered dataset (`./results/tanzania-latest.highway-core.osm.pbf`) is sliced into areas of equal size
 according to the slices defined in (`./data/tanzania-latest-extracts.geojson`).

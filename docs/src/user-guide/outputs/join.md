@@ -1,4 +1,4 @@
-# 5. Join data
+# Join data
 
 Finally, the split data files are reunited to produce a .geoparquet file that contains infrastructure-hazard
 information for the whole of the original .osm.pbf file.

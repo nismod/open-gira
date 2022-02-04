@@ -1,4 +1,4 @@
-# 4. Intersect infrastructure and flood level
+# Intersect infrastructure and flood level
 
 The intersection process inspects the geographic data for each of the rows in our .geoparquet files in 
 `./results/geoparquet/` and produces a new file with the flood depths affecting that road in each
