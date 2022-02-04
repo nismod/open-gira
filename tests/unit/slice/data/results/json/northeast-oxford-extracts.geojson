@@ -8,7 +8,7 @@
                 -1.175,
                 51.805
             ],
-            "output": "northeast-oxford-slice0.osm.pbf"
+            "output": "northeast-oxford-slice0.highway-core.osm.pbf"
         }
     ]
 }
