@@ -54,12 +54,6 @@ RUN wget https://zenodo.org/record/5887564/files/aqueduct_TZA.zip?download=1 \
     unzip /aqueduct_TZA.zip -d open-gira/data/aqueduct && \
     mv -f open-gira/data/aqueduct/aqueduct_TZA/* open-gira/data/aqueduct
 
-# Create the extracts file
-RUN rm -f open-gira/tanzania-latest.json
-RUN echo '{"directory":"./results/slices","extracts":\
-    [{"bbox": [29.24395,-11.775945,40.69487,-0.974988],\
-    "output": "tanzania-latest.osm.pbf"}]}' >> open-gira/tanzania-latest.json
-
 # Showtime
 #RUN cd open-gira && snakemake --cores all -R all
 #RUN cd open-gira && snakemake --cores all -R clean

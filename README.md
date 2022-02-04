@@ -121,43 +121,6 @@ specify a configuration to be used in place of the default
 ```
 snakemake --cores 8 --configfile config/my_other_config.yml
 ```
-## Automatically generating the `osmium extract` configuration file
-
-A common task is to slice the OSM dataset into areas of equal height
-and width. Script `prepare-extracts.py` automates this
-process, given a JSON file describing the original dataset. 
-
-Say that you want to slice `tanzania-latest.osm.pbf` into 6 slices of equal
-height and equal width. First, write a `osmium extract` config file
-describing the `tanzania-latest` as a single extract:
-
-```json
-// ./tanzania-latest.json
-{
-    "directory": "./results/slices",
-    "extracts": [
-        {
-            "bbox": [
-                -1.23,
-                51.78,
-                -1.175,
-                51.805
-            ],
-            "output": "tanzania-latest.osm.pbf"
-        }
-	]
-}
-```
-
-Next, use `prepare-extracts.py` to generate the `osmium extract`
-configuration file for the 9 slices. For instance:
-
-```
-python prepare-extracts.py tanzania-latest.json 3
-```
-
-This generates a file `./data/tanzania-latest-extracts.json` describing
-the 9 slices to be created by `osmium extract`.
 
 ## Step-by-step description of the pipeline
 
