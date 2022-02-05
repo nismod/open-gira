@@ -132,7 +132,7 @@ The pipeline consists in the following steps:
 
 1. The initial OSM dataset is filtered, keeping only relevant tags for road links
    (using `osmium tags-filter`). This results in a smaller file
-   `<output_dir>/<dataset>.<filters>.osm.pbf`, where `<filters>` is the
+   `<output_dir>/<dataset>_filter-<filters>.osm.pbf`, where `<filters>` is the
    filename of the `osmium_tags_filter` file in the config.
 2. The OSM dataset's headers are examined for a `bbox` property and that is used
    to determine the bounding box for the whole area (`<output_dir>/json/<dataset>.json`).
@@ -141,11 +141,11 @@ The pipeline consists in the following steps:
 4. The filtered OSM file is sliced into areas of equal size using the bounding 
    box grid (`<output_dir>/slices/<dataset>_slice<N>.osm.pbf`).
 5. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
-   resulting in `<output_dir>/geoparquet/<dataset>_slice<N>_<filters>.geoparquet`.
+   resulting in `<output_dir>/geoparquet/<dataset>_filter-<filters>_slice-<N>.geoparquet`.
 6. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
    raster data files. The network/hazard intersection results in data
-   `<output_dir>/splits/<dataset>_slice<N>_<filters>.splits.geoparquet` describing
+   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>.geoparquet` describing
    roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
 7. Split data (one file per slice, see step 1) is then joined into a unique
@@ -162,7 +162,7 @@ snakemake clean
 ```
 
 Note that this will *not* remove the final data files
-`<output_dir>/<dataset>.<filters>.splits.[geoparquet, parquet]`.
+`<output_dir>/<dataset>_filter-<filters>_split-<N>.[geoparquet, parquet]`.
 
 Snakemake has utilities to improve the workflow code quality:
 - `snakemake --lint` suggests improvements and fixes for common problems
