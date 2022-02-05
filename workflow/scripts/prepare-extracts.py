@@ -69,8 +69,8 @@ for extract in originaljsonfile["extracts"]:
     dataset, ext = splitext(extract["output"])
     for n, bbox in enumerate(slice_subextracts(extract["bbox"], n)):
         subextractsjson["extracts"].append(
-            {"bbox": bbox, "output": f"{dataset}-slice{n}{ext}"}
+            {"bbox": bbox, "output": f"{dataset}_slice-{n}{ext}"}
         )
-    with open(join(out_dir, "json", dataset + "-extracts.geojson"), "w") as fp:
+    with open(join(out_dir, "json", f"{dataset}-extracts.geojson"), "w") as fp:
         json.dump(subextractsjson, fp, indent=4)
     subextractsjson["extracts"].clear()

@@ -2,12 +2,12 @@
 
 Finally, the split data files are reunited to produce a .geoparquet file that contains infrastructure-hazard
 information for the whole of the original .osm.pbf file.
-This file is `./results/tanzania-latest.highway-core.splits.geoparquet`.
+This file is `./results/tanzania-latest_filter-highway-core_hazard-aqueduct-river.geoparquet`.
 Let's open it up in Python and have a look:
 
 ```python
 # geopandas already imported
-result_file = 'results/tanzania-latest.highway-core_aqueduct_river_splits.geoparquet'
+result_file = 'results/tanzania-latest_filter-highway-core_hazard-aqueduct-river.geoparquet'
 result = geopandas.read_parquet(result_file)
 print(result)
 ```

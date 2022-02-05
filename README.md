@@ -131,26 +131,27 @@ associating road splits to corresponding flood levels.
 The pipeline consists in the following steps:
 
 1. The initial OSM dataset is filtered, keeping only relevant tags for road links
-   (using `osmium tags-filter`. This results in a smaller file
-   `<output_dir>/<dataset>.highway-core.osm.pbf`.
+   (using `osmium tags-filter`). This results in a smaller file
+   `<output_dir>/<dataset>.<filters>.osm.pbf`, where `<filters>` is the
+   filename of the `osmium_tags_filter` file in the config.
 2. The OSM dataset's headers are examined for a `bbox` property and that is used
    to determine the bounding box for the whole area (`<output_dir>/json/<dataset>.json`).
 3. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
    according to the `slice_count` config option (`<output_dir>/json/<dataset>-extracts.geojson`).
 4. The filtered OSM file is sliced into areas of equal size using the bounding 
-   box grid (`<output_dir>/slices/<dataset>-slice<N>.osm.pbf`).
+   box grid (`<output_dir>/slices/<dataset>_slice<N>.osm.pbf`).
 5. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
-   resulting in `<output_dir>/geoparquet/<dataset>-slice<N>.highway-core.geoparquet`.
+   resulting in `<output_dir>/geoparquet/<dataset>_slice<N>_<filters>.geoparquet`.
 6. Each geoparquet slice is intersected against flood level data from the
    aqueduct dataset. The aqueduct dataset itself consists of a collection of
    raster data files. The network/hazard intersection results in data
-   `<output_dir>/splits/<dataset>-slice<N>.highway-core.splits.geoparquet` describing
+   `<output_dir>/splits/<dataset>_slice<N>_<filters>.splits.geoparquet` describing
    roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
 7. Split data (one file per slice, see step 1) is then joined into a unique
    dataset describing splits and associated flood level values for the whole
    original OSM dataset. This results in
-   `<output_dir>/<dataset>.highway-core_aqueduct_river_splits.geoparquet`.
+   `<output_dir>/<dataset>_filter-<filters>_hazard-aqueduct-river.geoparquet`.
 
 ### Keeping things tidy
 
@@ -161,7 +162,7 @@ snakemake clean
 ```
 
 Note that this will *not* remove the final data files
-`<output_dir>/<dataset>.highway-core.splits.[geoparquet, parquet]`.
+`<output_dir>/<dataset>.<filters>.splits.[geoparquet, parquet]`.
 
 Snakemake has utilities to improve the workflow code quality:
 - `snakemake --lint` suggests improvements and fixes for common problems

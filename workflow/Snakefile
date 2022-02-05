@@ -1,9 +1,23 @@
 from glob import glob
 import requests
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('localhost', port=9991, stdoutToServer=True, stderrToServer=True)
 
 configfile: "config/config.yaml"
 
-hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
+# Slugs are NOT allowed to use _ because that's used to separate slugs from one another
+dataset_slug = os.path.basename(config["dataset"]).replace("_", "-")
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "").replace("_", "-")
+filter_slug = os.path.basename(config["osmium_tags_filters_file"]).replace(".txt", "").replace("_", "-")
+
+# Constrain wildcards to NOT use _
+wildcard_constraints:
+    DATA_DIR="[^/]+",
+    OUTPUT_DIR="[^/]+",
+    DATASET="[^_]+",
+    SLICE_SLUG="slice-[0-9]+",
+    FILTER_SLUG="filter-[^_]+",
+    HAZARD_SLUG="hazard-[^_]+"
 
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
@@ -29,7 +43,7 @@ include: "rules/join_data.smk"
 # Require the completed single .geoparquet file to be present
 rule all:
     input:
-        f"{config['output_dir']}/{config['dataset']}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{config['output_dir']}/{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet",
 
 # Remove intermediate directories
 rule clean:

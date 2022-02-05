@@ -8,7 +8,7 @@
                 -1.175,
                 51.805
             ],
-            "output": "northeast-oxford-slice0.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core_slice-0.osm.pbf"
         },
         {
             "bbox": [
@@ -17,7 +17,7 @@
                 -1.175,
                 51.83
             ],
-            "output": "northeast-oxford-slice1.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core_slice-1.osm.pbf"
         },
         {
             "bbox": [
@@ -26,7 +26,7 @@
                 -1.12,
                 51.805
             ],
-            "output": "northeast-oxford-slice2.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core_slice-2.osm.pbf"
         },
         {
             "bbox": [
@@ -35,7 +35,7 @@
                 -1.12,
                 51.83
             ],
-            "output": "northeast-oxford-slice3.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core_slice-3.osm.pbf"
         }
     ]
 }

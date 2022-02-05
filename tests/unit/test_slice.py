@@ -22,21 +22,20 @@ def test_slice():
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("results/slices/northeast-oxford-slice0.highway-core.osm.pbf", file=sys.stderr)
+        print("results/slices/northeast-oxford_filter-highway-core_slice-0.osm.pbf", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/slices/northeast-oxford-slice0.highway-core.osm.pbf",
+            "results/slices/northeast-oxford_filter-highway-core_slice-0.osm.pbf",
             # "-F",
             "-j1",
             "--keep-target-files",
             "--configfile",
             "tests/config.yaml",
-            "--config",
-            "slice_count=1",
+
             "--directory",
             workdir,
         ])

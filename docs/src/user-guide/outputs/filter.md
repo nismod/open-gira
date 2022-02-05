@@ -7,7 +7,9 @@ match one of the types we specified in `./config/filters.txt`, or whichever othe
 as the `osmium_tags_filters_file` variable in `./config/config.yaml`).
 
 This file is in `./results`, so let's open it up in QGIS.
-Load `./results/tanzania-latest.highway-core.osm.pbf`, 
+It will have been renamed to indicate that it's been filtered 
+(using the filename of the `osmium_tags_filters_file`).
+Load `./results/tanzania-latest_filter-highway-core.osm.pbf`, 
 and notice that there are fewer roads than in the previous file.
 We've coloured the roads in the new file in red.
 

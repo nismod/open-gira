@@ -22,14 +22,14 @@ def test_join_data():
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet", file=sys.stderr)
+        print("results/northeast-oxford_filter-highway-core_hazard-aqueduct-river.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet",
+            "results/northeast-oxford_filter-highway-core_hazard-aqueduct-river.geoparquet",
             "-F", 
             "-j1",
             "--keep-target-files",

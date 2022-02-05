@@ -13,7 +13,7 @@ dataset: 'northeast-oxford'
 slice_count: 4
 # Path (relative to root-dir) to file containing comma separated list
 # of filters for 'osmium tags-filter' command
-osmium_tags_filters_file: 'tests/test_osm_filters.txt'
+osmium_tags_filters_file: 'tests/highway-core.txt'
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 
