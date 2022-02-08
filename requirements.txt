@@ -4,5 +4,5 @@ osmium==3.2.0
 pyarrow==6.0.0
 snakemake==6.15.1
 pytest==6.2.4
-geopandas
+geopandas==0.10.2
 
