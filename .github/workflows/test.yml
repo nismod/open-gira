@@ -52,6 +52,7 @@ jobs:
         osmium --version
         python -m pytest tests
 
+    - uses: actions/checkout@v2
     - name: Setup tmate session
       if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
