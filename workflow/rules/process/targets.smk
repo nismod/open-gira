@@ -26,6 +26,7 @@ rule process_target_box:
         os.path.join(DATA_DIR, "gridfinder", "targets.tif"),
         os.path.join(DATA_DIR, "processed", "world_boxes_metadata.txt"),
         os.path.join(DATA_DIR, "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc"),
+        os.path.join("data", "adminboundaries", "exclude_countries.txt"),
     output:
         os.path.join(
             DATA_DIR, "processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"
@@ -34,7 +35,7 @@ rule process_target_box:
         (
             "python3 "
             + os.path.join(
-                "workflow", "scripts", "processing", "process_power_2_targets.py"
+                "workflow", "scripts", "process", "process_power_2_targets.py"
             )
             + " {wildcards.box_id}"
         )

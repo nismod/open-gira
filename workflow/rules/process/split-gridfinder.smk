@@ -20,5 +20,5 @@ rule process_gridfinder:
         out_gridfinder,
     shell:
         "python3 " + os.path.join(
-        "workflow", "scripts", "processing", "process_power_3_gridfinder.py"
+        "workflow", "scripts", "process", "process_power_3_gridfinder.py"
         )

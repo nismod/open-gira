@@ -16,9 +16,13 @@ def required_nh_remaining(rsn):
     region_all = rsn[0]
     sample_all = rsn[1]
     nh_all = rsn[2]
-    nh_completed_files = glob(
-        os.path.join(DATA_DIR, "intersection", "storm_data", "all_winds", "*csv")
-    )  # find which wind speeds have been completed already
+    nh_completed_files = []
+    for region in region_all:
+        nh_completed_files += glob(
+            os.path.join(
+                DATA_DIR, "intersection", "storm_data", "all_winds", region, "*csv"
+            )
+        )  # find which wind speeds have been completed already
     nh_completed = [
         file[file.find("_n") + 2 : -4] for file in nh_completed_files
     ]  # single out nh identifiers from directory files
@@ -128,6 +132,7 @@ TC_all = expand(
         "intersection",
         "storm_data",
         "all_winds",
+        "{region}",
         "TC_r{region}_s{sample}_n{nh}.csv",
     ),
     region=REGIONS,
@@ -144,7 +149,7 @@ rule intersect_winds_indiv:
     """Find the .csv files for the wind speed details at each unit. 
     IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
                still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
-               it clears all existing files matching the output."""
+    it clears all existing files matching the output."""
     input:
         os.path.join("data", "processed", "world_boxes_metadata.txt"),
         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
@@ -168,7 +173,7 @@ rule intersect_winds_indiv:
                 "intersection",
                 "storm_data",
                 "all_winds",
-                "TC_r{region}_s{sample}_n" + f"{nh}.csv",
+                "{region}" "TC_r{region}_s{sample}_n" + f"{nh}.csv",
             )
             for nh in rsn_req[2]
         ],

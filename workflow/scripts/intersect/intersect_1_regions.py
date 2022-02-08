@@ -1,11 +1,6 @@
 """Takes a region and finds the box box_ids within it, exports as a list."""
 
-#!/usr/bin/env python
-# coding: utf-8
 
-
-import numpy as np
-import pandas as pd
 import json
 import netCDF4 as nc4
 import sys
@@ -13,14 +8,7 @@ import geopandas as gpd
 import os
 from shapely.geometry import box
 
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    region = "SP"
-
-else:
-    region = sys.argv[1]
+region = sys.argv[1]
 
 
 gdf_box = gpd.read_file(os.path.join("data", "processed", "world_boxes.gpkg"))

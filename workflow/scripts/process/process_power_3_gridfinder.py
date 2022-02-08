@@ -1,16 +1,8 @@
 """Indexes all gridfinder values"""
-import fiona, time, os, sys
-import geopandas as gpd
-from tqdm import tqdm
-from shapely.geometry import shape
-import json
-import numpy as np
 
+
+from importing_modules import *
 from process_power_functions import idxbox
-
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
 
 
 if __name__ == "__main__":
@@ -73,8 +65,3 @@ if __name__ == "__main__":
             empty_file.to_file(all_boxes_g_file, driver="GPKG")
 
     print("gpkg saving: ", round((time.time() - s) / 60, 2), " mins")
-
-    #
-    # s = time.time()
-    # gdf = gpd.read_file(os.path.join('data', 'processed', 'test_gridfinder.gpkg'))
-    # print("time for only gpkg opening: ",round((time.time() - s)/60, 2)," mins")

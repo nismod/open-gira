@@ -11,25 +11,13 @@ from shapely.geometry import LineString
 import json
 from tqdm import tqdm
 import sys
-
 from damage_calculator import applythreshold
 
-
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    region = "SP"
-    nh = "0_945_1"  # number of hurr to examine
-    sample = 0
-    operationfind = True  # Includes the operational values of the target areas (makes about 50% slower)
-
-else:  # linux
-    region, sample, nh, operationfind_ = sys.argv[1:]
-    if operationfind_ in [True, "True", "T", 1, "1"]:
-        operationfind = True
-    else:
-        operationfind = False
+region, sample, nh, operationfind_ = sys.argv[1:]
+if operationfind_ in [True, "True", "T", 1, "1"]:
+    operationfind = True
+else:
+    operationfind = False
 
 
 def t_op(lower, upper, targets):
@@ -42,7 +30,8 @@ def t_op(lower, upper, targets):
         return "N/A"
 
 
-print("loading tracks")
+print(f"{nh}: loading data")
+# print('loading tracks')
 stormfile = os.path.join(
     "data",
     "stormtracks",
@@ -66,14 +55,21 @@ TC.columns = [
     "dis_land",
 ]  # https://www.nature.com/articles/s41597-020-0381-2.pdf
 TC = TC[["year", "number", "lat", "lon"]]
-TC['number_hur'] = str(sample)+"_"+TC['year'].astype(int).astype(str)+"_"+TC['number'].astype(int).astype(str)
+TC["number_hur"] = (
+    str(sample)
+    + "_"
+    + TC["year"].astype(int).astype(str)
+    + "_"
+    + TC["number"].astype(int).astype(str)
+)
 
-print("Loading wind")
+# print("Loading wind")
 windfile = os.path.join(
     "data",
     "intersection",
     "storm_data",
     "all_winds",
+    region,
     f"TC_r{region}_s{sample}_n{nh}.csv",
 )
 if not os.path.isfile(windfile):
@@ -93,7 +89,7 @@ winds_ev_filtered = applythreshold(winds_ev_all)
 ID_affected = list(winds_ev_filtered["ID_point"])
 box_id_affected = winds_ev_filtered["box_id"].unique()
 
-print("- grid")
+# print("- grid")
 grid_data = gpd.read_file(
     os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
 )
@@ -105,16 +101,15 @@ routeid_damaged = (
     {}
 )  # marks which source_sink routes already damaged -> do not double count. Form: {source:[target,target,...], source:[target, target,...],...}
 totdamage = 0  # total damage (ensuring no double counts)
-if operationfind:  # if the operation value of the target is desired
-    targetsdamaged = {}
+targetsdamaged = {}  # if the operation value of the target is desired
 edges_affected = gpd.GeoDataFrame()
 targets = gpd.GeoDataFrame()
 
 start = time.time()
 for jj, box_id in enumerate(box_id_affected):
     print(f"-- Examining {jj+1}/{len(box_id_affected)} -- {box_id}")
-    print("-- network edges")
-    print("-- gdp flow")
+    # print("-- network edges")
+    # print("-- gdp flow")
     with open(
         os.path.join(
             "data", "processed", "all_boxes", box_id, f"edge_gdp_sorted_{box_id}.txt"
@@ -126,7 +121,7 @@ for jj, box_id in enumerate(box_id_affected):
     if (
         len(sorted_gdp) == 0
     ):  # no gdp flow could be established (usually no sources within subgraph)
-        print("-- no gdp flow - breaking loop")
+        # print("-- no gdp flow - breaking loop")
         continue
 
     box_edges = gpd.read_file(
@@ -136,7 +131,7 @@ for jj, box_id in enumerate(box_id_affected):
         layer="edges",
     )
 
-    print("-- targets")
+    # print("-- targets")
     box_targets = gpd.read_file(
         os.path.join("data", "processed", "all_boxes", box_id, f"targets_{box_id}.gpkg")
     )
@@ -144,9 +139,6 @@ for jj, box_id in enumerate(box_id_affected):
     box_edges_affected = box_edges.overlay(
         polys_affected, how="intersection"
     )  # keeps edges that are affected grid points (only a part has to be in)
-
-
-
 
     edges_to_check = box_edges_affected["link"]
 
@@ -156,7 +148,6 @@ for jj, box_id in enumerate(box_id_affected):
         desc=f"storm_{nh}-{box_id}: affected edges",
         total=len(box_edges_affected),
     ):
-        s1 = time.time()
 
         # preprocess the edge
         edge_dict = sorted_gdp[
@@ -170,7 +161,6 @@ for jj, box_id in enumerate(box_id_affected):
         sinks = [item.split("_")[1] for item in edge_dict.keys()]
 
         # sum damage from undamaged source_sinks
-        t1 = time.time()
         dmg = 0  # total damage per box
         for sourcesink, v in edge_dict.items():
             source = sourcesink.split("_")[0]
@@ -180,13 +170,9 @@ for jj, box_id in enumerate(box_id_affected):
                 ):  # sourcesink already counted
                     continue  # do not add to dmg
             dmg += v
-        # print('time for t1 ', time.time()-t1)
-
 
         # find target operations
-        if (
-            operationfind
-        ):  # if the operation value of the target is desired
+        if operationfind:  # if the operation value of the target is desired
             t_gdp = [
                 [route_id_.split("_")[1], v]
                 for route_id_, v in edge_dict.items()
@@ -205,7 +191,6 @@ for jj, box_id in enumerate(box_id_affected):
                     targetsdamaged[tspec_name] = totdamage_t
 
         # update dictionary of damaged source_sinks
-        t2 = time.time()
         sources_new = [
             source for source in sources if source not in routeid_damaged.keys()
         ]
@@ -214,10 +199,9 @@ for jj, box_id in enumerate(box_id_affected):
         )  # add new keys
         for jj, source in enumerate(sources):
             if sinks[jj] not in routeid_damaged[source]:
-                #routeid_damaged[source] += [sinks[jj]]
-                routeid_damaged[source] = routeid_damaged[source].copy()+[str(sinks[jj])]
-        # print('time for t2 ', time.time()-t2)
-
+                routeid_damaged[source] = routeid_damaged[source].copy() + [
+                    str(sinks[jj])
+                ]
 
         totdamage += dmg  # add to overall storm damage
 
@@ -226,10 +210,10 @@ for jj, box_id in enumerate(box_id_affected):
 
 print(f"- [{nh} - Master timer: ", time.time() - start, "]")
 
-print("- saving")
+print(f"{nh}: - saving")
 
 storm_path = os.path.join(
-    "data", "intersection", "storm_data", "individual_storms", f"storm_{nh}"
+    "data", "intersection", "storm_data", "individual_storms", region, f"storm_{nh}"
 )
 if not os.path.exists(storm_path):
     os.makedirs(storm_path)
@@ -277,7 +261,9 @@ if operationfind:
 
 
 if operationfind and len(targets) != 0:
-    targets["gdp_loss"] = targets["id"].map(targetsdamaged).fillna(0)  # map targets that are damaged, if not in list -> no damage (.fillna(0))
+    targets["gdp_loss"] = (
+        targets["id"].map(targetsdamaged).fillna(0)
+    )  # map targets that are damaged, if not in list -> no damage (.fillna(0))
     targets["operation_frac"] = round(
         (targets["gdp"] - targets["gdp_loss"]) / targets["gdp"], 10
     )
@@ -307,7 +293,7 @@ targets.to_file(
 # write storm track file
 if len(TC) != 0:
     print(f"- writing {nh} to storm track file")
-    TC_nh = TC[TC['number_hur']==nh]
+    TC_nh = TC[TC["number_hur"] == nh]
     coords_lat = list(TC_nh["lat"])
     coords_lon = list(TC_nh["lon"])
     coords = [((coords_lon[i], coords_lat[i])) for i in range(len(coords_lat))]
@@ -342,11 +328,7 @@ stats_add = {
 }
 
 damagescsvpath = os.path.join(
-    "data",
-    "intersection",
-    "storm_data",
-    "individual_storms",
-    f"storm_{nh}",
+    storm_path,
     f"storm_r{region}_s{sample}_n{nh}.txt",
 )
 with open(

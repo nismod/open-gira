@@ -1,21 +1,9 @@
-import json
-import geopandas as gpd
-import numpy as np
-from shapely.geometry import Point, shape
-import sys
-import os
-import fiona
-from tqdm import tqdm
+"""Splits the world into boxes of length and height boxlen (input parameter)"""
 
 
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    boxlen = 5
+from importing_modules import *
 
-else:  # linux
-    boxlen = float(sys.argv[1])
+boxlen = float(sys.argv[1])
 
 
 if __name__ == "__main__":

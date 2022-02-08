@@ -3,10 +3,7 @@ This file downloads the plants data to csv files
 """
 
 from importing_modules import *
-from process_power_functions import changedir, idxbox
-
-
-changedir()
+from process_power_functions import idxbox
 
 
 if __name__ == "__main__":

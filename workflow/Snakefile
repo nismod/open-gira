@@ -8,19 +8,24 @@ DATA_DIR = config["data_dir"]
 HAZARD_DATA_DIR = config["hazard_data_dir"]
 DATASET = config["dataset"]
 hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
-WORKFLOW_DIR = config['workflow_dir']
+
 
 # Inputs #
 import requests
+
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 boxlen = 5  # width and height of boxes
-all_boxes = [f"box_{int(idx)}" for idx in range(0, int((180--180)*(90--90)/boxlen**2))]  # all boxes with width and height boxlen
-all_boxes = ["box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1719", "box_1720", "box_1721", "box_1722", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014"]  # temporary, just SP region
+all_boxes = [
+    f"box_{int(idx)}" for idx in range(0, int((180 - -180) * (90 - -90) / boxlen ** 2))
+]  # all boxes with width and height boxlen
+# all_boxes = ["box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1719", "box_1720", "box_1721", "box_1722", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014"]  # temporary, just SP region, uncomment to analyse only SP region
 YEARS = ["0"]  # years to investigate all storms within
 SAMPLES = ["0"]  # synthetic data samples (range from 0 to 9)
-REGIONS = ["SP"]  # Regions in which to analyse ((all boxes must be cohered with region))
+REGIONS = [
+    "SP"
+]  # Regions in which to analyse ((all boxes must be cohered with region))
 operationfind = True  # True: includes operation details of targets where hit by storms
 
 ##### load rules #####
@@ -40,6 +45,7 @@ include: "rules/process/split-gridfinder.smk"
 include: "rules/process/network.smk"
 include: "rules/process/connector.smk"
 include: "rules/process/assign-gdp.smk"
+include: "rules/process/exclude-countries.smk"
 include: "rules/process_all.smk"
 include: "rules/intersect/region-boxes.smk"
 include: "rules/intersect/region-grid.smk"
@@ -54,7 +60,7 @@ include: "rules/network_hazard_intersection.smk"
 include: "rules/join_data.smk"
 
 
-##### target rules #####
+#### target rules #####
 
 
 rule all:

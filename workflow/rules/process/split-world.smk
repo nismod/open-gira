@@ -17,6 +17,6 @@ rule world_splitter:
     shell:
         (
             "python3 "
-            + os.path.join("workflow", "scripts", "processing", "world_split.py")
+            + os.path.join("workflow", "scripts", "process", "world_split.py")
             + f" {boxlen}"
         )

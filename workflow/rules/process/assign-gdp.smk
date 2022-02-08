@@ -80,7 +80,7 @@ rule process_assigngdp:
         (
             "python3 "
             + os.path.join(
-                "workflow", "scripts", "processing", "process_power_6_assigngdp.py"
+                "workflow", "scripts", "process", "process_power_6_assigngdp.py"
             )
             + " {wildcards.box_id}"
         )

@@ -1,17 +1,9 @@
 """
-functions and data required to perform preprocessing
+common functions required to perform preprocessing
 """
 
 
 from importing_modules import *
-
-
-# TODO: remove below lines once testing complete and solely on linux
-def changedir():
-    """For use on personal pc"""
-    if "linux" not in sys.platform:
-        path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-        os.chdir(path)
 
 
 def idx(lat, lon):
@@ -170,62 +162,6 @@ def adjbox(box_idx):
     return [f"box_{int(elem)}" for elem in boxes]
 
 
-#
-# def get_lines(code=None):
-#     """Read gridfinder lines"""
-#
-#     s = time.time()
-#
-#     features = []
-#     with fiona.open(os.path.join("data","gridfinder","grid.gpkg")) as src:
-#
-#
-#
-#         for jj,feature in tqdm(enumerate(src), desc='grid.gpkg features', total=len(src)):
-#             # gridfinder GeoPackage stores an "fid" which GeoPandas ignores
-#             # and fiona reads as "id", not to feature['properties']
-#             # see https://github.com/geopandas/geopandas/issues/1035
-#             geom = shape(feature['geometry'])
-#
-#             # if code != None:
-#             #     check = code_geoms_gpd.within(geom)
-#             #     if True in check:
-#             #         continue
-#             #     else:
-#             #         break
-#
-#
-#
-#             features.append({
-#                 'source_id': feature['id'],
-#                 'source': feature['properties']['source'],
-#                 'geometry': geom,
-#             })
-#
-#     print("time for grid.gpkg processing: ",round((time.time() - s)/60, 2)," mins")
-#
-#
-#     gdf_world = gpd.GeoDataFrame(features)
-#
-#     if code != None:  # preload
-#         print(f'using {code}')
-#         with fiona.open(os.path.join("data","adminboundaries",f"gadm36_{code}.gpkg"), "r", layer=3) as src_code:
-#
-#             code_geoms = []
-#             for feature in src_code:
-#                 code_geoms.append(shape(feature['geometry']))
-#             print('create dataframe')
-#             code_geoms_gpd = gpd.GeoDataFrame({'geometry':code_geoms})
-#         print("overlay")
-#         xmin, ymin, xmax, ymax = code_geoms_gpd.bounds.values[0]
-#         gdf_world = gdf_world.cx[xmin:xmax,ymin:ymax]  # speed up
-#
-#         gdf_world = gdf_world.overlay(code_geoms_gpd, how='intersection')
-#
-#         print(gdf_world)
-#     return gdf_world
-
-
 def patch_nearest_edge(point, edges):
     """Set up network
 
@@ -249,15 +185,10 @@ def patch_nearest_edge(point, edges):
 snkit.network.nearest_edge = patch_nearest_edge
 
 
-#%% start
-# r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
-# COUNTRY_CODES = [row['iso3'] for row in r.json()['data']]
-COUNTRY_CODES = ["PHL"]  # TODO i think can remove these and two lines above
+#%% set global variables
 
 start = time.time()
 
-
-changedir()  # TODO keep?
 with open(
     os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
 ) as filejson:

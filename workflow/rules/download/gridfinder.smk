@@ -5,7 +5,10 @@ Reference
 https://gridfinder.org/
 """
 
-out_gridfinder = os.path.join(DATA_DIR, "gridfinder", "grid.gpkg")
+out_gridfinder = [
+    os.path.join(DATA_DIR, "gridfinder", "grid.gpkg"),
+    os.path.join(DATA_DIR, "gridfinder", "targets.tif"),
+]
 
 
 rule download_gridfinder:

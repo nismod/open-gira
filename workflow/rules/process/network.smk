@@ -46,7 +46,7 @@ rule process_network:
         (
             "python3 "
             + os.path.join(
-                "workflow", "scripts", "processing", "process_power_4_network.py"
+                "workflow", "scripts", "process", "process_power_4_network.py"
             )
             + " {wildcards.box_id}"
         )

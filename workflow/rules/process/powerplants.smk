@@ -20,5 +20,5 @@ rule process_powerplants:
         out_powerplants,
     shell:
         "python3 " + os.path.join(
-        "workflow", "scripts", "processing", "process_power_1_powerplants.py"
+        "workflow", "scripts", "process", "process_power_1_powerplants.py"
         )

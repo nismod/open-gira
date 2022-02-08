@@ -1,8 +1,5 @@
 """Creates unit grid at resolution of the return period maps."""
 
-#!/usr/bin/env python
-# coding: utf-8
-
 
 import numpy as np
 import pandas as pd
@@ -18,18 +15,11 @@ from pathos.multiprocessing import ProcessPool, cpu_count
 
 from tqdm import tqdm
 
+region = sys.argv[1]
 
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    region = "SP"
-
-
-else:  # linux
-    region = sys.argv[1]
-
-squarehalfwidth = 0.05
+squarehalfwidth = (
+    0.05  # this is half the width of the smallest unit in the return period maps
+)
 
 
 def t(num, t):
@@ -136,7 +126,7 @@ def create_grid_box(box_id, idx, totboxes):
         return grid_box_indiv, containing_box_dict
 
 
-if __name__ == "__main__":  # for windows (due to parallel processing)
+if __name__ == "__main__":
     nodesuse = max(1, cpu_count() - 2)
     if "linux" not in sys.platform:
         nodesuse = 8

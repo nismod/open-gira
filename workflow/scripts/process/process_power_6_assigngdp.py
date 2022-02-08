@@ -1,25 +1,14 @@
 """Assigns each edge its gdp flow and notes the source-sink paths passing through it"""
 
 
-from collections import defaultdict
-import networkx as nx
-from tqdm.notebook import tqdm
-from importing_modules import *
+
 from process_power_functions import adj, adjbox
-from collections import ChainMap
+from importing_modules import *
 
-export_full_subgraph = False  # if True, will export an addional file for network which contains all adjacent connections (larger file)
-include_paths = False  # if True will include paths running through edge (in the gpkg file - larger file)
+export_full_subgraph = False  # if True, will export an addional file for network which contains all adjacent connections (larger file) - Recommend False
+include_paths = False  # if True will include paths running through edge (in the gpkg file - larger file) - Recommend False
 
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    box_id = "box_1941"
-    box_id = "box_1431"
-
-else:
-    box_id = sys.argv[1]
+box_id = sys.argv[1]
 
 
 def read_network(fname):
@@ -76,7 +65,7 @@ def combine_networks(
         base_box = to_test[0]
         test_boxes = adj(base_box)  # boxes around base_box
         test_boxes_copy = test_boxes.copy()
-        print(f"Examine {base_box} with boxes adjacent: {test_boxes}")
+        # print(f"Examine {base_box} with boxes adjacent: {test_boxes}")
         for test_box in test_boxes_copy:
             if (
                 f"{min(base_box, test_box)}_{max(base_box, test_box)}" in checked
@@ -96,15 +85,15 @@ def combine_networks(
                 ) as file_ex:
                     connector_adj = json.load(file_ex)
             except:  # if doesnt exist
-                print(f"cant find box_{test_box} (nofile)")
+                # print(f"cant find box_{test_box} (nofile)")
                 test_boxes.remove(test_box)  # remove since no more connections
                 continue  # do not continue
             if len(connector_adj) == 0:
-                print(f"cant find box_{test_box} (len-0)")
+                # print(f"cant find box_{test_box} (len-0)")
                 test_boxes.remove(test_box)  # remove since no more connections
                 continue
 
-            print(f"loading box_{test_box}")
+            # print(f"loading box_{test_box}")
             test_fname = os.path.join(
                 "data",
                 "processed",
@@ -115,15 +104,15 @@ def combine_networks(
             try:
                 test_box_base_connections = connector_adj[f"box_{base_box}"]
             except:
-                print(f"No connections from {base_box} to {test_box}")
+                # print(f"No connections from {base_box} to {test_box}")
                 test_boxes.remove(test_box)
                 continue
             if len(test_box_base_connections) == 0:
-                print(f"No connections from {base_box} to {test_box} (len-0)")
+                # print(f"No connections from {base_box} to {test_box} (len-0)")
                 test_boxes.remove(test_box)
                 continue
 
-            print(f"Connections from {base_box} to {test_box}")
+            # print(f"Connections from {base_box} to {test_box}")
             # add adjacent box network
             test_nodes, test_edges = read_network(test_fname)
             test_G = create_graph_simple(test_nodes, test_edges)
@@ -139,7 +128,7 @@ def combine_networks(
                     if (
                         test_box_conn in conn_comp
                     ):  # if it contains a connection to base_box
-                        print(f"Found connections to base_box")
+                        # print(f"Found connections to base_box")
                         test_components_keep += conn_comp  # add it to the list
 
             test_nodes_keep = test_nodes[
@@ -181,7 +170,7 @@ def combine_networks(
                     test_box
                 )  # since test_box is connected, note to test all around test_box too
 
-        print(f"removing {base_box} from to_test\n")
+        # print(f"removing {base_box} from to_test\n")
         to_test.remove(base_box)  # tested all surrounding
 
     return nodes, edges, links_in_base_box
@@ -299,7 +288,9 @@ def assign_component_gdp(G, component, links_in_base_box):
             paths = nx.shortest_path(c, source=u.id)
             for v in targets.itertuples():
                 path = paths[v.id]  # path is the route from source to target
-                path_gdp = u.gdp * (v.gdp / c_gdp)  # (source gdp) * ( (target gdp)/(total component gdp) ) = (target gdp) * ( (source MW) / (total MW) )
+                path_gdp = u.gdp * (
+                    v.gdp / c_gdp
+                )  # (source gdp) * ( (target gdp)/(total component gdp) ) = (target gdp) * ( (source MW) / (total MW) )
                 target_sources.loc[target_sources["id"] == v.id, u.id] = (
                     u.capacity_mw / c_cap
                 )  # for each target (each row), we have a fraction of the power coming from each source (each column)
@@ -346,10 +337,10 @@ s = time.time()
 fname = os.path.join("data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg")
 
 
-print("importing and stitching together")
+print(f"{box_id}: importing and stitching together")
 nodes, edges, links_in_base_box = combine_networks(box_id)
-print("finished stitching")
-print(f"time: {round((time.time()-s)/60,2)}")
+print(f"{box_id}: finished stitching")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
 if len(nodes) == 1 and nodes["id"].iloc[0] == None:
     nodes = gpd.GeoDataFrame(columns=nodes.columns)
@@ -358,11 +349,11 @@ if len(edges) == 1 and edges["id"].iloc[0] == None:
 
 
 # else:
-print("creating graph")
+print(f"{box_id}: creating graph")
 G = create_graph(nodes, edges)
-print(f"time: {round((time.time()-s)/60,2)}")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
-print("assigning node edges gdp")
+# print("assigning node edges gdp")
 (
     node_gdp,
     edge_gdp,
@@ -370,7 +361,7 @@ print("assigning node edges gdp")
     target_sources_df,
     edge_gdp_sorted,
 ) = assign_node_edge_gdp(G, links_in_base_box)
-print(f"time: {round((time.time()-s)/60,2)}")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
 
 print(f"{box_id} -- saving edge_gdps_sorted")
@@ -389,7 +380,7 @@ with open(
 ) as sortedjson:
     json.dump(edge_gdp_sorted, sortedjson)
 
-print("writing source allocation for targets")
+# print("writing source allocation for targets")
 if len(target_sources_df) == 0:
     target_sources_df = pd.DataFrame({"Connections": [None]})
 target_sources_df.to_csv(
@@ -434,22 +425,22 @@ targets.to_file(
 out_fname = fname.replace("network", "network_with_gdp")
 
 
-print("node processing")
+# print("node processing")
 nodes = nodes.drop("gdp", axis=1)
 if len(node_gdp) != 0:
     nodes = nodes.merge(node_gdp, on="id")
-print(f"time: {round((time.time()-s)/60,2)}")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
-print("merging edges")
+# print("merging edges")
 if len(comp_path) != 0:
     edge_gdp = edge_gdp.merge(
         comp_path, on="link"
     )  # merge the component sink source info for each edge
 if len(edge_gdp) != 0:
     edges = edges.merge(edge_gdp, on="link")
-print(f"time: {round((time.time()-s)/60,2)}")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
-print("cleaning data")
+# print("cleaning data")
 edge_cols = list(edges.columns)
 if "path" in edge_cols:
     edges["path"] = [str(path) for path in edges["path"]]
@@ -464,7 +455,7 @@ if len(nodes) == 0:
     nodes.loc[0, :] = [None] * len(nodes.columns)
 
 if export_full_subgraph == True:
-    print("Writing full subgraph files (in addition)")
+    print(f"{box_id}: Writing full subgraph files (in addition)")
     nodes.to_file(
         out_fname.replace("with_gdp", "with_gdp_full_subgraph"),
         layer="nodes",
@@ -483,12 +474,12 @@ if len(nodes) != 1 and nodes["id"].iloc[0] != None:
 edges.drop("orig", axis=1, inplace=True)
 nodes.drop("orig", axis=1, inplace=True)
 
-print("writing nodes to file")
+print(f"{box_id}: writing nodes to file")
 nodes.to_file(out_fname, layer="nodes", driver="GPKG")
-print(f"time: {round((time.time()-s)/60,2)}")
+# print(f"time: {round((time.time()-s)/60,2)}")
 
 
-print("writing edges to file")
+print(f"{box_id}: writing edges to file")
 edges.to_file(out_fname, layer="edges", driver="GPKG")
 
 print(f"\n{box_id} -- Time to run file: {(time.time() - s)/60:0.2f} minutes")

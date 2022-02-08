@@ -1,24 +1,8 @@
 """Documents the connections between boxes"""
 
-import os
-import sys
 
-import geopandas as gpd
-import pandas as pd
-import json
-from tqdm.notebook import tqdm
+from process_power_functions import adj
 from importing_modules import *
-from process_power_functions import adjbox, adj
-import glob
-import time
-from shapely.geometry import LineString
-
-
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
 
 network_paths = glob.glob(
     os.path.join("data", "processed", "all_boxes", "box_*", "network_box_*.gpkg")
@@ -92,5 +76,3 @@ for network_path in tqdm(
         "w",
     ) as file_ex:
         json.dump(portal_dict, file_ex)
-
-    # print(time.time()-s)

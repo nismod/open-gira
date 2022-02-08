@@ -3,18 +3,8 @@ This file downloads the plants data to geoparequet files
 """
 
 from importing_modules import *
-from process_power_functions import changedir, idx
 
-
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    box_id = "box_1789"
-    # box_id = "box_1941"
-
-else:  # linux
-    box_id = sys.argv[1]
+box_id = sys.argv[1]
 
 
 def combine(lsts):
@@ -31,7 +21,7 @@ def combine(lsts):
         lst_intersect = [lst[j] for lst in lsts]
         mask_count = lst_intersect.count(numpy.ma.masked) + lst_intersect.count(None)
         if mask_count <= num_lsts - 2:  # 2 or more non-masked values
-            print(j, [lst[j] for lst in lsts])
+            # (j, [lst[j] for lst in lsts])
             avgval = sum(
                 [
                     0 if np.ma.is_masked(x) == True or x == None else x
@@ -42,7 +32,6 @@ def combine(lsts):
             count_overlap += 1
 
     assert count_overlap / llen < 0.4  # assert less than 40% is overlap (rough)
-    print(count_overlap, count_overlap / llen)
 
     all = [numpy.ma.masked] * llen
     for i in range(llen):
@@ -93,7 +82,7 @@ def get_target_areas(box_id):
     )
 
 
-def get_population(box_id, targets):
+def get_population(box_id, targets, exclude_countries_lst):
 
     # below: population of target areas (targets.geometry), populations is list corresponding to areas (CHECK, I think)
 
@@ -101,56 +90,58 @@ def get_population(box_id, targets):
         os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
-    box_country_dict_id = world_boxes_metadata["box_country_dict"][box_id]
+    box_country_list_id = world_boxes_metadata["box_country_dict"][box_id]
 
     pop_all = []
     pop_d_all = []
-    for kk, code in enumerate(box_country_dict_id):  # run for every country in the box
-        print(f"{kk+1}/{len(box_country_dict_id)} -- {code}")
 
-        gen = gen_zonal_stats(
-            targets.geometry,
-            os.path.join(
-                "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
-            ),
-            stats=[],
-            add_stats={"nansum": np.nansum},  # count NaN as zero for summation
-            all_touched=True,  # possible overestimate, but targets grid is narrower than pop
-        )
+    for kk, code in enumerate(box_country_list_id):  # run for every country in the box
+        print(f"{box_id}: {kk+1}/{len(box_country_list_id)} -- {code}")
 
-        populations = [
-            d["nansum"]
-            for d in tqdm(
-                gen, desc=f"{code} population progress", total=len(targets.geometry)
+        if code not in exclude_countries_lst:
+            gen = gen_zonal_stats(
+                targets.geometry,
+                os.path.join(
+                    "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                ),
+                stats=[],
+                add_stats={"nansum": np.nansum},  # count NaN as zero for summation
+                all_touched=True,  # possible overestimate, but targets grid is narrower than pop
             )
-        ]
-        ss = time.time()
-        population_density = point_query(
-            targets.centroid,
-            os.path.join(
-                "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
-            ),
-        )
-        print(f"time for {code} pop density: ", time.time() - ss)
+
+            populations = [
+                d["nansum"]
+                for d in tqdm(
+                    gen, desc=f"{code} population progress", total=len(targets.geometry)
+                )
+            ]
+            ss = time.time()
+            population_density = point_query(
+                targets.centroid,
+                os.path.join(
+                    "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                ),
+            )
+            # print(f"time for {code} pop density: ", time.time() - ss, "s")
+        else:  # code does not have .tif data so list of None is applied
+            populations = [None] * len(targets)
+            population_density = [None] * len(targets)
 
         pop_all.append(populations)
         pop_d_all.append(population_density)
 
-    if len(box_country_dict_id) == 1:
+    if len(box_country_list_id) == 1:
         pop_all = pop_all[0]
         pop_d_all = pop_d_all[0]
 
-    if len(box_country_dict_id) > 1:
+    if len(box_country_list_id) > 1:
         # join up again
         pop_all = combine(pop_all)
         pop_d_all = combine(pop_d_all)
 
-    # pop_all = [np.nan if numpy.ma.is_masked(x)==True else x for x in pop_all]  # replace masked with nan
     targets["population"] = pop_all
     targets["population_density_at_centroid"] = pop_d_all
-    targets["population_density_at_centroid"].fillna(
-        np.nan, inplace=True
-    )
+    targets["population_density_at_centroid"].fillna(np.nan, inplace=True)
 
     def estimate_population_from_density(row):
         if row.population is numpy.ma.masked:
@@ -193,7 +184,6 @@ def get_gdp(targets):
 
 
 if __name__ == "__main__":
-    # Targets
     # print("getting target areas")
     targets_box = get_target_areas(box_id)
 
@@ -210,9 +200,14 @@ if __name__ == "__main__":
         ]
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
+    with open(
+        os.path.join("data", "adminboundaries", "exclude_countries.txt"), "r"
+    ) as file:
+        exclude_countries_lst = json.load(file)
+
     if len(targets_box) != 0:
         # print("getting target population")
-        targets_box = get_population(box_id, targets_box)
+        targets_box = get_population(box_id, targets_box, exclude_countries_lst)
 
         # print("getting target gdp")
         targets_box = get_gdp(targets_box)

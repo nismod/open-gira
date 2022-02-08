@@ -25,5 +25,5 @@ rule process_connector:
         out_connector,
     shell:
         "python3 " + os.path.join(
-        "workflow", "scripts", "processing", "process_power_5_connector.py"
+        "workflow", "scripts", "process", "process_power_5_connector.py"
         )

@@ -1,8 +1,5 @@
 """Adapted wind speed file from J Verschuur. Processes stormtracks data and returns the wind speed at each grid location."""
 
-#!/usr/bin/env python
-# coding: utf-8
-
 
 import numpy as np
 import pandas as pd
@@ -14,22 +11,9 @@ import ast
 from pathos.multiprocessing import ProcessPool, cpu_count
 
 
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    sample = 0  # smaller sample size for testing
-    region = "SP"
-    nh_input = ["0_0_0"]
-
-
-else:  # linux
-    region = sys.argv[1]
-    sample = sys.argv[2]
-    nh_input = ast.literal_eval(sys.argv[3])
-
-# windmaxthreshold = 5  # ignore windspeed less than [m/s]
-# min_windlocmax = 8  # setting parameter J.V.
+region = sys.argv[1]
+sample = sys.argv[2]
+nh_input = ast.literal_eval(sys.argv[3])
 
 
 def t(num, t):
@@ -145,11 +129,11 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
 
     ### merge and remove based on lowest threshold for severity hurricane
     TC_sample = TC_sample.merge(max_wind, on="number_hur")
-    ##TC_sample  = TC_sample[TC_sample['wind_max']>windmaxthreshold] ### only with a maximum wind of more than  # NOTE: commented
+    ##TC_sample  = TC_sample[TC_sample['wind_max']>windmaxthreshold] ### only with a maximum wind of more than  # NOTE: commented so that snakemake knows all hurricane identifiers (nh)
 
     ### merge and remove based on mimum distance set
     TC_sample = TC_sample.merge(min_distance, on="number_hur")
-    ##TC_sample  = TC_sample[TC_sample['distance_min']<2000]  # NOTE: commented
+    ##TC_sample  = TC_sample[TC_sample['distance_min']<2000]  # NOTE: commented so that snakemake knows all hurricane identifiers (nh)
 
     TC_sample["wind_location"] = holland_wind_field(
         TC_sample["radius"],
@@ -169,7 +153,7 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
 
     ### merge and remove based on lowest threshold for severity hurricane at location
     TC_sample = TC_sample.merge(max_wind_location, on="number_hur")
-    ##TC_sample  = TC_sample[TC_sample['wind_location_max']>min_windlocmax] # NOTE: commented
+    ##TC_sample  = TC_sample[TC_sample['wind_location_max']>min_windlocmax] # NOTE: commented so that snakemake knows all hurricane identifiers (nh)
 
     above20ms = (
         TC_sample[TC_sample["wind_location"] > 20][["wind_location", "number_hur"]]
@@ -187,7 +171,7 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
     )
 
     ### extract the maximum wind speed at point only and associated parameters
-    # TODO could add other stats here
+    # could add other stats here
     TC_sample_maximum = TC_sample[
         [
             "number_hur",
@@ -216,7 +200,7 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
     return TC_sample_maximum
 
 
-if __name__ == "__main__":  # for windows (due to parallel processing)
+if __name__ == "__main__":
     nodesuse = max(1, cpu_count() - 2)
     if "linux" not in sys.platform:
         nodesuse = 7
@@ -239,9 +223,10 @@ if __name__ == "__main__":  # for windows (due to parallel processing)
                 "intersection",
                 "storm_data",
                 "all_winds",
+                region,
                 f"TC_r{region}_s{sample}_n{nh}.csv",
             )
-        ):  # {region}_s{sample}_y{year}
+        ):
             nh_toprocess.append(nh)
     print(f"nh to process: {nh_toprocess}")
 
@@ -263,13 +248,15 @@ if __name__ == "__main__":  # for windows (due to parallel processing)
             nh_toprocess_num,
             idx_pts,
             totpoints,
-        )  # , grid_code.idx)
+        )
         print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
 
         print("finalising")
         output_files = pd.concat(output)
 
-        all_winds_path = os.path.join("data", "intersection", "storm_data", "all_winds")
+        all_winds_path = os.path.join(
+            "data", "intersection", "storm_data", "all_winds", region
+        )
         if not os.path.exists(all_winds_path):
             os.makedirs(all_winds_path)
         for nh, csv_nh in output_files.groupby("number_hur"):  #

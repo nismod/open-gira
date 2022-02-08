@@ -14,16 +14,7 @@ targets, plants, edges -> all files
 
 from importing_modules import *
 
-# from process_power_functions import *
-
-# TODO: remove below lines once testing complete and solely on linux
-if "linux" not in sys.platform:
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-    box_id = "box_1940"
-
-else:  # linux
-    box_id = sys.argv[1]
+box_id = sys.argv[1]
 
 
 def timer(s):
@@ -36,7 +27,7 @@ if __name__ == "__main__":
     plants_empty = False
     targets_empty = False
 
-    print("opening files")
+    print(f"{box_id}: opening files")
     start = time.time()
     plantsfile = os.path.join(
         "data", "processed", "all_boxes", box_id, f"powerplants_{box_id}.csv"
@@ -61,7 +52,7 @@ if __name__ == "__main__":
     plants[
         "connected"
     ] = False  # bool, will be set to true if edges available to be connected to
-    print(f"writing to plants_{box_id}.gpkg")
+    print(f"{box_id}: writing to plants_{box_id}.gpkg")
     plants_file_name = os.path.join(
         "data", "processed", "all_boxes", box_id, f"plants_{box_id}.gpkg"
     )
@@ -76,13 +67,10 @@ if __name__ == "__main__":
 
     targets = targets.reset_index().copy()
     targets["id"] = [f"target_{i}_{box_id}" for i in range(len(targets))]
-    # targets['connected'] = False  # bool, will be set to true if edges available to be connected to
 
-    timer(start)
+    # timer(start)
 
-    print("writing to targets.gpkg")
-    # if len(targets) == 0:
-    #     raise RuntimeError("targets file is empty, program will quit.")
+    print(f"{box_id}: writing to targets_{box_id}.gpkg")
 
     targets_file_name = os.path.join(
         "data", "processed", "all_boxes", box_id, f"targets_{box_id}.gpkg"
@@ -97,21 +85,21 @@ if __name__ == "__main__":
         targets_empty = True
     else:
         targets.drop(columns=["centroid"]).to_file(targets_file_name, driver="GPKG")
-    timer(start)
+    # timer(start)
 
-    print("processing targets GeoData")
+    # print("processing targets GeoData")
     targets = targets[["id", "type", "box_id", "centroid"]].rename(
         columns={"centroid": "geometry"}
     )
-    timer(start)
+    # timer(start)
 
     # Combine to nodes
-    print("combining sources and sinks")
+    # print("combining sources and sinks")
     nodes = plants.append(targets).reset_index(drop=True)  # sources and targets located
-    timer(start)
+    # timer(start)
 
     # Edges
-    print("getting gridfinder lines")
+    # print("getting gridfinder lines")
 
     edges = gpd.read_file(
         os.path.join(
@@ -123,24 +111,24 @@ if __name__ == "__main__":
         edges = gpd.GeoDataFrame(columns=edges.columns)
         edges_empty = True
 
-    timer(start)
+    # timer(start)
 
-    print("processing lines")
+    # print("processing lines")
     edges["type"] = "transmission"
     edges["id"] = edges.reset_index()["index"].apply(
         lambda i: f"edge_{i}_{box_id}"
     )  # changed to edges, was targets (?)
 
-    timer(start)
+    # timer(start)
 
-    print("processing edges GeoData")
+    # print("processing edges GeoData")
     edges = edges[["id", "source_id", "box_id", "type", "geometry"]]
-    timer(start)
+    # timer(start)
 
     # Process network
-    print("creating network")
+    print(f"{box_id}: creating network")
     network = snkit.network.Network(nodes, edges)
-    timer(start)
+    # timer(start)
 
     # fix str when should be Point(# #)
     network.nodes["geometry"] = [
@@ -155,17 +143,17 @@ if __name__ == "__main__":
     if not edges_empty:
 
         # Connect power plants
-        print("connecting powerplants")
+        # print("connecting powerplants")
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
             warnings.simplefilter(action="ignore", category=FutureWarning)
 
-            print("processing network")
+            # print("processing network")
             network = snkit.network.split_multilinestrings(network)
-            timer(start)
+            # timer(start)
 
             geod = Geod(ellps="WGS84")
-            edge_limit = 20_000  # meters
+            edge_limit = 200_000  # meters
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
@@ -174,9 +162,9 @@ if __name__ == "__main__":
             )
 
         network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
-        timer(start)
+        # timer(start)
 
-        print("resetting indices")
+        # print("resetting indices")
         network.nodes["id"] = network.nodes.reset_index().apply(
             lambda row: f"conn_source_{row['index']}_{box_id}"
             if type(row.id) is float
@@ -185,7 +173,7 @@ if __name__ == "__main__":
         )
 
         # Connect targets
-        print("connecting targets")
+        # print("connecting targets")
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
             warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -196,41 +184,41 @@ if __name__ == "__main__":
                 and geod.geometry_length(edge.geometry) < edge_limit,
             )
         network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
-        timer(start)
+        # timer(start)
 
-        print("resetting indices")
+        # print("resetting indices")
         network.nodes["id"] = network.nodes.reset_index().apply(
             lambda row: f"conn_target_{row['index']}_{box_id}"
             if type(row.id) is float
             else row.id,
             axis=1,
         )
-        timer(start)
+        # timer(start)
 
         # Add nodes at line endpoints
-        print("adding nodes at line endpoints")
+        # print("adding nodes at line endpoints")
         network = snkit.network.add_endpoints(network)
-        timer(start)
+        # timer(start)
 
-        print("processing network")
+        # print("processing network")
         network.nodes.loc[network.nodes.id.isnull(), "type"] = "intermediate"
-        timer(start)
+        # timer(start)
 
-        print("resetting indices")
+        # print("resetting indices")
         network.nodes["id"] = network.nodes.reset_index().apply(
             lambda row: f"intermediate_{row['index']}_{box_id}"
             if type(row.id) is float
             else row.id,
             axis=1,
         )
-        timer(start)
+        # timer(start)
 
         # add from/to ids
-        print("adding from/to ids")
+        # print("adding from/to ids")
         with warnings.catch_warnings():
             warnings.simplefilter(action="ignore", category=FutureWarning)
             network = snkit.network.add_topology(network, id_col="id")
-        timer(start)
+        # timer(start)
 
         network.edges["box_id"] = box_id
 
@@ -249,7 +237,7 @@ if __name__ == "__main__":
     )
     print("writing edges to ", out_fname)
     network.edges.to_file(out_fname, layer="edges", driver="GPKG")
-    timer(start)
+    # timer(start)
 
     if targets_empty and plants_empty:
         network.nodes = gpd.GeoDataFrame(columns=network.nodes.columns)
@@ -258,12 +246,10 @@ if __name__ == "__main__":
 
     print("writing nodes to ", out_fname)
     network.nodes.to_file(out_fname, layer="nodes", driver="GPKG")
-    timer(start)
+    # timer(start)
 
     print(
-        "\nnote that ShapelyDepreciationWarnings (shapely) and FutureWarning (geopandas) were supressed. Also newer pandas versions can cause issues (1.1.5 works)."
+        "\nnote that ShapelyDepreciationWarnings (shapely) and FutureWarning (geopandas) were supressed. Newer pandas versions could cause issues (1.1.5 works)."
     )  # remove if fixed
     end = time.time()
-    print(f"\nTime to run file: {(end - start)/60:0.2f} minutes")
-
-    # print(targets_empty, plants_empty, edges_empty)
+    print(f"\n{box_id}: Time to run file: {(end - start)/60:0.2f} minutes")
