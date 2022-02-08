@@ -1,17 +1,22 @@
-def aggregate_input_geoparquet(wildcards):
-    checkpoint_output = checkpoints.slice.get(**wildcards).output[0]
-    return expand(
-        f"{OUTPUT_DIR}/splits/{DATASET}-slice{{i}}.highway-core_{hazard_slug}_splits.geoparquet",
-        i=glob_wildcards(
-            os.path.join(checkpoint_output, f"{DATASET}-slice{{i,\d+}}.osm.pbf")
-        ).i,
-    )
-
-
+# Take .geoparquet files and output a single, unified .geoparquet file
 rule join_data:
     input:
-        aggregate_input_geoparquet,
+        expand(
+            os.path.join(
+                f"{config['output_dir']}",
+                "splits",
+                f"{config['dataset']}_filter-{filter_slug}_slice-{{i}}_hazard-{hazard_slug}.geoparquet"
+            ),
+            i=range(config['slice_count'])
+        ),
     output:
-        f"{OUTPUT_DIR}/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{config['output_dir']}/{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet",
     script:
         "../scripts/join_data.py"
+
+rule test_join_data:
+    input:
+        os.path.join(
+            config['output_dir'],
+            f"{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet"
+        ),

@@ -9,9 +9,11 @@ hazard_csv: 'tests/test_aqueduct_data/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'northeast-oxford'
+# Number of slices to produce
+slice_count: 4
 # Path (relative to root-dir) to file containing comma separated list
 # of filters for 'osmium tags-filter' command
-osmium_tags_filters_file: 'tests/test_osm_filters.txt'
+osmium_tags_filters_file: 'tests/highway-core.txt'
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 

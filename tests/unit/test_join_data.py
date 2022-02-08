@@ -15,27 +15,26 @@ def test_join_data():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        configdir = workdir / "config"
         data_path = PurePosixPath("tests/unit/join_data/data")
         expected_path = PurePosixPath("tests/unit/join_data/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        configdir.mkdir()
-        shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet", file=sys.stderr)
+        print("results/northeast-oxford_filter-highway-core_hazard-aqueduct-river.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/northeast-oxford.highway-core_aqueduct_river_splits.geoparquet",
+            "results/northeast-oxford_filter-highway-core_hazard-aqueduct-river.geoparquet",
             "-F", 
             "-j1",
             "--keep-target-files",
+            "--configfile",
+            "tests/config.yaml",
     
             "--directory",
             workdir,

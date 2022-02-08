@@ -54,20 +54,6 @@ RUN wget https://zenodo.org/record/5887564/files/aqueduct_TZA.zip?download=1 \
     unzip /aqueduct_TZA.zip -d open-gira/data/aqueduct && \
     mv -f open-gira/data/aqueduct/aqueduct_TZA/* open-gira/data/aqueduct
 
-# Create the extracts file
-RUN rm -f open-gira/tanzania-latest.json
-RUN echo '{"directory":"./data","extracts":\
-    [{"bbox": [29.24395,-11.775945,40.69487,-0.974988],\
-    "output": "tanzania-latest.osm.pbf"}]}' >> open-gira/tanzania-latest.json
-
-# Prep the extracts
-RUN cd open-gira && \
-    python3 prepare-extracts.py tanzania-latest.json 3
-
 # Showtime
-#RUN cd open-gira && snakemake --cores all -R slice
-#RUN cd open-gira && snakemake --cores all -R filter_osm_data
-#RUN cd open-gira && snakemake --cores all -R convert_to_geoparquet
-#RUN cd open-gira && snakemake --cores all -R network_hazard_intersection
-#RUN cd open-gira && snakemake --cores all -R join_data
+#RUN cd open-gira && snakemake --cores all -R all
 #RUN cd open-gira && snakemake --cores all -R clean

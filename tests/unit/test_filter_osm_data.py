@@ -15,27 +15,26 @@ def test_filter_osm_data():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        configdir = workdir / "config"
         data_path = PurePosixPath("tests/unit/filter_osm_data/data")
         expected_path = PurePosixPath("tests/unit/filter_osm_data/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        configdir.mkdir()
-        shutil.copy("tests/config.yaml", configdir)
 
         # dbg
-        print("results/filtered/northeast-oxford-slice3.highway-core.osm.pbf", file=sys.stderr)
+        print("results/northeast-oxford_filter-highway-core.osm.pbf", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/filtered/northeast-oxford-slice3.highway-core.osm.pbf",
+            "results/northeast-oxford_filter-highway-core.osm.pbf",
             "-F", 
             "-j1",
             "--keep-target-files",
+            "--configfile",
+            "tests/config.yaml",
     
             "--directory",
             workdir,
