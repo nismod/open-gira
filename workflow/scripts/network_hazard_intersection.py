@@ -15,12 +15,11 @@ from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
 
-
 def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_path):
     # Filename to use for output
-    network_slug = os.path.basename(network_edges_path).replace(".geoparquet", "")
-    hazard_slug = os.path.basename(hazard_data_csv).replace(".csv", "")
-    slug = f"{network_slug}_{hazard_slug}"
+    network_slug = os.path.basename(network_edges_path).replace(".geoparquet", "")  # already _ safe
+    hazard_slug = os.path.basename(hazard_data_csv).replace(".csv", "").replace("_", "-")
+    slug = f"{network_slug}_hazard-{hazard_slug}"
 
     # Read hazard metadata
     # This is a config/steering file for this script, assumes hazards are all on the same
@@ -92,11 +91,11 @@ def main(network_edges_path, attrs, hazard_data_path, hazard_data_csv, outputs_p
             os.path.join(hazard_data_path, raster.filename))
 
     logging.info("Write data")
-    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}_splits.geoparquet'))
+    core_splits.to_parquet(os.path.join(outputs_path, f'{slug}.geoparquet'))
 
     logging.info("Write data without geometry")
     pandas.DataFrame(core_splits.drop(columns=['geometry'])) \
-        .to_parquet(os.path.join(outputs_path, f'{slug}_splits.parquet'))
+        .to_parquet(os.path.join(outputs_path, f'{slug}.parquet'))
 
     logging.info("Done.")
 
@@ -116,11 +115,11 @@ def write_empty_files(columns, slug, outputs_path):
         raise ValueError("Empty dataframe must contain a geometry column")
     logging.info("Write data")
     empty_geodf.to_parquet(
-        os.path.join(outputs_path, f"{slug}_splits.geoparquet")
+        os.path.join(outputs_path, f"{slug}.geoparquet")
     )
     logging.info("Write data without geometry")
     pandas.DataFrame(empty_geodf.drop(columns=["geometry"])).to_parquet(
-        os.path.join(outputs_path, f"{slug}_splits.parquet")
+        os.path.join(outputs_path, f"{slug}.parquet")
     )
 
 
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
-        network_edges_path = snakemake.input["network"]
+        network_edges_path = snakemake.input['network']
         attrs = snakemake.config["edge_attrs"]
         hazard_data_path = snakemake.config["hazard_data_dir"]
         hazard_csv = snakemake.input["hazard_csv"]

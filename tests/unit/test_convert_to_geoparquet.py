@@ -22,14 +22,14 @@ def test_convert_to_geoparquet():
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("results/geoparquet/northeast-oxford-slice0.highway-core.geoparquet", file=sys.stderr)
+        print("results/geoparquet/northeast-oxford_filter-highway-core_slice-0.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/geoparquet/northeast-oxford-slice0.highway-core.geoparquet",
+            "results/geoparquet/northeast-oxford_filter-highway-core_slice-0.geoparquet",
             "-F", 
             "-j1",
             "--keep-target-files",

@@ -31,7 +31,7 @@ target file.
                 -1.12,
                 51.83
             ],
-            "output": "northeast-oxford.highway-core.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core.osm.pbf"
         }
     ]
 }

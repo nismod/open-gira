@@ -22,14 +22,14 @@ def test_filter_osm_data():
         shutil.copytree(data_path, workdir)
 
         # dbg
-        print("results/northeast-oxford.highway-core.osm.pbf", file=sys.stderr)
+        print("results/northeast-oxford_filter-highway-core.osm.pbf", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/northeast-oxford.highway-core.osm.pbf",
+            "results/northeast-oxford_filter-highway-core.osm.pbf",
             "-F", 
             "-j1",
             "--keep-target-files",

@@ -8,7 +8,7 @@
                 -1.12,
                 51.83
             ],
-            "output": "northeast-oxford.osm.pbf"
+            "output": "northeast-oxford_filter-highway-core.osm.pbf"
         }
     ]
 }

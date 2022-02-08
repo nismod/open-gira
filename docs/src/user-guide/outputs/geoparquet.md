@@ -10,7 +10,7 @@ We'll do this using Python, so either write a script or pop open the console, an
 import geopandas  # installed when we installed open-gira
 
 # Assuming the open-gira root is the current working directory:
-file_name = 'results/geoparquet/tanzania-latest-slice32.highway-core.geoparquet'
+file_name = 'results/geoparquet/tanzania-latest_filter-highway-core_slice-32.geoparquet'
 
 gp = geopandas.read_parquet(file_name)  # load the file
 
