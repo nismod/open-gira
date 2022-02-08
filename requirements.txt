@@ -1,8 +1,8 @@
-nismod-snail
-tqdm
-osmium
-pyarrow
-snakemake
-pytest
+nismod-snail==0.2.1
+tqdm==4.62.3
+osmium==3.2.0
+pyarrow==6.0.0
+snakemake==6.15.1
+pytest==6.2.4
 geopandas
 

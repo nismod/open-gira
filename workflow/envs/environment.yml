@@ -10,4 +10,4 @@ dependencies:
   - pip:
     - nismod-snail==0.2.1
     - osmium==3.2.0
-    - snakemake==6.10.0
+    - snakemake==6.15.1
