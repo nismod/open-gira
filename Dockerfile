@@ -8,6 +8,7 @@ RUN apt update
 RUN apt install -y \
     build-essential \
     cmake \
+    gdal-bin \
     git \
     libboost-program-options-dev \
     libexpat1-dev \

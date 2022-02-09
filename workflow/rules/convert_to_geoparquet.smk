@@ -13,7 +13,7 @@ rule test_convert_to_geoparquet:
             os.path.join(
                 config['output_dir'],
                 'geoparquet',
-                f"{config['dataset']}_slice-{{i}}_filter-{filter_slug}.geoparquet"
+                f"{dataset_slug}_slice-{{i}}_filter-{filter_slug}.geoparquet"
             ),
             i=range(config['slice_count'])
         )
