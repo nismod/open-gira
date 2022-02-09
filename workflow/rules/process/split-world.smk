@@ -2,18 +2,17 @@
 
 """
 all_box_geoms = expand(
-    os.path.join(DATA_DIR, "processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
+    os.path.join(config['data_dir'], "processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
     box_id=all_boxes,
 )
 
 
 rule world_splitter:
     input:
-        os.path.join(DATA_DIR, "adminboundaries", "gadm36_levels.gpkg"),
+        os.path.join(config['data_dir'], "adminboundaries", "gadm36_levels.gpkg"),
     output:
-        #os.path.join(DATA_DIR, 'processed', 'world_boxes.gpkg'),
         all_box_geoms,
-        os.path.join(DATA_DIR, "processed", "world_boxes_metadata.txt"),
+        os.path.join(config['data_dir'], "processed", "world_boxes_metadata.txt"),
     shell:
         (
             "python3 "

@@ -19,7 +19,7 @@ rule download_population:
 
 rule download_population_indiv:
     output:
-        os.path.join(DATA_DIR, "population", "{code}_ppp_2020_UNadj_constrained.tif"),
+        os.path.join(config['data_dir'], "population", "{code}_ppp_2020_UNadj_constrained.tif"),
     shell:
         (
             "python3 "

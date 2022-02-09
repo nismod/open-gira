@@ -5,7 +5,7 @@
 exts = ["csv"]
 out_targets = expand(
     os.path.join(
-        DATA_DIR, "processed", "all_boxes", "{box_id}", "targets_{box_id}.{ext}"
+        config['data_dir'], "processed", "all_boxes", "{box_id}", "targets_{box_id}.{ext}"
     ),
     box_id=all_boxes,
     ext=exts,
@@ -19,17 +19,17 @@ rule process_targets:
 
 rule process_target_box:
     input:  # note also require countries which intersect each box
-        #os.path.join(DATA_DIR, 'processed', 'world_boxes.gpkg'),
+        #os.path.join(config['data_dir'], 'processed', 'world_boxes.gpkg'),
         os.path.join(
-            DATA_DIR, "processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"
+            config['data_dir'], "processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"
         ),
-        os.path.join(DATA_DIR, "gridfinder", "targets.tif"),
-        os.path.join(DATA_DIR, "processed", "world_boxes_metadata.txt"),
-        os.path.join(DATA_DIR, "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc"),
+        os.path.join(config['data_dir'], "gridfinder", "targets.tif"),
+        os.path.join(config['data_dir'], "processed", "world_boxes_metadata.txt"),
+        os.path.join(config['data_dir'], "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc"),
         os.path.join("data", "adminboundaries", "exclude_countries.txt"),
     output:
         os.path.join(
-            DATA_DIR, "processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"
+            config['data_dir'], "processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"
         ),
     shell:
         (

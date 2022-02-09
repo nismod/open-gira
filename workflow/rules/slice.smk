@@ -1,7 +1,7 @@
 # Use osmium to cut a .osm.pbf file into several .osm.pbf files as defined by bounding boxes
 rule slice:
     input:
-        # data=os.path.join(DATA_DIR, f"{DATASET}.osm.pbf"),
+        # data=os.path.join(config['data_dir'], f"{DATASET}.osm.pbf"),
         data=os.path.join(f"{config['output_dir']}",f"{config['dataset']}_filter-{filter_slug}.osm.pbf"),
         extracts_config=os.path.join(
             f"{config['output_dir']}",
