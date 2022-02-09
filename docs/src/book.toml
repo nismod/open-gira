@@ -1,0 +1,18 @@
+[book]
+title = "open-gira Documentation"
+authors = ["Tom Russell", "Matt Jaquiery"]
+description = "This ebook serves as a user guide for the open-gira software."
+
+[build]
+build-dir = "build"
+create-missing = false
+
+[preprocessor.index]
+
+[preprocessor.links]
+
+[output.html]
+# additional-css = ["custom.css"]
+
+[output.html.search]
+# limit-results = 15

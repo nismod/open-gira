@@ -8,6 +8,9 @@ venv/*
 data/*
 results/*
 
+# Slice files
+*-latest.json
+
 # snakemake
 .snakemake/
 
@@ -16,3 +19,9 @@ results/*
 
 # Tester files
 tester/*
+
+# IDE
+.idea
+
+# Rendered documentation
+docs/book/

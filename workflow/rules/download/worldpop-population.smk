@@ -7,7 +7,7 @@ https://www.worldpop.org/geodata/listing?id=79
 """
 
 out_population = expand(
-    os.path.join(DATA_DIR, "population", "{country}_ppp_2020_UNadj_constrained.tif"),
+    os.path.join(config['data_dir'], "population", "{country}_ppp_2020_UNadj_constrained.tif"),
     country=COUNTRY_CODES,
 )
 
