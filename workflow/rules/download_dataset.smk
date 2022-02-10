@@ -1,12 +1,13 @@
 # Download the file specified in the config
 rule download_dataset:
     output:
-        os.path.join(f"{config['output_dir']}", "input", f"{dataset_slug}.osm.pbf"),
-    shell:
-        """
-        wget {config[dataset]} --output-document={config[output_dir]}/input/{dataset_slug}.osm.pbf
-        """
+        "{OUTPUT_DIR}/input/{DATASET}.osm.pbf"
+        # os.path.join(f"{config['output_dir']}", "input", f"{dataset_slug}.osm.pbf"),
+    run:
+        input_file = config['infrastructure_datasets'][wildcards.DATASET]
+        os.system(f"wget {input_file} --output-document={output}")
 
-rule test_download_dataset:
-    input:
-        os.path.join(f"{config['output_dir']}", "input" ,f"{dataset_slug}.osm.pbf")
+"""
+Test with:
+snakemake --cores all results/input/tanzania-latest.osm.pbf
+"""

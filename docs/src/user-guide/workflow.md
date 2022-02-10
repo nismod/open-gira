@@ -13,10 +13,6 @@ Each of these will be the result of one of the steps in the workflow process:
 These steps, along with the output produced at each stage, 
 are described in the subsections of this chapter.
 
-These steps are summarised in the digital acyclic graph for `slice_count: 1`:
-![DAG of the workflow for the Tanzania dataset](../img/DAG.png)
-
-Here is a more realistic (but slightly harder to follow) version with `slice_count: 4`.
-In actual practice we'll often be using much higher `slice_count` values.
-In this tutorial, for instance, we use `slice_count: 36`.
-![DAG of the workflow for 4 slices of the Tanzania database](../img/DAG_4.png)
+These steps are summarised in the digital acyclic graph for `slice_count: 1`,
+for just the `tanzania-latest` infrastructure and `aqueduct-coast` hazard data:
+[![DAG of the workflow for the Tanzania dataset and coast flooding data](../img/DAG-simple.png)](../img/DAG-simple.png)

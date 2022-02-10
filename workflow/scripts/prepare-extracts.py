@@ -44,19 +44,23 @@ def slice_subextracts(initial_bbox, n):
 try:
     slice_count = int(snakemake.config['slice_count'])
     original_file = snakemake.input[0]
-    out_dir = snakemake.config['output_dir']
+    out_file = snakemake.output[0]
+    filter_slug = snakemake.params['filter_slug']
 except NameError:
     if len(sys.argv) != 3:
         raise RuntimeError(
-            "Incorrect number of input args, 3 required. Args: .json file, slice count, output directory"
+            "Incorrect number of input args, 4 required. Args: .json file, slice count, filter slug, output directory"
         )
-    slice_count = int(sys.argv[2])
     original_file = sys.argv[1]
-    output_dir = sys.argv[3]
+    slice_count = int(sys.argv[2])
+    filter_slug = sys.argv[3]
+    out_file = sys.argv[4]
 
 n = math.sqrt(slice_count)
 if n % 1 > 0 and n != 1:
     raise ValueError('Total slice count must be a square number or 1.')
+elif slice_count == 1:
+    n = slice_count
 else:
     n = int(n)
 
@@ -69,8 +73,8 @@ for extract in originaljsonfile["extracts"]:
     dataset, ext = splitext(extract["output"])
     for n, bbox in enumerate(slice_subextracts(extract["bbox"], n)):
         subextractsjson["extracts"].append(
-            {"bbox": bbox, "output": f"{dataset}_slice-{n}{ext}"}
+            {"bbox": bbox, "output": f"{dataset}_{filter_slug}/slice-{n}{ext}"}
         )
-    with open(join(out_dir, "json", f"{dataset}-extracts.geojson"), "w") as fp:
+    with open(out_file, "w") as fp:
         json.dump(subextractsjson, fp, indent=4)
     subextractsjson["extracts"].clear()

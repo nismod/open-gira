@@ -1,26 +1,23 @@
-# Take .geoparquet files and output a single, unified .geoparquet file
-# TODO: recombining across hazards here means we haven't guaranteed that they
-#   all use the same raster grid (because we checked consistently individually
-#   for each hazard). We may need to tweak the flow to handle this.
+# Take split .geoparquet files and output a single, unified .geoparquet file
+# for each dataset-hazard combination
+
 rule join_data:
     input:
-        expand(
-            os.path.join(
-                config['output_dir'],
-                "splits",
-                f"{dataset_slug}_filter-{filter_slug}_slice-{{i}}_hazard-{{hazard}}.geoparquet"
-            ),
-            i=range(config['slice_count']),
-            hazard=config['hazard_datasets'].keys()
+        lambda wildcards: expand(
+            os.path.join("{OUTPUT_DIR}", "splits", "{DATASET}_{FILTER_SLUG}_slice-{i}_{HAZARD_SLUG}.geoparquet"),
+            **wildcards,
+            i=range(config['slice_count'])
         ),
     output:
-        # "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}_{HAZARD_SLUG}.geoparquet",
-        os.path.join(
-            f"{config['output_dir']}",
-            f"{dataset_slug}_filter-{filter_slug}.geoparquet"
-        )
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}_{HAZARD_SLUG}.geoparquet",
+        # os.path.join(
+        #     f"{config['output_dir']}",
+        #     f"{dataset_slug}_filter-{filter_slug}.geoparquet"
+        # )
     script:
         "../scripts/join_data.py"
 
-# This can be tested using
-# snakemake --cores all join_data
+"""
+Test with:
+snakemake --cores all results/tanzania-latest_filter-highway-core_hazard-aqueduct-coast.geoparquet
+"""

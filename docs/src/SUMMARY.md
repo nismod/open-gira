@@ -20,3 +20,4 @@
   - [Convert to GeoParquet](user-guide/outputs/geoparquet.md)
   - [Intersect infrastructure and hazard data](user-guide/outputs/intersect.md)
   - [Join slices](user-guide/outputs/join.md)
+- [Workflow (_advanced_)](user-guide/workflow-advanced.md)

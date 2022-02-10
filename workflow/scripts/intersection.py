@@ -37,8 +37,7 @@ def main(network_edges_path, attrs, hazard_tifs, output_path):
             f"The list of hazard .tif files is empty. Check they were downloaded to "
             f"{snakemake.config['output_dir']}"
         ))
-
-    hazard_tifs_basenames = [os.path.split(os.path.basename(tif))[0] for tif in hazard_tifs]
+    hazard_tifs_basenames = [re.sub("\\.tif$", "", os.path.basename(tif)) for tif in hazard_tifs]
 
     # Read metadata for a single raster
     logging.info("Determining raster grid properties")
@@ -170,6 +169,7 @@ if __name__ == "__main__":
         ) = sys.argv[1:]
     attrs = attrs.split(",")
 
+    print(f"hazard_tifs={hazard_tifs}")
     main(
         network_edges_path=network_edges_path,
         attrs=attrs,

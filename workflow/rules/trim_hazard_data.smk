@@ -2,26 +2,29 @@
 # calculated in the .osm.pbf dataset's json file
 
 from json import load
+from glob import glob
 
+# This is a checkpoint because it outputs to a directory we want to ensure is up to date in later rules.
+# Specifically, intersection.smk looks for all *.tif files in the output directory.
 checkpoint trim_hazard_data:
     input:
-        file="{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw/{FILENAME}.tif",
-        json=os.path.join(f"{config['output_dir']}", "json", f"{dataset_slug}.json")
+        files=lambda wildcards: glob(
+            f"{checkpoints.download_hazard_datasets.get(**wildcards).output[0]}/*.tif"
+        ),
+        json="{OUTPUT_DIR}/json/{DATASET}.json"
     output:
-        "{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}/{FILENAME}.tif"
+        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}")
     run:
-        out_file = os.path.join(
-            f"{wildcards.OUTPUT_DIR}",
-            "input",
-            f"{wildcards.HAZARD_SLUG}",
-            f"{dataset_slug}",
-            f"{wildcards.FILENAME}.tif"
-        )
-        with open(input.json, "r") as j:
-            dict = load(j)
-            xmin, ymin, xmax, ymax = dict['extracts'][0]['bbox']
-            os.system(f"gdalwarp -te {xmin} {ymin} {xmax} {ymax} {input.file} {out_file}")
+        os.system(f"mkdir --parents {output}")
+        for f in input.files:
+            print(f"Trimming {f} for {wildcards.HAZARD_SLUG}, {wildcards.DATASET}.")
+            out_file = f"{output}/{os.path.basename(f)}"
+            with open(input.json, "r") as j:
+                dict = load(j)
+                xmin, ymin, xmax, ymax = dict['extracts'][0]['bbox']
+                os.system(f"gdalwarp -te {xmin} {ymin} {xmax} {ymax} {f} {out_file}")
 
-# Not sure how to test this within snakemake.
-# It can be done from the command line by requiring a specific file, e.g.:
-# snakemake --cores all data/hazard-aqueduct-coast/tanzania-latest/inuncoast_historical_nosub_hist_rp0001_5.tif
+"""
+Test with:
+snakemake --cores all results/input/hazard-aqueduct-river/tanzania-latest/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif
+"""
