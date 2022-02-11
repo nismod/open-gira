@@ -20,6 +20,7 @@ def test_all():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copytree(PurePosixPath("tests/unit/config"), PurePosixPath(workdir / "config"))
 
         # dbg
         print("all", file=sys.stderr)
@@ -30,11 +31,9 @@ def test_all():
             "-m",
             "snakemake", 
             "all",
-            "-F", 
+            # "-F",
             "-j1",
             "--keep-target-files",
-            "--configfile",
-            "tests/config.yaml",
     
             "--directory",
             workdir,

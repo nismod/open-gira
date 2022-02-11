@@ -20,21 +20,20 @@ def test_convert_to_geoparquet():
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
+        shutil.copytree(PurePosixPath("tests/unit/config"), PurePosixPath(workdir / "config"))
 
         # dbg
-        print("results/geoparquet/northeast-oxford_filter-highway-core_slice-0.geoparquet", file=sys.stderr)
+        print("results/geoparquet/tanzania-mini_filter-highway-core_slice-0.geoparquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/geoparquet/northeast-oxford_filter-highway-core_slice-0.geoparquet",
-            "-F", 
+            "results/geoparquet/tanzania-mini_filter-highway-core_slice-0.geoparquet",
+            "--force",
             "-j1",
             "--keep-target-files",
-            "--configfile",
-            "tests/config.yaml",
     
             "--directory",
             workdir,

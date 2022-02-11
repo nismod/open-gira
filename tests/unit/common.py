@@ -26,6 +26,8 @@ class OutputChecker:
         )
         unexpected_files = set()
         for path, subdirs, files in os.walk(self.workdir):
+            if "config" in path:
+                continue
             for f in files:
                 f = (Path(path) / f).relative_to(self.workdir)
                 if str(f).startswith(".snakemake"):

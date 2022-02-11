@@ -11,27 +11,27 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common
 
 
-def test_join_data():
+def test_intersection():
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath("tests/unit/join_data/data")
-        expected_path = PurePosixPath("tests/unit/join_data/expected")
+        data_path = PurePosixPath("tests/unit/intersection/data")
+        expected_path = PurePosixPath("tests/unit/intersection/expected")
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
         shutil.copytree(PurePosixPath("tests/unit/config"), PurePosixPath(workdir / "config"))
 
         # dbg
-        print("results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet", file=sys.stderr)
+        print("results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.geoparquet results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.parquet", file=sys.stderr)
 
         # Run the test job.
         sp.check_output([
             "python",
             "-m",
             "snakemake", 
-            "results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet",
-            "--force",
+            "results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.geoparquet results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.parquet",
+            # "--force",
             "-j1",
             "--keep-target-files",
     

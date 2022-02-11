@@ -33,7 +33,7 @@ if not isinstance(config['slice_count'], int) or \
 if not os.path.exists(config['osmium_tags_filters_file']):
     raise FileNotFoundError((
         f"Error in config: could not locate osmium_tags_filters_file at "
-        f"{config['osmium_tags_filters_file']}"
+        f"{os.path.join(os.getcwd(), config['osmium_tags_filters_file'])}"
     ))
 
 filter_slug = os.path.basename(config["osmium_tags_filters_file"]).replace(".txt", "").replace("_", "-")
