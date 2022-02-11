@@ -2,7 +2,6 @@
 
 
 
-
 from process_power_functions import adj, adjbox
 from importing_modules import *
 

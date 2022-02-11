@@ -22,10 +22,17 @@ lon_min, lat_min, lon_max, lat_max = (
     max(ds["lon"]),
     max(ds["lat"]),
 )
-region_box = box(lon_min, lat_min, lon_max, lat_max)
-gdf_boxes_in_region = gdf_box.overlay(
-    gpd.GeoDataFrame({"geometry": [region_box]}, crs="EPSG:4326"), how="intersection"
-)
+region_box = box(lon_min, lat_min, min(180, lon_max), lat_max)
+if lon_max > 180:
+    assert lon_max-360 > -180
+    region_box2 = box(-180, lat_min, lon_max-360, lat_max)
+    gdf_boxes_in_region = gdf_box.overlay(
+            gpd.GeoDataFrame({"geometry": [region_box, region_box2]}, crs="EPSG:4326"), how="intersection"
+    )
+else:
+    gdf_boxes_in_region = gdf_box.overlay(
+        gpd.GeoDataFrame({"geometry": [region_box]}, crs="EPSG:4326"), how="intersection"
+    )
 boxes_in_region = list(gdf_boxes_in_region["box_id"])
 
 with open(

@@ -49,16 +49,23 @@ def make_grid_points_nc2(box_id, region, ps):
     )
     lon_min, lat_min, lon_max, lat_max = box_gs.bounds.values[0]
 
+
+    mask = lons > 180.0  # fix above 180
+    lons[mask] = lons[mask] - 360.0
+
     lons = lons[lons > lon_min]
     lons = lons[lons < lon_max]
     lats = lats[lats > lat_min]
     lats = lats[lats < lat_max]
 
-    assert len(lons) != 0
-    assert len(lats) != 0
+    if len(lons) == 0:
+        print(f"No lons for {box_id}")
+        assert len(lons) != 0
+    if len(lats) == 0:
+        print(f"No lats for {box_id}")
+        assert len(lats) != 0
 
     point_df = pd.DataFrame()
-    tot = len(lats) * len(lons)
 
     box_infrastructure = gpd.read_file(
         os.path.join(
@@ -98,7 +105,7 @@ def make_grid_points_nc2(box_id, region, ps):
                     {"longitude": [lon], "latitude": [lat], "ID_point": [ID_point]}
                 )
                 point_df = pd.concat([point_df, point_df_add])
-            unit += 1
+                unit += 1
     try:
         gdf = gpd.GeoDataFrame(
             point_df, geometry=gpd.points_from_xy(point_df.longitude, point_df.latitude)

@@ -173,7 +173,8 @@ rule intersect_winds_indiv:
                 "intersection",
                 "storm_data",
                 "all_winds",
-                "{region}" "TC_r{region}_s{sample}_n" + f"{nh}.csv",
+                "{region}",
+                "TC_r{region}_s{sample}_n" + f"{nh}.csv",
             )
             for nh in rsn_req[2]
         ],
