@@ -20,7 +20,7 @@ def required_nh_remaining(rsn):
     for region in region_all:
         nh_completed_files += glob(
             os.path.join(
-                DATA_DIR, "intersection", "storm_data", "all_winds", region, "*csv"
+                config['data_dir'], "intersection", "storm_data", "all_winds", region, "*csv"
             )
         )  # find which wind speeds have been completed already
     nh_completed = [

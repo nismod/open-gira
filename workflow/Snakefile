@@ -1,35 +1,37 @@
 from glob import glob
-
+import requests
 
 configfile: "config/config.yaml"
 
+# Slugs are NOT allowed to use _ because that's used to separate slugs from one another
+dataset_slug = os.path.basename(config["dataset"]).replace("_", "-")
+hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "").replace("_", "-")
+filter_slug = os.path.basename(config["osmium_tags_filters_file"]).replace(".txt", "").replace("_", "-")
 
-DATA_DIR = config["data_dir"]
-HAZARD_DATA_DIR = config["hazard_data_dir"]
-DATASET = config["dataset"]
-hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "")
+# Constrain wildcards to NOT use _
+wildcard_constraints:
+    DATA_DIR="[^/]+",
+    OUTPUT_DIR="[^/]+",
+    DATASET="[^_]+",
+    SLICE_SLUG="slice-[0-9]+",
+    FILTER_SLUG="filter-[^_]+",
+    HAZARD_SLUG="hazard-[^_]+"
 
-
-# Inputs #
-import requests
-
+# TODO remove need for request on every run
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
+# TODO move to config
 boxlen = 5  # width and height of boxes
 all_boxes = [
     f"box_{int(idx)}" for idx in range(0, int((180 - -180) * (90 - -90) / boxlen ** 2))
 ]  # all boxes with width and height boxlen
-# all_boxes = ["box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1719", "box_1720", "box_1721", "box_1722", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014"]  # temporary, just SP region, uncomment to analyse only SP region
 YEARS = ["0"]  # years to investigate all storms within
 SAMPLES = ["0"]  # synthetic data samples (range from 0 to 9)
 REGIONS = [
     "SP"
 ]  # Regions in which to analyse ((all boxes must be cohered with region))
 operationfind = True  # True: includes operation details of targets where hit by storms
-
-##### load rules #####
-
 
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
@@ -38,6 +40,7 @@ include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download_all.smk"
+  
 include: "rules/process/split-world.smk"
 include: "rules/process/powerplants.smk"
 include: "rules/process/targets.smk"
@@ -47,30 +50,33 @@ include: "rules/process/connector.smk"
 include: "rules/process/assign-gdp.smk"
 include: "rules/process/exclude-countries.smk"
 include: "rules/process_all.smk"
+
 include: "rules/intersect/region-boxes.smk"
 include: "rules/intersect/region-grid.smk"
 include: "rules/intersect/extract-wind.smk"
 include: "rules/intersect/gdp-loss.smk"
 include: "rules/intersect/merge-stats.smk"
 include: "rules/intersect_all.smk"
-include: "rules/slice.smk"
+  
 include: "rules/filter_osm_data.smk"
+include: "rules/create_overall_bbox.smk"
+include: "rules/create_slice_rules.smk"
+include: "rules/slice.smk"
 include: "rules/convert_to_geoparquet.smk"
 include: "rules/network_hazard_intersection.smk"
 include: "rules/join_data.smk"
 
-
-#### target rules #####
-
-
+# Require the completed single .geoparquet file to be present
 rule all:
     input:
-        f"results/{DATASET}.highway-core_{hazard_slug}_splits.geoparquet",
+        f"{config['output_dir']}/{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet",
 
-
+# Remove intermediate directories
 rule clean:
     shell:
         """
-        rm -rf data/slices &&
-        rm -rf outputs/slices
+        rm -rf {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/geoparquet &&
+        rm -rf {config[output_dir]}/slices &&
+        rm -rf {config[output_dir]}/splits
         """

@@ -1,7 +1,7 @@
 # Input data and output locations
 data_dir: 'data'
 hazard_data_dir: 'data/aqueduct'
-output_dir: 'outputs'
+output_dir: 'results'
 
 # workflow location
 workflow_dir: 'workflow'
@@ -12,8 +12,10 @@ hazard_csv: 'data/aqueduct/aqueduct_river.csv'
 
 # OSM dataset
 dataset: 'tanzania-latest'
+# Number of slices to cut dataset into -- must be a square number
+slice_count: 1
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 # Filters definition
-osmium_tags_filters_file: "config/filters.txt"
+osmium_tags_filters_file: "config/highway-core.txt"
 

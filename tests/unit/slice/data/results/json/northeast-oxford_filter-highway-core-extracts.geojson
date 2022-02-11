@@ -1,0 +1,14 @@
+{
+    "directory": "./results/slices",
+    "extracts": [
+        {
+            "bbox": [
+                -1.23,
+                51.78,
+                -1.175,
+                51.805
+            ],
+            "output": "northeast-oxford_filter-highway-core_slice-0.osm.pbf"
+        },
+    ]
+}

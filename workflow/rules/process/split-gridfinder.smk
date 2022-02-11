@@ -5,7 +5,7 @@
 out_gridfinder = (
     expand(
         os.path.join(
-            DATA_DIR, "processed", "all_boxes", "{box_id}", "gridfinder_{box_id}.gpkg"
+            config['data_dir'], "processed", "all_boxes", "{box_id}", "gridfinder_{box_id}.gpkg"
         ),
         box_id=all_boxes,
     ),
