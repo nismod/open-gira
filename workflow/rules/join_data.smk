@@ -19,5 +19,5 @@ rule join_data:
 
 """
 Test with:
-snakemake --cores all results/tanzania-latest_filter-highway-core_hazard-aqueduct-coast.geoparquet
+snakemake --cores all results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet
 """

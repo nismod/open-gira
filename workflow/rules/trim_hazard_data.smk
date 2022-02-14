@@ -35,5 +35,5 @@ checkpoint trim_hazard_data:
 
 """
 Test with:
-snakemake --cores all results/input/hazard-aqueduct-river/tanzania-latest/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif
+snakemake --cores all results/input/hazard-aqueduct-river/tanzania-mini
 """

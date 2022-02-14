@@ -15,5 +15,5 @@ rule intersection:
 
 """
 Test with:
-snakemake --cores all results/splits/wales-latest_filter-highway-core_slice-0_hazard-aqueduct-coast.geoparquet
+snakemake --cores all results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.geoparquet
 """

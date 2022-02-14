@@ -11,5 +11,5 @@ rule create_overall_bbox:
 
 """
 Test with:
-snakemake --cores all results/json/tanzania-latest.json
+snakemake --cores all results/json/tanzania-mini.json
 """

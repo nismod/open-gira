@@ -11,7 +11,7 @@ hazard_datasets:
 infrastructure_datasets:
 #  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
 #  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
-  tanzania-mini: 'https://github.com/mjaquiery/aqueduct/raw/main/tanzania-mini.osm.pbf'
+  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 4
@@ -19,4 +19,3 @@ slice_count: 4
 edge_attrs: 'id'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
-

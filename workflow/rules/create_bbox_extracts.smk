@@ -11,5 +11,5 @@ rule create_bbox_extracts:
 
 """
 Test with:
-snakemake --cores all results/json/tanzania-latest_filter-highway-core_extracts.geojson
+snakemake --cores all results/json/tanzania-mini_extracts.geojson
 """

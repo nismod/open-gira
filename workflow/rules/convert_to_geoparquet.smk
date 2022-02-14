@@ -1,22 +1,21 @@
 # Take .osm.pbf files and output .geoparquet files
+
+# https://snakemake.readthedocs.io/en/latest/snakefiles/rules.html#data-dependent-conditional-execution
+def aggregate_input(wildcards):
+    checkpoint_output = checkpoints.slice.get(**wildcards).output[0]
+    files = glob_wildcards(os.path.join(checkpoint_output, "{file}.osm.pbf"))
+    input = expand(os.path.join(checkpoint_output, "{file}.osm.pbf"), file=files.file)
+    return input
+
 rule convert_to_geoparquet:
     input:
-        lambda wildcards: glob(
-            f"{checkpoints.slice.get(**wildcards).output[0]}/{wildcards.SLICE_SLUG}.osm.pbf"
-        ),
+        aggregate_input,
     output:
         "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}.geoparquet",
     script:
         "../scripts/osm_to_pq.py"
 
-rule test_convert_to_geoparquet:
-    input:
-        expand(
-            os.path.join(
-                config['output_dir'],
-                'geoparquet',
-                f"{{dataset}}_slice-{{i}}_filter-{filter_slug}.geoparquet"
-            ),
-            dataset=config['infrastructure_datasets'].keys(),
-            i=range(config['slice_count'])
-        )
+"""
+Test with:
+snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core_slice-0.geoparquet
+"""

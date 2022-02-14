@@ -1,0 +1,41 @@
+{
+    "directory": "./results/slices",
+    "extracts": [
+        {
+            "bbox": [
+                29.24395,
+                -2.7751475,
+                30.19819335,
+                -1.87506775
+            ],
+            "output": "tanzania-mini_filter-highway-core/slice-0.osm.pbf"
+        },
+        {
+            "bbox": [
+                29.24395,
+                -1.87506775,
+                30.19819335,
+                -0.974988
+            ],
+            "output": "tanzania-mini_filter-highway-core/slice-1.osm.pbf"
+        },
+        {
+            "bbox": [
+                30.19819335,
+                -2.7751475,
+                31.1524367,
+                -1.87506775
+            ],
+            "output": "tanzania-mini_filter-highway-core/slice-2.osm.pbf"
+        },
+        {
+            "bbox": [
+                30.19819335,
+                -1.87506775,
+                31.1524367,
+                -0.974988
+            ],
+            "output": "tanzania-mini_filter-highway-core/slice-3.osm.pbf"
+        }
+    ]
+}

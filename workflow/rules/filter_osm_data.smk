@@ -10,5 +10,5 @@ rule filter_osm_data:
 
 """
 Test with:
-snakemake --cores all results/input/tanzania-latest_filter-highway-core.osm.pbf
+snakemake --cores all results/input/tanzania-mini_filter-highway-core.osm.pbf
 """

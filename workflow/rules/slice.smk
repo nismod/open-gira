@@ -15,7 +15,7 @@ checkpoint slice:
 
 """
 Test with:
-snakemake --cores all results/slices/tanzania-latest_filter-highway-core_slice-0.osm.pbf
+snakemake --cores all results/slices/tanzania-mini_filter-highway-core
 
 Note: even testing with a single slice will generate all slices defined in the *_extracts.geojson file
 """

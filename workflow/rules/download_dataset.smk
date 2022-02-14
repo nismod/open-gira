@@ -14,5 +14,5 @@ rule download_dataset:
 
 """
 Test with:
-snakemake --cores all results/input/tanzania-latest.osm.pbf
+snakemake --cores all results/input/tanzania-mini.osm.pbf
 """

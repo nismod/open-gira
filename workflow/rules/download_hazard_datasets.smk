@@ -43,5 +43,5 @@ checkpoint download_hazard_datasets:
 
 """
 Test with:
-snakemake --cores all results/input/hazard-aqueduct-coast/raw/inuncoast_historical_nosub_hist_rp0001_5.tif
+snakemake --cores all results/input/hazard-aqueduct-river/raw
 """

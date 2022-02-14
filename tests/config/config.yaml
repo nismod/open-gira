@@ -1,0 +1,18 @@
+# Input data and output locations
+output_dir: 'results'
+
+# This should be a named list of files that specify hazard raster files
+# to retrieve using wget -i
+hazard_datasets:
+  aqueduct-river: 'external_files/hazard_sources.txt'
+
+# OSM dataset
+infrastructure_datasets:
+  tanzania-mini: 'external_files/tanzania-mini.osm.pbf'
+
+# Number of slices to cut dataset into -- must be a square number
+slice_count: 1
+# Edge attributes list for network/hazard intersection.
+edge_attrs: 'id'
+# Filters definition
+osmium_tags_filters_file: "tests/config/highway-core.txt"
