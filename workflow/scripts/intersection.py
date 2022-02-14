@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import sys
+import glob
 
 import geopandas
 import pandas
@@ -18,14 +19,14 @@ from tqdm import tqdm
 def main(network_edges_path, attrs, hazard_tifs, output_path):
     """
     Split the entries in network_edges_path according to the cells they occupy in the
-    grids of the hazard_tifs. Write the results to a .geoparquet file (output_path)
+    grids of the hazard_dir. Write the results to a .geoparquet file (output_path)
     and a similarly-named .parquet file.
 
     Parameters
     ----------
     network_edges_path (str): Path to a .geoparquet file with network data
     attrs (str|List[str]): attribute/s to copy from the original rows when split
-    hazard_tifs (List[str]): list of hazard raster files whose values should be combined with the network
+    hazard_dir (List[str]): list of hazard raster files whose values should be combined with the network
     output_path (str): .geoparquet version of the path to write to. A .parquet version is also written
 
     Returns
@@ -157,22 +158,25 @@ if __name__ == "__main__":
     try:
         network_edges_path = snakemake.input['network']
         attrs = snakemake.config["edge_attrs"]
-        hazard_tifs = snakemake.input['tifs']
+        hazard_dir = snakemake.input['tifs']
         output_path = snakemake.output['geoparquet']
     except NameError:
         print(sys.argv)
         (
             network_edges_path,
             attrs,
-            hazard_tifs,
+            hazard_dir,
             output_path,
         ) = sys.argv[1:]
-    attrs = attrs.split(",")
 
-    print(f"hazard_tifs={hazard_tifs}")
+    attrs = attrs.split(",")
+    tifs = glob.glob(os.path.join(hazard_dir, "*.tif"))
+
+    # print(f"hazard_dir={hazard_dir}")
+    # print(f"tifs={tifs}")
     main(
         network_edges_path=network_edges_path,
         attrs=attrs,
-        hazard_tifs=hazard_tifs,
+        hazard_tifs=tifs,
         output_path=output_path
     )

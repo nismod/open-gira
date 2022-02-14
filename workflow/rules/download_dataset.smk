@@ -1,11 +1,16 @@
 # Download the file specified in the config
+import os
+import re
+
 rule download_dataset:
     output:
         "{OUTPUT_DIR}/input/{DATASET}.osm.pbf"
-        # os.path.join(f"{config['output_dir']}", "input", f"{dataset_slug}.osm.pbf"),
     run:
         input_file = config['infrastructure_datasets'][wildcards.DATASET]
-        os.system(f"wget {input_file} --output-document={output}")
+        if re.match("^https?://", input_file):
+            os.system(f"wget {input_file} --output-document={output}")
+        else:
+            os.system(f"cp {input_file} {output}")
 
 """
 Test with:

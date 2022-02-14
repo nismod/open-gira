@@ -5,9 +5,8 @@ from glob import glob
 rule intersection:
     input:
         network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}.geoparquet",
-        tifs= lambda wildcards: glob(
-            f"{checkpoints.trim_hazard_data.get(** wildcards).output[0]}/*.tif"
-        ),
+        # We read in the entire directory here to avoid splitting the job for each *.tif file
+        tifs= lambda wildcards: checkpoints.trim_hazard_data.get(**wildcards).output[0],
     output:
         geoparquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}_{HAZARD_SLUG}.geoparquet",
         parquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}_{HAZARD_SLUG}.parquet",
