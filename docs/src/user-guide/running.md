@@ -1,7 +1,5 @@
 # Running
 
-With the requirements installed, data downloaded, configuration set, and the extracts file prepared, it's finally time
-to run the program. 
 When we run snakemake we have to tell it how many CPU cores it can use to do its processing.
 If you have fewer than 4 cores, or wish to use more, substitute an appropriate number for the 4 below:
 

@@ -2,13 +2,16 @@
 
 The program will have created a great many files in subdirectories of `./results`.
 Each of these will be the result of one of the steps in the workflow process:
-1. Filter the OpenStreetMap data to focus on major infrastructure components
-2. Determine the bounding box from the OpenStreetMap data
-3. Calculate a grid of bounding boxes for slicing the OpenStreetMap data
-4. Slice the OpenStreetMap data into smaller sections
-5. Convert OpenStreetMap data to .geoparquet format
-6. Add hazard information to infrastructure geoparquet
-7. Join slices together to produce overall geoparquet file
+1. Download OpenStreetMap data
+2. Filter OpenStreetMap data to focus on major infrastructure components
+3. Determine the bounding box from the OpenStreetMap data
+4. Download hazard raster files
+5. Clip hazard raster files to bounding boxes determined in step 3
+6. Calculate a grid of bounding boxes for slicing the OpenStreetMap data
+7. Slice the OpenStreetMap data into smaller sections
+8. Convert OpenStreetMap data to .geoparquet format
+9. Add hazard information to infrastructure geoparquet
+10. Join slices together to produce overall geoparquet file
 
 These steps, along with the output produced at each stage, 
 are described in the subsections of this chapter.
