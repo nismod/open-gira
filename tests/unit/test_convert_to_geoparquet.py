@@ -9,7 +9,7 @@ def test_convert_to_geoparquet():
     common.run_test(
         'convert_to_geoparquet',
         (
-            'snakemake results/geoparquet/tanzania-mini_filter-highway-core_slice-0.geoparquet '
+            'snakemake results/geoparquet/tanzania-mini_filter-highway-core_slice-2.geoparquet '
             '-j1 --keep-target-files'
         )
     )

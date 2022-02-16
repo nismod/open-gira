@@ -49,8 +49,11 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
 
+    print(f"Converting {pbf_path} to .geoparquet")
+
     h = WayHandler()
     h.apply_file(pbf_path, locations=True)
     geopandas.GeoDataFrame(h.output_data).to_parquet(
         output_path
     )
+    # print(geopandas.read_parquet(output_path))

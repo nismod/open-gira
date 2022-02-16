@@ -1,12 +1,15 @@
 """
 Common code for unit testing of rules generated with Snakemake 6.15.1.
 """
+import re
 import shutil
 import sys
 from pathlib import Path, PurePosixPath
 import subprocess as sp
 import os
 from tempfile import TemporaryDirectory
+import geopandas
+import pandas
 
 
 def run_test(target_name, command):
@@ -86,4 +89,29 @@ class OutputChecker:
             )
 
     def compare_files(self, generated_file, expected_file):
-        sp.check_output(["cmp", generated_file, expected_file])
+        print(f">>> Compare {generated_file} vs {expected_file}", file=sys.stderr)
+        if re.search("\\.geoparquet$", str(generated_file), re.IGNORECASE):
+            """
+            NOTE: This test will **fail** if the geoparquet file does not contain geography data columns.
+            This can happen where the convert_to_geoparquet job does not find any roads to write.
+            We leave this failure in because it is usually unintentional that you're testing with a 
+            dataset where _none_ of the slices have road data, and these tests should be targeted at
+            slices that _do_ have road data.
+            """
+            print(f">>> Method=geopandas.GeoDataFrame.compare", file=sys.stderr)
+            generated = geopandas.read_parquet(generated_file)
+            expected = geopandas.read_parquet(expected_file)
+            # TODO: This will be horribly slow -- needs sensible optimisation
+            for r in range(len(generated)):
+                assert str(generated[r:r+1]) == str(expected[r:r+1])
+        elif re.search("\\.parquet$", str(generated_file), re.IGNORECASE):
+            print(f">>> Method=pandas.GeoDataFrame.compare", file=sys.stderr)
+            generated = pandas.read_parquet(generated_file)
+            expected = pandas.read_parquet(expected_file)
+            # TODO: This will be horribly slow -- needs sensible optimisation
+            for r in range(len(generated)):
+                assert str(generated[r:r+1]) == str(expected[r:r+1])
+        else:
+            print(f">>> Method=cmp", file=sys.stderr)
+            sp.check_output(["cmp", generated_file, expected_file])
+        print(f">>> OK", file=sys.stderr)

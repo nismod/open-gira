@@ -37,6 +37,13 @@ The contents of this directory are:
 | `hazard_sources.txt` | Text file that contains the file path to the hazard file below |
 | `inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif` | Hazard data raster file |
 
+### NOTE on slices
+
+**Some of the slices in the mini testing dataset do not have highway data.**
+When you are writing tests that rely on slices, make sure you use one of the 
+slices that _does_ have highway data (**slices 2 and 3**), not one of the slices
+that does not have these data (slices 0 and 1).
+
 ## Config
 
 The tests have their own configuration, located in `tests/config/config.yaml`.

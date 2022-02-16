@@ -3,8 +3,10 @@
 # https://snakemake.readthedocs.io/en/latest/snakefiles/rules.html#data-dependent-conditional-execution
 def aggregate_input(wildcards):
     checkpoint_output = checkpoints.slice.get(**wildcards).output[0]
-    files = glob_wildcards(os.path.join(checkpoint_output, "{file}.osm.pbf"))
-    input = expand(os.path.join(checkpoint_output, "{file}.osm.pbf"), file=files.file)
+    # Handle the slice wildcard manually, because it's not set by the slice.smk rule
+    input = expand(os.path.join(checkpoint_output, "{SLICE_SLUG}.osm.pbf"), SLICE_SLUG=wildcards.SLICE_SLUG)
+    print(f"checkpoint_output={checkpoint_output}")
+    print(f"input={input}")
     return input
 
 rule convert_to_geoparquet:
