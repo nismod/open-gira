@@ -37,7 +37,7 @@ def run_test(target_name, command):
 
             "-r",  # show reasons, helps with debugging
             "--configfile",
-            "config/config.yaml",
+            "tests/config/config.yaml",
             "--directory",
             workdir,
         ])
@@ -103,14 +103,24 @@ class OutputChecker:
             expected = geopandas.read_parquet(expected_file)
             # TODO: This will be horribly slow -- needs sensible optimisation
             for r in range(len(generated)):
-                assert str(generated[r:r+1]) == str(expected[r:r+1])
+                try:
+                    assert str(generated[r:r+1]) == str(expected[r:r+1])
+                except AssertionError as e:
+                    print(f">>> FAILURE at row {r}.")
+                    print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
+                    raise e
         elif re.search("\\.parquet$", str(generated_file), re.IGNORECASE):
             print(f">>> Method=pandas.GeoDataFrame.compare", file=sys.stderr)
             generated = pandas.read_parquet(generated_file)
             expected = pandas.read_parquet(expected_file)
             # TODO: This will be horribly slow -- needs sensible optimisation
             for r in range(len(generated)):
-                assert str(generated[r:r+1]) == str(expected[r:r+1])
+                try:
+                    assert str(generated[r:r+1]) == str(expected[r:r+1])
+                except AssertionError as e:
+                    print(f">>> FAILURE at row {r}.")
+                    print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
+                    raise e
         else:
             print(f">>> Method=cmp", file=sys.stderr)
             sp.check_output(["cmp", generated_file, expected_file])

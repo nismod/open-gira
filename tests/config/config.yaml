@@ -15,4 +15,4 @@ slice_count: 1
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 # Filters definition
-osmium_tags_filters_file: "tests/config/highway-core.txt"
+osmium_tags_filters_file: "config/highway-core.txt"
