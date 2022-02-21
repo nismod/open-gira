@@ -4,16 +4,16 @@ from glob import glob
 
 rule intersection:
     input:
-        network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}.geoparquet",
+        network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.geoparquet",
         # We read in the entire directory here to avoid splitting the job for each *.tif file
         tifs= lambda wildcards: checkpoints.trim_hazard_data.get(**wildcards).output[0],
     output:
-        geoparquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}_{HAZARD_SLUG}.geoparquet",
-        parquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}_{HAZARD_SLUG}.parquet",
+        geoparquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.geoparquet",
+        parquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.parquet",
     script:
         "../scripts/intersection.py"
 
 """
 Test with:
-snakemake --cores all results/splits/tanzania-mini_filter-highway-core_slice-0_hazard-aqueduct-river.geoparquet
+snakemake --cores all results/splits/tanzania-mini_filter-highway-core/hazard-aqueduct-river/slice-0.geoparquet
 """

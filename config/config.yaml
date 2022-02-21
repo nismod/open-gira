@@ -10,7 +10,7 @@ hazard_datasets:
 # OSM dataset
 infrastructure_datasets:
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
-#  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
 #  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number

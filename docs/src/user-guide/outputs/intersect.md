@@ -9,7 +9,7 @@ slice 32 of Tanzania:
 
 ```python
 # We already imported geopandas
-slice_file_name = 'results/splits/tanzania-latest_filter-highway-core_slice-32_hazard-aqueduct-river.geoparquet'
+slice_file_name = 'results/splits/tanzania-latest_filter-highway-core/hazard-aqueduct-river/slice-32.geoparquet'
 slice_gp = geopandas.read_parquet(slice_file_name)
 print(slice_gp)
 ```

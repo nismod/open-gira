@@ -13,11 +13,11 @@ rule convert_to_geoparquet:
     input:
         aggregate_input,
     output:
-        "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}.geoparquet",
+        "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.geoparquet",
     script:
         "../scripts/osm_to_pq.py"
 
 """
 Test with:
-snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core_slice-0.geoparquet
+snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core/slice-0.geoparquet
 """
