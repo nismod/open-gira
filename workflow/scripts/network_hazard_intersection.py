@@ -9,7 +9,6 @@ import sys
 import geopandas
 import pandas
 import rasterio
-import snail
 
 from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring

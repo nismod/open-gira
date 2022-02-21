@@ -1,27 +1,21 @@
 # Use osmium to cut a .osm.pbf file into several .osm.pbf files as defined by bounding boxes
-rule slice:
+
+# This is a checkpoint because the DAG needs to be recalculated after the files are produced
+checkpoint slice:
     input:
-        # data=os.path.join(DATA_DIR, f"{DATASET}.osm.pbf"),
-        data=os.path.join(f"{config['output_dir']}",f"{config['dataset']}_filter-{filter_slug}.osm.pbf"),
-        extracts_config=os.path.join(
-            f"{config['output_dir']}",
-            "json",
-            f"{config['dataset']}_filter-{filter_slug}-extracts.geojson"
-        ),
+        data="{OUTPUT_DIR}/input/{DATASET}_{FILTER_SLUG}.osm.pbf",
+        extracts_config="{OUTPUT_DIR}/json/{DATASET}_extracts.geojson"
     output:
-        "{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}_{SLICE_SLUG}.osm.pbf",
+        directory("{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}"),
     shell:
         """
-        osmium extract --overwrite --no-progress --config {input.extracts_config} {input.data}
+        mkdir {output} &&
+        osmium extract --set-bounds --overwrite --no-progress --config {input.extracts_config} {input.data}
         """
 
-rule test_slice:
-    input:
-        expand(
-            os.path.join(
-                f"{config['output_dir']}",
-                "slices",
-                f"{config['dataset']}_slice-{{i}}_filter-{filter_slug}.osm.pbf"
-            ),
-            i=range(config['slice_count'])
-        ),
+"""
+Test with:
+snakemake --cores all results/slices/tanzania-mini_filter-highway-core
+
+Note: even testing with a single slice will generate all slices defined in the *_extracts.geojson file
+"""

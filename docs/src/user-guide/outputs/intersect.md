@@ -2,14 +2,14 @@
 
 The intersection process inspects the geographic data for each of the rows in our .geoparquet files in 
 `./results/geoparquet/` and produces a new file with the flood depths affecting that road in each
-of the flood scenarios in `./data/aqueduct/`.
+of the flood scenarios in `./results/input/hazard-<hazard>/<dataset>/`.
 These new files are saved in `./results/splits/`. 
 Let's use the Python console or update our Python script to load in the intersection information for
-slice 32:
+slice 32 of Tanzania:
 
 ```python
 # We already imported geopandas
-slice_file_name = 'results/splits/tanzania-latest_filter-highway-core_slice-32_hazard-aqueduct-river.geoparquet'
+slice_file_name = 'results/splits/tanzania-latest_filter-highway-core/hazard-aqueduct-river/slice-32.geoparquet'
 slice_gp = geopandas.read_parquet(slice_file_name)
 print(slice_gp)
 ```
@@ -35,10 +35,11 @@ We should see something like:
 Notice that there are more rows and columns than there were before.
 There are more rows because each highway has been split up into one row for each cell in the raster grid
 that it passes through.[^raster]
-There are more columns because each hazard scenario we had in `./data/aqueduct` has added a column 
-with its filename as the colum name and the maximum flood depth for each stretch of highway in each raster cell
-as its values.
+There are more columns because each hazard scenario we had in 
+`./results/input/hazard-<hazard>/<dataset>/` has added a column 
+with its filename as the colum name and the maximum flood depth for 
+each stretch of highway in each raster cell as its values.
 
 Corresponding `.parquet` files (without geometries) are also created.
 
-[^raster]: The flood maps in `./data/aqueduct` are raster files that show flood depth in each cell.
+[^raster]: The flood maps in `./results/input/hazard-<hazard>/<dataset>/` are raster files that show flood depth in each cell.

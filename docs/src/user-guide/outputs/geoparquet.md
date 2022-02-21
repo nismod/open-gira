@@ -2,15 +2,16 @@
 
 Geoparquet files are files that contain geographic data alongside other information.
 They are loaded into Python as dataframes (`geopandas.GeoDataFrame`).
-The .geoparquet files are stored in `./results/geoparquet`.
+The .geoparquet files are stored in `./results/geoparquet/`.
 Once again, let's open up the slice for Dar es Salaam, slice 32.
-We'll do this using Python, so either write a script or pop open the console, and put in the following:
+We'll do this using Python, so either write a script or pop open the console, 
+and put in the following:
 
 ```python
 import geopandas  # installed when we installed open-gira
 
 # Assuming the open-gira root is the current working directory:
-file_name = 'results/geoparquet/tanzania-latest_filter-highway-core_slice-32.geoparquet'
+file_name = 'results/geoparquet/tanzania-latest_filter-highway-core/slice-32.geoparquet'
 
 gp = geopandas.read_parquet(file_name)  # load the file
 
@@ -36,5 +37,7 @@ We should get an output something like:
 [870 rows x 3 columns]
 ```
 
-That looks about right -- we can see we have some geometry information, the type of the highway the geometry
-describes, and an (unused) id field.
+That looks about right -- we can see we have some geometry information, 
+the type of the highway the geometry describes, and an (unused) id field.
+The id field is inherited from the .osm.pbf file -- we asked for it
+using the `edge_attrs` config directive.

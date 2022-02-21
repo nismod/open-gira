@@ -1,3 +1,17 @@
+"""
+Snakemake file for open-gira.
+
+Snakemake is a workflow organiser. Snakemake is given a list of desired output files
+(see rule all below), and if those files don't exist (or aren't up to date), for each
+of those files it looks for a rule that can be used to generate it. The process is
+then repeated for that rule -- if the files required to build _these files_ don't exist,
+look for a rule that will produce them -- and so on.
+
+The Snakemake workflow is covered in detail in the documentation.
+"""
+
+import math
+import os.path
 from glob import glob
 import requests
 # import pydevd_pycharm
@@ -5,19 +19,32 @@ import requests
 
 configfile: "config/config.yaml"
 
-# Slugs are NOT allowed to use _ because that's used to separate slugs from one another
-dataset_slug = os.path.basename(config["dataset"]).replace("_", "-")
-hazard_slug = os.path.basename(config["hazard_csv"]).replace(".csv", "").replace("_", "-")
+# Check configfile
+if any(["/" in h for h in config['hazard_datasets'].keys()]):
+    raise ValueError("""Error in config: Hazard dataset names cannot contain / or _""")
+if any(["/" in h for h in config['infrastructure_datasets'].keys()]):
+    raise ValueError("""Error in config: Infrastructure dataset names cannot contain / or _""")
+
+# Number of slices to cut dataset into -- must be a square number
+if not isinstance(config['slice_count'], int) or \
+        (math.sqrt(config['slice_count']) % 1 > 0 and config['slice_count'] != 1):
+    raise ValueError("""Error in config: slice_count must be an integer, either a square number or 1""")
+
+if not os.path.exists(config['osmium_tags_filters_file']):
+    raise FileNotFoundError((
+        f"Error in config: could not locate osmium_tags_filters_file at "
+        f"{os.path.join(os.getcwd(), config['osmium_tags_filters_file'])}"
+    ))
+
 filter_slug = os.path.basename(config["osmium_tags_filters_file"]).replace(".txt", "").replace("_", "-")
 
-# Constrain wildcards to NOT use _
+# Constrain wildcards to NOT use _ or /
 wildcard_constraints:
-    DATA_DIR="[^/]+",
-    OUTPUT_DIR="[^/]+",
-    DATASET="[^_]+",
+    DATASET="[^_/]+",
     SLICE_SLUG="slice-[0-9]+",
-    FILTER_SLUG="filter-[^_]+",
-    HAZARD_SLUG="hazard-[^_]+"
+    FILTER_SLUG="filter-[^_/]+",
+    HAZARD_SLUG="hazard-[^_/]+",
+    FILENAME="[^/]+",
 
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
@@ -30,27 +57,50 @@ include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download_all.smk"
+
+include: "rules/download_dataset.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/create_overall_bbox.smk"
-include: "rules/create_slice_rules.smk"
+include: "rules/download_hazard_datasets.smk"
+include: "rules/trim_hazard_data.smk"
+include: "rules/create_bbox_extracts.smk"
 include: "rules/slice.smk"
 include: "rules/convert_to_geoparquet.smk"
-include: "rules/network_hazard_intersection.smk"
+include: "rules/intersection.smk"
 include: "rules/join_data.smk"
 
 ##### target rules #####
 
-# Require the completed single .geoparquet file to be present
+# Require the completed single .geoparquet file to be present for each hazard
 rule all:
     input:
-        f"{config['output_dir']}/{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet",
+        expand(
+            os.path.join(
+                f"{config['output_dir']}",
+                f"{{dataset}}_filter-{filter_slug}_hazard-{{hazard}}.geoparquet"
+            ),
+            dataset=config['infrastructure_datasets'].keys(),
+            hazard=config['hazard_datasets'].keys()
+        )
 
 # Remove intermediate directories
 rule clean:
     shell:
         """
-        rm -rm {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/json &&
         rm -rf {config[output_dir]}/geoparquet &&
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits
         """
+
+# Remove everything except the final results
+rule clean_all:
+    shell:
+        """
+        rm -rf {config[output_dir]}/input &&
+        rm -rf {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/geoparquet &&
+        rm -rf {config[output_dir]}/slices &&
+        rm -rf {config[output_dir]}/splits
+        """
+

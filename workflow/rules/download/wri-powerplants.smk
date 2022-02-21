@@ -6,7 +6,7 @@ https://www.wri.org/research/global-database-power-plants
 """
 
 out_powerplant = os.path.join(
-    config['data_dir'], "powerplants", "global_power_plant_database.csv"
+    config['output_dir'], "input", "powerplants", "global_power_plant_database.csv"
 )
 
 

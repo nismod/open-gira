@@ -68,37 +68,17 @@ python -m pytest tests
 
 ## Downloading datasets
 
-New users can follow through the remaining steps in this guide using the Tanzania OpenStreetMap data, available from 
-[https://download.geofabrik.de/africa/tanzania.html](https://download.geofabrik.de/africa/tanzania.html) (~500MB).
-This file should be placed in ./data.
-
-There should also be a hazard file in the location specified by `hazard_csv` in `config/config.yml`.
-For an initial run, users can copy the files in `./tests/test_aqueduct_data` to the `<hazard_csv>` location 
-(by default `./data/aqueduct`).
+The workflow downloads OpenStreetMap datasets and hazard raster files and combines them.
+The locations of the datasets to download are specified in `config/config.yaml`.
 
 ## Running the pipeline
 
 The snakemake configuration details are in `config/config.yml`. 
 You can edit this to set the target OSM
-dataset, number of slices and hazard data location. See
+infrastructure datasets, number of slices, and hazard datasets. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
 for details on the configuration variables.
 For new users, the default values should suffice.
-
-The second step is to create a configuration file for `osmium
-extract`, describing the bounding box of each OSM dataset slice.  This
-configuration file is expected to be found next to the OSM data at the
-location specified by the `data_dir` configuration variable. Its
-filename should be of the form `<dataset>-extracts.json` where
-`<dataset>` is specified by the `dataset` configuration variable. See
-[Creating multiple extracts in one
-go](https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts)
-on the `osmium-tool` docs for more details on how to write config
-files for `osmium extract`. A common task is to slice the OSM dataset
-into areas of equal height and width, see [Automatically generating
-the osmium extract confgiuration
-file.](https://github.com/nismod/open-gira/tree/update_readme#step-by-step-description-of-the-pipeline)
-New users should follow those steps to create `./tanzania-latests.json`.
 
 You can then run the exposure analysis pipeline automatically using
 snakemake, like so
@@ -107,20 +87,23 @@ snakemake, like so
 snakemake --cores 8
 ```
 
-Individual configuration parameters can be overriden from the command
+Individual configuration parameters can be overridden from the command
 line, for instance
 
 ```
-snakemake --cores 1 --config dataset=tanzania-latest data_dir=osm-data
+snakemake --cores 1 --config output_dir=output slice_count=8
 ```
 
-It is often useful to maintain several configuration files. You can
+It may be useful to maintain several configuration files. You can
 specify a configuration to be used in place of the default
 `config/config.yml` like so
 
 ```
 snakemake --cores 8 --configfile config/my_other_config.yml
 ```
+
+Note that pathways in the config file are always relative to the open-gira
+project root, not the location of the config file.
 
 ## Step-by-step description of the pipeline
 
@@ -130,39 +113,61 @@ associating road splits to corresponding flood levels.
 
 The pipeline consists in the following steps:
 
-1. The initial OSM dataset is filtered, keeping only relevant tags for road links
-   (using `osmium tags-filter`). This results in a smaller file
-   `<output_dir>/<dataset>_filter-<filters>.osm.pbf`, where `<filters>` is the
-   filename of the `osmium_tags_filter` file in the config.
-2. The OSM dataset's headers are examined for a `bbox` property and that is used
+1. The target OSM datasets are downloaded or copied and saved as 
+   `<output_dir>/input/<dataset>.osm.pbf`.
+2. The initial OSM datasets are filtered, keeping only relevant tags for road links
+   (using `osmium tags-filter`). This results in smaller files
+   `<output_dir>/input/<dataset>_filter-<filters>.osm.pbf`, where `<dataset>` is the
+   key name and `<filters>` is the filename of the `osmium_tags_filter` file in the config.
+3. The OSM dataset's headers are examined for a `bbox` property and that is used
    to determine the bounding box for the whole area (`<output_dir>/json/<dataset>.json`).
-3. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
-   according to the `slice_count` config option (`<output_dir>/json/<dataset>-extracts.geojson`).
-4. The filtered OSM file is sliced into areas of equal size using the bounding 
-   box grid (`<output_dir>/slices/<dataset>_slice<N>.osm.pbf`).
-5. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
+4. The hazard raster files for each hazard datasets are located by reading a list
+   of their locations from the config. Each of these locations is visited and the
+   .tif file downloaded or copied to `<output_dir>/input/hazard-<hazard>/raw/<filename>`
+   where `<hazard>` is the keyname in the config and `<filename>` is the file's
+   base name.
+5. Each hazard raster file is clipped to contain just the hazard data for each dataset.
+   These files are stored in `<output_dir>/input/hazard-<hazard>/<dataset>/<filename>`
+   where `<dataset>` is the OSM dataset whose bounding box is used for clipping.
+6. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
+   according to the `slice_count` config option, and these slices are saved
+   in a json file `<output_dir>/json/<dataset>-extracts.geojson`.
+7. The filtered OSM file is sliced into areas of equal size using the bounding 
+   box grid from step 6. The slices are saved to 
+   `<output_dir>/slices/<dataset>_filter-<filter>/slice-<N>.osm.pbf`.
+8. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
    resulting in `<output_dir>/geoparquet/<dataset>_filter-<filters>_slice-<N>.geoparquet`.
-6. Each geoparquet slice is intersected against flood level data from the
-   aqueduct dataset. The aqueduct dataset itself consists of a collection of
+9. Each geoparquet slice is intersected against flood level data from the
+   hazard datasets. The hazard datasets consist of a collection of
    raster data files. The network/hazard intersection results in data
-   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>.geoparquet` describing
-   roads split according to the raster grid and associated flood level values.
+   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>_hazard-<hazard>.geoparquet` 
+   describing roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
-7. Split data (one file per slice, see step 1) is then joined into a unique
-   dataset describing splits and associated flood level values for the whole
-   original OSM dataset. This results in
-   `<output_dir>/<dataset>_filter-<filters>_hazard-aqueduct-river.geoparquet`.
+10. Split data is then joined into a unique dataset describing 
+    infrastructure and associated hazard level values for each combination of
+    OSM dataset and hazard dataset. This results in
+    `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`.
+
+This is a directional acyclic graph (DAG) of a simplified version of the workflow
+that uses just one OSM dataset, one hazard dataset, and one slice:
+![DAG of the Snakefile workflow](docs/src/img/DAG-simple.png)
 
 ### Keeping things tidy
 
-You can remove all intermediate data and output files by running
+You can remove all intermediate files by running
 
 ```
-snakemake clean
+snakemake -c1 clean
 ```
 
 Note that this will *not* remove the final data files
-`<output_dir>/<dataset>_filter-<filters>_split-<N>.[geoparquet, parquet]`.
+`<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`,
+nor will it remove the original input files `<output_dir>/input/*`.
+
+You can remove all intermediate data _including_ input files by running
+```
+snakemake -c1 clean_all
+```
 
 Snakemake has utilities to improve the workflow code quality:
 - `snakemake --lint` suggests improvements and fixes for common problems

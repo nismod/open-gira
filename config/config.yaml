@@ -1,18 +1,21 @@
 # Input data and output locations
-data_dir: 'data'
-hazard_data_dir: 'data/aqueduct'
 output_dir: 'results'
 
-# Directory <aqueduct_dir> is expected to contain a csv file
-# <datafiles_list> describing the raster data files.
-hazard_csv: 'data/aqueduct/aqueduct_river.csv'
+# This should be a named list of files that specify hazard raster files
+# to retrieve using wget -i
+hazard_datasets:
+  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
+  aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
 
 # OSM dataset
-dataset: 'tanzania-latest'
+infrastructure_datasets:
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+#  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
+
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 1
+slice_count: 36
 # Edge attributes list for network/hazard intersection.
 edge_attrs: 'id'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
-
