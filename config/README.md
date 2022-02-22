@@ -19,7 +19,7 @@ or they can be remote files to fetch with `wget`.
 - `slice_count`: Number of slices to take for each infrastructure dataset.
 More slices allows for greater parallelization, but will also duplicate sections of roads that cross
 slice boundaries, so too high a number can lead to redundancy.
-- `edge_attrs`: Edge attributes list for network/hazard intersection.
+- `keep_tags`: Osmium tags to preserve in .geoparquet file.
 - `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
 
 Modifying the configuration file will *not* trigger a re-run of the pipeline by
