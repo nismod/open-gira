@@ -16,7 +16,7 @@ from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
 
-def main(network_edges_path, attrs, hazard_tifs, output_path):
+def main(network_edges_path, hazard_tifs, output_path):
     """
     Split the entries in network_edges_path according to the cells they occupy in the
     grids of the hazard_dir. Write the results to a .geoparquet file (output_path)
@@ -67,29 +67,27 @@ def main(network_edges_path, attrs, hazard_tifs, output_path):
         core_edges = geopandas.read_parquet(network_edges_path)
     except ValueError:
         logging.info("No data in geometry column, writing empty files.")
-        columns = ["id", "geometry", "cell_index", "length_km"] + hazard_tifs_basenames
+        columns = ['geometry', *pandas.read_parquet(network_edges_path).columns, "length_km", *hazard_tifs_basenames]
         write_empty_files(columns, output_path)
         return
 
     # Split edges
     logging.info("Split edges")
     core_splits = []
-    for edge in tqdm(core_edges.itertuples(), total=len(core_edges)):
+    for i in tqdm(range(len(core_edges))):
         # split edge
         splits = split_linestring(
-            edge.geometry,
+            core_edges.geometry[i],
             raster_width,
             raster_height,
             raster_transform,
         )
         # add to collection
         for s in splits:
-            split_data = {
-                'geometry': s
-            }
-            for attr in attrs:
-                split_data[attr] = getattr(edge, attr)
-            core_splits.append(split_data)
+            new_row = core_edges.iloc[i].copy()
+            new_row.geometry = s
+            core_splits.append(new_row)
+
     core_splits = geopandas.GeoDataFrame(core_splits)
 
     logging.info("Split %d edges into %d pieces", len(core_edges), len(core_splits))
@@ -157,26 +155,25 @@ if __name__ == "__main__":
     tqdm.pandas()
     try:
         network_edges_path = snakemake.input['network']
-        attrs = snakemake.config["edge_attrs"]
         hazard_dir = snakemake.input['tifs']
         output_path = snakemake.output['geoparquet']
     except NameError:
-        print(sys.argv)
-        (
-            network_edges_path,
-            attrs,
-            hazard_dir,
-            output_path,
-        ) = sys.argv[1:]
+        # print(sys.argv)
+        # (
+        #     network_edges_path,
+        #     hazard_dir,
+        #     output_path,
+        # ) = sys.argv[1:]
+        network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
+        output_path = '../../results/test.geoparquet'
+        hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
 
-    attrs = attrs.split(",")
     tifs = glob.glob(os.path.join(hazard_dir, "*.tif"))
 
     # print(f"hazard_dir={hazard_dir}")
     # print(f"tifs={tifs}")
     main(
         network_edges_path=network_edges_path,
-        attrs=attrs,
         hazard_tifs=tifs,
         output_path=output_path
     )

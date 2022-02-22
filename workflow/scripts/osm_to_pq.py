@@ -69,15 +69,13 @@ class WaySlicer(osmium.SimpleHandler):
         # print(f"way={w.id}; shared node count={len([n for n in w.nodes if n.ref in shared_node_set])}")
         segment = []
         segments = {}
-        segment_id = 1
+        segment_id = 0
         for node in w.nodes:
             if node.ref in shared_node_set and len(segment) >= 2:
                 # end segment
                 segment.append(node)
                 segments[segment_id] = segment
                 segment_id += 1
-                if segment_id % 10 == 0:  # avoid round numbers because they are truncated as decimals
-                    segment_id += 1
                 segment = [node]
             else:
                 # start/middle
@@ -85,8 +83,8 @@ class WaySlicer(osmium.SimpleHandler):
 
         # Prepare information for all segments
         base_input = {}
-        for k in ['highway', *self.tags_to_preserve]:
-            base_input[k] = w.tags[k] if k in w.tags else None
+        for k in self.tags_to_preserve:
+            base_input[f"tag_{k}"] = w.tags[k] if k in w.tags else None
 
         # Calculate segment output
         for s_id, segment in segments.items():
@@ -99,8 +97,7 @@ class WaySlicer(osmium.SimpleHandler):
             self.output_data.append({
                 'geometry': line,
                 'way_id': w.id,
-                # digit count from https://stackoverflow.com/a/2189827
-                'segment_id': w.id + s_id / math.pow(10, int(math.log10(s_id)) + 1),
+                'segment_id': s_id,
                 **base_input,
                 **self.shared_node_to_dict(segment[0], 'start_node_'),
                 **self.shared_node_to_dict(segment[-1], 'end_node_')
@@ -134,11 +131,11 @@ if __name__ == '__main__':
     try:
         pbf_path = snakemake.input[0]
         output_path = snakemake.output[0]
-        edge_attrs = snakemake.config['edge_attrs']
+        keep_tags = snakemake.config['keep_tags']
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        pbf_path, output_path, edge_attrs = sys.argv[1:]
+        pbf_path, output_path, keep_tags = sys.argv[1:]
 
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     logging.info(f"Converting {pbf_path} to .geoparquet.")
@@ -153,7 +150,7 @@ if __name__ == '__main__':
 
     h = WaySlicer(
         shared_nodes=shared_nodes,
-        tags_to_preserve=edge_attrs.replace(' ', '').split(',')
+        tags_to_preserve=keep_tags.replace(' ', '').split(',')
     )
     h.apply_file(pbf_path, locations=True)
     logging.info(

@@ -127,7 +127,7 @@ if __name__ == "__main__":
     tqdm.pandas()
     try:
         network_edges_path = snakemake.input['network']
-        attrs = snakemake.config["edge_attrs"]
+        attrs = snakemake.config["keep_tags"]
         hazard_data_path = snakemake.config["hazard_data_dir"]
         hazard_csv = snakemake.input["hazard_csv"]
         output_paths = os.path.dirname(snakemake.output["geoparquet"])
