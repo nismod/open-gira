@@ -11,7 +11,7 @@ def aggregate_input(wildcards):
 
 rule convert_to_geoparquet:
     input:
-        aggregate_input,
+        aggregate_input
     output:
         "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.geoparquet",
     script:
