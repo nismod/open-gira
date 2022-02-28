@@ -33,11 +33,6 @@ def main(network_edges_path, hazard_tifs, output_path):
     -------
     (void)
     """
-    if len(hazard_tifs) == 0:
-        raise ValueError((
-            f"The list of hazard .tif files is empty. Check they were downloaded to "
-            f"{snakemake.config['output_dir']}"
-        ))
     hazard_tifs_basenames = [re.sub("\\.tif$", "", os.path.basename(tif)) for tif in hazard_tifs]
 
     # Read metadata for a single raster
@@ -158,17 +153,23 @@ if __name__ == "__main__":
         hazard_dir = snakemake.input['tifs']
         output_path = snakemake.output['geoparquet']
     except NameError:
-        # print(sys.argv)
-        # (
-        #     network_edges_path,
-        #     hazard_dir,
-        #     output_path,
-        # ) = sys.argv[1:]
-        network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
-        output_path = '../../results/test.geoparquet'
-        hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
+        print(sys.argv)
+        (
+            network_edges_path,
+            hazard_dir,
+            output_path,
+        ) = sys.argv[1:]
+        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
+        # output_path = '../../results/test.geoparquet'
+        # hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
 
     tifs = glob.glob(os.path.join(hazard_dir, "*.tif"))
+
+    if len(tifs) == 0:
+        raise ValueError((
+            f"The list of hazard .tif files is empty. Check they were downloaded to "
+            f"{hazard_dir}"
+        ))
 
     # print(f"hazard_dir={hazard_dir}")
     # print(f"tifs={tifs}")
