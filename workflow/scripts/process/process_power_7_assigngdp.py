@@ -1,47 +1,33 @@
 """Assigns each edge its gdp flow and notes the source-sink paths passing through it"""
 
 
+# TODO
+import sys
 
+if 'linux' not in sys.platform:
+    box_id = "box_1696"
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
+else:
+    box_id = sys.argv[1]
 
-from process_power_functions import adj, adjbox
+from process_power_functions import adj, adjbox, read_network, read_simple_network
 from importing_modules import *
 
 export_full_subgraph = False  # if True, will export an addional file for network which contains all adjacent connections (larger file) - Recommend False
 include_paths = False  # if True will include paths running through edge (in the gpkg file - larger file) - Recommend False
 
-box_id = sys.argv[1]
 
+def long2short(x):
+    """Converts from long notation to short notation (more efficient to work with). x is string"""
+    return x.replace('intermediate_','i').replace('_box_','b').replace('target_','t').replace('source_','s').replace('conn_','c')
 
+def short2long(x):
+    """Converts from short notation back to long notation. Order is crucial to avoid incorrect replacements. x is string"""
+    return x.replace('c','conn_').replace('s','source_').replace('t','target_').replace('b','_box_').replace('i','intermediate_')
 
-def read_network(fname):
-    # read edges
-    edges = gpd.read_file(fname, layer="edges")
-
-    if len(edges) == 1:
-        if edges["id"].iloc[0] == None:  # no edges
-            edges["link"] = None
-    else:
-        # create unique link id from from/to node ids
-        edges["link"] = edges.apply(
-            lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
-        )
-
-    # read nodes
-    nodes = gpd.read_file(fname, layer="nodes")
-
-    # add gdp to target nodes
-    targets = gpd.read_file(fname.replace("network", "targets"))
-    nodes = nodes.merge(targets[["id", "gdp"]], on="id", how="left")
-
-    # add capacity to plant/generation/source nodes
-    plants = gpd.read_file(fname.replace("network", "plants"))
-    if nodes["capacity_mw"].all() == plants["capacity_mw"].all():
-        nodes = nodes.drop(columns="capacity_mw")  # prevent merge issue
-    nodes = nodes.merge(plants[["id", "capacity_mw"]], on="id", how="left")
-
-    return nodes, edges
-
-
+#@profile
 def combine_networks(
     box_id_orig,
 ):
@@ -55,14 +41,16 @@ def combine_networks(
     nodes["orig"] = True  # note that these are from the base box
     edges["orig"] = True  # note that these are from the base box
 
+    edges['length_eff'] = edges.geometry.length  # add the geometry lengths
+
     links_in_base_box = list(edges["link"])  # notes the links in the base box
 
     to_test = [int(box_id_orig[4:])]  # start with
     edge_cols = list(edges.columns)
     checked = []  # list of checked boxes (to note not to recheck)
     while len(to_test) >= 1:
-        if len(checked)%10==0:
-            print(f"{box_id_orig}: checked {len(checked)}")
+        if len(checked) % 1  == 0:
+            print(f"{box_id_orig}: checked {len(checked)} boxes")
 
         to_test = list(set(to_test))  # get rid of duplicates
 
@@ -103,7 +91,7 @@ def combine_networks(
                 "processed",
                 "all_boxes",
                 f"box_{test_box}",
-                f"network_box_{test_box}.gpkg",
+                f"simple_network_box_{test_box}.gpkg",
             )
             try:
                 test_box_base_connections = connector_adj[f"box_{base_box}"]
@@ -116,9 +104,17 @@ def combine_networks(
                 test_boxes.remove(test_box)
                 continue
 
+            try:
+                test_nodes, test_edges = read_simple_network(test_fname)
+            except:
+                print(f"Simple network box does not exist for {test_box}. Will assume no connections between {base_box} and {test_box}.\nThis message should disappear with all boxes processed.")  # occurs when simple boxes not completed everywhere.
+                test_boxes.remove(test_box)
+                continue
+
+
             # print(f"Connections from {base_box} to {test_box}")
             # add adjacent box network
-            test_nodes, test_edges = read_network(test_fname)
+
             test_G = create_graph_simple(test_nodes, test_edges)
             test_components = list(nx.connected_components(test_G))
             test_components_keep = []  # indices of test_components to include
@@ -127,7 +123,7 @@ def combine_networks(
             ) in test_box_base_connections:  # for each box connection to base_box
                 if conn[5] not in list(nodes["id"]):
                     continue
-                test_box_conn = conn[4]  # # toid
+                test_box_conn = conn[4]  # to_id
                 for conn_comp in test_components:  # for each subgraph in test_box
                     if (
                         test_box_conn in conn_comp
@@ -152,7 +148,7 @@ def combine_networks(
                 item
                 for item in test_box_base_connections
                 if item[5] in list(nodes["id"])
-            ]  # only keen if in the subgraph
+            ]  # only keep if in the subgraph
 
             if len(test_box_base_connections_keep) >= 1:
                 # add adjacent box network connections
@@ -169,7 +165,7 @@ def combine_networks(
                 update_dict = dict(zip(edge_cols, all_connections_lst))
                 edges = edges.append(gpd.GeoDataFrame(update_dict))  # add to network
 
-                #print(f"added connections, adding {test_box} to to_check")
+                # print(f"added connections, adding {test_box} to to_check")
                 to_test.append(
                     test_box
                 )  # since test_box is connected, note to test all around test_box too
@@ -187,7 +183,7 @@ def create_graph(nodes, edges):
         for n in nodes.itertuples()
     )
     G.add_edges_from(
-        (e.from_id, e.to_id, {"id": e.id, "length_m": e.geometry.length})
+        (e.from_id, e.to_id, {"id": e.id, "length_m": e.length_eff})  # effective length is
         for e in edges.itertuples()
     )
     return G
@@ -205,7 +201,6 @@ def assign_node_edge_gdp(G, links_in_base_box):
     node_gdps = []
     edge_gdps = []
     component_lst = []
-    target_sources_lst = []
     edge_gdp_sorted = {}
 
     for component in tqdm(components, desc="assigning gdp", total=len(components)):
@@ -213,7 +208,6 @@ def assign_node_edge_gdp(G, links_in_base_box):
             c_node_gdp,
             c_edge_gdp,
             c_component,
-            target_sources,
             edge_gdp_indiv,
         ) = assign_component_gdp(
             G, component, links_in_base_box
@@ -224,8 +218,6 @@ def assign_node_edge_gdp(G, links_in_base_box):
             edge_gdps.append(c_edge_gdp)
         if len(c_component):
             component_lst.append(c_component)
-        if len(target_sources):
-            target_sources_lst.append(target_sources)
 
         edge_gdp_sorted = {
             **edge_gdp_sorted,
@@ -241,12 +233,8 @@ def assign_node_edge_gdp(G, links_in_base_box):
     node_gdp = g0(node_gdps)
     edge_gdp = g0(edge_gdps)
     component_df = g0(component_lst)
-    target_sources_df = g0(target_sources_lst)
 
-    if len(target_sources_df) > 0:
-        target_sources_df = target_sources_df.fillna(0)
-
-    return node_gdp, edge_gdp, component_df, target_sources_df, edge_gdp_sorted
+    return node_gdp, edge_gdp, component_df, edge_gdp_sorted
 
 
 def edge_link_ids_from_nodes(G, route_nodes):
@@ -254,10 +242,11 @@ def edge_link_ids_from_nodes(G, route_nodes):
     next(next_nodes)
     return ["__".join(sorted([u, v])) for u, v in zip(route_nodes, next_nodes)]
 
-
+#@profile
 def assign_component_gdp(G, component, links_in_base_box):
     # create connected component subgraph
     c = G.subgraph(component).copy()
+    c = nx.relabel_nodes(c, lambda x: long2short(x))  # relabel for efficiency
     # nodes dataframe
     c_nodes = pd.DataFrame(n for _, n in c.nodes(data=True))
 
@@ -272,7 +261,7 @@ def assign_component_gdp(G, component, links_in_base_box):
             return n.capacity_mw * c_gdp / c_cap
         return n.gdp
 
-    c_nodes["gdp"] = c_nodes.apply(assign_source_gdp, axis=1)
+    c_nodes["gdp"] = c_nodes.apply(assign_source_gdp, axis=1)  # TODO check midpoints not affected
 
     # assign GDP "flow" along shortest path from source to target, sharing source
     # gdp proportionally between targets
@@ -282,58 +271,65 @@ def assign_component_gdp(G, component, links_in_base_box):
     sources = c_nodes[c_nodes.type == "source"].copy()
     targets = c_nodes[c_nodes.type == "target"].copy()
 
-    target_sources = pd.DataFrame({"id": targets["id"]})
+    sources['id'] = sources['id'].str.replace('source_','s').str.replace('_box_','b')  # improve computational efficiency
+    targets['id'] = targets['id'].str.replace('target_','t').str.replace('_box_','b')  # improve computational efficiency
 
     edge_gdp_indiv = dict()
+
 
     print(f"{box_id} -- Sources: {len(sources)}, targets: {len(targets)}")
     if len(sources) and len(targets):
         for u in tqdm(sources.itertuples(), desc="sources", total=len(sources)):
-            paths = nx.shortest_path(c, source=u.id)
+            paths = nx.shortest_path(c, source=u.id, weight='length_eff')  # TODO add weight length_m
             for v in targets.itertuples():
                 path = paths[v.id]  # path is the route from source to target
                 path_gdp = u.gdp * (
                     v.gdp / c_gdp
                 )  # (source gdp) * ( (target gdp)/(total component gdp) ) = (target gdp) * ( (source MW) / (total MW) )
-                target_sources.loc[target_sources["id"] == v.id, u.id] = (
-                    u.capacity_mw / c_cap
-                )  # for each target (each row), we have a fraction of the power coming from each source (each column)
 
                 for link_id in edge_link_ids_from_nodes(c, path):
-                    if link_id in links_in_base_box:
-                        edge_links[
+
+                    #if link_id in links_in_base_box:  # only save if in the base_box (to be examined)
+                    edge_links[
+                        link_id
+                    ] += path_gdp  # each edge is given the associated gdp
+
+                    # if include_paths:  # only do if include in gpkg
+                    #     comp_path[link_id].append(
+                    #         [path[0], path[-1]]
+                    #     )  # [source, target]
+
+                    route_id = (
+                        path[0] + "_" + path[-1]
+                    )  # source_sink unique for a flow
+                    if link_id not in edge_gdp_indiv:
+                        edge_gdp_indiv[
                             link_id
-                        ] += path_gdp  # each edge is given the associated gdp
+                        ] = (
+                            {}
+                        )  # add link_id dict to edge_gdp_indiv if not yet there
 
-                        if include_paths:  # only do if include in gpkg
-                            comp_path[link_id].append(
-                                [path[0], path[-1]]
-                            )  # [source, target]
+                    if route_id in edge_gdp_indiv[link_id]:
+                        edge_gdp_indiv[link_id][
+                            route_id
+                        ] += path_gdp  # add path_gdp to target (source unknown) if target in edge_gdp_indiv[link_id]
+                    else:
+                        edge_gdp_indiv[link_id][
+                            route_id
+                        ] = path_gdp  # create path_gdp for target (source unknown) if target not in edge_gdp_indiv[link_id]
 
-                        route_id = (
-                            path[0] + "_" + path[-1]
-                        )  # source_sink unique for a flow
-                        if link_id not in edge_gdp_indiv:
-                            edge_gdp_indiv[
-                                link_id
-                            ] = (
-                                {}
-                            )  # add link_id dict to edge_gdp_indiv if not yet there
-
-                        if route_id in edge_gdp_indiv[link_id]:
-                            edge_gdp_indiv[link_id][
-                                route_id
-                            ] += path_gdp  # add path_gdp to target (source unknown) if target in edge_gdp_indiv[link_id]
-                        else:
-                            edge_gdp_indiv[link_id][
-                                route_id
-                            ] = path_gdp  # create path_gdp for target (source unknown) if target not in edge_gdp_indiv[link_id]
+    print('Shortening base component names')
+    links_in_base_box_shortened = [long2short(x) for x in links_in_base_box]
+    print('filter base box...')
+    edge_gdp_indiv = {key_keep: edge_gdp_indiv[key_keep] for key_keep in edge_gdp_indiv.keys() if key_keep in links_in_base_box_shortened}  # just keep in components in the base_box
+    print('...filtered')
+    #edge_gdp_indiv = {short2long(k): {short2long(kk): vv for kk,vv in v.items()} for k,v in edge_gdp_indiv.items()}  # change values back to original
 
     c_edges = pd.DataFrame({"link": k, "gdp": v} for k, v in edge_links.items())
 
     c_components = pd.DataFrame({"link": k, "path": v} for k, v in comp_path.items())
 
-    return c_nodes[["id", "gdp"]], c_edges, c_components, target_sources, edge_gdp_indiv
+    return c_nodes[["id", "gdp"]], c_edges, c_components, edge_gdp_indiv
 
 
 #%% run
@@ -362,20 +358,12 @@ G = create_graph(nodes, edges)
     node_gdp,
     edge_gdp,
     comp_path,
-    target_sources_df,
     edge_gdp_sorted,
 ) = assign_node_edge_gdp(G, links_in_base_box)
 # print(f"time: {round((time.time()-s)/60,2)}")
 
 
 print(f"{box_id} -- saving edge_gdps_sorted")
-edge_gdp_sorted = {
-    k: {
-        k2.replace("source_", "s").replace("_box_", "b").replace("target_", "t"): i2
-        for k2, i2 in i.items()
-    }
-    for k, i in edge_gdp_sorted.items()
-}  # shorten keys
 with open(
     os.path.join(
         "data", "processed", "all_boxes", box_id, f"edge_gdp_sorted_{box_id}.txt"
@@ -383,48 +371,6 @@ with open(
     "w",
 ) as sortedjson:
     json.dump(edge_gdp_sorted, sortedjson)
-
-# print("writing source allocation for targets")
-if len(target_sources_df) == 0:
-    target_sources_df = pd.DataFrame({"Connections": [None]})
-target_sources_df.to_csv(
-    os.path.join(
-        "data",
-        "processed",
-        "all_boxes",
-        box_id,
-        f"target_source_allocation_{box_id}.csv",
-    )
-)
-fname_targets = os.path.join(
-    "data", "processed", "all_boxes", box_id, f"targets_{box_id}.gpkg"
-)
-targets = gpd.read_file(fname_targets)
-
-target_sources_df["allocation"] = [
-    str(
-        dict(
-            ChainMap(
-                *[
-                    {x[0]: x[1]}
-                    for x in list(target_sources_df.iloc[i].items())[1:]
-                    if x[1] > 0
-                ]
-            )
-        )
-    )
-    for i in range(len(target_sources_df))
-]  # merges all the data into lists
-targets.to_file(
-    os.path.join(
-        "data",
-        "processed",
-        "all_boxes",
-        box_id,
-        f"targets_with_allocation_{box_id}.gpkg",
-    ),
-    driver="GPKG",
-)
 
 out_fname = fname.replace("network", "network_with_gdp")
 
@@ -441,7 +387,10 @@ if len(comp_path) != 0:
         comp_path, on="link"
     )  # merge the component sink source info for each edge
 if len(edge_gdp) != 0:
+    #edges['link'] = [long2short(edge) for edge in edges['link']]
+    edge_gdp['link'] = [short2long(edge) for edge in edge_gdp['link']]  # convert back to long form
     edges = edges.merge(edge_gdp, on="link")
+    edges = edges[edges['box_id']==box_id]
 # print(f"time: {round((time.time()-s)/60,2)}")
 
 # print("cleaning data")

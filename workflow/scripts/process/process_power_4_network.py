@@ -2,13 +2,13 @@
 Creates the network from the plants and targets data
 
 If box has:
-no targets, no plants, no edges -> dummy file for all [checked]
-no targets, no plants, edges -> dummy file for targets and plants, edges file [checked]
-no targets, plants, no edges -> dummy target file, plants file but connected=False, dummy edges file [checked]
-no targets, plants, edges -> dummy target file, plants file, edges file [checked]
-targets, no plants, no edges -> targets file but connected=False, dummy plants file, dummy edges file [checked]
-targets, plants, no edges -> targets file but connected=False, plants file but connected=False, dummy edges file [checked]
-targets, no plants, edges -> targets file, dummy plants file, edges file [checked]
+no targets, no plants, no edges -> dummy file for all
+no targets, no plants, edges -> dummy file for targets and plants, edges file
+no targets, plants, no edges -> dummy target file, plants file but connected=False, dummy edges file
+no targets, plants, edges -> dummy target file, plants file, edges file
+targets, no plants, no edges -> targets file but connected=False, dummy plants file, dummy edges file
+targets, plants, no edges -> targets file but connected=False, plants file but connected=False, dummy edges file
+targets, no plants, edges -> targets file, dummy plants file, edges file
 targets, plants, edges -> all files
 """
 

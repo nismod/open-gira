@@ -185,6 +185,52 @@ def patch_nearest_edge(point, edges):
 snkit.network.nearest_edge = patch_nearest_edge
 
 
+def read_edges_make_unique(fname):
+    edges = gpd.read_file(fname, layer="edges")
+
+    if len(edges) == 1:
+        if edges["id"].iloc[0] == None:  # no edges
+            edges["link"] = None
+    else:
+        # create unique link id from from/to node ids
+        edges["link"] = edges.apply(
+            lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
+        )
+    return edges
+
+
+def read_network(fname):
+    """Read network and add relevant attributes"""
+    # read edges
+    edges = read_edges_make_unique(fname)
+
+    # read nodes
+    nodes = gpd.read_file(fname, layer="nodes")
+
+    # add gdp to target nodes
+    targets = gpd.read_file(fname.replace("network", "targets"))
+    nodes = nodes.merge(targets[["id", "gdp"]], on="id", how="left")
+
+    # add capacity to plant/generation/source nodes
+    plants = gpd.read_file(fname.replace("network", "plants"))
+    if nodes["capacity_mw"].all() == plants["capacity_mw"].all():
+        nodes = nodes.drop(columns="capacity_mw")  # prevent merge issue
+    nodes = nodes.merge(plants[["id", "capacity_mw"]], on="id", how="left")
+
+    return nodes, edges
+
+def read_simple_network(fname):
+    """Read simplified network in which attributes already there"""
+
+    # read edges
+    edges = read_edges_make_unique(fname)
+
+    # read nodes
+    nodes = gpd.read_file(fname, layer="nodes")
+
+    return nodes, edges
+
+
 #%% set global variables
 
 start = time.time()
