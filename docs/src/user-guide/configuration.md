@@ -21,7 +21,7 @@ hazard_datasets:
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 36
 # Edge attributes to preserve during network/hazard intersection.
-edge_attrs: 'id'
+keep_tags: 'highway'
 # Filters definition -- base filename is used as the filter name
 osmium_tags_filters_file: "config/highway-core.txt"
 ```

@@ -99,21 +99,14 @@ class OutputChecker:
             slices that _do_ have road data.
             """
             print(f">>> Method=geopandas.GeoDataFrame.compare", file=sys.stderr)
-            generated = geopandas.read_parquet(generated_file)
-            expected = geopandas.read_parquet(expected_file)
-            # TODO: This will be horribly slow -- needs sensible optimisation
-            for r in range(len(generated)):
-                try:
-                    assert str(generated[r:r+1]) == str(expected[r:r+1])
-                except AssertionError as e:
-                    print(f">>> FAILURE at row {r}.")
-                    print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
-                    raise e
+            read = geopandas.read_parquet
         elif re.search("\\.parquet$", str(generated_file), re.IGNORECASE):
             print(f">>> Method=pandas.GeoDataFrame.compare", file=sys.stderr)
-            generated = pandas.read_parquet(generated_file)
-            expected = pandas.read_parquet(expected_file)
-            # TODO: This will be horribly slow -- needs sensible optimisation
+            read = pandas.read_parquet
+        if re.search("\\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
+            generated = read(generated_file)
+            expected = read(expected_file)
+            # horribly slow but gives useful information on failures
             for r in range(len(generated)):
                 try:
                     assert str(generated[r:r+1]) == str(expected[r:r+1])
@@ -123,5 +116,9 @@ class OutputChecker:
                     raise e
         else:
             print(f">>> Method=cmp", file=sys.stderr)
-            sp.check_output(["cmp", generated_file, expected_file])
+            try:
+                sp.check_output(["cmp", generated_file, expected_file])
+            except sp.CalledProcessError as e:
+                print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
+                raise e
         print(f">>> OK", file=sys.stderr)
