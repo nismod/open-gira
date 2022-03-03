@@ -79,7 +79,7 @@ def add_custom_node_references(base):
     node_ref = -1
     max_cycles = 100000000
     while max_cycles > 0:
-        max_cycles += 1
+        max_cycles -= 1
         new_base = fix_nodes(base, node_ref)
         if not new_base['changed']:
             break
