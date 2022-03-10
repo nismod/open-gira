@@ -1,0 +1,16 @@
+wheel
+setuptools
+pytest
+h5py
+python-rocksdb
+
+pyarrow
+pygeos
+geopandas
+numpy
+scipy
+scikit-learn
+networkx
+igraph
+jupyter
+notebook
