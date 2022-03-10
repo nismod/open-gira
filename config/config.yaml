@@ -19,3 +19,6 @@ slice_count: 4
 keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+
+# When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+exposure_threshold: 0.5

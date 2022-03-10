@@ -15,6 +15,7 @@ RUN apt install -y \
     libbz2-dev \
     python3 \
     python3-pip \
+    python-is-python3 \
     unzip \
     wget \
     zlib1g-dev
@@ -39,6 +40,8 @@ COPY . open-gira
 
 # Install Python requirements with pip
 RUN pip install -r open-gira/requirements.txt
+
+WORKDIR /open-gira
 
 # Showtime
 #RUN cd open-gira && snakemake --cores all -R all
