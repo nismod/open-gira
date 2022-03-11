@@ -24,6 +24,8 @@ slice_count: 36
 keep_tags: 'highway'
 # Filters definition -- base filename is used as the filter name
 osmium_tags_filters_file: "config/highway-core.txt"
+
+exposure_threshold: 0.5  # minimum flood depth (m) for inclusion in exposure rasters
 ```
 
 You should also have a `./config/highway-core.txt` file that looks like:

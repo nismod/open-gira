@@ -21,5 +21,7 @@
   - [Convert to GeoParquet](user-guide/outputs/geoparquet.md)
   - [Intersect infrastructure and hazard data](user-guide/outputs/intersect.md)
   - [Join slices](user-guide/outputs/join.md)
+  - [Generate exposure rasters](user-guide/outputs/exposure.md)
+- [Further analysis](user-guide/further-analysis.md)
 - [Cleaning output](user-guide/clean.md)
 - [Workflow (_advanced_)](user-guide/workflow-advanced.md)

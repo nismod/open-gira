@@ -22,6 +22,9 @@ slice boundaries, so too high a number can lead to redundancy.
 - `keep_tags`: Osmium tags to preserve in .geoparquet file.
 - `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
 
+- `exposure_threshold`: Minimum depth of flooding (m) for a cell to have its 
+  road lengths included in the exposure raster files
+
 Modifying the configuration file will *not* trigger a re-run of the pipeline by
 snakemake. If you wish to rerun the whole pipeline after altering the
 configuration, use 
