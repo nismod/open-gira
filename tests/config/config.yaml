@@ -16,3 +16,5 @@ slice_count: 1
 keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+
+exposure_threshold: 0.5

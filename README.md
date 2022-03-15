@@ -147,6 +147,9 @@ The pipeline consists in the following steps:
     infrastructure and associated hazard level values for each combination of
     OSM dataset and hazard dataset. This results in
     `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`.
+11. Each .geoparquet file is processed to produce a .tif raster file showing the length
+    of road affected by flooding greater than a threshold defined in the config.
+    These files are saved as `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/exposure_<hazard_tif_filename>`
 
 This is a directional acyclic graph (DAG) of a simplified version of the workflow
 that uses just one OSM dataset, one hazard dataset, and one slice:

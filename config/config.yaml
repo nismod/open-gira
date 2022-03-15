@@ -4,18 +4,21 @@ output_dir: 'results'
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
 hazard_datasets:
-#  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
+  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
   aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
 
 # OSM dataset
 infrastructure_datasets:
-#  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
-#  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
-  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+#  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 4
+slice_count: 1
 # Osmium tags to retain in the geoparquet files
 keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+
+# When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+exposure_threshold: 0.5
