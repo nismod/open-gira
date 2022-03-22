@@ -22,8 +22,10 @@ slice boundaries, so too high a number can lead to redundancy.
 - `keep_tags`: Osmium tags to preserve in .geoparquet file.
 - `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
 
-- `exposure_threshold`: Minimum depth of flooding (m) for a cell to have its 
-  road lengths included in the exposure raster files
+- `exposure_tifs`: Arguments for generating exposure TIF files
+  - `exposure_threshold` height in m above which infrastructure is considered flooded (default 0.5)
+  - `scaling_factor` ratio with which to resample the hazard data (default 0.1 = downsample 10x)
+  - `resampling_mode` resampling method to use. Can be any of `rasterio.enums.Resampling` (default 'bilinear')
 
 Modifying the configuration file will *not* trigger a re-run of the pipeline by
 snakemake. If you wish to rerun the whole pipeline after altering the
