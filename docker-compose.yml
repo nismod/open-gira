@@ -7,3 +7,21 @@ services:
     command: tail -F anything
     volumes:
       - .:/open-gira
+  # https://github.com/peaceiris/docker-mdbook
+  mdbook:
+    container_name: mdbook
+    image: peaceiris/mdbook:v0.4.15           # Minimum image
+    # image: peaceiris/mdbook:v0.x.x-rust     # `mdbook test` subcommand is available
+    # image: ghcr.io/peaceiris/mdbook:v0.x.x  # Docker images on GitHub Packages
+    stdin_open: true
+    tty: true
+    ports:
+      - 3000:3000
+      - 3001:3001
+    volumes:
+      - .:/book
+    command:
+      - serve
+      - /book/docs
+      - --hostname
+      - '0.0.0.0'
