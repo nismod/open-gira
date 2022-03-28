@@ -23,6 +23,13 @@ rule process_simplify:
             "all_boxes",
             "{box_id}",
             "simple_network_{box_id}.gpkg"
+        ),
+        os.path.join(
+            "data",
+            "processed",
+            "all_boxes",
+            "{box_id}",
+            "collapsed_sources_targets_{box_id}.txt"
         )
     params:
         box_id = "{box_id}"
@@ -37,4 +44,10 @@ rule process_simplify_all:
         "processed",
         "all_boxes",
         f"{box_id}",
-        f"simple_network_{box_id}.gpkg") for box_id in all_boxes]
+        f"simple_network_{box_id}.gpkg") for box_id in all_boxes],
+        [os.path.join(
+        "data",
+        "processed",
+        "all_boxes",
+        f"{box_id}",
+        f"collapsed_sources_targets_{box_id}.txt") for box_id in all_boxes]

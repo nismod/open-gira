@@ -150,10 +150,12 @@ def combine_networks(
             test_components_keep = []  # indices of test_components to include
             for (
                 conn
-            ) in test_box_base_connections:  # for each box connection to base_box
-                if conn['from_id'] not in list(nodes["id"]):
+            ) in test_box_base_connections:  # for each box connection to base_box (from_id in base_box)
+                print('here:' ,conn['to_id'])
+                #if not conn['to_id']:  # if not empty
+                if conn['to_id'] not in list(nodes["id"]):   # if adjacent box network connection is not in the node df, continue
                     continue
-                test_box_conn = conn['to_id']  # to_id
+                test_box_conn = conn['from_id']  #
                 for conn_comp in test_components:  # for each subgraph in test_box
                     if (
                         test_box_conn in conn_comp
@@ -187,6 +189,7 @@ def combine_networks(
                 #     a = 1
                 # if test == '1650':
                 #     print('---------------> hit')
+                print('adding nodes/edges')
                 nodes = nodes.append(test_nodes_keep)  # add to network  # TODO why counted double
                 edges = edges.append(test_edges_keep)  # add to network
 
@@ -218,6 +221,9 @@ def combine_networks(
                     test_box
                 )  # since test_box is connected, note to test all around test_box too
 
+
+            print(len(nodes))
+
         print(f"removing {base_box} from to_test\n")
         to_test.remove(base_box)  # tested all surrounding
 
@@ -226,7 +232,7 @@ def combine_networks(
 
     #nodes.to_file("testme.gpkg", layer="nodes", driver="GPKG")   # TODO
     #edges.to_file("testme.gpkg", layer="edges", driver="GPKG")  # TODO
-    return nodes, edges, links_in_base_box
+    return nodes, edges
 
 
 def create_graph(nodes, edges):
@@ -252,7 +258,7 @@ def create_graph_simpleXX(nodes, edges):
     return G
 
 
-def assign_node_edge_gdp(G, links_in_base_box):
+def assign_node_edge_gdp(G):
     components = list(nx.connected_components(G))
     node_gdps = []
     edge_gdps = []
@@ -265,7 +271,7 @@ def assign_node_edge_gdp(G, links_in_base_box):
             c_edge_gdp,
             route_gdp_indiv,
             ) = assign_component_gdp(
-            G, component, links_in_base_box
+            G, component
         )  # c_components returns sources and sinks for each edge
         if len(c_node_gdp):
             node_gdps.append(c_node_gdp)
@@ -318,7 +324,7 @@ def target_process(v, u, paths, c_gdp, c):  # TODO possinly directly use partial
     return edge_routes, source_sink_gdp, edge_links_gdp
 
 #@profile
-def assign_component_gdp(G, component, links_in_base_box):
+def assign_component_gdp(G, component):
     # create connected component subgraph
     c = G.subgraph(component).copy()
     c = nx.relabel_nodes(c, lambda x: long2short(x))  # relabel for efficiency
@@ -362,7 +368,7 @@ def assign_component_gdp(G, component, links_in_base_box):
     c_edges = pd.DataFrame(columns=['link', 'gdp'])
 
 
-    base_flow_path = os.path.join('data', 'processed', 'all_boxes', box_id, 'gdp_flows')
+    base_flow_path = os.path.join('data', 'processed', 'all_boxes', box_id, 'gdp_flows')   # TODO for all affected
     if not os.path.exists(base_flow_path):
         os.makedirs(base_flow_path)
 
@@ -385,12 +391,13 @@ def assign_component_gdp(G, component, links_in_base_box):
             output = pool.map(pool_partial, targets.itertuples())
             edge_routes_output = [x[0] for x in output]
             # include from output. Note that edge_routes IS reset after each source loop
-            print('a')
+            print('pool output complete')
 
             link_ids_u = set()  # set of all links affected by source u
             for edge_routes in edge_routes_output:
                 link_ids_u.update(edge_routes.keys())  # add new link_ids
                 for link_id, routes in edge_routes.items():
+                    #if len(routes) != 0:
                     with open(flow_file(link_id), 'ab') as f:
                         _ = [pickle.dump(route, f) for route in routes]
 
@@ -433,10 +440,12 @@ if __name__ == "__main__":
     gdp_base_flows = os.path.join('data', 'processed', 'tester')
     if 'linux' in sys.platform:
         if os.path.exists(gdp_base_flows):
+            print('removing files')
             files = glob.glob(os.path.join(gdp_base_flows, "*.pkl"))
             for file in files:
                 os.remove(file)
         else:
+            print('adding folder')
             os.makedirs(gdp_base_flows)
     else:  # windows
         if os.path.exists(gdp_base_flows):
@@ -451,7 +460,7 @@ if __name__ == "__main__":
 
     print("finding boxes within region")
     print(f"{box_id}: importing and stitching together")
-    nodes, edges, links_in_base_box = combine_networks(box_id)
+    nodes, edges = combine_networks(box_id)
     print(f"{box_id}: finished stitching")
     # print(f"time: {round((time.time()-s)/60,2)}")
 
@@ -472,7 +481,7 @@ if __name__ == "__main__":
         node_gdp,
         edge_gdp,
         route_gdp,
-    ) = assign_node_edge_gdp(G, links_in_base_box)
+    ) = assign_node_edge_gdp(G)
     # print(f"time: {round((time.time()-s)/60,2)}")
 
     a

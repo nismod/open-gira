@@ -230,6 +230,26 @@ def read_simple_network(fname):
 
     return nodes, edges
 
+def long2short(x):
+    """Converts from long notation to short notation (more efficient to work with). x is string"""
+    return x.replace('intermediate_','i').replace('_box_','b').replace('target_','t').replace('source_','s').replace('conn_','c')
+
+def short2long(x):
+    """Converts from short notation back to long notation. Order is crucial to avoid incorrect replacements. x is string"""
+    if 'midpoint' not in x:
+        return x.replace('c','conn_').replace('s','source_').replace('t','target_').replace('b','_box_').replace('i','intermediate_')
+
+    if 'midpoint_idx' in x:
+        return 'midpoint_idx'+x[12:].replace('c','conn_').replace('s','source_').replace('t','target_').replace('b','_box_').replace('i','intermediate_')
+    elif 'midpoint' in x:
+        return 'midpoint'+x[8:].replace('c','conn_').replace('s','source_').replace('t','target_').replace('b','_box_').replace('i','intermediate_')
+    else:
+        raise RuntimeError("Short to long conversion Issue")
+
+
+
+
+
 
 #%% set global variables
 

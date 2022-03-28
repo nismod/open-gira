@@ -17,6 +17,7 @@ import rasterio
 import rasterio.mask
 import rasterio.features
 import snkit
+import itertools as it
 from pyproj import Geod
 from rasterstats import zonal_stats, point_query, gen_zonal_stats
 from shapely.geometry import shape, LineString, Point

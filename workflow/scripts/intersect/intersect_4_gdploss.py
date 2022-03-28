@@ -12,13 +12,30 @@ import json
 from tqdm import tqdm
 import sys
 from damage_calculator import applythreshold
+import pickle
 
-region, sample, nh, operationfind_ = sys.argv[1:]
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
+
+
+try:
+    region = snakemake.params["region"]
+    sample = snakemake.params["sample"]
+    nh = snakemake.params["nh"]
+    operationfind_ = snakemake.params["op_find"]
+except:
+    region = 'SP'
+    sample = '0'
+    nh = '0_0_1'
+    operationfind_ = 'True'
+
+
 if operationfind_ in [True, "True", "T", 1, "1"]:
     operationfind = True
 else:
     operationfind = False
-
 
 def t_op(lower, upper, targets):
     """returns number of targets between the lower and upper percentage inputs"""
@@ -28,6 +45,48 @@ def t_op(lower, upper, targets):
         )
     else:
         return "N/A"
+
+
+def long2short(x):  # TODO copied from functions file in process
+    """Converts from long notation to short notation (more efficient to work with). x is string"""
+    return x.replace('intermediate_','i').replace('_box_','b').replace('target_','t').replace('source_','s').replace('conn_','c')
+
+def short2long(x):
+    """Converts from short notation back to long notation. Order is crucial to avoid incorrect replacements. x is string"""
+    return x.replace('c','conn_').replace('s','source_').replace('t','target_').replace('b','_box_').replace('i','intermediate_')
+
+
+
+
+def open_collapsed(box_id):
+    collapse_file = os.path.join("data", "processed", "all_boxes", box_id, f'collapsed_sources_targets_{box_id}.txt')
+    with open(collapse_file, 'r') as f2:  # load the file containing midpoint collapsed nodes
+        collapse_dict = json.load(f2)
+    return collapse_dict
+
+def midpoint_source(source_inp):
+    """Returns the dictionary of expanded sources"""
+    box_id = f"box_{source_inp.split('b')[-1]}"
+    collapse_dict =  open_collapsed(box_id)
+    key_source_inp = f"midpoint_{source_inp.split('_s')[1].split('b')[0]}_box_{source_inp.split('b')[-1]}"  # TODO this can be improved by renaming files in _6_
+    return collapse_dict[key_source_inp]["sources"]  # retrieve sources
+
+def midpoint_target(target_inp):
+    """Returns the dictionary of expanded targets"""
+    box_id = f"box_{target_inp.split('b')[-1]}"
+    collapse_dict =  open_collapsed(box_id)
+    key_target_inp = f"midpoint_{target_inp.split('_t')[1].split('b')[0]}_box_{target_inp.split('b')[-1]}"
+    return collapse_dict[key_target_inp]["targets"]  # retrieve targets
+
+# def midpoint_expand(source_target_dict, box_id):
+#     """Takes source target dictionary with gdps and expands the midpoints according to the collapsed_sources_targets file"""
+#     def collapse_file_name(box_id):
+#         return os.path.join('data', 'processed', 'all_boxes', box_id, f'collapsed_sources_targets_{box_id}.txt')
+#
+#     for key, value in source_target_dict.items():
+#         if 'midpoint' in key:
+#     with open()
+
 
 
 print(f"{nh}: loading data")
@@ -97,9 +156,7 @@ grid_data = gpd.read_file(
 polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)]
 
 # set iteration variables
-routeid_damaged = (
-    {}
-)  # marks which source_sink routes already damaged -> do not double count. Form: {source:[target,target,...], source:[target, target,...],...}
+routeid_damaged = set() # marks which source_sink routes already damaged -> do not double count. Form: {(source1, target1), (source2, target2), ...}
 totdamage = 0  # total damage (ensuring no double counts)
 targetsdamaged = {}  # if the operation value of the target is desired
 edges_affected = gpd.GeoDataFrame()
@@ -110,19 +167,22 @@ for jj, box_id in enumerate(box_id_affected):
     print(f"-- Examining {jj+1}/{len(box_id_affected)} -- {box_id}")
     # print("-- network edges")
     # print("-- gdp flow")
-    with open(
-        os.path.join(
-            "data", "processed", "all_boxes", box_id, f"edge_gdp_sorted_{box_id}.txt"
-        ),
-        "r",
-    ) as sortedjson:
-        sorted_gdp = json.load(sortedjson)
 
+
+    gdp_flow_folder = os.path.join("data", "processed", "all_boxes", box_id, 'gdp_flows')
     if (
-        len(sorted_gdp) == 0
+        len(os.listdir(gdp_flow_folder)) == 0
     ):  # no gdp flow could be established (usually no sources within subgraph)
         # print("-- no gdp flow - breaking loop")
         continue
+
+    gdp_routing_file = os.path.join("data", "processed", "all_boxes", box_id, f'edge_gdp_sorted_{box_id}.txt')
+    with open(gdp_routing_file, 'r') as f1:
+        gdp_routing_values = json.load(f1)
+
+
+
+
 
     box_edges = gpd.read_file(
         os.path.join(
@@ -140,75 +200,99 @@ for jj, box_id in enumerate(box_id_affected):
         polys_affected, how="intersection"
     )  # keeps edges that are affected grid points (only a part has to be in)
 
-    edges_to_check = box_edges_affected["link"]
+    edges_to_check = [long2short(edge) for edge in box_edges_affected["link"]]
 
     # run through each edge to examine flor damage
-    for ii, edge in tqdm(
+    for ii, edge in tqdm(  #TODO CONSIDER JUST NOTING THE EDGES -> FORM SET -> FORM UNIQUE (SOURCE,SINK) set -> FIND in .txt CORRESPONDING DAMAGE
         enumerate(edges_to_check),
         desc=f"storm_{nh}-{box_id}: affected edges",
         total=len(box_edges_affected),
     ):
 
-        # preprocess the edge
-        edge_dict = sorted_gdp[
-            edge
-        ]  # returns a dictionary of all source_sink paths running through that edge
-        edge_dict = {
-            k.replace("source_", "s").replace("_box_", "b").replace("target_", "t"): v
-            for k, v in edge_dict.items()
-        }
-        sources = [item.split("_")[0] for item in edge_dict.keys()]
-        sinks = [item.split("_")[1] for item in edge_dict.keys()]
+        # First load data for edge
+        edge_set_file = os.path.join(gdp_flow_folder, edge+".pkl")
+        route_set = set()  # set of (source, sink) tuples running through that edge
+        with open(edge_set_file, 'rb') as src:
+            while True:
+                try:
+                    route_set.add(pickle.load(src))  # to open all (when writing, the append format was used)
+                except:
+                    break
 
-        # sum damage from undamaged source_sinks
-        dmg = 0  # total damage per box
-        for sourcesink, v in edge_dict.items():
-            source = sourcesink.split("_")[0]
-            if source in routeid_damaged.keys():  # key exists
-                if (
-                    sourcesink.split("_")[1] in routeid_damaged[source]
-                ):  # sourcesink already counted
-                    continue  # do not add to dmg
-            dmg += v
+        dmg = 0  # damage from this edge
+        dmg_frac = 1  # factor to incorporate already damaged routes
 
-        # find target operations
-        if operationfind:  # if the operation value of the target is desired
-            t_gdp = [
-                [route_id_.split("_")[1], v]
-                for route_id_, v in edge_dict.items()
-                if route_id_.split("_")[1]
-                not in routeid_damaged.get(route_id_.split("_")[0], [])
-            ]  # list of lists containing [targetnumber, gdp] only if not already damaged
-            t_dam = list(set([t[0] for t in t_gdp]))  # make unique
-            for t_indiv in t_dam:  # go through unique (undamaged) targets
-                totdamage_t = sum(
-                    [t[1] for t in t_gdp if t[0] == t_indiv]
-                )  # sum damage for each (unique, undamaged) target
-                tspec_name = f"target_{t_indiv[1:t_indiv.find('b')]}_box_{t_indiv[t_indiv.find('b')+1:]}"  # target name
-                if tspec_name in targetsdamaged:
-                    targetsdamaged[tspec_name] += totdamage_t
-                else:
-                    targetsdamaged[tspec_name] = totdamage_t
+        routes_eval = route_set.difference(routeid_damaged)
+        for (source, target) in routes_eval:
 
-        # update dictionary of damaged source_sinks
-        sources_new = [
-            source for source in sources if source not in routeid_damaged.keys()
-        ]
-        routeid_damaged.update(
-            dict(zip(sources_new, [[]] * len(sources_new)))
-        )  # add new keys
-        for jj, source in enumerate(sources):
-            if sinks[jj] not in routeid_damaged[source]:
-                routeid_damaged[source] = routeid_damaged[source].copy() + [
-                    str(sinks[jj])
-                ]
+            gdp_damaged = gdp_routing_values[source][target]
+
+            if 'midpoint' in source and 'midpoint' in target:  # must find the (expanded) sources and targets
+                target_gdp_dict = midpoint_target(target)
+                source_gdp_dict = midpoint_source(source)
+
+                for ks, vs in source_gdp_dict.items():# TODO use itertools
+                    for kt, vt in target_gdp_dict.items():
+                        if (ks, kt) not in routeid_damaged:  # if the (source, target) has not already been damaged
+                            dmg_frac *= vs*vt
+                            routeid_damaged.update({(ks, kt)})
+
+                            if operationfind:
+                                if kt in targetsdamaged:
+                                    targetsdamaged[kt] += dmg_frac*gdp_damaged
+                                else:
+                                    targetsdamaged[kt] = dmg_frac*gdp_damaged
+
+            elif 'midpoint' in source:  # must find the (expanded) sources
+                source_gdp_dict = midpoint_source(source)
+                dict_to_assess_source = {k:v for k, v in source_gdp_dict.items() if (k, target) not in routeid_damaged}
+                sum_mid_source = sum([v for v in dict_to_assess_source.values()])
+                dmg_frac *= sum_mid_source  # total fraction of this (midpoint, target) combination that has not yet been damaged
+                routeid_damaged.update({(source_, target) for source_ in dict_to_assess_source.keys()})
+
+                if operationfind:
+                    if target in targetsdamaged:
+                        targetsdamaged[target] += sum_mid_source*gdp_damaged
+                    else:
+                        targetsdamaged[target] = sum_mid_source*gdp_damaged
+
+            elif 'midpoint' in target:
+                target_gdp_dict = midpoint_target(target)
+                dict_to_assess_target = {k:v for k, v in target_gdp_dict.items() if (source, k) not in routeid_damaged}
+                dmg_frac *= sum([v for v in dict_to_assess_target.values()])  # total fraction of this (midpoint, target) combination that has not yet been damaged
+
+                routeid_damaged.update({(source, target_) for target_ in dict_to_assess_target.keys()})  # update which (source, target) tuples have been damaged
+
+                if operationfind:
+
+                    for k, v in dict_to_assess_target.items():
+                        if k in targetsdamaged:
+                            targetsdamaged[k] += v*gdp_damaged
+                        else:
+                            targetsdamaged[k] = v*gdp_damaged
+
+            else:  # no midpoints
+                routeid_damaged.update({(source, target)})  # update which (source, target) tuples have been damaged
+
+
+                if operationfind:
+                    if target in targetsdamaged:
+                        targetsdamaged[target] += gdp_damaged
+                    else:
+                        targetsdamaged[target] = gdp_damaged
+
+
+            gdp_damaged = gdp_routing_values[source][target]
+            dmg += gdp_damaged*dmg_frac
+
+
 
         totdamage += dmg  # add to overall storm damage
 
     edges_affected = edges_affected.append(box_edges_affected)
     targets = targets.append(box_targets)
 
-print(f"- [{nh} - Master timer: ", time.time() - start, "]")
+print(f"- [{nh} - Master timer: ", round((time.time() - start)/60,1), "]")
 
 print(f"{nh}: - saving")
 
@@ -239,9 +323,9 @@ if operationfind:
     box_id_unaccounted = list(
         set(
             [
-                key[key.find("box") :]
+                key.split('b')[-1]
                 for key in targetsdamaged.keys()
-                if key[key.find("box") :] not in box_id_affected
+                if key.split('b')[-1] not in box_id_affected
             ]
         )
     )  # get set of boxes not in box_id_affected but have target damage
@@ -253,16 +337,17 @@ if operationfind:
                 "data",
                 "processed",
                 "all_boxes",
-                box_id_unaccounted_indiv,
-                f"targets_{box_id_unaccounted_indiv}.gpkg",
+                f"box_{box_id_unaccounted_indiv}",
+                f"targets_box_{box_id_unaccounted_indiv}.gpkg",
             )
         )
         targets = targets.append(targets_unaccounted_indiv)
 
 
+targetsdamaged_map = {short2long(k):v for k,v in targetsdamaged.items()}  # convert back to long
 if operationfind and len(targets) != 0:
     targets["gdp_loss"] = (
-        targets["id"].map(targetsdamaged).fillna(0)
+        targets["id"].map(targetsdamaged_map).fillna(0)
     )  # map targets that are damaged, if not in list -> no damage (.fillna(0))
     targets["operation_frac"] = round(
         (targets["gdp"] - targets["gdp_loss"]) / targets["gdp"], 10

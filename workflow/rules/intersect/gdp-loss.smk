@@ -30,7 +30,17 @@ rule intersection_gdploss:
                 "processed",
                 "all_boxes",
                 f"{box_id}",
-                f"edge_gdp_sorted_{box_id}.txt",
+                f"edge_gdp_sorted_{box_id}.hkl",
+            )
+            for box_id in all_boxes
+        ],
+        [
+            os.path.join(
+                "data",
+                "processed",
+                "all_boxes",
+                f"{box_id}",
+                f"component_indices_{box_id}.hkl",
             )
             for box_id in all_boxes
         ],
@@ -59,9 +69,8 @@ rule intersection_gdploss:
             "storm_{nh}",
             "storm_track_r{region}_s{sample}_n{nh}.gpkg",
         ),
-    shell:
-        (
-            "python3 "
-            + os.path.join("workflow", "scripts", "intersect", "intersect_4_gdploss.py")
-            + " {wildcards.region} {wildcards.sample} {wildcards.nh} {operationfind}"
+    params:
+        region = "{region}", sample = "{sample}", nh = "{nh}", op_find = operationfind,
+    script:
+            os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py"
         )

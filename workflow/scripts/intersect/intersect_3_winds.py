@@ -11,9 +11,21 @@ import ast
 from pathos.multiprocessing import ProcessPool, cpu_count
 
 
-region = sys.argv[1]
+region = sys.argv[1]  # TODO snkakemake
 sample = sys.argv[2]
 nh_input = ast.literal_eval(sys.argv[3])
+
+
+# # TODO
+#
+# if 'linux' not in sys.platform:  # TODO
+#     import os
+#     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+#     os.chdir(path)
+#
+#     region = 'SP'
+#     sample = '0'
+#     nh_input = ['0_0_0']
 
 
 def t(num, t):
@@ -208,6 +220,7 @@ if __name__ == "__main__":
     grid_box = gpd.read_file(
         os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
     )
+    #grid_box = grid_box.head(10)  # TODO
 
     totpoints = [len(grid_box)] * len(grid_box)  # for console progress purposes
     idx_pts = list(range(len(totpoints)))
@@ -255,7 +268,7 @@ if __name__ == "__main__":
         output_files = pd.concat(output)
 
         all_winds_path = os.path.join(
-            "data", "intersection", "storm_data", "all_winds", region
+            "data", "intersection", "storm_data", "all_winds", region+"2"  # TODO
         )
         if not os.path.exists(all_winds_path):
             os.makedirs(all_winds_path)

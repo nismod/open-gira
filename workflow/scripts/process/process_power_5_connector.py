@@ -1,12 +1,27 @@
 """Documents the connections between boxes"""
+import sys
+if "linux" not in sys.platform:
+    # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 
 from process_power_functions import adj
 from importing_modules import *
 
+
+
+
 network_paths = glob.glob(
     os.path.join("data", "processed", "all_boxes", "box_*", "network_box_*.gpkg")
 )  # finds the network_{box_id}.gpkg files that exist in all_boxes
+
+# TODO remove
+all_boxes = ["box_1584", "box_1585", "box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1718", "box_1719", "box_1720", "box_1721", "box_1722", "box_1790", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014", "box_1504"]
+network_paths = [x for x in network_paths if any(item in x for item in all_boxes)]
+#network_paths = [x for x in network_paths if any(item in x for item in ["box_1718", "box_1719"])]
+# TODO remove
 
 for network_path in tqdm(
     network_paths, desc="connecting all boxes", total=len(network_paths)
@@ -44,16 +59,17 @@ for network_path in tqdm(
                     )
                     # update_dict = {i: j for i, j in zip(duplicates.id_idx, duplicates.id_ex)}  # add {examined_box_point:other_box_point}
                     update_lst = [
-                        [
-                            f"edge_X_{from_box}__{to_box}",
-                            from_source_id,
-                            f"cb_{from_box}__{to_box}",
-                            "transmission",
-                            from_idx,
-                            to_ex,
-                            str(LineString([fromto_geom, fromto_geom])),
-                            f"{from_idx}__{to_ex}",
-                        ]
+                            {'edge_id': f"edge_X_{from_box}__{to_box}",
+                            'source_id': from_source_id,
+                            'link': f"cb_{from_box}__{to_box}",
+                            'type': "transmission",
+                            'from_id': from_idx,  # connection in box_idx
+                            'to_id': to_ex,  # connection in box next to box_idx
+                            #'geometry': str(LineString([fromto_geom, fromto_geom])),
+                            'geometry': str(LineString([fromto_geom, fromto_geom])),
+                            #'to_geom': fromto_geom,
+                            #'from_to': f"{from_idx}__{to_ex}"
+                            }
                         for from_idx, to_ex, from_box, to_box, from_source_id, fromto_geom in zip(
                             duplicates.id_idx,
                             duplicates.id_ex,
