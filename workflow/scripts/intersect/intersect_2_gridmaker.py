@@ -15,7 +15,13 @@ from pathos.multiprocessing import ProcessPool, cpu_count
 
 from tqdm import tqdm
 
-region = sys.argv[1]
+try:
+    region = sys.argv[1]
+except:
+    region = 'NA'
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 squarehalfwidth = (
     0.05  # this is half the width of the smallest unit in the return period maps
@@ -28,7 +34,7 @@ def t(num, t):
 
 def make_grid_points_nc2(box_id, region, ps):
     """Updated grid point maker, uses return period maps
-    Performs manual overlay, remember to not do this later then."""
+    Performs manual overlay."""
 
     fn = os.path.join(
         "data", "stormtracks", "fixed", f"STORM_FIXED_RETURN_PERIODS_{region}.nc"
@@ -58,12 +64,12 @@ def make_grid_points_nc2(box_id, region, ps):
     lats = lats[lats > lat_min]
     lats = lats[lats < lat_max]
 
-    if len(lons) == 0:
-        print(f"No lons for {box_id}")
-        assert len(lons) != 0
-    if len(lats) == 0:
-        print(f"No lats for {box_id}")
-        assert len(lats) != 0
+    # if len(lons) == 0:
+    #     print(f"No lons for {box_id}")
+    #     assert len(lons) != 0
+    # if len(lats) == 0:
+    #     print(f"No lats for {box_id}")
+    #     assert len(lats) != 0
 
     point_df = pd.DataFrame()
 
@@ -131,12 +137,14 @@ def create_grid_box(box_id, idx, totboxes):
         grid_box_indiv["region"] = region
 
         return grid_box_indiv, containing_box_dict
+    else:
+        return None
 
 
 if __name__ == "__main__":
     nodesuse = max(1, cpu_count() - 2)
     if "linux" not in sys.platform:
-        nodesuse = 8
+        nodesuse = 10  # for testing
 
     with open(
         os.path.join("data", "intersection", "regions", f"{region}_boxes.txt"), "r"
@@ -147,6 +155,8 @@ if __name__ == "__main__":
 
     pool_grid = ProcessPool(nodes=nodesuse)
     output = pool_grid.map(create_grid_box, box_ids, idx_bxs, totboxes)
+
+    output = list(filter(None, output))  # remove None
 
     output_grid = [item[0] for item in output]  # extract dataframes
     grid_boxes = pd.concat(output_grid).reset_index(drop=True)

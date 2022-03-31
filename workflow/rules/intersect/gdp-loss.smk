@@ -16,40 +16,11 @@ rule intersection_gdploss:
         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
         [
             os.path.join(
-                "data",
-                "processed",
-                "all_boxes",
-                f"{box_id}",
-                f"network_with_gdp_{box_id}.gpkg",
-            )
-            for box_id in all_boxes
-        ],
-        [
-            os.path.join(
-                "data",
-                "processed",
-                "all_boxes",
-                f"{box_id}",
-                f"edge_gdp_sorted_{box_id}.hkl",
-            )
-            for box_id in all_boxes
-        ],
-        [
-            os.path.join(
-                "data",
-                "processed",
-                "all_boxes",
-                f"{box_id}",
-                f"component_indices_{box_id}.hkl",
-            )
-            for box_id in all_boxes
-        ],
-        [
-            os.path.join(
                 "data", "processed", "all_boxes", f"{box_id}", f"targets_{box_id}.gpkg"
             )
             for box_id in all_boxes
         ],
+        out_connector,
     output:
         os.path.join(
             "data",
@@ -70,7 +41,7 @@ rule intersection_gdploss:
             "storm_track_r{region}_s{sample}_n{nh}.gpkg",
         ),
     params:
-        region = "{region}", sample = "{sample}", nh = "{nh}", op_find = operationfind,
+        region = "{region}", sample = "{sample}", nh = "{nh}"
     script:
             os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py"
         )

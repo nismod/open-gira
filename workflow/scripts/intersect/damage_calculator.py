@@ -5,6 +5,6 @@ def applythreshold(winds_df):  # TODO some threshold
     """Returns locations where wind is 'severe' enough to affect the power lines. Based on some condition
     Current condition is >=15m/s"""
 
-    thrval = 15  # m/s
+    thrval = 10  # m/s
     winds_df = winds_df[winds_df["wind_location"] >= thrval]
     return winds_df

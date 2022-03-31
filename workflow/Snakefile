@@ -31,8 +31,7 @@ YEARS = ["0"]  # years to investigate all storms within
 SAMPLES = ["0"]  # synthetic data samples (range from 0 to 9)
 REGIONS = [
     "SP"
-]  # Regions in which to analyse ((all boxes must be cohered with region))
-operationfind = True  # True: includes operation details of targets where hit by storms
+]  # Regions in which to analyse ((all boxes must be coherent with region))
 
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
@@ -48,8 +47,6 @@ include: "rules/process/targets.smk"
 include: "rules/process/split-gridfinder.smk"
 include: "rules/process/network.smk"
 include: "rules/process/connector.smk"
-include: "rules/process/simplifier.smk"
-include: "rules/process/assign-gdp.smk"
 include: "rules/process/exclude-countries.smk"
 include: "rules/process_all.smk"
 

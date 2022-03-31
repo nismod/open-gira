@@ -18,8 +18,8 @@ network_paths = glob.glob(
 )  # finds the network_{box_id}.gpkg files that exist in all_boxes
 
 # TODO remove
-all_boxes = ["box_1584", "box_1585", "box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1718", "box_1719", "box_1720", "box_1721", "box_1722", "box_1790", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014", "box_1504"]
-network_paths = [x for x in network_paths if any(item in x for item in all_boxes)]
+#all_boxes = ["box_1584", "box_1585", "box_1431", "box_1432", "box_1433", "box_1505", "box_1575", "box_1576", "box_1577", "box_1647", "box_1648", "box_1649", "box_1650", "box_1652", "box_1653", "box_1718", "box_1719", "box_1720", "box_1721", "box_1722", "box_1790", "box_1791", "box_1792", "box_1793", "box_1794", "box_1798", "box_1863", "box_1864", "box_1865", "box_1866", "box_1870", "box_1871", "box_1936", "box_1937", "box_1941", "box_1942", "box_1943", "box_2013", "box_2014", "box_1504"]
+#network_paths = [x for x in network_paths if any(item in x for item in all_boxes)]
 #network_paths = [x for x in network_paths if any(item in x for item in ["box_1718", "box_1719"])]
 # TODO remove
 
@@ -29,7 +29,7 @@ for network_path in tqdm(
     s = time.time()
     # extract box numbers
     filename = network_path[network_path.find("network_box_") :]
-    box_id = filename[filename.find("box_") : filename.find(".gpkg")]
+    box_id = filename[filename.find("box_") : filename.find(".gpkg")]  # TODO basename
     id = int(box_id[4:])
     examine = adj(id)
 

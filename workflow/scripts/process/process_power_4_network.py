@@ -153,7 +153,7 @@ if __name__ == "__main__":
             # timer(start)
 
             geod = Geod(ellps="WGS84")
-            edge_limit = 200_000  # meters
+            edge_limit = 20_000  # meters   # TODO was 200_000 to solve issue but not realistic
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,

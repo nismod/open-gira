@@ -13,8 +13,10 @@ from pathos.multiprocessing import ProcessPool, cpu_count
 
 region = sys.argv[1]  # TODO snkakemake
 sample = sys.argv[2]
-nh_input = ast.literal_eval(sys.argv[3])
+#nh_input = ast.literal_eval(sys.argv[3])
+nh_input = list(sys.argv[3:])
 
+print(nh_input)
 
 # # TODO
 #
@@ -220,7 +222,6 @@ if __name__ == "__main__":
     grid_box = gpd.read_file(
         os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
     )
-    #grid_box = grid_box.head(10)  # TODO
 
     totpoints = [len(grid_box)] * len(grid_box)  # for console progress purposes
     idx_pts = list(range(len(totpoints)))
@@ -268,7 +269,7 @@ if __name__ == "__main__":
         output_files = pd.concat(output)
 
         all_winds_path = os.path.join(
-            "data", "intersection", "storm_data", "all_winds", region+"2"  # TODO
+            "data", "intersection", "storm_data", "all_winds", region
         )
         if not os.path.exists(all_winds_path):
             os.makedirs(all_winds_path)
