@@ -11,29 +11,32 @@ import rasterio
 from rasterio.enums import Resampling
 import os
 import numpy as np
-import sys
-
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    # move to settings later
+    epsg = 3857
     try:
         db_file = snakemake.input['geoparquet']
         hazard = snakemake.input['hazard'][0]
+        coastline = snakemake.input['coastline']
         output_path = snakemake.output[0]
         opts_dict = snakemake.config['exposure_tifs']
     except NameError:
-        print(sys.argv)
-        (
-            db_file,
-            hazard,
-            output_path,
-            opts_dict
-        ) = sys.argv[1:]
-        # db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
-        # hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
-        # output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
-        # opts_dict = {}
+        # print(sys.argv)
+        # (
+        #     db_file,
+        #     hazard,
+        #     coastline,
+        #     output_path,
+        #     opts_dict
+        # ) = sys.argv[1:]
+        db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
+        hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
+        coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
+        output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
+        opts_dict = {}
 
     # Load up the options from the opts_dict
     threshold = opts_dict['exposure_threshold'] if 'exposure_threshold' in opts_dict.keys() else 0.5

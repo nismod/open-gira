@@ -1,10 +1,15 @@
-FROM ubuntu:20.04
+FROM osgeo/proj
 
 # Silence interactive installations
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required software tools
 RUN apt update
+RUN apt install -y \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python-is-python3
 RUN apt install -y \
     build-essential \
     cmake \
@@ -13,9 +18,7 @@ RUN apt install -y \
     libboost-program-options-dev \
     libexpat1-dev \
     libbz2-dev \
-    python3 \
-    python3-pip \
-    python-is-python3 \
+    libgeos-dev \
     unzip \
     wget \
     zlib1g-dev

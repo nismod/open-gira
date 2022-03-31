@@ -1,3 +1,5 @@
+cython==0.29.28
+cartopy==0.20.2
 numpy==1.22.0  # avoid an AttributeError with numpy < 1.19 and pandas
 nismod-snail==0.2.1
 tqdm==4.62.3
@@ -6,4 +8,5 @@ pyarrow==6.0.0
 snakemake==6.15.1
 pytest==6.2.4
 geopandas==0.10.2
-
+rtree==0.9.7
+matplotlib==3.5.1
