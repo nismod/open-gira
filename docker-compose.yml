@@ -19,9 +19,8 @@ services:
       - 3000:3000
       - 3001:3001
     volumes:
-      - .:/book
+      - ./docs:/book
     command:
       - serve
-      - /book/docs
       - --hostname
       - '0.0.0.0'
