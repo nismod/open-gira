@@ -23,6 +23,7 @@
 
 import sys
 import geopandas as gpd
+import numpy as np
 import pandas
 import logging
 
@@ -42,52 +43,48 @@ def add_custom_node_references(base):
     ensuring that nodes in the same location have the same reference.
     We'll make it easy on ourselves by giving our inserted nodes negative reference numbers.
     """
-    def fix_nodes(base, node_ref):
-        node = None
-        for index, r in base.iterrows():
-            if pandas.isna(r['start_node_reference']):
-                node = (r['start_node_longitude'], r['start_node_latitude'])
-                break
-            if pandas.isna(r['end_node_reference']):
-                node = (r['end_node_longitude'], r['end_node_latitude'])
-                break
+    # Find start nodes with no reference
+    na_start_nodes = base[base.start_node_reference.isna()] \
+        [['start_node_longitude','start_node_latitude']] \
+        .copy() \
+        .rename(columns={
+            'start_node_longitude': 'lon',
+            'start_node_latitude': 'lat'
+        })
+    # and end nodes with no reference
+    na_end_nodes = base[base.end_node_reference.isna()] \
+        [['end_node_longitude','end_node_latitude']] \
+        .copy() \
+        .rename(columns={
+            'end_node_longitude': 'lon',
+            'end_node_latitude': 'lat'
+        })
+    # stitch them together, dropping any duplicate coordinates
+    nodes = pandas.concat([na_start_nodes, na_end_nodes]).drop_duplicates()
+    # give them ids
+    nodes_n = len(nodes)
+    nodes['node_reference'] = np.arange(nodes_n)[::-1] - nodes_n
 
-        if node is not None:
-            logging.debug(f"Fixing references for node {node} (ref {node_ref})")
-            def f(x):
-                if x['start_node_longitude'] == node[0] and x['start_node_latitude'] == node[1]:
-                    return node_ref
-                else:
-                    return x['start_node_reference']
-            base['start_node_reference'] = base.apply(f, axis=1)
+    # merge on against start nodes and fill na values
+    base = base.merge(
+        nodes,
+        left_on=['start_node_longitude', 'start_node_latitude'],
+        right_on=['lon', 'lat'],
+        how='left'
+    ).drop(columns=['lon','lat'])
+    base.start_node_reference = base.start_node_reference.fillna(base.node_reference)
+    base = base.drop(columns='node_reference')
 
-            def f(x):
-                if x['end_node_longitude'] == node[0] and x['end_node_latitude'] == node[1]:
-                    return node_ref
-                else:
-                    return x['end_node_reference']
-            base['end_node_reference'] = base.apply(f, axis=1)
-            changed = True
-        else:
-            changed = False
+    # merge on against end nodes and fill na values
+    base = base.merge(
+        nodes,
+        left_on=['end_node_longitude', 'end_node_latitude'],
+        right_on=['lon', 'lat'],
+        how='left'
+    ).drop(columns=['lon','lat'])
+    base.end_node_reference = base.end_node_reference.fillna(base.node_reference)
+    base = base.drop(columns='node_reference')
 
-        return {
-            'changed': changed,
-            'base': base
-        }
-
-    node_ref = -1
-    max_cycles = 100000000
-    while max_cycles > 0:
-        max_cycles -= 1
-        new_base = fix_nodes(base, node_ref)
-        if not new_base['changed']:
-            break
-        base = new_base['base']
-        node_ref -= 1
-
-    if max_cycles == 0:
-        raise RecursionError(f'Max cycles exceeded for node referencing.')
     return base
 
 
