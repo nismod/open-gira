@@ -71,10 +71,11 @@ include: "rules/convert_to_geoparquet.smk"
 include: "rules/intersection.smk"
 include: "rules/join_data.smk"
 include: "rules/make_exposure_tif.smk"
+include: "rules/make_exposure_img.smk"
 
 ##### target rules #####
 
-# Require the completed single .geoparquet file to be present for each hazard
+# Require the completed overlay image file to be present for each hazard
 rule all:
     input:
         expand(
@@ -82,7 +83,8 @@ rule all:
                 f"{config['output_dir']}",
                 "exposure",
                 f"{{dataset}}_filter-{filter_slug}",
-                f"hazard-{{hazard}}"
+                f"hazard-{{hazard}}",
+                "img"
             ),
             dataset=config['infrastructure_datasets'].keys(),
             hazard=config['hazard_datasets'].keys()
