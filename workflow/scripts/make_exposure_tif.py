@@ -20,7 +20,6 @@ if __name__ == "__main__":
     try:
         db_file = snakemake.input['geoparquet']
         hazard = snakemake.input['hazard'][0]
-        coastline = snakemake.input['coastline']
         output_path = snakemake.output[0]
         opts_dict = snakemake.config['exposure_tifs']
     except NameError:
@@ -28,7 +27,6 @@ if __name__ == "__main__":
         # (
         #     db_file,
         #     hazard,
-        #     coastline,
         #     output_path,
         #     opts_dict
         # ) = sys.argv[1:]

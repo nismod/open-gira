@@ -25,7 +25,6 @@ import sys
 import geopandas as gpd
 import numpy as np
 import pandas
-import logging
 
 
 def append_data(base, slice_files):

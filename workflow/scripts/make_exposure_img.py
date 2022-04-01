@@ -23,7 +23,11 @@ if __name__ == "__main__":
         coastline = snakemake.input['coastline']
         boundaries = snakemake.input['boundaries']
         output_path = snakemake.output[0]
-        opts_dict = snakemake.config['exposure_tifs']
+        try:
+            opts_dict = snakemake.config['exposure_tifs']['plot']
+        except KeyError:
+            opts_dict = {}
+
     except NameError:
         # print(sys.argv)
         # (
@@ -33,13 +37,19 @@ if __name__ == "__main__":
         #     output_path,
         #     opts_dict
         # ) = sys.argv[1:]
-        hazard_tif = '../../results/exposure/tanzania-mini/hazard-aqueduct-river/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
+        hazard_tif = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
         coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
         boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
-        output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river/img/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.png'
+        output_path = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/img/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.png'
         opts_dict = {}
 
     # Load up the options from the opts_dict
+    def opt(s, default=None):
+        return opts_dict[s] if s in opts_dict.keys() else default
+
+    raster_opts = opt('raster', {'cmap': 'Reds'})
+    coastline_opts = opt('coastline', {'facecolor': '#87cefa'})
+    boundary_opts = opt('boundary', {'edgecolor': '#000000'})
 
     logging.info(f"Generating image {output_path}")
     if not os.path.exists(os.path.dirname(output_path)):
@@ -65,18 +75,18 @@ if __name__ == "__main__":
 
         # Plot raster
         logging.debug("Plotting raster data.")
-        rasterio.plot.show(hazard, ax=ax, zorder=3)
+        rasterio.plot.show(hazard, ax=ax, zorder=1, **raster_opts)
 
         # Plot coastline
         logging.debug("Plotting coastline data.")
         coast = gp.read_file(coastline).to_crs(plt_crs)
         coast = coast.geometry.clip(hazard_rect)
-        coast.plot(ax=ax, edgecolor='none', facecolor='#87cefa', zorder=1)
+        coast.plot(ax=ax, edgecolor='none', zorder=2, **coastline_opts)
 
         # Plot boundaries
         logging.debug("Plotting administrative boundary data.")
         bounds = gp.read_file(boundaries).to_crs(plt_crs)
         bounds = bounds.geometry.clip(hazard_rect)
-        bounds.plot(ax=ax, edgecolor='#333333', facecolor='none', zorder=2)
+        bounds.plot(ax=ax, facecolor='none', zorder=3, **boundary_opts)
 
         plt.savefig(output_path)
