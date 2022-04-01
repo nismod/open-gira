@@ -1,4 +1,4 @@
-FROM osgeo/proj
+FROM ubuntu:20.04
 
 # Silence interactive installations
 ENV DEBIAN_FRONTEND=noninteractive

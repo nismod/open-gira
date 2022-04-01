@@ -6,9 +6,7 @@ coastline data, and administrative boundary information.
 """
 import logging
 import geopandas as gp
-import rasterio
 import rasterio.plot
-import cartopy.crs as crs
 import os
 import matplotlib.pyplot as plt
 import shapely.geometry as shape
