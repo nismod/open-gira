@@ -9,9 +9,9 @@ hazard_datasets:
 
 # OSM dataset
 infrastructure_datasets:
-#  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
 #  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
-  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
+#  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 1
@@ -28,3 +28,6 @@ exposure_tifs:
   scaling_factor: 0.1
   # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
   resampling_mode: 'bilinear'
+  plot:
+    raster:
+      cmap: 'Reds'
