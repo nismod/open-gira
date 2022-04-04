@@ -10,24 +10,30 @@ import time
 import ast
 from pathos.multiprocessing import ProcessPool, cpu_count
 
+try:
+    region = snakemake.params["region"]
+    sample = snakemake.params["sample"]
+    #nh_input = snakemake.params["nh_compute"]
+    all_boxes = snakemake.params["all_boxes_compute"]
+except:
+    pass  # cant run from console without snakemake
+    # region = sys.argv[1]
+    # sample = sys.argv[2]
+    # #nh_input = ast.l iteral_eval(sys.argv[3])
+    # nh_input = list(sys.argv[3:])
 
-region = sys.argv[1]  # TODO snkakemake
-sample = sys.argv[2]
-#nh_input = ast.literal_eval(sys.argv[3])
-nh_input = list(sys.argv[3:])
 
-print(nh_input)
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
-# # TODO
-#
-# if 'linux' not in sys.platform:  # TODO
-#     import os
-#     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-#     os.chdir(path)
-#
-#     region = 'SP'
-#     sample = '0'
-#     nh_input = ['0_0_0']
+    region = 'NA'
+    sample = '0'
+    #nh_input = str(['0_0_5'])#, '0_0_1', '0_0_2', '0_0_3', '0_0_4']
+    all_boxes = [f"box_{num}" for num in [884, 955, 956, 957]]#, 1028, 1029, 1030, 1031, 1102, 1103, 1104]]  # Carribean
+
+#nh_input = ast.literal_eval(nh_input)  # convert string to list
 
 
 def t(num, t):
@@ -71,7 +77,7 @@ def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
     return Vg
 
 
-def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints):
+def TC_analysis(lat, lon, name, box_id, region, sample, idx, totpoints):
     print(f"{idx}/{totpoints}")
 
     list_regions = ["NI", "SA", "NA", "EP", "SI", "SP", "WP"]
@@ -114,11 +120,10 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
     )
     TC["sample"] = str(sample)
 
-    TC = TC[TC["number_hur"].isin(nh_func)]  # filter for nhs only
+    #TC = TC[TC["number_hur"].isin(nh_func)]  # filter for nhs only
 
     ##### change geometry from 0-360 to -180-180
-    mask = TC["lon"] > 180.0
-    TC["lon"][mask] = TC["lon"] - 360.0
+    TC['lon'] = TC['lon'].apply(lambda x: x if x <= 180 else x - 360)
 
     ### background environmental pressure
     pressure_env = environ_df[environ_df["region"] == str(region)]
@@ -215,6 +220,7 @@ def TC_analysis(lat, lon, name, box_id, region, sample, nh_func, idx, totpoints)
 
 
 if __name__ == "__main__":
+    start = time.time()
     nodesuse = max(1, cpu_count() - 2)
     if "linux" not in sys.platform:
         nodesuse = 7
@@ -223,58 +229,62 @@ if __name__ == "__main__":
         os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
     )
 
+    if len(all_boxes) != 0:
+        grid_box = grid_box[grid_box['box_id'].isin(all_boxes)]  # filter for boxes that are to be examined only!
+
     totpoints = [len(grid_box)] * len(grid_box)  # for console progress purposes
     idx_pts = list(range(len(totpoints)))
 
     sample_num = [sample] * len(grid_box)
 
-    assert type(nh_input) == list
-    nh_toprocess = []
-    for nh in nh_input:
-        if not os.path.isfile(
-            os.path.join(
-                "data",
-                "intersection",
-                "storm_data",
-                "all_winds",
-                region,
-                f"TC_r{region}_s{sample}_n{nh}.csv",
-            )
-        ):
-            nh_toprocess.append(nh)
-    print(f"nh to process: {nh_toprocess}")
+    # assert type(nh_input) == list
+    # nh_toprocess = []
+    # for nh in nh_input:
+    #     if not os.path.isfile(
+    #         os.path.join(
+    #             "data",
+    #             "intersection",
+    #             "storm_data",
+    #             "all_winds",
+    #             region,
+    #             f"TC_r{region}_s{sample}_n{nh}.csv",
+    #         )
+    #     ):
+    #         nh_toprocess.append(nh)
+    # print(f"nh to process: {nh_toprocess}")
 
-    if len(nh_toprocess) != 0:
-        nh_toprocess_num = [nh_toprocess] * len(grid_box)
+    # if len(nh_toprocess) != 0:
+    #     nh_toprocess_num = [nh_toprocess] * len(grid_box)
 
-        print("running wind analysis...")
-        pool = ProcessPool(nodes=nodesuse)
+    print("running wind analysis...")
+    pool = ProcessPool(nodes=nodesuse)
 
-        s = time.time()
-        output = pool.map(
-            TC_analysis,
-            grid_box.latitude,
-            grid_box.longitude,
-            grid_box.ID_point,
-            grid_box.box_id,
-            grid_box.region,
-            sample_num,
-            nh_toprocess_num,
-            idx_pts,
-            totpoints,
-        )
-        print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
+    s = time.time()
+    output = pool.map(
+        TC_analysis,
+        grid_box.latitude,
+        grid_box.longitude,
+        grid_box.ID_point,
+        grid_box.box_id,
+        grid_box.region,
+        sample_num,
+        #nh_toprocess_num,
+        idx_pts,
+        totpoints,
+    )
+    print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
 
-        print("finalising")
-        output_files = pd.concat(output)
+    print("finalising")
+    output_files = pd.concat(output)
 
-        all_winds_path = os.path.join(
-            "data", "intersection", "storm_data", "all_winds", region
-        )
-        if not os.path.exists(all_winds_path):
-            os.makedirs(all_winds_path)
-        for nh, csv_nh in output_files.groupby("number_hur"):  #
-            print(f"saving {nh}")
-            nh_input.remove(nh)
-            p = os.path.join(all_winds_path, f"TC_r{region}_s{sample}_n{nh}.csv")
-            csv_nh.to_csv(p, index=False)
+    all_winds_path = os.path.join(
+        "data", "intersection", "storm_data", "all_winds", region
+    )
+    if not os.path.exists(all_winds_path):
+        os.makedirs(all_winds_path)
+    #for nh, csv_nh in output_files.groupby("number_hur"):  #
+    #print(f"saving {nh}")
+    #nh_input.remove(nh)
+    p = os.path.join(all_winds_path, f"TC_r{region}_s{sample}.csv")
+    output_files.to_csv(p, index=False)
+    print(f"Total time {round((time.time()-start)/60,3)}")

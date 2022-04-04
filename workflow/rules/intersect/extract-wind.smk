@@ -20,7 +20,7 @@ def required_nh_remaining(rsn):
     for region in region_all:
         nh_completed_files += glob(
             os.path.join(
-                config['data_dir'], "intersection", "storm_data", "all_winds", region, "*csv"
+                'data', "intersection", "storm_data", "all_winds", region, "*csv"
             )
         )  # find which wind speeds have been completed already
     nh_completed = [
@@ -145,6 +145,77 @@ rsn_req = required_nh_remaining(
 )  # [region list, sample list, nh list] for all nh storms that have NOT had their wind speed calculations for the .csv
 
 
+# for region_key in REGIONS:
+#     for sample_key in SAMPLES:
+#         if not os.path.isfile(os.path.join("data", "intersection", "regions", f"nh_r{region_key}_s{sample_key}.csv")):
+#             nh_to_find = find_nh(YEARS, region_key, sample_key)
+#             print(f"Writing for {region_key} {sample_key}: {nh_to_find}")
+#             pd.DataFrame({'key': nh_to_find}).to_csv(os.path.join("data", "intersection", "regions", f"nh_r{region_key}_s{sample_key}.csv"))
+#         else:
+#             print(f"Already written {region_key} {sample_key}")
+#
+
+
+
+# checkpoint storm_sorter:
+#     input:
+#         # os.path.join(
+#         #     "data",
+#         #     "stormtracks",
+#         #     "events",
+#         #     "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
+#         # ),
+#         out_events
+#     output:
+#         os.path.join("data", "intersection", "storm_data", "storm_identifiers", "r{region}_s{sample}_n{nh}.txt")
+#     script:
+#             os.path.join("..", "..", "scripts", "intersect", "storm_sorter.py"
+#         )
+
+
+
+
+# rule intersect_winds_indiv:
+#     """Find the .csv files for the wind speed details at each unit.
+#     IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
+#                still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
+#     it clears all existing files matching the output."""
+#     input:
+#         os.path.join("data", "processed", "world_boxes_metadata.txt"),
+#         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
+#         os.path.join(
+#             "data", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
+#         ),
+#         os.path.join(
+#             "data",
+#             "stormtracks",
+#             "events",
+#             "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
+#         )
+#     params:
+#         region = "{region}",
+#         sample = "{sample}",
+#         nh = "{nh}",
+#         all_boxes_compute = all_boxes,
+#         #req_nh = lambda wildcards: str(
+#         #    find_nh(YEARS, wildcards.region, wildcards.sample)#required_nh_remaining(find_nh_mult(YEARS, region, sample))
+#     output:
+#         [
+#             os.path.join(
+#                 "data",
+#                 "intersection",
+#                 "storm_data",
+#                 "all_winds",
+#                 "{region}",
+#                 "TC_r{region}_s{sample}_n" + f"{nh}.csv",
+#             )
+#             for nh in rsn_req[2]
+#         ],
+#     script:
+#             os.path.join("..", "..", "scripts", "intersect", "intersect_3_winds.py"
+#         )
+
+
 rule intersect_winds_indiv:
     """Find the .csv files for the wind speed details at each unit. 
     IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
@@ -161,35 +232,83 @@ rule intersect_winds_indiv:
             "stormtracks",
             "events",
             "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
-        ),
+        )
     params:
-        nh_compute=lambda wildcards: str(
-            find_nh(YEARS, wildcards.region, wildcards.sample)
-        ),
+        region = "{region}",
+        sample = "{sample}",
+        #nh = "{nh}",
+        all_boxes_compute = all_boxes,
+        #req_nh = lambda wildcards: str(
+        #    find_nh(YEARS, wildcards.region, wildcards.sample)#required_nh_remaining(find_nh_mult(YEARS, region, sample))
     output:
-        [
             os.path.join(
                 "data",
                 "intersection",
                 "storm_data",
                 "all_winds",
                 "{region}",
-                "TC_r{region}_s{sample}_n" + f"{nh}.csv",
+                "TC_r{region}_s{sample}.csv",
             )
-            for nh in rsn_req[2]
-        ],
-    shell:
-        (
-            "python3 "
-            + os.path.join("workflow", "scripts", "intersect", "intersect_3_winds.py")
-            + " {wildcards.region} {wildcards.sample} "
-            + '"""'
-            + "{params.nh_compute}"
-            + '"""'
+    script:
+            os.path.join("..", "..", "scripts", "intersect", "intersect_3_winds.py"
         )
+
+# TC_all2 = [
+#     os.path.join(
+#         "data",
+#         "intersection",
+#         "storm_data",
+#         "all_winds",
+#         f"{region}",
+#         f"TC_r{region}_1000_YEARS_{sample}_n{nh}.csv",
+#     )
+#     for region, sample, nh in zip(rsn_req[0], rsn_req[1], rsn_req[2])
+# ]
 
 
 rule intersect_wind:
-    """For all elements"""
+    """Makes separate files for quicker gdp loss loading times. Also required to generate {nh} wildcard"""
     input:
-        TC_all,
+        expand(os.path.join(
+            "data",
+            "intersection",
+            "storm_data",
+            "all_winds",
+            "{region}",
+            "TC_r{region}_s{sample}.csv",
+        ), region=REGIONS, sample=SAMPLES)
+    params:
+        REGIONS=REGIONS,
+        SAMPLES=SAMPLES
+    output:
+        TC_all
+    script:
+        os.path.join("..", "..", "scripts", "intersect", "intersect_3_winds_separator.py")
+
+
+#
+# def nh_input(wildcards):
+#    lst = [
+#         os.path.join(
+#             "data",
+#             "intersection",
+#             "storm_data",
+#             "all_winds",
+#             f"{region}",
+#             f"TC_r{region}_1000_YEARS_{sample}_n" + f"{nh}.csv",
+#         )
+#         for region, sample, nh in zip(rsn_req[0], rsn_req[1], rsn_req[2])
+#     ]
+#    return lst
+#
+#
+#
+# rule intersect_wind_master:
+#     input:
+#         nh_input
+#
+#
+# rule intersect_wind:
+#     """For all elements"""
+#     input:
+#         TC_all,

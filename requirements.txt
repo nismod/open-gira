@@ -13,3 +13,4 @@ rasterio
 rasterstats
 requests
 snkit
+zenodo_get

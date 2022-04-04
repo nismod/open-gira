@@ -1,21 +1,48 @@
 # Input data and output locations
-data_dir: 'data'
-hazard_data_dir: 'data/aqueduct'
 output_dir: 'results'
 
-# workflow location
-workflow_dir: 'workflow'
+## Aqueduct Analysis ##
+# This should be a named list of files that specify hazard raster files
+# to retrieve using wget -i
+hazard_datasets:
+  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
+  aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
 
-# Directory <aqueduct_dir> is expected to contain a csv file
-# <datafiles_list> describing the raster data files.
-hazard_csv: 'data/aqueduct/aqueduct_river.csv'
+# OSM dataset #
+infrastructure_datasets:
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+#  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
-# OSM dataset
-dataset: 'tanzania-latest'
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 1
-# Edge attributes list for network/hazard intersection.
-edge_attrs: 'id'
+# Osmium tags to retain in the geoparquet files
+keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
 
+# When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+exposure_threshold: 0.5
+
+
+## STORM Power Network Analysis ##
+# width and height of dataset-splitting box (must be factor of 180)
+box_width_height: 5
+
+# YEARS #
+# Value (inclusive) of year to investigate storms to.
+year_upper: 15
+
+# Years to investigate all storms within. Will override year_upper. Write None to use year_upper. List of floats or strings
+years_indiv: ["0", "1", "2", "3", "4"]
+
+# REGIONS #
+# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
+regions: ["NA"]
+
+# SAMPLES #
+# Synthetic data sample upper value (inclusive).Value from 0 to 9 to analyse for all years and regions.
+sample_upper: 0
+
+# Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
+samples_indiv: None

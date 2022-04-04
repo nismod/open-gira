@@ -10,14 +10,14 @@ https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_pe
 CYCLONE_REGIONS = ["EP", "NA", "NI", "SI", "SP", "WP"]
 
 out_fixed = expand(
-    os.path.join(config['data_dir'], "stormtracks", "fixed", "STORM_FIXED_{param}_{region}.nc"),
+    os.path.join('data', "stormtracks", "fixed", "STORM_FIXED_{param}_{region}.nc"),
     region=CYCLONE_REGIONS,
     param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
 )
 
 out_events = expand(
     os.path.join(
-        config['data_dir'],
+        'data',
         "stormtracks",
         "events",
         "STORM_DATA_IBTRACS_{region}_1000_YEARS_{num}.txt",
@@ -25,6 +25,7 @@ out_events = expand(
     region=CYCLONE_REGIONS,
     num=list(range(0, 10)),
 )
+
 
 
 rule download_stormtracks_fixed:
