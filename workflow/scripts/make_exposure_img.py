@@ -13,14 +13,13 @@ import shapely.geometry as shape
 import re
 import glob
 
-
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     try:
         hazard_dir = snakemake.input['hazard_dir']
-        coastline = snakemake.input['coastline']
-        boundaries = snakemake.input['boundaries']
+        coastline = os.path.join(snakemake.input['coastline'], snakemake.params['coastline'])
+        boundaries = os.path.join(snakemake.input['boundaries'], snakemake.params['boundaries'])
         output_dir = snakemake.output[0]
 
         try:
@@ -29,19 +28,19 @@ if __name__ == "__main__":
             opts_dict = {}
 
     except NameError:
-        # print(sys.argv)
-        # (
-        #     hazard_dir,
-        #     coastline,
-        #     boundaries,
-        #     output_path,
-        #     opts_dict
-        # ) = sys.argv[1:]
-        hazard_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/'
-        coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
-        boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
-        output_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/img/'
-        opts_dict = {}
+        print(sys.argv)
+        (
+            hazard_dir,
+            coastline,
+            boundaries,
+            output_dir,
+            opts_dict
+        ) = sys.argv[1:]
+        # hazard_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/'
+        # coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
+        # boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
+        # output_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/img/'
+        # opts_dict = {}
 
     # Load up the options from the opts_dict
     def opt(s, default=None):
