@@ -17,4 +17,13 @@ keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
 
-exposure_threshold: 0.5
+exposure_tifs:
+  # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+  exposure_threshold: 0.5
+  # Used when scaling raster files, values < 1 will downsample
+  scaling_factor: 0.1
+  # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
+  resampling_mode: 'bilinear'
+  plot:
+    raster:
+      cmap: 'Reds'

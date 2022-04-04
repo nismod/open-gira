@@ -12,7 +12,7 @@ The steps involved are:
 - load the original hazard raster file, e.g.
   `./results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif`
 - create a copy of that file at
-  `./results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif`
+  `./results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/raster/exposure_inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif`
 - replace the flood info band with a road length info band 
   (0 for any cell with less than `exposure_threshold` of flooding)
 - resample the flood info band according to the `scaling_factor` config directive

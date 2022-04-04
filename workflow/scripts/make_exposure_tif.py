@@ -23,17 +23,17 @@ if __name__ == "__main__":
         output_path = snakemake.output[0]
         opts_dict = snakemake.config['exposure_tifs']
     except NameError:
-        # print(sys.argv)
-        # (
-        #     db_file,
-        #     hazard,
-        #     output_path,
-        #     opts_dict
-        # ) = sys.argv[1:]
-        db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
-        hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
-        output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
-        opts_dict = {}
+        print(sys.argv)
+        (
+            db_file,
+            hazard,
+            output_path,
+            opts_dict
+        ) = sys.argv[1:]
+        # db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
+        # hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
+        # output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
+        # opts_dict = {}
 
     # Load up the options from the opts_dict
     threshold = opts_dict['exposure_threshold'] if 'exposure_threshold' in opts_dict.keys() else 0.5

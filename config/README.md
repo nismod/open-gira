@@ -26,6 +26,11 @@ slice boundaries, so too high a number can lead to redundancy.
   - `exposure_threshold` height in m above which infrastructure is considered flooded (default 0.5)
   - `scaling_factor` ratio with which to resample the hazard data (default 0.1 = downsample 10x)
   - `resampling_mode` resampling method to use. Can be any of `rasterio.enums.Resampling` (default 'bilinear')
+  - `plot` a dictionary of dictionaries specifiying keyword arguments for plotting layers in the exposure images
+    - `raster` keyword arguments for the raster layer
+      - `cmap` (for example) value of the 'cmap' argument to `rasterio.plot.show()`
+    - `coastline` keyword arguments for the coastline layer (passed to `geopandas.GeoDataFrame.plot()`)
+    - `boundary` keyword arguments for the administrative boundary layer (passed to `geopandas.GeoDataFrame.plot()`)
 
 Modifying the configuration file will *not* trigger a re-run of the pipeline by
 snakemake. If you wish to rerun the whole pipeline after altering the

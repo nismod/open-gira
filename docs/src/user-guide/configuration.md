@@ -33,6 +33,12 @@ exposure_tifs:
   scaling_factor: 0.1
   # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
   resampling_mode: 'bilinear'
+  # Options for plotting
+  plot:
+    # Keyword arguments for raster plotting
+    raster:
+      # Colour mapping to use for raster data
+      cmap: 'Reds'
 ```
 
 You should also have a `./config/highway-core.txt` file that looks like:
