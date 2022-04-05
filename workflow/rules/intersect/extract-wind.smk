@@ -23,6 +23,7 @@ def required_nh_remaining(rsn):
                 'data', "intersection", "storm_data", "all_winds", region, "*csv"
             )
         )  # find which wind speeds have been completed already
+    raise RuntimeError('OoD function')
     nh_completed = [
         file[file.find("_n") + 2 : -4] for file in nh_completed_files
     ]  # single out nh identifiers from directory files
@@ -140,9 +141,9 @@ TC_all = expand(
     nh=find_nh_mult(YEARS, REGIONS, SAMPLES)[2],
 )
 
-rsn_req = required_nh_remaining(
-    find_nh_mult(YEARS, REGIONS, SAMPLES)
-)  # [region list, sample list, nh list] for all nh storms that have NOT had their wind speed calculations for the .csv
+# rsn_req = required_nh_remaining(
+#     find_nh_mult(YEARS, REGIONS, SAMPLES)
+# )  # [region list, sample list, nh list] for all nh storms that have NOT had their wind speed calculations for the .csv
 
 
 # for region_key in REGIONS:
@@ -238,6 +239,7 @@ rule intersect_winds_indiv:
         sample = "{sample}",
         #nh = "{nh}",
         all_boxes_compute = all_boxes,
+        #total_parallel_processes = int(len(REGIONS)*len(SAMPLES))
         #req_nh = lambda wildcards: str(
         #    find_nh(YEARS, wildcards.region, wildcards.sample)#required_nh_remaining(find_nh_mult(YEARS, region, sample))
     output:
@@ -250,7 +252,7 @@ rule intersect_winds_indiv:
                 "TC_r{region}_s{sample}.csv",
             )
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_3_winds.py"
+            os.path.join("..", "..", "scripts", "intersect", "intersect_3_wind_extracter.py"
         )
 
 # TC_all2 = [
@@ -283,7 +285,7 @@ rule intersect_wind:
     output:
         TC_all
     script:
-        os.path.join("..", "..", "scripts", "intersect", "intersect_3_winds_separator.py")
+        os.path.join("..", "..", "scripts", "intersect", "intersect_4_wind_separator")
 
 
 #

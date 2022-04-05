@@ -241,6 +241,16 @@ def target_mapper(feature, targets, nodes):
 
 
 
+# set iteration variables
+routeid_damaged = set() # marks which source_sink routes already damaged -> do not double count. Form: {(source1, target1), (source2, target2), ...}
+totdamage = 0  # total damage (ensuring no double counts)
+targetsdamaged = {}  # if the operation value of the target is desired
+edges_affected = gpd.GeoDataFrame()
+targets = gpd.GeoDataFrame()
+polys_affected = gpd.GeoDataFrame()
+
+
+
 print(f"{nh}: loading data")
 # print('loading tracks')
 stormfile = os.path.join(
@@ -281,6 +291,7 @@ windfile = os.path.join(
     "storm_data",
     "all_winds",
     region,
+    sample,
     f"TC_r{region}_s{sample}_n{nh}.csv",
 )
 if not os.path.isfile(windfile):
@@ -288,126 +299,123 @@ if not os.path.isfile(windfile):
         f"Wind file should exist but doesnt (TC_r{region}_s{sample}_n{nh}.csv)"
     )
 
-
 winds_ev_all = pd.read_csv(windfile)
 assert len(winds_ev_all) != 0
+if not isNone(windfile):
 
 
-stats_add_master = {}
-
-print(f"Investigating storm {nh}")
-winds_ev_filtered = applythreshold(winds_ev_all)
-ID_affected = list(winds_ev_filtered["ID_point"])
-box_id_affected = winds_ev_filtered["box_id"].unique()
-
-# print("- grid")
-grid_data = gpd.read_file(
-    os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
-)
-
-polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)].rename(columns={'box_id':'box_id_poly'})
-# set iteration variables
-routeid_damaged = set() # marks which source_sink routes already damaged -> do not double count. Form: {(source1, target1), (source2, target2), ...}
-totdamage = 0  # total damage (ensuring no double counts)
-targetsdamaged = {}  # if the operation value of the target is desired
-edges_affected = gpd.GeoDataFrame()
-targets = gpd.GeoDataFrame()
-
-start = time.time()
 
 
-for jj, box_id in enumerate(box_id_affected):  # extract the damaged edges using this for loop
-    print(f"-- Inspecting for damage {jj+1}/{len(box_id_affected)} -- {box_id}")
+    print(f"Investigating storm {nh}")
+    winds_ev_filtered = applythreshold(winds_ev_all)
+    ID_affected = list(winds_ev_filtered["ID_point"])
+    box_id_affected = winds_ev_filtered["box_id"].unique()
 
-    box_edges = gpd.read_file(
-        os.path.join(
-            "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
-        ),
-        layer="edges",
+    # print("- grid")
+    grid_data = gpd.read_file(
+        os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
     )
 
-    box_edges_affected = box_edges.overlay(
-        polys_affected, how="intersection"
-    )  # keeps edges that are affected grid points (only a part has to be in)
+    polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)].rename(columns={'box_id':'box_id_poly'})
 
 
-    box_edges_affected["link"] = box_edges_affected.apply(lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1)  # consistent naming
-
-    edges_affected = edges_affected.append(box_edges_affected)  # add to master list of damaged edges
+    start = time.time()
 
 
-edges = gpd.GeoDataFrame(columns=['link'])
-nodes = gpd.GeoDataFrame()
+    for jj, box_id in enumerate(box_id_affected):  # extract the damaged edges using this for loop
+        print(f"-- Inspecting for damage {jj+1}/{len(box_id_affected)} -- {box_id}")
 
-print("Starting network connection expansion")
-startx = time.time()
-for edge_damaged in edges_affected.itertuples():
+        box_edges = gpd.read_file(
+            os.path.join(
+                "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+            ),
+            layer="edges",
+        )
 
-
-    if edge_damaged.link not in set(edges['link']):
-        #print('Searching Network')
-        nodes_new, edges_new = combine_networks(edge_damaged)
-        s1 = time.time()
-        nodes = nodes.append(nodes_new)
-        s2 = time.time()
-        #print(f"Time for s1 is {s2 - s1}")
-        edges = edges.append(edges_new)
-        #print(f"Time for s2 is {time.time() - s2}")
-
-print(f'Search took {round((time.time() - startx)/60,1)} mins')
+        box_edges_affected = box_edges.overlay(
+            polys_affected, how="intersection"
+        )  # keeps edges that are affected grid points (only a part has to be in)
 
 
-## Now all the damaged edges can be found in nodes & edges
-G = create_graph(nodes, edges)
+        box_edges_affected["link"] = box_edges_affected.apply(lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1)  # consistent naming
 
-components = list(nx.connected_components(G))
-
+        edges_affected = edges_affected.append(box_edges_affected)  # add to master list of damaged edges
 
 
-## Set nominal values ##
-nodes['nominal_mw'] = 0  # set base to zero
-nominal_dict = dict()  # dictionary: {component1: {'nominal_mw': nominal_mw_1, 'nominal_gdp': nominal_gdp_1}, ... }
-for ii, component in enumerate(components):
-    component_nodes = nodes[nodes['id'].isin(component)]
-    nodes.loc[nodes.id.isin(component), 'component'] = ii
-    total_component_mw = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
-    component_node_targets = component_nodes[component_nodes['type']=='target']
-    total_component_gdp = component_node_targets['gdp'].sum()
+    edges = gpd.GeoDataFrame(columns=['link'])
+    nodes = gpd.GeoDataFrame()
 
-    nominal_dict[ii] = {'nominal_mw': total_component_mw, 'nominal_gdp': total_component_gdp}
+    print("Starting network connection expansion")
+    startx = time.time()
+    for edge_damaged in edges_affected.itertuples():
 
-    if total_component_gdp != 0:
-        component_target_mw_allocation = {target_id: total_component_mw*target_gdp/total_component_gdp for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target has gdp:  tot_mw * target_gdp / tot_gdp. This is the nominal values
-        nodes['nominal_mw'] = nodes['nominal_mw'] + nodes['id'].map(component_target_mw_allocation).fillna(0)  # maps the nominal values to the node dataframe
 
-if len(edges) != 0 and len(nodes) != 0:
-    ## Split damaged components ##
-    edges_damaged = edges[~edges.link.isin(edges_affected.link.values)]  # remove edges which are affected (edges_affected)
-    G = create_graph(nodes, edges_damaged)  # new graph
+        if edge_damaged.link not in set(edges['link']):
+            #print('Searching Network')
+            nodes_new, edges_new = combine_networks(edge_damaged)
+            s1 = time.time()
+            nodes = nodes.append(nodes_new)
+            s2 = time.time()
+            #print(f"Time for s1 is {s2 - s1}")
+            edges = edges.append(edges_new)
+            #print(f"Time for s2 is {time.time() - s2}")
+
+    print(f'Search took {round((time.time() - startx)/60,1)} mins')
+
+
+    ## Now all the damaged edges can be found in nodes & edges
+    G = create_graph(nodes, edges)
 
     components = list(nx.connected_components(G))
 
-    nodes['post_storm_mw'] = 0  # base level of mw value after storm
-    for component in components:
+
+
+    ## Set nominal values ##
+    nodes['nominal_mw'] = 0  # set base to zero
+    nominal_dict = dict()  # dictionary: {component1: {'nominal_mw': nominal_mw_1, 'nominal_gdp': nominal_gdp_1}, ... }
+    for ii, component in enumerate(components):
         component_nodes = nodes[nodes['id'].isin(component)]
-        total_component_mw_storm = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
+        nodes.loc[nodes.id.isin(component), 'component'] = ii
+        total_component_mw = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
         component_node_targets = component_nodes[component_nodes['type']=='target']
-        total_component_gdp_storm = component_node_targets['gdp'].sum()
-        if total_component_gdp_storm != 0:
+        total_component_gdp = component_node_targets['gdp'].sum()
 
-            ## Rerouting (method not yet verified) ##
-            #component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/total_component_gdp_storm for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp_subnetwork (for the sub-network in which the target is located)
-            ## No Rerouting ##
-            component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/nominal_dict[jj]['nominal_gdp'] for target_id, target_gdp, jj in zip(component_node_targets.id.values, component_node_targets.gdp.values, component_node_targets.component.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp (for the sub-network in which the target is located).
+        nominal_dict[ii] = {'nominal_mw': total_component_mw, 'nominal_gdp': total_component_gdp}
 
-            nodes['post_storm_mw'] = nodes['post_storm_mw'] + nodes['id'].map(component_target_mw_storm_allocation).fillna(0)  # maps the nominal values to the node dataframe
+        if total_component_gdp != 0:
+            component_target_mw_allocation = {target_id: total_component_mw*target_gdp/total_component_gdp for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target has gdp:  tot_mw * target_gdp / tot_gdp. This is the nominal values
+            nodes['nominal_mw'] = nodes['nominal_mw'] + nodes['id'].map(component_target_mw_allocation).fillna(0)  # maps the nominal values to the node dataframe
 
-    nodes['mw_loss_storm'] = nodes['nominal_mw'] - nodes['post_storm_mw']  # calculate mw loss
-    nodes['f_value'] = 1 - nodes['mw_loss_storm'] / nodes['nominal_mw']  # calculate f value: power_after_storm / nominal_power
-    nodes['gdp_damage'] = nodes['f_value'] * nodes['gdp']  # equivalent gdp value
+    if len(edges) != 0 and len(nodes) != 0:
+        ## Split damaged components ##
+        edges_damaged = edges[~edges.link.isin(edges_affected.link.values)]  # remove edges which are affected (edges_affected)
+        G = create_graph(nodes, edges_damaged)  # new graph
+
+        components = list(nx.connected_components(G))
+
+        nodes['post_storm_mw'] = 0  # base level of mw value after storm
+        for component in components:
+            component_nodes = nodes[nodes['id'].isin(component)]
+            total_component_mw_storm = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
+            component_node_targets = component_nodes[component_nodes['type']=='target']
+            total_component_gdp_storm = component_node_targets['gdp'].sum()
+            if total_component_gdp_storm != 0:
+
+                ## Rerouting (method not yet verified) ##
+                #component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/total_component_gdp_storm for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp_subnetwork (for the sub-network in which the target is located)
+                ## No Rerouting ##
+                component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/nominal_dict[jj]['nominal_gdp'] for target_id, target_gdp, jj in zip(component_node_targets.id.values, component_node_targets.gdp.values, component_node_targets.component.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp (for the sub-network in which the target is located).
+
+                nodes['post_storm_mw'] = nodes['post_storm_mw'] + nodes['id'].map(component_target_mw_storm_allocation).fillna(0)  # maps the nominal values to the node dataframe
+
+        nodes['mw_loss_storm'] = nodes['nominal_mw'] - nodes['post_storm_mw']  # calculate mw loss
+        nodes['f_value'] = 1 - nodes['mw_loss_storm'] / nodes['nominal_mw']  # calculate f value: power_after_storm / nominal_power
+        nodes['gdp_damage'] = nodes['f_value'] * nodes['gdp']  # equivalent gdp value
 
 
-
+else:
+    print(f"No data in windfile for {nh}")
+    nodes = pd.DataFrame()
 
 print(f"{nh}: - saving")
 

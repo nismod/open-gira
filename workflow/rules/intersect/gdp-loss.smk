@@ -43,5 +43,5 @@ rule intersection_gdploss:
     params:
         region = "{region}", sample = "{sample}", nh = "{nh}"
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py"
+            os.path.join("..", "..", "scripts", "intersect", "intersect_5_gdploss.py"
         )
