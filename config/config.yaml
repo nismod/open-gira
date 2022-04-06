@@ -29,12 +29,15 @@ exposure_threshold: 0.5
 # width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5
 
-# YEARS #
-# Value (inclusive) of year to investigate storms to.
-year_upper: 15
+# List of boxes to analyse (only). Put None to evaluate globally
+specific_boxes: [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1102, 1103, 1104]
 
-# Years to investigate all storms within. Will override year_upper. Write None to use year_upper. List of floats or strings
-years_indiv: ["0", "1", "2", "3", "4"]
+## YEARS #
+## Value (inclusive) of year to investigate storms to.
+#year_upper: 15
+#
+## Years to investigate all storms within. Will override year_upper. Write None to use year_upper. List of floats or strings
+#years_indiv: ["0", "1", "2", "3", "4"]
 
 # REGIONS #
 # Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS

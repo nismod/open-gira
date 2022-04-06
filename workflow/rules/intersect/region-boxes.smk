@@ -10,12 +10,12 @@ if len(REGIONS)==0:
     print('Inputting all regions')
     REGIONS = ["EP", "NA", "NI", "SI", "SP", "WP"]
 
-YEARS = list(range(config['year_upper']+1))
-if config['years_indiv'] != 'None':
-    print('Using specified years')
-    YEARS = config['years_indiv']
-if len(YEARS)==0:
-    print('Years incorrectly specified')
+# YEARS = list(range(config['year_upper']+1))
+# if config['years_indiv'] != 'None':
+#     print('Using specified years')
+#     YEARS = config['years_indiv']
+# if len(YEARS)==0:
+#     print('Years incorrectly specified')
 
 SAMPLES = list(range(config['sample_upper']+1))
 if config['samples_indiv'] != 'None':
