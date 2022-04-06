@@ -8,6 +8,8 @@ REGIONS = snakemake.params['REGIONS']
 SAMPLES = snakemake.params['SAMPLES']
 
 
+
+
 def find_nh(region, sample):
     """Returns a list of all hurricane unique identifiers (nh) in the years years_inp for the given region and sample
     Input:
@@ -64,13 +66,14 @@ def find_nh(region, sample):
     return ret_lst
 
 empty_csv = pd.DataFrame({'id':[None]})
-nh_completed = set()
+
 for region in REGIONS:
     all_winds_path = os.path.join(
         "data", "intersection", "storm_data", "all_winds", region
     )
 
     for input in inputs:
+        nh_completed = set()
         output_files = pd.read_csv(input)
         sample = input.split('_')[-1][1:-4]  # get sample
 
@@ -88,5 +91,7 @@ for region in REGIONS:
         # required for snakemake
         nh_remaining = set(find_nh(region, sample)).difference(nh_completed)
         for nh in nh_remaining:
+            print(f"saving empty {nh}")
             p = os.path.join(sample_path, f"TC_r{region}_s{sample}_n{nh}.csv")
             empty_csv.to_csv(p, index=False)
+print('finished separating')

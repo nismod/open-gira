@@ -285,7 +285,7 @@ rule intersect_wind:
     output:
         TC_all
     script:
-        os.path.join("..", "..", "scripts", "intersect", "intersect_4_wind_separator")
+        os.path.join("..", "..", "scripts", "intersect", "intersect_4_wind_separator.py")
 
 
 #
