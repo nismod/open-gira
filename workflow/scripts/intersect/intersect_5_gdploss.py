@@ -495,7 +495,7 @@ if len(TC) != 0:
     #mask = TC["lon"] > 180.0
     #TC["lon"][mask] = TC["lon"] - 360.0  # adjust long
 
-    TC_nh['lon'] = TC_nh.['lon'].apply(lambda x: x if x <= 180 else x - 360)
+    TC_nh['lon'] = TC_nh['lon'].apply(lambda x: x if x <= 180 else x - 360)
 
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
     storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})

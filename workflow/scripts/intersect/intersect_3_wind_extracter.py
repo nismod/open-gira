@@ -14,11 +14,12 @@ import ast
 try:
     region = snakemake.params["region"]
     sample = snakemake.params["sample"]
-    total_parallel_processes = snakemake.params["total_parallel_processes"]
+    #total_parallel_processes = snakemake.params["total_parallel_processes"]
     #nh_input = snakemake.params["nh_compute"]
     all_boxes = snakemake.params["all_boxes_compute"]
 except:
     pass  # cant run from console without snakemake
+    print("Not using Snakemake")
     # region = sys.argv[1]
     # sample = sys.argv[2]
     # #nh_input = ast.l iteral_eval(sys.argv[3])
@@ -303,13 +304,12 @@ print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
 
 
 all_winds_path = os.path.join(
-    "data", "intersection", "storm_data", "all_winds", region
+    "data", "intersection", "storm_data", "all_winds", region, sample
 )
 if not os.path.exists(all_winds_path):
     os.makedirs(all_winds_path)
-#for nh, csv_nh in output_files.groupby("number_hur"):  #
-#print(f"saving {nh}")
-#nh_input.remove(nh)
-p = os.path.join(all_winds_path, f"TC_r{region}_s{sample}.csv")
-TC_all.to_csv(p, index=False)
+for nh, csv_nh in TC_all.groupby("number_hur"):  #
+    print(f"saving {nh}")
+    p = os.path.join(all_winds_path, f"TC_r{region}_s{sample}_n{nh}.csv")
+    csv_nh.to_csv(p, index=False)
 print(f"Total time {round((time.time()-start)/60,3)}")

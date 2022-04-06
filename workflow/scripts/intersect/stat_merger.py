@@ -1,34 +1,21 @@
 """Collects all individual storm json statistics and merges into one csv"""
 
-import os
 import json
 import pandas as pd
-import glob
 
+inputs = snakemake.inputs
+output = snakemake.outputs
 
-region_data_path = os.path.join(
-    "data", "intersection", "storm_data", "individual_storms"
-)
-regionfolders = os.listdir(region_data_path)
 df = pd.DataFrame()
 
-for region in regionfolders:
-    storm_data_path = os.path.join(region_data_path, region)
-    stormfolders = os.listdir(storm_data_path)
-    stormfolders = [
-        foldername for foldername in stormfolders if foldername[:6] == "storm_"
-    ]  # keep only storm ones
+for input in inputs:
+    with open(input, "r") as file:
+        storm_stats = json.load(file)
+        df_toadd = pd.DataFrame(storm_stats)
+        df = df.append(df_toadd, ignore_index=True)
 
-    for ii, storm in enumerate(stormfolders):
-        storm_file = glob.glob(os.path.join(storm_data_path, storm, "*.txt"))
-        if len(storm_file) == 1:
-            with open(storm_file[0], "r") as file:
-                storm_stats = json.load(file)
-                df_toadd = pd.DataFrame(storm_stats)
-                df = df.append(df_toadd, ignore_index=True)
-df.to_csv(
-    os.path.join("data", "intersection", "combined_storm_statistics.csv"), index=False
-)
+df.to_csv(str(output))
+
 if len(df) == 0:
     print("Merged, len=0")
 else:

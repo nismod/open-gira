@@ -11,6 +11,7 @@ rule intersection_gdploss:
             "storm_data",
             "all_winds",
             "{region}",
+            "{sample}",
             "TC_r{region}_s{sample}_n{nh}.csv",
         ),
         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
