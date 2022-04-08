@@ -31,7 +31,7 @@ except:
     print('RUNNING ON FIXED INPUTS')
     region = 'NA'
     sample = '0'
-    nh = '0_0_2'
+    nh = '0_11_11'
 
 def isNone(df):
     """Checks if dataframe contains solely the None row (required for snakemake and gpkg files)"""
@@ -410,7 +410,7 @@ if not isNone(windfile):
 
         nodes['mw_loss_storm'] = nodes['nominal_mw'] - nodes['post_storm_mw']  # calculate mw loss
         nodes['f_value'] = 1 - nodes['mw_loss_storm'] / nodes['nominal_mw']  # calculate f value: power_after_storm / nominal_power
-        nodes['gdp_damage'] = nodes['f_value'] * nodes['gdp']  # equivalent gdp value
+        nodes['gdp_damage'] = (1 - nodes['f_value']) * nodes['gdp']  # equivalent gdp value
 
 
 else:
@@ -420,7 +420,7 @@ else:
 print(f"{nh}: - saving")
 
 storm_path = os.path.join(
-    "data", "intersection", "storm_data", "individual_storms", region, f"storm_{nh}"
+    "data", "intersection", "storm_data", "individual_storms", region, sample, f"storm_{nh}"
 )
 if not os.path.exists(storm_path):
     os.makedirs(storm_path)
@@ -511,11 +511,13 @@ today = date.today()
 
 
 if not isNone(targets):
-    f_0_25_temp, f_25_50, f_50_75, f_75_1_temp = targets['f_value'].value_counts(bins=[0, 0.25, 0.5, 0.75, 1]).values.astype(float)
+    f_75_1_temp, f_50_75, f_25_50, f_0_25_temp  = targets['f_value'].value_counts(bins=[0, 0.25, 0.5, 0.75, 1]).values.astype(float)  # note order
     f_0 = len(targets[targets['f_value']==0])
     f_0_25 = f_0_25_temp - f_0
     f_1 = len(targets[targets['f_value']==1])
+
     f_75_1 = f_75_1_temp - f_1
+    print(f"f_75_1: {f_75_1}, f_75_1_temp: {f_75_1_temp}, f_1: {f_1}")
 
     totdamage = targets.gdp_damage.sum()
 

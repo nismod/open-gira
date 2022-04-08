@@ -22,6 +22,15 @@ rule intersection_gdploss:
             for box_id in all_boxes
         ],
         out_connector,
+        os.path.join(
+            "data",
+            "intersection",
+            "storm_data",
+            "all_winds",
+            "{region}",
+            "{sample}",
+            "{region}_{sample}_completed.txt"
+        )
     output:
         os.path.join(
             "data",
@@ -29,18 +38,20 @@ rule intersection_gdploss:
             "storm_data",
             "individual_storms",
             "{region}",
+            "{sample}",
             "storm_{nh}",
             "storm_r{region}_s{sample}_n{nh}.txt",
         ),
-        os.path.join(
-            "data",
-            "intersection",
-            "storm_data",
-            "individual_storms",
-            "{region}",
-            "storm_{nh}",
-            "storm_track_r{region}_s{sample}_n{nh}.gpkg",
-        ),
+        # os.path.join(
+        #     "data",
+        #     "intersection",
+        #     "storm_data",
+        #     "individual_storms",
+        #     "{region}",
+        #     "{sample}",
+        #     "storm_{nh}",
+        #     "storm_track_r{region}_s{sample}_n{nh}.gpkg",
+        # ),
     params:
         region = "{region}", sample = "{sample}", nh = "{nh}"
     script:

@@ -3,20 +3,18 @@
 import json
 import pandas as pd
 
-inputs = snakemake.inputs
-output = snakemake.outputs
+inputs = snakemake.input
+output = snakemake.output
 
 df = pd.DataFrame()
 
 for input in inputs:
-    with open(input, "r") as file:
-        storm_stats = json.load(file)
-        df_toadd = pd.DataFrame(storm_stats)
-        df = df.append(df_toadd, ignore_index=True)
+    storm_stats = pd.read_csv(input)
+    df = df.append(storm_stats, ignore_index=True)
 
-df.to_csv(str(output))
+df.to_csv(str(output), index=False)
 
 if len(df) == 0:
-    print("Merged, len=0")
+    print("Merged all, len=0")
 else:
-    print("Merged")
+    print("Merged all")
