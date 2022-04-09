@@ -19,10 +19,12 @@ try:
     all_boxes = snakemake.params["all_boxes_compute"]
     nh_split = int(snakemake.params["memory_storm_split"])  # number of nh to run each iteration
 except:
-    pass  # cant run from console without snakemake
+    #pass  # cant run from console without snakemake
     print("Not using Snakemake")
-    # region = sys.argv[1]
-    # sample = sys.argv[2]
+    region = "NA"
+    sample = "0"
+    all_boxes = [f"box_{num}" for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1102, 1103, 1104]]
+    nh_split = 50
     # #nh_input = ast.l iteral_eval(sys.argv[3])
     # nh_input = list(sys.argv[3:])
 
@@ -199,20 +201,19 @@ unit_path = os.path.join(
 "data", "intersection", "storm_data", "unit_data", region, sample
 )
 
-if not os.path.exists(unit_path):
-    os.makedirs(unit_path)
+
 
 
 unit_paths_all = dict()  # {unit_path: [list of nh in that unit], ... }  Note that this can speed up the loading time for the for loop after next.
 c = 0
 for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)):  # TODO kernprof me
-    if c > 100:
-        print('USING BREAKER')
-        break
+    # if c > 100:
+    #     print('USING BREAKER')
+    #     break
 
     c += 1
     unique_num = str(unit.longitude)[:7].replace('.','d').replace('-','m') + "x" + str(unit.latitude)[:7].replace('.','d').replace('-','m') # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
-    unit_path_indiv = os.path.join(unit_path, unique_num+".parquet")
+    unit_path_indiv = os.path.join(unit_path, unique_num+".csv")
     if not os.path.isfile(unit_path_indiv):
         distance_arr = haversine(unit.longitude, unit.latitude, TC["lon"], TC["lat"])
         TC_sample = TC.copy()
@@ -221,17 +222,20 @@ for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)): 
         TC_sample["ID_point"] = unit.ID_point
         TC_sample = TC_sample[TC_sample['distance']<=hurr_buffer_dist]
 
+        if not os.path.exists(unit_path):
+            os.makedirs(unit_path)
+
         nh_sample_unique = list(TC_sample["number_hur"].unique())
 
-        TC_sample.to_parquet(unit_path_indiv, compression='snappy', index=False)
+        TC_sample.to_csv(unit_path_indiv, index=False)
 
     else:
-        print(f"{unit_path_indiv}.parquet exists already")
+        print(f"{unit.ID_point}.csv exists already")
 
 
         if nh_split < 25:
             # Option 1: time consuming (in this for loop) but useful if storm_batches is small (will rule out many nh options)
-            TC_sample = pd.read_parquet(unit_path_indiv)
+            TC_sample = pd.read_csv(unit_path_indiv)
             nh_sample_unique = list(TC_sample["number_hur"].unique())
 
         else:
@@ -242,14 +246,29 @@ for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)): 
 
     unit_paths_all.update({unit_path_indiv: nh_sample_unique})
 
+@profile
+def find_TC_all(unit_paths_all):
+    TC_all_lst = []
 
+    #for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
+    for unit_path_indiv, nh_unique in unit_paths_all.items():
+        if nh_unique != None:  # if it is None, continue because it is unknown which nh are in which units
+            if not any([x==y for x in nh_unique for y in nh_lst]):  # if no overlap
+                print('skipping')
+                continue  # then dont continue because no point loading as will be empty
+
+        TC_add = pd.read_csv(unit_path_indiv)
+        TC_add = TC_add[TC_add['number_hur'].isin(nh_lst)]
+        TC_all_lst.append(TC_add)
+
+    return TC_all_lst
 
 unique_nh_splitlst = [unique_nh[i*nh_split: (i+1)*nh_split] for i in range(0, int(len(unique_nh)/nh_split)+1)]  # split into lists of length (max) nh_split (is list of lists)
 if len(unique_nh_splitlst[-1]) == 0:  # last one can be [] is nh_split == len(unique_nh_splitlst)
     unique_nh_splitlst = unique_nh_splitlst[:-1]  # remove []
 
 print("!!! REMOVE [:XX] BEFORE UPLOADING !!!")
-for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(unique_nh_splitlst)):
+for nh_lst in tqdm(unique_nh_splitlst, desc='Storm Damages', total=len(unique_nh_splitlst)):
 
 
     # TODO for testing only, remove later
@@ -260,19 +279,11 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
         continue # skip, all saved already
 
 
-
-    TC_all_lst = []
     ss = time.time()
-    #for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
-    for unit_path_indiv, nh_unique in unit_paths_all.items():
-        if nh_unique != None:  # if it is None, continue because it is unknown which nh are in which units
-            if not any([x==y for x in nh_unique for y in nh_lst]):  # if no overlap
-                print('skipping')
-                continue  # then dont continue because no point loading as will be empty
+    TC_all_lst = find_TC_all(unit_paths_all)
 
-        TC_add = pd.read_parquet(unit_path_indiv)
-        TC_add = TC_add[TC_add['number_hur'].isin(nh_lst)]
-        TC_all_lst.append(TC_add)
+
+
     print(f"Time for grid loading: {round((time.time()-ss)/60,3)} mins")
 
 
