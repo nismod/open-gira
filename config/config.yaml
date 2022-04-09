@@ -50,5 +50,5 @@ sample_upper: 0
 # Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
 samples_indiv: None
 
-# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (300 is often a good starting value)
+# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (300 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
 storm_batches: 300

@@ -198,12 +198,16 @@ distance_arr = np.array([])
 unit_path = os.path.join(
 "data", "intersection", "storm_data", "unit_data", region, sample
 )
-unit_paths_all = []
+
+
+
+
+unit_paths_all = dict()  # {unit_path: [list of nh in that unit], ... }  Note that this can speed up the loading time for the for loop after next.
 c = 0
 for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)):  # TODO kernprof me
-    if c > 100:
-        print('USING BREAKER')
-        break
+    # if c > 100:
+    #     print('USING BREAKER')
+    #     break
 
     c += 1
     unique_num = str(unit.longitude)[:7].replace('.','d').replace('-','m') + "x" + str(unit.latitude)[:7].replace('.','d').replace('-','m') # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
@@ -219,13 +223,26 @@ for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)): 
         if not os.path.exists(unit_path):
             os.makedirs(unit_path)
 
+        nh_sample_unique = list(TC_sample["number_hur"].unique())
 
         TC_sample.to_csv(unit_path_indiv, index=False)
 
     else:
         print(f"{unit.ID_point}.csv exists already")
 
-    unit_paths_all.append(unit_path_indiv)
+
+        if nh_split < 25:
+            # Option 1: time consuming (in this for loop) but useful if storm_batches is small (will rule out many nh options)
+            TC_sample = pd.read_csv(unit_path_indiv)
+            nh_sample_unique = list(TC_sample["number_hur"].unique())
+
+        else:
+            # Option 2: quicker (in this for loop) and useful if storm_batches is high (most likely an overlap so less to rule out)
+            nh_sample_unique = None
+
+
+
+    unit_paths_all.update({unit_path_indiv: nh_sample_unique})
 
 
 
@@ -234,12 +251,27 @@ if len(unique_nh_splitlst[-1]) == 0:  # last one can be [] is nh_split == len(un
     unique_nh_splitlst = unique_nh_splitlst[:-1]  # remove []
 
 print("!!! REMOVE [:XX] BEFORE UPLOADING !!!")
-for nh_lst in tqdm(unique_nh_splitlst[:2], desc='Storm Damages', total=len(unique_nh_splitlst)):
+for nh_lst in tqdm(unique_nh_splitlst, desc='Storm Damages', total=len(unique_nh_splitlst)):
+
+
+    # TODO for testing only, remove later
+    if False in [os.path.isfile(os.path.join("data", "intersection", "storm_data", "all_winds", region, sample, f"TC_r{region}_s{sample}_n{nh}.csv")) for nh in nh_lst]:
+        print('')
+    else:
+        print('skipping, saved all nh already')
+        continue # skip, all saved already
+
+
 
     TC_all_lst = []
     ss = time.time()
     #for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
-    for unit_path_indiv in unit_paths_all:
+    for unit_path_indiv, nh_unique in unit_paths_all.items():
+        if nh_unique != None:  # if it is None, continue because it is unknown which nh are in which units
+            if not any([x==y for x in nh_unique for y in nh_lst]):  # if no overlap
+                print('skipping')
+                continue  # then dont continue because no point loading as will be empty
+
         TC_add = pd.read_csv(unit_path_indiv)
         TC_add = TC_add[TC_add['number_hur'].isin(nh_lst)]
         TC_all_lst.append(TC_add)
@@ -247,7 +279,10 @@ for nh_lst in tqdm(unique_nh_splitlst[:2], desc='Storm Damages', total=len(uniqu
 
 
     print("concatenating")
-    TC_all = pd.concat(TC_all_lst, ignore_index=True)
+    if len(TC_all_lst) != 0:
+        TC_all = pd.concat(TC_all_lst, ignore_index=True)
+    else:
+        TC_all = []  # dummy
 
     if len(TC_all) != 0:
         s = time.time()
