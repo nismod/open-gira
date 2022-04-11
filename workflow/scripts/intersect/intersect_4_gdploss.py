@@ -235,9 +235,9 @@ def combine_networks(
 
         if box_id_examine not in network_dict.keys():  # if not in the dictionary, then add it
             network_dict[box_id_examine] = read_network(network_name(box_id_examine))
-            print('added to dict')
-        else:
-            print('already in dict')
+            #print('added to dict')
+        #else:
+        #    print('already in dict')
 
 
 
@@ -380,8 +380,8 @@ if not isNone(windfile):
     for edge_damaged in edges_affected.itertuples():
 
 
-        if edge_damaged.link not in set(edges['link']):
-            print('New link')
+        if edge_damaged.link not in edges.link.values:
+            #print('New link')
             #print('Searching Network')
             nodes_new, edges_new = combine_networks(edge_damaged)
             s1 = time.time()
@@ -508,14 +508,11 @@ target_cols = [
     "gdp_damage",
     "geometry",
 ]
-if len(targets) == 0:  # if empty
-    targets = gpd.GeoDataFrame(columns=target_cols)
-    targets.loc[0, :] = [None] * len(target_cols)
-
-targets.to_file(
-    os.path.join(storm_path, f"targets__storm_r{region}_s{sample}_n{nh}.gpkg"),
-    driver="GPKG",
-)
+if len(targets) != 0:  # if not empty
+    targets.to_file(
+        os.path.join(storm_path, f"targets__storm_r{region}_s{sample}_n{nh}.gpkg"),
+        driver="GPKG",
+    )
 
 
 # write storm track file
@@ -542,17 +539,24 @@ today = date.today()
 
 
 if not isNone(targets):
-    f_75_1_temp, f_50_75, f_25_50, f_0_25_temp  = targets['f_value'].value_counts(bins=[0, 0.25, 0.5, 0.75, 1]).values.astype(float)  # note order
+    f_0_25_temp, f_25_50, f_50_75, f_75_1_temp  = targets['f_value'].value_counts(bins=[0, 0.25, 0.5, 0.75, 1], sort=False).values.astype(int)  # note order
     f_0 = len(targets[targets['f_value']==0])
     f_0_25 = f_0_25_temp - f_0
     f_1 = len(targets[targets['f_value']==1])
 
     f_75_1 = f_75_1_temp - f_1
-    print(f"f_75_1: {f_75_1}, f_75_1_temp: {f_75_1_temp}, f_1: {f_1}")
 
     totdamage = targets.gdp_damage.sum()
 
     num_affected = len(targets) - f_1
+
+
+    assert f_0 >= 0
+    assert f_0_25 >= 0
+    assert f_25_50 >= 0
+    assert f_50_75 >= 0
+    assert f_75_1 >= 0
+    assert f_1 >= 0
 else:
     f_0, f_0_25, f_25_50, f_50_75, f_75_1 = [0]*5
     num_affected = 0
