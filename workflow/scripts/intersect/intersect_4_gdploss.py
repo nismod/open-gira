@@ -105,13 +105,18 @@ def box_connectors(box_id):
         connector_adj = json.load(file_ex)
     return connector_adj
 
+def network_name(box_id):
+    fname = os.path.join(
+        "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+    )
+    return fname
 
-
-def component_select(box_id, node_set, nodes_current):
+def component_select(box_id, node_set, network_dict):
     """Finds the connected component(s) in box_id which contain(s) node_set
     Input:
         box_id: str
         node_set: set of nodes which are required to be in the connected component(s)
+        network_dict: dictionary of (nodes, edges) corresponding to the box_id keys (to reduce time on loading, only do once)
     Output:
         nodes: dataframe of nodes connected to node_set
         edges: dataframe of edges connected to edge_set
@@ -123,10 +128,15 @@ def component_select(box_id, node_set, nodes_current):
     conn_boxes = set()
     nodes = gpd.GeoDataFrame()
     edges = gpd.GeoDataFrame()
-    fname = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
-    )
-    nodes_init, edges_init = read_network(fname)  # load the network for the boxdamaged component
+
+
+    #print(box_id)
+
+    ## Option 1
+    #nodes_init, edges_init = read_network(network_name(box_id))  # load the network for the boxdamaged component
+
+    ## Option 2
+    nodes_init, edges_init = network_dict[box_id]
 
 
     if isNone(nodes_init) or isNone(edges_init):  # if None row, return empty
@@ -212,22 +222,42 @@ def combine_networks(
     to_examine = set(conn_dict.keys())  # set of boxes to examine
 
     c = 0
+
+
+    ## comment out below for if better memory available)
+    network_dict = dict()  # dictionary {box_id1: (nodes_of_box_id1, edges_od_box_id1), box_id2, ...}
     while len(conn_set) >= 1:  # while there are still links to be examined
 
 
 
         box_id_examine = min(to_examine)  # pick one from to_examine (which is irrelevant)
+
+
+        if box_id_examine not in network_dict.keys():  # if not in the dictionary, then add it
+            network_dict[box_id_examine] = read_network(network_name(box_id_examine))
+            print('added to dict')
+        else:
+            print('already in dict')
+
+
+
         c += 1
         if c%25 == 0:
             print(f"Examined {c} boxes")
         to_examine = to_examine.difference({box_id_examine})
 
         #print('examining ', box_id_examine)
-        nodes_examine, edges_examine, conn_set, to_examine_newboxes = component_select(box_id_examine, conn_set, nodes)  # extract the network components which connect to any node in conn_set, thenupdate conn_set to not include these are more
+        nodes_examine, edges_examine, conn_set, to_examine_newboxes = component_select(box_id_examine, conn_set, network_dict)  # extract the network components which connect to any node in conn_set, thenupdate conn_set to not include these are more
         nodes = nodes.append(nodes_examine)  # add
         edges = edges.append(edges_examine)  # add
         to_examine = to_examine.union(to_examine_newboxes)  # update
         #print(len(conn_set))
+
+
+        # # TODO for testing
+        # c_file = os.path.join('tester', 'expansion', f'expansion_{edge_damaged.id}_{c}.gpkg')
+        # edges.to_file(c_file, layer="edges", driver="GPKG")
+        # nodes.to_file(c_file, layer="nodes", driver="GPKG")
 
 
     return nodes, edges
@@ -351,6 +381,7 @@ if not isNone(windfile):
 
 
         if edge_damaged.link not in set(edges['link']):
+            print('New link')
             #print('Searching Network')
             nodes_new, edges_new = combine_networks(edge_damaged)
             s1 = time.time()
