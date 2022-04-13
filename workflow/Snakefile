@@ -1,10 +1,12 @@
 """
 Snakemake file for open-gira.
+
 Snakemake is a workflow organiser. Snakemake is given a list of desired output files
 (see rule all below), and if those files don't exist (or aren't up to date), for each
 of those files it looks for a rule that can be used to generate it. The process is
 then repeated for that rule -- if the files required to build _these files_ don't exist,
 look for a rule that will produce them -- and so on.
+
 The Snakemake workflow is covered in detail in the documentation.
 """
 
@@ -69,25 +71,51 @@ include: "rules/intersect/gdp-loss.smk"
 include: "rules/intersect/merge-stats.smk"
 include: "rules/power_intersect_all.smk"
 
+include: "rules/download_dataset.smk"
 include: "rules/filter_osm_data.smk"
 include: "rules/create_overall_bbox.smk"
-include: "rules/create_slice_rules.smk"
+include: "rules/download_hazard_datasets.smk"
+include: "rules/trim_hazard_data.smk"
+include: "rules/create_bbox_extracts.smk"
 include: "rules/slice.smk"
 include: "rules/convert_to_geoparquet.smk"
-include: "rules/network_hazard_intersection.smk"
+include: "rules/intersection.smk"
 include: "rules/join_data.smk"
+include: "rules/make_exposure_tif.smk"
 
-#Require the completed single .geoparquet file to be present
+##### target rules #####
+
+# Require the completed single .geoparquet file to be present for each hazard
 rule all:
-   input:
-       f"{config['output_dir']}/{config['dataset']}_filter-{filter_slug}_hazard-{hazard_slug}.geoparquet",
+    input:
+        expand(
+            os.path.join(
+                f"{config['output_dir']}",
+                "exposure",
+                f"{{dataset}}_filter-{filter_slug}",
+                f"hazard-{{hazard}}"
+            ),
+            dataset=config['infrastructure_datasets'].keys(),
+            hazard=config['hazard_datasets'].keys()
+        )
 
-#Remove intermediate directories
+# Remove intermediate directories
 rule clean:
-   shell:
-       """
-       rm -rf {config[output_dir]}/json &&
-       rm -rf {config[output_dir]}/geoparquet &&
-       rm -rf {config[output_dir]}/slices &&
-       rm -rf {config[output_dir]}/splits
-       """
+    shell:
+        """
+        rm -rf {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/geoparquet &&
+        rm -rf {config[output_dir]}/slices &&
+        rm -rf {config[output_dir]}/splits
+        """
+
+# Remove everything except the final results
+rule clean_all:
+    shell:
+        """
+        rm -rf {config[output_dir]}/input &&
+        rm -rf {config[output_dir]}/json &&
+        rm -rf {config[output_dir]}/geoparquet &&
+        rm -rf {config[output_dir]}/slices &&
+        rm -rf {config[output_dir]}/splits
+        """
