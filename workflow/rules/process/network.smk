@@ -43,7 +43,6 @@ rule process_network:
             "data", "processed", "all_boxes", "{box_id}", "targets_{box_id}.gpkg"
         ),
     params:
-        box_id = "{box_id}",
+        box_id="{box_id}",
     script:
-            os.path.join("..", "..", "scripts", "process", "process_power_4_network.py"
-        )
+        os.path.join("..", "..", "scripts", "process", "process_power_4_network.py")

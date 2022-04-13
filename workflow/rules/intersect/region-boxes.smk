@@ -5,25 +5,19 @@ import os
 
 
 ## Process Config Inputs ##
-REGIONS = config['regions']
-if len(REGIONS)==0:
-    print('Inputting all regions')
+REGIONS = config["regions"]
+if len(REGIONS) == 0:
+    print("Inputting all regions")
     REGIONS = ["EP", "NA", "NI", "SI", "SP", "WP"]
 
-# YEARS = list(range(config['year_upper']+1))
-# if config['years_indiv'] != 'None':
-#     print('Using specified years')
-#     YEARS = config['years_indiv']
-# if len(YEARS)==0:
-#     print('Years incorrectly specified')
 
-SAMPLES = list(range(config['sample_upper']+1))
-if config['samples_indiv'] != 'None':
-    print('Using specified samples')
-    SAMPLES = config['samples_indiv']
-if len(SAMPLES)==0:
-    print('Samples incorrectly specified')
-## Processed ##
+SAMPLES = list(range(config["sample_upper"] + 1))
+if config["samples_indiv"] != "None":
+    print("Using specified samples")
+    SAMPLES = config["samples_indiv"]
+if len(SAMPLES) == 0:
+    print("Samples incorrectly specified")
+
 
 region_box = expand(
     os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
@@ -51,10 +45,9 @@ rule intersect_regions_indiv:
     output:
         os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
     params:
-        region = "{region}",
+        region="{region}",
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py"
-        )
+        os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py")
 
 
 rule intersect_regions:

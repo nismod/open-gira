@@ -3,46 +3,27 @@
 
 import numpy as np
 import pandas as pd
-import sys
 import geopandas as gpd
 import os
 import time
 from tqdm import tqdm
-import ast
-#from pathos.multiprocessing import ProcessPool, cpu_count
 
 try:
     region = snakemake.params["region"]
     sample = snakemake.params["sample"]
-    #total_parallel_processes = snakemake.params["total_parallel_processes"]
-    #nh_input = snakemake.params["nh_compute"]
     all_boxes = snakemake.params["all_boxes_compute"]
-    nh_split = int(snakemake.params["memory_storm_split"])  # number of nh to run each iteration
+    nh_split = int(
+        snakemake.params["memory_storm_split"]
+    )  # number of nh to run each iteration'
+    wind_rerun = snakemake.params["wind_rerun"]
 except:
-    pass  # cant run from console without snakemake
-    print("Not using Snakemake")
-    # region = sys.argv[1]
-    # sample = sys.argv[2]
-    # #nh_input = ast.l iteral_eval(sys.argv[3])
-    # nh_input = list(sys.argv[3:])
+    raise RuntimeError("Snakemake parameters not found")
 
-#print(f"If this process is stopped/killed/ctrl-c before finishing, it is recommended to rerun the checkpoint rule (intersect_winds_indiv) by deleting the folder data/intersection/storm_data/individual_storms/{region}/{sample}.")  # TODO or stats?
-min_windlocmax = 8  # minimum wind speed value to consider significant to further save   # TODO
-min_windmax = 10  # minimum wind speed value to consider significant to further save   #TODO
-hurr_buffer_dist = 1500  # maximum distance to consider to strom centre
-
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
-    region = 'NA'
-    sample = '0'
-    #nh_input = str(['0_0_5'])#, '0_0_1', '0_0_2', '0_0_3', '0_0_4']
-    all_boxes = [f"box_{num}" for num in [884, 955, 956, 957]]#, 1028, 1029, 1030, 1031, 1102, 1103, 1104]]  # Carribean
-    total_parallel_processes = 1
-
-#nh_input = ast.literal_eval(nh_input)  # convert string to list
+min_windlocmax = (
+    10  # minimum wind speed value (at unit) to consider significant to further save
+)
+min_windmax = 12  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
+hurr_buffer_dist = 1300  # maximum distance to consider to storm centre
 
 
 def t(num, t):
@@ -88,59 +69,29 @@ def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
 
 
 start = time.time()
-# nodesuse = max(1, int(cpu_count()/total_parallel_processes))  # split up fairly
-# if "linux" not in sys.platform:
-#     nodesuse = 7
 
+all_winds_path = os.path.join(
+    "data", "intersection", "storm_data", "all_winds", region, sample
+)
 grid_box = gpd.read_file(
     os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
 )
 
 if len(all_boxes) != 0:
-    grid_box = grid_box[grid_box['box_id'].isin(all_boxes)]  # filter for boxes that are to be examined only!
+    grid_box = grid_box[
+        grid_box["box_id"].isin(all_boxes)
+    ]  # filter for boxes that are to be examined only!
 
 totpoints = [len(grid_box)] * len(grid_box)  # for console progress purposes
 idx_pts = list(range(len(totpoints)))
 
 sample_num = [sample] * len(grid_box)
 
-# assert type(nh_input) == list
-# nh_toprocess = []
-# for nh in nh_input:
-#     if not os.path.isfile(
-#         os.path.join(
-#             "data",
-#             "intersection",
-#             "storm_data",
-#             "all_winds",
-#             region,
-#             f"TC_r{region}_s{sample}_n{nh}.csv",
-#         )
-#     ):
-#         nh_toprocess.append(nh)
-# print(f"nh to process: {nh_toprocess}")
-
-# if len(nh_toprocess) != 0:
-#     nh_toprocess_num = [nh_toprocess] * len(grid_box)
-
 print("running wind analysis...")
-#pool = ProcessPool(nodes=nodesuse)
-
-
-
-
-
-
-
 
 list_regions = ["NI", "SA", "NA", "EP", "SI", "SP", "WP"]
 environmental_pressure = [1006.5, 1014.1, 1014.1, 1008.8, 1010.6, 1008.1, 1008.3]
 environ_dict = dict(zip(list_regions, environmental_pressure))
-
-
-# environ_df = pd.DataFrame(
-#     {"region": list_regions, "pressure": environmental_pressure}
-# )
 
 #### load in cyclone tracks for region
 stormfile = os.path.join(
@@ -178,56 +129,48 @@ TC["number_hur"] = (
 unique_nh = TC["number_hur"].unique()
 TC["sample"] = str(sample)
 
-#TC = TC[TC["number_hur"].isin(nh_func)]  # filter for nhs only
+# TC = TC[TC["number_hur"].isin(nh_func)]  # filter for nhs only
 
 ##### change geometry from 0-360 to -180-180
-TC['lon'] = TC['lon'].apply(lambda x: x if x <= 180 else x - 360)
+TC["lon"] = TC["lon"].apply(lambda x: x if x <= 180 else x - 360)
 
-# ### background environmental pressure
-# pressure_env = environ_df[environ_df["region"] == str(region)]
-
-#TC_sample = TC.copy()
-
-#grid_box = grid_box.head(20)  # TODO REMOVE ME
-
-
-#TC_all = pd.concat([TC.copy()]*len(grid_box))  # dataframe containing all data
 hurr_buffer_dist = 1300
-# TODO, can we drop TC columns? (some)
+
 distance_arr = np.array([])
 unit_path = os.path.join(
-"data", "intersection", "storm_data", "unit_data", region, sample
+    "data", "intersection", "storm_data", "unit_data", region, sample
 )
 
 if not os.path.exists(unit_path):
     os.makedirs(unit_path)
 
 
-unit_paths_all = dict()  # {unit_path: [list of nh in that unit], ... }  Note that this can speed up the loading time for the for loop after next.
-c = 0
-for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)):  # TODO kernprof me
-    if c > 100:
-        print('USING BREAKER')
-        break
+unit_paths_all = (
+    dict()
+)  # {unit_path: [list of nh in that unit], ... }  Note that this can speed up the loading time for the for loop after next.
 
-    c += 1
-    unique_num = str(unit.longitude)[:7].replace('.','d').replace('-','m') + "x" + str(unit.latitude)[:7].replace('.','d').replace('-','m') # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
-    unit_path_indiv = os.path.join(unit_path, unique_num+".parquet")
+for unit in tqdm(grid_box.itertuples(), desc="distances", total=len(grid_box)):
+
+    unique_num = (
+        str(unit.longitude)[:7].replace(".", "d").replace("-", "m")
+        + "x"
+        + str(unit.latitude)[:7].replace(".", "d").replace("-", "m")
+    )  # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
+    unit_path_indiv = os.path.join(unit_path, unique_num + ".parquet")
     if not os.path.isfile(unit_path_indiv):
         distance_arr = haversine(unit.longitude, unit.latitude, TC["lon"], TC["lat"])
         TC_sample = TC.copy()
-        TC_sample['distance'] = distance_arr
+        TC_sample["distance"] = distance_arr
         TC_sample["box_id"] = unit.box_id
         TC_sample["ID_point"] = unit.ID_point
-        TC_sample = TC_sample[TC_sample['distance']<=hurr_buffer_dist]
+        TC_sample = TC_sample[TC_sample["distance"] <= hurr_buffer_dist]
 
         nh_sample_unique = list(TC_sample["number_hur"].unique())
 
-        TC_sample.to_parquet(unit_path_indiv, compression='snappy', index=False)
+        TC_sample.to_parquet(unit_path_indiv, compression="snappy", index=False)
 
     else:
-        print(f"{unit_path_indiv}.parquet exists already")
-
+        print(f"{unit_path_indiv} exists already")
 
         if nh_split < 25:
             # Option 1: time consuming (in this for loop) but useful if storm_batches is small (will rule out many nh options)
@@ -238,43 +181,58 @@ for unit in tqdm(grid_box.itertuples(), desc='distances', total=len(grid_box)): 
             # Option 2: quicker (in this for loop) and useful if storm_batches is high (most likely an overlap so less to rule out)
             nh_sample_unique = None
 
-
-
     unit_paths_all.update({unit_path_indiv: nh_sample_unique})
 
 
-
-unique_nh_splitlst = [unique_nh[i*nh_split: (i+1)*nh_split] for i in range(0, int(len(unique_nh)/nh_split)+1)]  # split into lists of length (max) nh_split (is list of lists)
-if len(unique_nh_splitlst[-1]) == 0:  # last one can be [] is nh_split == len(unique_nh_splitlst)
+unique_nh_splitlst = [
+    unique_nh[i * nh_split : (i + 1) * nh_split]
+    for i in range(0, int(len(unique_nh) / nh_split) + 1)
+]  # split into lists of length (max) nh_split (is list of lists)
+if (
+    len(unique_nh_splitlst[-1]) == 0
+):  # last one can be [] is nh_split == len(unique_nh_splitlst)
     unique_nh_splitlst = unique_nh_splitlst[:-1]  # remove []
 
-print("!!! REMOVE [:XX] BEFORE UPLOADING !!!")
-for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(unique_nh_splitlst)):
 
+for nh_lst in tqdm(
+    unique_nh_splitlst, desc="Storm Damages", total=len(unique_nh_splitlst)
+):
 
-    # TODO for testing only, remove later
-    if False in [os.path.isfile(os.path.join("data", "intersection", "storm_data", "all_winds", region, sample, f"TC_r{region}_s{sample}_n{nh}.csv")) for nh in nh_lst]:
-        print('')
-    else:
-        print('skipping, saved all nh already')
-        continue # skip, all saved already
-
-
+    if wind_rerun == False:
+        if False in [
+            os.path.isfile(
+                os.path.join(
+                    "data",
+                    "intersection",
+                    "storm_data",
+                    "all_winds",
+                    region,
+                    sample,
+                    f"TC_r{region}_s{sample}_n{nh}.csv",
+                )
+            )
+            for nh in nh_lst
+        ]:
+            print("")
+        else:
+            print("skipping, saved all nh already")
+            continue  # skip, all in nh_lst saved already
 
     TC_all_lst = []
     ss = time.time()
-    #for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
+    # for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
     for unit_path_indiv, nh_unique in unit_paths_all.items():
-        if nh_unique != None:  # if it is None, continue because it is unknown which nh are in which units
-            if not any([x==y for x in nh_unique for y in nh_lst]):  # if no overlap
-                print('skipping')
+        if (
+            nh_unique != None
+        ):  # if it is None, continue because it is unknown which nh are in which units
+            if not any([x == y for x in nh_unique for y in nh_lst]):  # if no overlap
+                print("skipping")
                 continue  # then dont continue because no point loading as will be empty
 
         TC_add = pd.read_parquet(unit_path_indiv)
-        TC_add = TC_add[TC_add['number_hur'].isin(nh_lst)]
+        TC_add = TC_add[TC_add["number_hur"].isin(nh_lst)]
         TC_all_lst.append(TC_add)
     print(f"Time for grid loading: {round((time.time()-ss)/60,3)} mins")
-
 
     print("concatenating")
     if len(TC_all_lst) != 0:
@@ -286,7 +244,6 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
         s = time.time()
 
         TC_all["environ_pressure"] = environ_dict[region]
-
 
         print("max winds")
         ### get the maximum wind and minimum distance per event
@@ -305,12 +262,13 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
         print("performing merges")
         ### merge and remove based on lowest threshold for severity hurricane
         TC_all = TC_all.merge(max_wind, on="number_hur")
-        TC_all  = TC_all[TC_all['wind_max']>min_windmax] ### only with a maximum wind of more than  # NOTE: commented so that snakemake knows all hurricane identifiers (nh)
+        TC_all = TC_all[
+            TC_all["wind_max"] > min_windmax
+        ]  ### only with a maximum wind of more than
 
         ### merge and remove based on mimum distance set
         TC_all = TC_all.merge(min_distance, on="number_hur")
-        #TC_all = TC_all[TC_all['distance_min']<max_distance]  # NOTE: commented so that snakemake knows all hurricane identifiers (nh)
-
+        # TC_all = TC_all[TC_all['distance_min']<max_distance]
 
         print("Holland wind field")
         TC_all["wind_location"] = holland_wind_field(
@@ -331,7 +289,7 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
         print("merging ")
         ### merge and remove based on lowest threshold for severity hurricane at location
         TC_all = TC_all.merge(max_wind_location, on="number_hur")
-        TC_all = TC_all[TC_all['wind_location_max']>min_windlocmax] # NOTE:  so that snakemake knows all hurricane identifiers (nh)
+        TC_all = TC_all[TC_all["wind_location_max"] > min_windlocmax]
 
         above20ms = (
             TC_all[TC_all["wind_location"] > 20][["wind_location", "number_hur"]]
@@ -363,27 +321,19 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
                 "wind_max",
                 "ID_point",
                 "box_id",
-
-            ]]  # TODO check if need duplicates??
-        # ].drop_duplicates(
-        #     subset=["number_hur"], keep="first"
-        # )  # removed: .sort_values(by = 'wind_location',ascending = False)
+            ]
+        ]
         print("finalising")
-        TC_all = TC_all.merge(
-            above20ms, on="number_hur", how="outer"
-        ).replace(np.nan, 0)
-        TC_all = TC_all.merge(
-            above15ms, on="number_hur", how="outer"
-        ).replace(np.nan, 0)
+        TC_all = TC_all.merge(above20ms, on="number_hur", how="outer").replace(
+            np.nan, 0
+        )
+        TC_all = TC_all.merge(above15ms, on="number_hur", how="outer").replace(
+            np.nan, 0
+        )
         TC_all["basin"] = region
 
         print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
 
-
-
-        all_winds_path = os.path.join(
-            "data", "intersection", "storm_data", "all_winds", region, sample
-        )
         if not os.path.exists(all_winds_path):
             os.makedirs(all_winds_path)
 
@@ -395,7 +345,9 @@ for nh_lst in tqdm(unique_nh_splitlst[:10], desc='Storm Damages', total=len(uniq
     else:
         print(f"{nh_lst} do not have sufficient unit damage, skipping")
 
-with open(os.path.join(all_winds_path, f'{region}_{sample}_completed.txt'), 'w') as file:  # add dummy
-    file.writelines('')
+with open(
+    os.path.join(all_winds_path, f"{region}_{sample}_completed.txt"), "w"
+) as file:  # add dummy
+    file.writelines(f"Delete this file to rerun all {region}/{sample} winds")
 
 print(f"Total time {round((time.time()-start)/60,3)}")

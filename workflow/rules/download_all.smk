@@ -12,4 +12,4 @@ rule download_all:
         out_GDP,
         out_powerplant,
         out_gridfinder,
-        out_adminboundaries_levels
+        out_adminboundaries_levels,

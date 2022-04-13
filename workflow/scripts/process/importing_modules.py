@@ -23,8 +23,8 @@ from rasterstats import zonal_stats, point_query, gen_zonal_stats
 from shapely.geometry import shape, LineString, Point
 from shapely import wkt
 import shapely.wkt as sw
-import netCDF4 as nc4  # TODO add to requirements
-import time  # TODO add to requirements
+import netCDF4 as nc4
+import time
 import sys
 import ast
 from tqdm import tqdm

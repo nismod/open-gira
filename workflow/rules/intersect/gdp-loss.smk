@@ -3,7 +3,7 @@
 """
 
 
-rule intersection_gdploss:
+rule intersection_gdp_loss:
     input:
         os.path.join(
             "data",
@@ -29,8 +29,8 @@ rule intersection_gdploss:
             "all_winds",
             "{region}",
             "{sample}",
-            "{region}_{sample}_completed.txt"
-        )
+            "{region}_{sample}_completed.txt",
+        ),
     output:
         os.path.join(
             "data",
@@ -42,18 +42,9 @@ rule intersection_gdploss:
             "storm_{nh}",
             "storm_r{region}_s{sample}_n{nh}.txt",
         ),
-        # os.path.join(
-        #     "data",
-        #     "intersection",
-        #     "storm_data",
-        #     "individual_storms",
-        #     "{region}",
-        #     "{sample}",
-        #     "storm_{nh}",
-        #     "storm_track_r{region}_s{sample}_n{nh}.gpkg",
-        # ),
     params:
-        region = "{region}", sample = "{sample}", nh = "{nh}"
+        region="{region}",
+        sample="{sample}",
+        nh="{nh}",
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py"
-        )
+        os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

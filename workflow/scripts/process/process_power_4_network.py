@@ -15,7 +15,7 @@ targets, plants, edges -> all files
 from importing_modules import *
 
 try:
-    box_id = snakemake.params['box_id']
+    box_id = snakemake.params["box_id"]
 except:
     box_id = sys.argv[1]
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
             # timer(start)
 
             geod = Geod(ellps="WGS84")
-            edge_limit = 20_000  # meters   # TODO was 200_000 to solve issue but not realistic
+            edge_limit = 20_000  # meters   # TODO 200_000 vs 20_000
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,

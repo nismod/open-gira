@@ -5,7 +5,7 @@
 out_gridfinder = (
     expand(
         os.path.join(
-            'data', "processed", "all_boxes", "{box_id}", "gridfinder_{box_id}.gpkg"
+            "data", "processed", "all_boxes", "{box_id}", "gridfinder_{box_id}.gpkg"
         ),
         box_id=all_boxes,
     ),
@@ -19,5 +19,4 @@ rule process_gridfinder:
     output:
         out_gridfinder,
     script:
-            os.path.join("..", "..", "scripts", "process", "process_power_3_gridfinder.py"
-        )
+        os.path.join("..", "..", "scripts", "process", "process_power_3_gridfinder.py")

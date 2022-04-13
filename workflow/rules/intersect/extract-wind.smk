@@ -2,7 +2,6 @@
 
 """
 import os
-import pandas as pd
 
 try:
     storm_batch_value = float(config["storm_batches"])
@@ -10,6 +9,8 @@ try:
 except:
     raise RuntimeError("storm_batches incorrectly specified in config.yaml file")
 
+wind_rerun_bool = config["wind_rerun"]
+assert wind_rerun_bool in [True, False]
 
 
 checkpoint intersect_winds_indiv:
@@ -28,25 +29,15 @@ checkpoint intersect_winds_indiv:
             "stormtracks",
             "events",
             "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
-        )
+        ),
     params:
-        region = "{region}",
-        sample = "{sample}",
-        #nh = "{nh}",
-        all_boxes_compute = all_boxes,
-        memory_storm_split = storm_batch_value
-        #total_parallel_processes = int(len(REGIONS)*len(SAMPLES))
-        #req_nh = lambda wildcards: str(
-        #    find_nh(YEARS, wildcards.region, wildcards.sample)#required_nh_remaining(find_nh_mult(YEARS, region, sample))
+        region="{region}",
+        sample="{sample}",
+        all_boxes_compute=all_boxes,
+        memory_storm_split=storm_batch_value,
+        wind_rerun=wind_rerun_bool,
     output:
-            directory(os.path.join(
-                "data",
-                "intersection",
-                "storm_data",
-                "all_winds",
-                "{region}",
-                "{sample}"
-            )),
+        directory(
             os.path.join(
                 "data",
                 "intersection",
@@ -54,10 +45,18 @@ checkpoint intersect_winds_indiv:
                 "all_winds",
                 "{region}",
                 "{sample}",
-                "{region}_{sample}_completed.txt"
             )
-
+        ),
+        os.path.join(
+            "data",
+            "intersection",
+            "storm_data",
+            "all_winds",
+            "{region}",
+            "{sample}",
+            "{region}_{sample}_completed.txt",
+        ),
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_3_wind_extracter.py"
+        os.path.join(
+            "..", "..", "scripts", "intersect", "intersect_3_wind_extracter.py"
         )
-

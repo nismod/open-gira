@@ -24,5 +24,4 @@ rule process_connector:
     output:
         out_connector,
     script:
-            os.path.join("..", "..", "scripts", "process", "process_power_5_connector.py"
-        )
+        os.path.join("..", "..", "scripts", "process", "process_power_5_connector.py")

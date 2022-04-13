@@ -15,27 +15,17 @@ import numpy as np
 import shapely.wkt as sw
 
 
-
-
-
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
 try:
     region = snakemake.params["region"]
     sample = snakemake.params["sample"]
     nh = snakemake.params["nh"]
 except:
-    print('RUNNING ON FIXED INPUTS')
-    region = 'NA'
-    sample = '0'
-    nh = '0_11_11'
+    raise RuntimeError("Snakemake parameters not found")
+
 
 def isNone(df):
     """Checks if dataframe contains solely the None row (required for snakemake and gpkg files)"""
-    if len(df) == 1 and df['id'].iloc[0] == None:
+    if len(df) == 1 and df["id"].iloc[0] == None:
         return True
     else:
         return False
@@ -83,10 +73,7 @@ def create_graph(nodes, edges):
         (n.id, {"id": n.id, "type": n.type, "gdp": n.gdp, "capacity_mw": n.capacity_mw})
         for n in nodes.itertuples()
     )
-    G.add_edges_from(
-        (e.from_id, e.to_id, {"id": e.link})
-        for e in edges.itertuples()
-    )
+    G.add_edges_from((e.from_id, e.to_id, {"id": e.link}) for e in edges.itertuples())
     return G
 
 
@@ -105,11 +92,13 @@ def box_connectors(box_id):
         connector_adj = json.load(file_ex)
     return connector_adj
 
+
 def network_name(box_id):
     fname = os.path.join(
         "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
     )
     return fname
+
 
 def component_select(box_id, node_set, network_dict):
     """Finds the connected component(s) in box_id which contain(s) node_set
@@ -129,59 +118,74 @@ def component_select(box_id, node_set, network_dict):
     nodes = gpd.GeoDataFrame()
     edges = gpd.GeoDataFrame()
 
-
-    #print(box_id)
-
-    ## Option 1
-    #nodes_init, edges_init = read_network(network_name(box_id))  # load the network for the boxdamaged component
-
-    ## Option 2
     nodes_init, edges_init = network_dict[box_id]
-
 
     if isNone(nodes_init) or isNone(edges_init):  # if None row, return empty
         return nodes, edges, node_set, conn_boxes
 
-
     G_init = create_graph(nodes_init, edges_init)  # create a graph
     components_init = list(nx.connected_components(G_init))  # split into components
     for comp_init in components_init:  # for each component
-        if any(x in comp_init for x in node_set):  # if any node from the node_set and current node list is in this component
+        if any(
+            x in comp_init for x in node_set
+        ):  # if any node from the node_set and current node list is in this component
 
-            nodes_comp = nodes_init[nodes_init['id'].isin(comp_init)]  # nodes in this component
+            nodes_comp = nodes_init[
+                nodes_init["id"].isin(comp_init)
+            ]  # nodes in this component
             edges_comp = edges_init[
                 np.maximum(
                     edges_init["from_id"].isin(comp_init),
                     edges_init["to_id"].isin(comp_init),
-                )]  # edges in this component
+                )
+            ]  # edges in this component
 
             nodes = nodes.append(nodes_comp)  # keep the nodes of this component
-            edges = edges.append(edges_comp)  # keep only edges of this component (note max(True, False) = True)
+            edges = edges.append(
+                edges_comp
+            )  # keep only edges of this component (note max(True, False) = True)
 
             ## note which nodes have been examined and which remain ##
-            node_set_in_comp_init = {node for node in node_set if node in comp_init}  # nodes in component examined now, so will be removed
-            conn_dict = {k: [v_conn['to_id'] for v_conn in v_lst if v_conn['from_id'] in comp_init.difference(node_set_in_comp_init)] for k, v_lst in connectors.items()}  # add the nodes (to_id) if the from_id is in the component (but not if connected to the previous box)
-            node_set = node_set.difference(node_set_in_comp_init)  # node_set now contains all outer search nodes still to be examined
+            node_set_in_comp_init = {
+                node for node in node_set if node in comp_init
+            }  # nodes in component examined now, so will be removed
+            conn_dict = {
+                k: [
+                    v_conn["to_id"]
+                    for v_conn in v_lst
+                    if v_conn["from_id"] in comp_init.difference(node_set_in_comp_init)
+                ]
+                for k, v_lst in connectors.items()
+            }  # add the nodes (to_id) if the from_id is in the component (but not if connected to the previous box)
+            node_set = node_set.difference(
+                node_set_in_comp_init
+            )  # node_set now contains all outer search nodes still to be examined
             conn_boxes = set(conn_dict.keys())  # note the boxes to still be examined
-            conn_new = set().union(*conn_dict.values())  # note the nodes still to be examined
-            node_set = node_set.union(conn_new)  # update to include new node connections
-
+            conn_new = set().union(
+                *conn_dict.values()
+            )  # note the nodes still to be examined
+            node_set = node_set.union(
+                conn_new
+            )  # update to include new node connections
 
             ## add the links for the examined cross-box connections ##
-            cross_box_links = []  # list of dictionary with the relevant cross-box connections
+            cross_box_links = (
+                []
+            )  # list of dictionary with the relevant cross-box connections
             for connectors_indiv in connectors.values():
-                cross_box_links += [conn_link_dict for conn_link_dict in connectors_indiv if conn_link_dict['from_id'] in node_set_in_comp_init]  # include the links where the 'from_id' is in the nodes in comp_init. That means the link travels into the box currently being examined
+                cross_box_links += [
+                    conn_link_dict
+                    for conn_link_dict in connectors_indiv
+                    if conn_link_dict["from_id"] in node_set_in_comp_init
+                ]  # include the links where the 'from_id' is in the nodes in comp_init. That means the link travels into the box currently being examined
             if len(cross_box_links) != 0:
                 update_gdf = gpd.GeoDataFrame(cross_box_links)
-                update_gdf['geometry'] = update_gdf['geometry'].apply(sw.loads)  # make geometry type
+                update_gdf["geometry"] = update_gdf["geometry"].apply(
+                    sw.loads
+                )  # make geometry type
                 edges = edges.append(update_gdf)  # add the new links
 
     return nodes, edges, node_set, conn_boxes
-
-
-
-
-
 
 
 def combine_networks(
@@ -190,95 +194,101 @@ def combine_networks(
     """finds adjacent boxes which are connected to original box_id and adds to nodes and edges.
     Returns all nodes and edges (both connected into base_box). edge_damaged is dataframe input containing link and box_id and id"""
 
-
     box_id_orig = edge_damaged.box_id
     fname = os.path.join(
         "data", "processed", "all_boxes", box_id_orig, f"network_{box_id_orig}.gpkg"
     )
-    nodes_orig, edges_orig = read_network(fname)  # load the network for the box which contains the damaged component
+    nodes_orig, edges_orig = read_network(
+        fname
+    )  # load the network for the box which contains the damaged component
     G_orig = create_graph(nodes_orig, edges_orig)  # create a graph
     components_orig = list(nx.connected_components(G_orig))  # split into components
     for comp_orig in components_orig:  # for each component
-        if any(x in comp_orig for x in [edge_damaged.from_id, edge_damaged.to_id]):  # if either end (from_id or to_id) of the damaged component is in this component
+        if any(
+            x in comp_orig for x in [edge_damaged.from_id, edge_damaged.to_id]
+        ):  # if either end (from_id or to_id) of the damaged component is in this component
 
-
-            nodes = nodes_orig[nodes_orig['id'].isin(comp_orig)]  # keep only the nodes of this component
+            nodes = nodes_orig[
+                nodes_orig["id"].isin(comp_orig)
+            ]  # keep only the nodes of this component
             edges = edges_orig[
                 np.maximum(
                     edges_orig["from_id"].isin(comp_orig),
                     edges_orig["to_id"].isin(comp_orig),
-                )]  # keep only edges of this component (note max(True, False) = True)
-
-
+                )
+            ]  # keep only edges of this component (note max(True, False) = True)
 
             break  # edge_damaged.id will not be in remaining components, stop looking
 
-
-
     ## For the original box, note the connectors to conn_set ##
-    conn_dict = {key_box: {conn_dict['to_id'] for conn_dict in conn_lst if conn_dict['from_id'] in nodes.id.values} for key_box, conn_lst in box_connectors(box_id_orig).items()}  # if any link starts in the current nodes df, then add it to the dictionary
-    conn_set = set().union(*conn_dict.values())  # conn set will contain a set of links which have to be explored
+    conn_dict = {
+        key_box: {
+            conn_dict["to_id"]
+            for conn_dict in conn_lst
+            if conn_dict["from_id"] in nodes.id.values
+        }
+        for key_box, conn_lst in box_connectors(box_id_orig).items()
+    }  # if any link starts in the current nodes df, then add it to the dictionary
+    conn_set = set().union(
+        *conn_dict.values()
+    )  # conn set will contain a set of links which have to be explored
 
     to_examine = set(conn_dict.keys())  # set of boxes to examine
 
-    c = 0
-
-
-    ## comment out below for if better memory available)
-    network_dict = dict()  # dictionary {box_id1: (nodes_of_box_id1, edges_od_box_id1), box_id2, ...}
+    count = 0
+    network_dict = (
+        dict()
+    )  # dictionary {box_id1: (nodes_of_box_id1, edges_od_box_id1), box_id2, ...}
     while len(conn_set) >= 1:  # while there are still links to be examined
 
+        box_id_examine = min(
+            to_examine
+        )  # pick one from to_examine (which is irrelevant)
 
-
-        box_id_examine = min(to_examine)  # pick one from to_examine (which is irrelevant)
-
-
-        if box_id_examine not in network_dict.keys():  # if not in the dictionary, then add it
+        if (
+            box_id_examine not in network_dict.keys()
+        ):  # if not in the dictionary, then add it
             network_dict[box_id_examine] = read_network(network_name(box_id_examine))
-            #print('added to dict')
-        #else:
-        #    print('already in dict')
 
-
-
-        c += 1
-        if c%25 == 0:
-            print(f"Examined {c} boxes")
+        count += 1
+        if count % 25 == 0:
+            print(f"Examined {count} boxes")
         to_examine = to_examine.difference({box_id_examine})
 
-        #print('examining ', box_id_examine)
-        nodes_examine, edges_examine, conn_set, to_examine_newboxes = component_select(box_id_examine, conn_set, network_dict)  # extract the network components which connect to any node in conn_set, thenupdate conn_set to not include these are more
+        nodes_examine, edges_examine, conn_set, to_examine_newboxes = component_select(
+            box_id_examine, conn_set, network_dict
+        )  # extract the network components which connect to any node in conn_set, thenupdate conn_set to not include these are more
         nodes = nodes.append(nodes_examine)  # add
         edges = edges.append(edges_examine)  # add
         to_examine = to_examine.union(to_examine_newboxes)  # update
-        #print(len(conn_set))
-
-
-        # # TODO for testing
-        # c_file = os.path.join('tester', 'expansion', f'expansion_{edge_damaged.id}_{c}.gpkg')
-        # edges.to_file(c_file, layer="edges", driver="GPKG")
-        # nodes.to_file(c_file, layer="nodes", driver="GPKG")
-
 
     return nodes, edges
 
 
 def target_mapper(feature, targets, nodes):
     """Maps feature (of nodes df) to targets df. Will remove rows in which map has no value"""
-    target_mapper_dict = {target_id: feature for target_id, feature, node_type in zip(nodes["id"].values, nodes[feature].values, nodes["type"].values) if node_type=='target'}  # dictionary {target1: f_value_of_target1, target2: f_value_of_target2, ... }
-    targets[feature] = targets['id'].map(target_mapper_dict).fillna('remove_me')  # map to targets, note which are not connected (with 'remove_me')
-    return targets[targets.f_value!='remove_me']  # remove unwanted targets
-
+    target_mapper_dict = {
+        target_id: feature
+        for target_id, feature, node_type in zip(
+            nodes["id"].values, nodes[feature].values, nodes["type"].values
+        )
+        if node_type == "target"
+    }  # dictionary {target1: f_value_of_target1, target2: f_value_of_target2, ... }
+    targets[feature] = (
+        targets["id"].map(target_mapper_dict).fillna("remove_me")
+    )  # map to targets, note which are not connected (with 'remove_me')
+    return targets[targets.f_value != "remove_me"]  # remove unwanted targets
 
 
 # set iteration variables
-routeid_damaged = set() # marks which source_sink routes already damaged -> do not double count. Form: {(source1, target1), (source2, target2), ...}
+routeid_damaged = (
+    set()
+)  # marks which source_sink routes already damaged -> do not double count. Form: {(source1, target1), (source2, target2), ...}
 totdamage = 0  # total damage (ensuring no double counts)
 targetsdamaged = {}  # if the operation value of the target is desired
 edges_affected = gpd.GeoDataFrame()
 targets = gpd.GeoDataFrame()
 polys_affected = gpd.GeoDataFrame()
-
 
 
 print(f"{nh}: loading data")
@@ -333,9 +343,6 @@ winds_ev_all = pd.read_csv(windfile)
 assert len(winds_ev_all) != 0
 if not isNone(windfile):
 
-
-
-
     print(f"Investigating storm {nh}")
     winds_ev_filtered = applythreshold(winds_ev_all)
     ID_affected = list(winds_ev_filtered["ID_point"])
@@ -346,13 +353,15 @@ if not isNone(windfile):
         os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
     )
 
-    polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)].rename(columns={'box_id':'box_id_poly'})
-
+    polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)].rename(
+        columns={"box_id": "box_id_poly"}
+    )
 
     start = time.time()
 
-
-    for jj, box_id in enumerate(box_id_affected):  # extract the damaged edges using this for loop
+    for jj, box_id in enumerate(
+        box_id_affected
+    ):  # extract the damaged edges using this for loop
         print(f"-- Inspecting for damage {jj+1}/{len(box_id_affected)} -- {box_id}")
 
         box_edges = gpd.read_file(
@@ -366,82 +375,122 @@ if not isNone(windfile):
             polys_affected, how="intersection"
         )  # keeps edges that are affected grid points (only a part has to be in)
 
+        box_edges_affected["link"] = box_edges_affected.apply(
+            lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
+        )  # consistent naming
 
-        box_edges_affected["link"] = box_edges_affected.apply(lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1)  # consistent naming
+        edges_affected = edges_affected.append(
+            box_edges_affected
+        )  # add to master list of damaged edges
 
-        edges_affected = edges_affected.append(box_edges_affected)  # add to master list of damaged edges
-
-
-    edges = gpd.GeoDataFrame(columns=['link'])
+    edges = gpd.GeoDataFrame(columns=["link"])
     nodes = gpd.GeoDataFrame()
 
     print("Starting network connection expansion")
     startx = time.time()
+
     for edge_damaged in edges_affected.itertuples():
 
-
         if edge_damaged.link not in edges.link.values:
-            #print('New link')
-            #print('Searching Network')
+            # print('New link')
+            # print('Searching Network')
             nodes_new, edges_new = combine_networks(edge_damaged)
             s1 = time.time()
             nodes = nodes.append(nodes_new)
             s2 = time.time()
-            #print(f"Time for s1 is {s2 - s1}")
+            # print(f"Time for s1 is {s2 - s1}")
             edges = edges.append(edges_new)
-            #print(f"Time for s2 is {time.time() - s2}")
+            # print(f"Time for s2 is {time.time() - s2}")
 
-    print(f'Search took {round((time.time() - startx)/60,1)} mins')
-
+    print(f"Search took {round((time.time() - startx)/60,1)} mins")
 
     ## Now all the damaged edges can be found in nodes & edges
     G = create_graph(nodes, edges)
 
     components = list(nx.connected_components(G))
 
-
-
     ## Set nominal values ##
-    nodes['nominal_mw'] = 0  # set base to zero
-    nominal_dict = dict()  # dictionary: {component1: {'nominal_mw': nominal_mw_1, 'nominal_gdp': nominal_gdp_1}, ... }
+    nodes["nominal_mw"] = 0  # set base to zero
+    nominal_dict = (
+        dict()
+    )  # dictionary: {component1: {'nominal_mw': nominal_mw_1, 'nominal_gdp': nominal_gdp_1}, ... }
     for ii, component in enumerate(components):
-        component_nodes = nodes[nodes['id'].isin(component)]
-        nodes.loc[nodes.id.isin(component), 'component'] = ii
-        total_component_mw = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
-        component_node_targets = component_nodes[component_nodes['type']=='target']
-        total_component_gdp = component_node_targets['gdp'].sum()
+        component_nodes = nodes[nodes["id"].isin(component)]
+        nodes.loc[nodes.id.isin(component), "component"] = ii
+        total_component_mw = component_nodes[component_nodes["type"] == "source"][
+            "capacity_mw"
+        ].sum()
+        component_node_targets = component_nodes[component_nodes["type"] == "target"]
+        total_component_gdp = component_node_targets["gdp"].sum()
 
-        nominal_dict[ii] = {'nominal_mw': total_component_mw, 'nominal_gdp': total_component_gdp}
+        nominal_dict[ii] = {
+            "nominal_mw": total_component_mw,
+            "nominal_gdp": total_component_gdp,
+        }
 
         if total_component_gdp != 0:
-            component_target_mw_allocation = {target_id: total_component_mw*target_gdp/total_component_gdp for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target has gdp:  tot_mw * target_gdp / tot_gdp. This is the nominal values
-            nodes['nominal_mw'] = nodes['nominal_mw'] + nodes['id'].map(component_target_mw_allocation).fillna(0)  # maps the nominal values to the node dataframe
+            component_target_mw_allocation = {
+                target_id: total_component_mw * target_gdp / total_component_gdp
+                for target_id, target_gdp in zip(
+                    component_node_targets.id.values, component_node_targets.gdp.values
+                )
+            }  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target has gdp:  tot_mw * target_gdp / tot_gdp. This is the nominal values
+            nodes["nominal_mw"] = nodes["nominal_mw"] + nodes["id"].map(
+                component_target_mw_allocation
+            ).fillna(
+                0
+            )  # maps the nominal values to the node dataframe
 
     if len(edges) != 0 and len(nodes) != 0:
         ## Split damaged components ##
-        edges_damaged = edges[~edges.link.isin(edges_affected.link.values)]  # remove edges which are affected (edges_affected)
+        edges_damaged = edges[
+            ~edges.link.isin(edges_affected.link.values)
+        ]  # remove edges which are affected (edges_affected)
         G = create_graph(nodes, edges_damaged)  # new graph
 
         components = list(nx.connected_components(G))
 
-        nodes['post_storm_mw'] = 0  # base level of mw value after storm
+        nodes["post_storm_mw"] = 0  # base level of mw value after storm
         for component in components:
-            component_nodes = nodes[nodes['id'].isin(component)]
-            total_component_mw_storm = component_nodes[component_nodes['type']=='source']['capacity_mw'].sum()
-            component_node_targets = component_nodes[component_nodes['type']=='target']
-            total_component_gdp_storm = component_node_targets['gdp'].sum()
+            component_nodes = nodes[nodes["id"].isin(component)]
+            total_component_mw_storm = component_nodes[
+                component_nodes["type"] == "source"
+            ]["capacity_mw"].sum()
+            component_node_targets = component_nodes[
+                component_nodes["type"] == "target"
+            ]
+            total_component_gdp_storm = component_node_targets["gdp"].sum()
             if total_component_gdp_storm != 0:
 
                 ## Rerouting (method not yet verified) ##
-                #component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/total_component_gdp_storm for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp_subnetwork (for the sub-network in which the target is located)
+                # component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/total_component_gdp_storm for target_id, target_gdp in zip(component_node_targets.id.values, component_node_targets.gdp.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp_subnetwork (for the sub-network in which the target is located)
                 ## No Rerouting ##
-                component_target_mw_storm_allocation = {target_id: total_component_mw_storm*target_gdp/nominal_dict[jj]['nominal_gdp'] for target_id, target_gdp, jj in zip(component_node_targets.id.values, component_node_targets.gdp.values, component_node_targets.component.values)}  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp (for the sub-network in which the target is located).
+                component_target_mw_storm_allocation = {
+                    target_id: total_component_mw_storm
+                    * target_gdp
+                    / nominal_dict[jj]["nominal_gdp"]
+                    for target_id, target_gdp, jj in zip(
+                        component_node_targets.id.values,
+                        component_node_targets.gdp.values,
+                        component_node_targets.component.values,
+                    )
+                }  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp (for the sub-network in which the target is located).
 
-                nodes['post_storm_mw'] = nodes['post_storm_mw'] + nodes['id'].map(component_target_mw_storm_allocation).fillna(0)  # maps the nominal values to the node dataframe
+                nodes["post_storm_mw"] = nodes["post_storm_mw"] + nodes["id"].map(
+                    component_target_mw_storm_allocation
+                ).fillna(
+                    0
+                )  # maps the nominal values to the node dataframe
 
-        nodes['mw_loss_storm'] = nodes['nominal_mw'] - nodes['post_storm_mw']  # calculate mw loss
-        nodes['f_value'] = 1 - nodes['mw_loss_storm'] / nodes['nominal_mw']  # calculate f value: power_after_storm / nominal_power
-        nodes['gdp_damage'] = (1 - nodes['f_value']) * nodes['gdp']  # equivalent gdp value
+        nodes["mw_loss_storm"] = (
+            nodes["nominal_mw"] - nodes["post_storm_mw"]
+        )  # calculate mw loss
+        nodes["f_value"] = (
+            1 - nodes["mw_loss_storm"] / nodes["nominal_mw"]
+        )  # calculate f value: power_after_storm / nominal_power
+        nodes["gdp_damage"] = (1 - nodes["f_value"]) * nodes[
+            "gdp"
+        ]  # equivalent gdp value
 
 
 else:
@@ -451,7 +500,13 @@ else:
 print(f"{nh}: - saving")
 
 storm_path = os.path.join(
-    "data", "intersection", "storm_data", "individual_storms", region, sample, f"storm_{nh}"
+    "data",
+    "intersection",
+    "storm_data",
+    "individual_storms",
+    region,
+    sample,
+    f"storm_{nh}",
 )
 if not os.path.exists(storm_path):
     os.makedirs(storm_path)
@@ -478,19 +533,21 @@ targets = gpd.GeoDataFrame()
 
 if len(nodes) != 0:
     for box_id in nodes.box_id.unique():
-        targets = targets.append(gpd.read_file(os.path.join(
-                        "data",
-                        "processed",
-                        "all_boxes",
-                        f"{box_id}",
-                        f"targets_{box_id}.gpkg",)))  # add target of box
+        targets = targets.append(
+            gpd.read_file(
+                os.path.join(
+                    "data",
+                    "processed",
+                    "all_boxes",
+                    f"{box_id}",
+                    f"targets_{box_id}.gpkg",
+                )
+            )
+        )  # add target of box
 
-    targets = target_mapper('f_value', targets, nodes)  # map f_value
-    targets = target_mapper('mw_loss_storm', targets, nodes)  # map mw loss after storm
-    targets = target_mapper('gdp_damage', targets, nodes)  # map gdp damage from storm
-
-
-
+    targets = target_mapper("f_value", targets, nodes)  # map f_value
+    targets = target_mapper("mw_loss_storm", targets, nodes)  # map mw loss after storm
+    targets = target_mapper("gdp_damage", targets, nodes)  # map gdp damage from storm
 
 
 target_cols = [
@@ -518,12 +575,9 @@ if len(targets) != 0:  # if not empty
 # write storm track file
 if len(TC) != 0:
     print(f"- writing {nh} to storm track file")
-    TC_nh = TC[TC["number_hur"] == nh]
+    TC_nh = TC[TC["number_hur"] == nh].copy()
 
-    #mask = TC["lon"] > 180.0
-    #TC["lon"][mask] = TC["lon"] - 360.0  # adjust long
-
-    TC_nh['lon'] = TC_nh['lon'].apply(lambda x: x if x <= 180 else x - 360)
+    TC_nh["lon"] = TC_nh["lon"].apply(lambda x: x if x <= 180 else x - 360)
 
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
     storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})
@@ -533,23 +587,25 @@ if len(TC) != 0:
     )
 
 
-
-#%% add stats
+#%% add initial stats
 today = date.today()
 
 
-if not isNone(targets):
-    f_0_25_temp, f_25_50, f_50_75, f_75_1_temp  = targets['f_value'].value_counts(bins=[0, 0.25, 0.5, 0.75, 1], sort=False).values.astype(int)  # note order
-    f_0 = len(targets[targets['f_value']==0])
+if not isNone(targets) and len(targets) != 0:
+    f_0_25_temp, f_25_50, f_50_75, f_75_1_temp = (
+        targets["f_value"]
+        .value_counts(bins=[0, 0.25, 0.5, 0.75, 1], sort=False)
+        .values.astype(float)
+    )  # note order
+    f_0 = len(targets[targets["f_value"] == 0])
     f_0_25 = f_0_25_temp - f_0
-    f_1 = len(targets[targets['f_value']==1])
+    f_1 = len(targets[targets["f_value"] == 1])
 
     f_75_1 = f_75_1_temp - f_1
 
     totdamage = targets.gdp_damage.sum()
 
     num_affected = len(targets) - f_1
-
 
     assert f_0 >= 0
     assert f_0_25 >= 0
@@ -558,7 +614,7 @@ if not isNone(targets):
     assert f_75_1 >= 0
     assert f_1 >= 0
 else:
-    f_0, f_0_25, f_25_50, f_50_75, f_75_1 = [0]*5
+    f_0, f_0_25, f_25_50, f_50_75, f_75_1 = [0] * 5
     num_affected = 0
     totdamage = 0
 

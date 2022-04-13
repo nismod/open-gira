@@ -5,7 +5,7 @@ This file downloads the plants data to geoparequet files
 from importing_modules import *
 
 try:
-    box_id = snakemake.params['box_id']
+    box_id = snakemake.params["box_id"]
 except:
     box_id = sys.argv[1]
 
@@ -24,7 +24,6 @@ def combine(lsts):
         lst_intersect = [lst[j] for lst in lsts]
         mask_count = lst_intersect.count(numpy.ma.masked) + lst_intersect.count(None)
         if mask_count <= num_lsts - 2:  # 2 or more non-masked values
-            # (j, [lst[j] for lst in lsts])
             avgval = sum(
                 [
                     0 if np.ma.is_masked(x) == True or x == None else x

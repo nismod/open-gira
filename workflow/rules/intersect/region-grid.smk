@@ -1,4 +1,4 @@
-"""Finds which units contain infrastructure
+"""Finds the units that contain infrastructure
 
 """
 import os
@@ -24,11 +24,9 @@ rule intersect_grid_indiv:
     output:
         os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
     params:
-        region = "{region}",
+        region="{region}",
     script:
-            os.path.join("..", "..", "scripts", "intersect", "intersect_2_gridmaker.py"
-        )
-
+        os.path.join("..", "..", "scripts", "intersect", "intersect_2_gridmaker.py")
 
 
 rule intersect_grid:

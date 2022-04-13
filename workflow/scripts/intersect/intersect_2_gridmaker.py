@@ -16,12 +16,9 @@ from pathos.multiprocessing import ProcessPool, cpu_count
 from tqdm import tqdm
 
 try:
-    region = snakemake.params['region']
+    region = snakemake.params["region"]
 except:
-    region = 'NA'
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+    raise RuntimeError("Snakemake parameters not found")
 
 squarehalfwidth = (
     0.05  # this is half the width of the smallest unit in the return period maps
@@ -55,7 +52,6 @@ def make_grid_points_nc2(box_id, region, ps):
     )
     lon_min, lat_min, lon_max, lat_max = box_gs.bounds.values[0]
 
-
     mask = lons > 180.0  # fix above 180
     lons[mask] = lons[mask] - 360.0
 
@@ -63,13 +59,6 @@ def make_grid_points_nc2(box_id, region, ps):
     lons = lons[lons < lon_max]
     lats = lats[lats > lat_min]
     lats = lats[lats < lat_max]
-
-    # if len(lons) == 0:
-    #     print(f"No lons for {box_id}")
-    #     assert len(lons) != 0
-    # if len(lats) == 0:
-    #     print(f"No lats for {box_id}")
-    #     assert len(lats) != 0
 
     point_df = pd.DataFrame()
 
@@ -156,7 +145,7 @@ if __name__ == "__main__":
     pool_grid = ProcessPool(nodes=nodesuse)
     output = pool_grid.map(create_grid_box, box_ids, idx_bxs, totboxes)
 
-    output = list(filter(None, output))  # remove None
+    output = list(filter(None, output))  # removes None values
 
     output_grid = [item[0] for item in output]  # extract dataframes
     grid_boxes = pd.concat(output_grid).reset_index(drop=True)

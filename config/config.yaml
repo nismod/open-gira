@@ -32,13 +32,6 @@ box_width_height: 5
 # List of boxes to analyse (only). Put None to evaluate globally
 specific_boxes: [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1102, 1103, 1104]
 
-## YEARS #
-## Value (inclusive) of year to investigate storms to.
-#year_upper: 15
-#
-## Years to investigate all storms within. Will override year_upper. Write None to use year_upper. List of floats or strings
-#years_indiv: ["0", "1", "2", "3", "4"]
-
 # REGIONS #
 # Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
 regions: ["NA"]
@@ -50,5 +43,9 @@ sample_upper: 0
 # Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
 samples_indiv: None
 
+# Further Configuration #
 # Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
-storm_batches: 300
+storm_batches: 500
+
+# If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
+wind_rerun: False

@@ -5,14 +5,6 @@ import json
 import os
 import glob
 import fiona
-import geopandas as gpd
-
-import sys
-if "linux" not in sys.platform:
-    # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
 
 
 with fiona.open(
@@ -21,7 +13,6 @@ with fiona.open(
     gadm36_countries = []
     for feature in src_code:
         gadm36_countries.append(feature["properties"]["GID_0"])
-
 
 
 print("finding tif codes")

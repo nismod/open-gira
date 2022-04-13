@@ -4,7 +4,7 @@
 from importing_modules import *
 
 try:
-    boxlen = snakemake.params['boxlen_value']
+    boxlen = snakemake.params["boxlen_value"]
 except:
     boxlen = sys.argv[1]
 

@@ -6,14 +6,14 @@ https://gridfinder.org/
 """
 
 out_gridfinder = [
-        os.path.join('data', "gridfinder", "grid.gpkg"),
-        os.path.join('data', "gridfinder", "targets.tif"),
+    os.path.join("data", "gridfinder", "grid.gpkg"),
+    os.path.join("data", "gridfinder", "targets.tif"),
 ]
 
-# TODO follow config data_dir in script
+
 rule download_gridfinder:
     output:
-        out_gridfinder
+        out_gridfinder,
     shell:
         """
         mkdir -p data/gridfinder

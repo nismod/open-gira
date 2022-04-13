@@ -3,7 +3,7 @@ import requests
 import sys
 
 try:
-    country_ident = snakemake.params['code_country']
+    country_ident = snakemake.params["code_country"]
 except:
     country_ident = sys.argv[1]
 

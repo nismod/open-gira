@@ -5,9 +5,7 @@ Reference
 https://www.wri.org/research/global-database-power-plants
 """
 
-out_powerplant = os.path.join(
-    'data', "powerplants", "global_power_plant_database.csv"
-)
+out_powerplant = os.path.join("data", "powerplants", "global_power_plant_database.csv")
 
 
 rule download_powerplants:
