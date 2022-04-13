@@ -18,3 +18,41 @@ keep_tags: 'highway'
 osmium_tags_filters_file: "config/highway-core.txt"
 
 exposure_threshold: 0.5
+
+#
+# STORM Power Network Analysis
+#
+
+# width and height of dataset-splitting box (must be factor of 180)
+box_width_height: 5
+
+# List of boxes to analyse (only). Put None to evaluate all
+specific_boxes: [1102, 1103, 1104]
+
+# Regions in which to analyse. List of strings. 
+# Any of: ["EP", "NA", "NI", "SI", "SP", "WP"]
+# Include all for global analysis. 
+# If specific_boxes is not None, they must be coherent with these regions.
+regions: ["NA"]
+
+# Synthetic data sample upper value (inclusive).
+# Value from 0 to 9 to analyse for all years and regions.
+sample_upper: 0
+
+# Individual samples to investigate. Will override sample_upper. 
+# Write None to use sample_upper. List of floats or strings
+samples_indiv: None
+
+# Storms will be analysed in batches of this value. 
+# Higher value: quicker process. Lower value: better memory. 
+# It is recommended to tweak this value dependent on the machine's available 
+# memory and/or user requirements (500 is often a good starting value). 
+# Note that at below 25, attempts are made to record which files store which 
+# data as to only load the relevant wind csv files. This may explain changes
+# in performance.
+storm_batches: 30
+
+# If set to True then wind_extracter will overwrite existing wind files. 
+# It is recommended to keep this as False unless changes are made in the wind 
+# configuration files/scripts.
+wind_rerun: False
