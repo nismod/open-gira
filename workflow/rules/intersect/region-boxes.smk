@@ -27,15 +27,15 @@ region_box = expand(
 
 rule intersect_regions_indiv:
     input:
-        os.path.join("data", "processed", "world_boxes_metadata.txt"),
-        #os.path.join("data", "processed", "world_boxes.gpkg"),  # removed because opening on QGIS tampers with metadata
+        os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
+        #os.path.join(config['output_dir'], "power_processed", "world_boxes.gpkg"),  # removed because opening on QGIS tampers with metadata
         os.path.join(
-            "data", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
+            config['output_dir'], "input", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
         ),
         expand(
             os.path.join(
-                "data",
-                "processed",
+                config['output_dir'],
+                "power_processed",
                 "all_boxes",
                 "{box_id}",
                 "gridfinder_{box_id}.gpkg",
@@ -43,9 +43,10 @@ rule intersect_regions_indiv:
             box_id=all_boxes,
         ),
     output:
-        os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
+        os.path.join(config['output_dir'], "power_intersection", "regions", "{region}_boxes.txt"),
     params:
         region="{region}",
+        output_dir = config['output_dir']
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py")
 

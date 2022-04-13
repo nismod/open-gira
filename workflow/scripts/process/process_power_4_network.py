@@ -16,8 +16,10 @@ from importing_modules import *
 
 try:
     box_id = snakemake.params["box_id"]
+    output_dir = snakemake.params['output_dir']
 except:
-    box_id = sys.argv[1]
+    output_dir = sys.argv[1]
+    box_id = sys.argv[2]
 
 
 def timer(s):
@@ -33,10 +35,10 @@ if __name__ == "__main__":
     print(f"{box_id}: opening files")
     start = time.time()
     plantsfile = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"powerplants_{box_id}.csv"
+        output_dir, "power_processed", "all_boxes", box_id, f"powerplants_{box_id}.csv"
     )
     targetsfile = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"targets_{box_id}.csv"
+        output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"
     )
 
     plants = pd.read_csv(plantsfile)
@@ -57,7 +59,7 @@ if __name__ == "__main__":
     ] = False  # bool, will be set to true if edges available to be connected to
     print(f"{box_id}: writing to plants_{box_id}.gpkg")
     plants_file_name = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"plants_{box_id}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id, f"plants_{box_id}.gpkg"
     )
     if len(plants) == 0:  # if empty, write dummy
         plants_empty_df = gpd.GeoDataFrame(columns=plants.columns)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
     print(f"{box_id}: writing to targets_{box_id}.gpkg")
 
     targets_file_name = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"targets_{box_id}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.gpkg"
     )
     target_cols = list(targets.columns)
     target_cols.remove("centroid")
@@ -106,7 +108,7 @@ if __name__ == "__main__":
 
     edges = gpd.read_file(
         os.path.join(
-            "data", "processed", "all_boxes", f"{box_id}", f"gridfinder_{box_id}.gpkg"
+            output_dir, "power_processed", "all_boxes", f"{box_id}", f"gridfinder_{box_id}.gpkg"
         )
     )
 
@@ -236,7 +238,7 @@ if __name__ == "__main__":
 
     # output
     out_fname = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
     )
     print("writing edges to ", out_fname)
     network.edges.to_file(out_fname, layer="edges", driver="GPKG")

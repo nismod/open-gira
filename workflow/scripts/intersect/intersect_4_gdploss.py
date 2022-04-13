@@ -19,6 +19,7 @@ try:
     region = snakemake.params["region"]
     sample = snakemake.params["sample"]
     nh = snakemake.params["nh"]
+    output_dir = snakemake.params['output_dir']
 except:
     raise RuntimeError("Snakemake parameters not found")
 
@@ -81,8 +82,8 @@ def box_connectors(box_id):
     """Loads and returns the connector dictionary"""
     with open(
         os.path.join(
-            "data",
-            "processed",
+            output_dir,
+            "power_processed",
             "all_boxes",
             f"{box_id}",
             f"connector_{box_id}.txt",
@@ -95,7 +96,7 @@ def box_connectors(box_id):
 
 def network_name(box_id):
     fname = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
     )
     return fname
 
@@ -196,7 +197,7 @@ def combine_networks(
 
     box_id_orig = edge_damaged.box_id
     fname = os.path.join(
-        "data", "processed", "all_boxes", box_id_orig, f"network_{box_id_orig}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id_orig, f"network_{box_id_orig}.gpkg"
     )
     nodes_orig, edges_orig = read_network(
         fname
@@ -294,7 +295,8 @@ polys_affected = gpd.GeoDataFrame()
 print(f"{nh}: loading data")
 # print('loading tracks')
 stormfile = os.path.join(
-    "data",
+    output_dir,
+    "input",
     "stormtracks",
     "events",
     f"STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
@@ -326,7 +328,8 @@ TC["number_hur"] = (
 
 # print("Loading wind")
 windfile = os.path.join(
-    "data",
+    output_dir,
+    "input",
     "intersection",
     "storm_data",
     "all_winds",
@@ -350,7 +353,7 @@ if not isNone(windfile):
 
     # print("- grid")
     grid_data = gpd.read_file(
-        os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
+        os.path.join(output_dir, "power_intersection", "regions", f"{region}_unit.gpkg")
     )
 
     polys_affected = grid_data[grid_data["ID_point"].isin(ID_affected)].rename(
@@ -366,7 +369,7 @@ if not isNone(windfile):
 
         box_edges = gpd.read_file(
             os.path.join(
-                "data", "processed", "all_boxes", box_id, f"network_{box_id}.gpkg"
+                output_dir, "power_processed",  "all_boxes", box_id, f"network_{box_id}.gpkg"
             ),
             layer="edges",
         )
@@ -500,8 +503,8 @@ else:
 print(f"{nh}: - saving")
 
 storm_path = os.path.join(
-    "data",
-    "intersection",
+    output_dir,
+    "power_intersection",
     "storm_data",
     "individual_storms",
     region,
@@ -536,8 +539,8 @@ if len(nodes) != 0:
         targets = targets.append(
             gpd.read_file(
                 os.path.join(
-                    "data",
-                    "processed",
+                    output_dir,
+                    "power_processed",
                     "all_boxes",
                     f"{box_id}",
                     f"targets_{box_id}.gpkg",

@@ -5,11 +5,30 @@ from importing_modules import *
 from process_power_functions import idxbox
 
 
+try:
+    output_dir = snakemake.params['output_dir']
+except:
+    output_dir = sys.argv[1]
+
+
 if __name__ == "__main__":
+
+    # preliminary function variables
+    with open(
+    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+    ) as filejson:
+        world_boxes_metadata = json.load(filejson)
+    boxlen = world_boxes_metadata["boxlen"]
+    lat_max = world_boxes_metadata["lat_max"]
+    lon_min = world_boxes_metadata["lon_min"]
+    num_cols = world_boxes_metadata["num_cols"]
+    tot_boxes = world_boxes_metadata["tot_boxes"]
+
+
     s = time.time()
 
     features = []
-    with fiona.open(os.path.join("data", "gridfinder", "grid.gpkg")) as src:
+    with fiona.open(os.path.join(output_dir, "input", "gridfinder", "grid.gpkg")) as src:
 
         for jj, feature in tqdm(
             enumerate(src), desc="loading grid.gpkg features", total=len(src)
@@ -35,19 +54,19 @@ if __name__ == "__main__":
     all_lon, all_lat = np.array(centres.x), np.array(centres.y)
 
     print(f"indices found: {round((time.time() - s)/60, 2)}. Saving...")
-    gdf["box_id"] = idxbox(all_lat, all_lon)
+    gdf["box_id"] = idxbox(all_lat, all_lon, boxlen, lat_max, num_cols, lon_min, tot_boxes)
 
     for box_id, gdf_box in tqdm(
         gdf.groupby("box_id"),
         desc="saving gridfinder gpkg",
         total=len(gdf["box_id"].unique()),
     ):
-        all_boxes_path = os.path.join("data", "processed", "all_boxes", f"{box_id}")
+        all_boxes_path = os.path.join(output_dir, "power_processed", "all_boxes", f"{box_id}")
         p = os.path.join(all_boxes_path, f"gridfinder_{box_id}.gpkg")
         gdf_box.to_file(p, driver="GPKG")
 
     with open(
-        os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
     ) as filejson:
         tot_boxes = json.load(filejson)["tot_boxes"]
 
@@ -56,7 +75,7 @@ if __name__ == "__main__":
         range(int(float(tot_boxes))), desc="empty folders", total=float(tot_boxes)
     ):  # create empty ones
         all_boxes_g_file = os.path.join(
-            "data", "processed", "all_boxes", f"box_{id}", f"gridfinder_box_{id}.gpkg"
+            output_dir, "power_processed", "all_boxes", f"box_{id}", f"gridfinder_box_{id}.gpkg"
         )
         if not os.path.exists(all_boxes_g_file):
             empty_file = gpd.GeoDataFrame(columns=cols)

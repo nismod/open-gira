@@ -8,10 +8,11 @@ try:
     output = snakemake.output
 except:  # if the user wishes to see the (partial) statistics before the full analysis, or wishes to view a semi-complete analysis, they can run this file through python3 in the command line. Please note that stat_merger_individual.py MUST be run (once) first
     print("USING DIRECTORY LISTINGS TO FIND STATS (please check manually)")
+    print("""!! Assuming output_dir is 'results' !!""")
     output = os.path.join(
-        "data", "intersection", "statistics", "combined_storm_statistics__manual.csv"
+        "results", "power_output", "statistics", "combined_storm_statistics__manual.csv"
     )
-    stat_path = os.path.join("data", "intersection", "statistics")
+    stat_path = os.path.join("results", "power_output", "statistics")
     inputs = []
     regions = [
         os.path.basename(path) for path in os.listdir(stat_path) if path[-4:] != ".csv"

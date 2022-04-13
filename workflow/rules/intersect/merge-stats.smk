@@ -4,12 +4,12 @@
 import os
 
 stat_csv = os.path.join(
-    "data", "intersection", "statistics", "combined_storm_statistics.csv"
+    config['output_dir'], "power_output", "statistics", "combined_storm_statistics.csv"
 )
 all_indiv_stat_csv = expand(
     os.path.join(
-        "data",
-        "intersection",
+        config['output_dir'],
+        "power_output",
         "statistics",
         "{region}",
         "{sample}",
@@ -33,8 +33,8 @@ def aggregate_input(wildcards):
 
     ret = expand(
         os.path.join(
-            "data",
-            "intersection",
+            config['output_dir'],
+            "power_intersection",
             "storm_data",
             "individual_storms",
             "{region}",
@@ -57,8 +57,8 @@ rule merge_indiv_stats:
         aggregate_input,
     output:
         os.path.join(
-            "data",
-            "intersection",
+            config['output_dir'],
+            "power_output",
             "statistics",
             "{region}",
             "{sample}",

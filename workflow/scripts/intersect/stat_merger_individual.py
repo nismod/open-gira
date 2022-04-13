@@ -10,8 +10,9 @@ try:
     outputs = [str(snakemake.output)]  # made list to counter for except: case
 except:  # if the user wishes to see the (partial) statistics before the full analysis, or wishes to view a semi-complete analysis, they can run this file through python3 in the command line. Please note that stat_merger.py must be run (once) after this to see ALL collated storm results.
     print("USING DIRECTORY LISTINGS TO FIND STATS (please check manually)")
+    print("""!! Assuming output_dir is 'results' !!""")
     indiv_storm_path = os.path.join(
-        "data", "intersection", "storm_data", "individual_storms"
+        "results", "power_intersection", "storm_data", "individual_storms"
     )
     inputs_stats = []
     regions = [os.path.basename(path) for path in os.listdir(indiv_storm_path)]
@@ -51,8 +52,8 @@ except:  # if the user wishes to see the (partial) statistics before the full an
     print(f"Len of inputs_stats is {len(inputs_stats)}")
     outputs = [
         os.path.join(
-            "data",
-            "intersection",
+            "results",
+            "power_output"
             "statistics",
             f"{region}",
             f"{sample}",

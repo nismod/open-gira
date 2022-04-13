@@ -17,8 +17,11 @@ from tqdm import tqdm
 
 try:
     region = snakemake.params["region"]
+    output_dir = snakemake.params['output_dir']
 except:
-    raise RuntimeError("Snakemake parameters not found")
+    output_dir = sys.argv[1]
+    region = sys.argv[2]
+
 
 squarehalfwidth = (
     0.05  # this is half the width of the smallest unit in the return period maps
@@ -34,7 +37,7 @@ def make_grid_points_nc2(box_id, region, ps):
     Performs manual overlay."""
 
     fn = os.path.join(
-        "data", "stormtracks", "fixed", f"STORM_FIXED_RETURN_PERIODS_{region}.nc"
+        output_dir, "input", "stormtracks", "fixed", f"STORM_FIXED_RETURN_PERIODS_{region}.nc"
     )
     ds = nc4.Dataset(fn)
     lons = np.array(ds["lon"])
@@ -48,7 +51,7 @@ def make_grid_points_nc2(box_id, region, ps):
     )  # see above
 
     box_gs = gpd.read_file(
-        os.path.join("data", "processed", "all_boxes", box_id, f"geom_{box_id}.gpkg")
+        os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg")
     )
     lon_min, lat_min, lon_max, lat_max = box_gs.bounds.values[0]
 
@@ -64,7 +67,7 @@ def make_grid_points_nc2(box_id, region, ps):
 
     box_infrastructure = gpd.read_file(
         os.path.join(
-            "data", "processed", "all_boxes", box_id, f"gridfinder_{box_id}.gpkg"
+            output_dir, "power_processed", "all_boxes", box_id, f"gridfinder_{box_id}.gpkg"
         )
     )
     containing_box_dict = {}
@@ -136,7 +139,7 @@ if __name__ == "__main__":
         nodesuse = 10  # for testing
 
     with open(
-        os.path.join("data", "intersection", "regions", f"{region}_boxes.txt"), "r"
+        os.path.join(output_dir, "power_intersection", "regions", f"{region}_boxes.txt"), "r"
     ) as src:
         box_ids = json.load(src)
     totboxes = [len(box_ids)] * len(box_ids)
@@ -157,7 +160,7 @@ if __name__ == "__main__":
 
     grid_boxes_area["centroid"] = grid_boxes_area["centroid"].astype(str)
     grid_boxes_area.to_file(
-        os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg"),
+        os.path.join(output_dir, "power_intersection", "regions", f"{region}_unit.gpkg"),
         driver="GPKG",
     )
 
@@ -166,7 +169,7 @@ if __name__ == "__main__":
     for dict_indiv in output_contains:  # join the dictionaries
         unit_contains.update(dict_indiv)
     with open(
-        os.path.join("data", "intersection", "regions", f"{region}_unit_contains.txt"),
+        os.path.join(output_dir, "power_intersection", "regions", f"{region}_unit_contains.txt"),
         "w",
     ) as writefile:
         json.dump(unit_contains, writefile)

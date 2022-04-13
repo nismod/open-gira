@@ -16,6 +16,7 @@ try:
         snakemake.params["memory_storm_split"]
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]
+    output_dir = config['output_dir']
 except:
     raise RuntimeError("Snakemake parameters not found")
 
@@ -71,10 +72,10 @@ def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
 start = time.time()
 
 all_winds_path = os.path.join(
-    "data", "intersection", "storm_data", "all_winds", region, sample
+    output_dir, "power_intersection", "storm_data", "all_winds", region, sample
 )
 grid_box = gpd.read_file(
-    os.path.join("data", "intersection", "regions", f"{region}_unit.gpkg")
+    os.path.join(output_dir, "power_intersection", "regions", f"{region}_unit.gpkg")
 )
 
 if len(all_boxes) != 0:
@@ -95,7 +96,8 @@ environ_dict = dict(zip(list_regions, environmental_pressure))
 
 #### load in cyclone tracks for region
 stormfile = os.path.join(
-    "data",
+    output_dir,
+    "input",
     "stormtracks",
     "events",
     "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
@@ -138,7 +140,7 @@ hurr_buffer_dist = 1300
 
 distance_arr = np.array([])
 unit_path = os.path.join(
-    "data", "intersection", "storm_data", "unit_data", region, sample
+    output_dir, "power_intersection", "storm_data", "unit_data", region, sample
 )
 
 if not os.path.exists(unit_path):
@@ -202,8 +204,8 @@ for nh_lst in tqdm(
         if False in [
             os.path.isfile(
                 os.path.join(
-                    "data",
-                    "intersection",
+                    output_dir,
+                    "power_intersection",
                     "storm_data",
                     "all_winds",
                     region,

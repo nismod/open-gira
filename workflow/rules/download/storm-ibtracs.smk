@@ -10,14 +10,15 @@ https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_pe
 CYCLONE_REGIONS = ["EP", "NA", "NI", "SI", "SP", "WP"]
 
 out_fixed = expand(
-    os.path.join("data", "stormtracks", "fixed", "STORM_FIXED_{param}_{region}.nc"),
+    os.path.join(config['output_dir'], "input", "stormtracks", "fixed", "STORM_FIXED_{param}_{region}.nc"),
     region=CYCLONE_REGIONS,
     param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
 )
 
 out_events = expand(
     os.path.join(
-        "data",
+        config['output_dir'],
+        "input",
         "stormtracks",
         "events",
         "STORM_DATA_IBTRACS_{region}_1000_YEARS_{num}.txt",
@@ -31,11 +32,10 @@ rule download_stormtracks_fixed:
     output:
         out_fixed,
     shell:
-        """
-        mkdir -p data/stormtracks/fixed/extracted
+        f"""
         wget \
             --input-file=workflow/scripts/storm_fixed_return.txt \
-            --directory-prefix=data/stormtracks/fixed \
+            --directory-prefix={config['output_dir']}/input/stormtracks/fixed \
             --timestamping \
             --no-check-certificate
         """
@@ -45,12 +45,12 @@ rule download_stormtracks_events:
     output:
         out_events,
     shell:
-        """
+        f"""
         wget \
             --input-file=workflow/scripts/storm_tracks.txt \
-            --directory-prefix=data/stormtracks/events \
+            --directory-prefix={config['output_dir']}/input/stormtracks/events \
             --timestamping \
             --no-check-certificate \
             --content-disposition
-        unzip -o data/stormtracks/events/STORM_DATA3.zip -d data/stormtracks/events
+        unzip -o {config['output_dir']}/input/stormtracks/events/STORM_DATA3.zip -d {config['output_dir']}/input/stormtracks/events
         """

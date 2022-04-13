@@ -6,9 +6,15 @@ import os
 import glob
 import fiona
 
+try:
+    output_dir = snakemake.params['output_dir']
+except:
+    output_dir = sys.argv[1]
+
+
 
 with fiona.open(
-    os.path.join("data", "adminboundaries", "gadm36_levels.gpkg"), "r", layer=0
+    os.path.join(output_dir, "input", "adminboundaries", "gadm36_levels.gpkg"), "r", layer=0
 ) as src_code:
     gadm36_countries = []
     for feature in src_code:
@@ -16,7 +22,7 @@ with fiona.open(
 
 
 print("finding tif codes")
-files = glob.glob(os.path.join("data", "population", "*.tif"))
+files = glob.glob(os.path.join(output_dir, "input", "population", "*.tif"))
 pop_countries = [file[file.find("_ppp") - 3 : file.find("_ppp")] for file in files]
 
 exclude_country_list = []
@@ -27,7 +33,7 @@ for country in gadm36_countries:
         exclude_country_list.append(country)
 
 print("writing to file")
-folder_path = os.path.join("data", "adminboundaries")
+folder_path = os.path.join(output_dir, "input", "adminboundaries")
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
 

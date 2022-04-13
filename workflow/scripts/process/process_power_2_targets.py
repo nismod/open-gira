@@ -6,8 +6,10 @@ from importing_modules import *
 
 try:
     box_id = snakemake.params["box_id"]
+    output_dir = snakemake.params['output_dir']
 except:
-    box_id = sys.argv[1]
+    output_dir = sys.argv[1]
+    box_id = sys.argv[2]
 
 
 def combine(lsts):
@@ -51,7 +53,7 @@ def combine(lsts):
 
 def get_target_areas(box_id):
     world_boxes_path = os.path.join(
-        "data", "processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"
+        output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"
     )
     gdf = gpd.read_file(world_boxes_path)
     box = gdf["geometry"]
@@ -59,7 +61,7 @@ def get_target_areas(box_id):
     geod = Geod(ellps="WGS84")
 
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
-    with rasterio.open(os.path.join("data", "gridfinder", "targets.tif")) as src:
+    with rasterio.open(os.path.join(output_dir, "input", "gridfinder", "targets.tif")) as src:
 
         # for each country (see: code) overlay connections to distribution grid
         try:
@@ -89,7 +91,7 @@ def get_population(box_id, targets, exclude_countries_lst):
     # below: population of target areas (targets.geometry), populations is list corresponding to areas (CHECK, I think)
 
     with open(
-        os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
     box_country_list_id = world_boxes_metadata["box_country_dict"][box_id]
@@ -104,7 +106,7 @@ def get_population(box_id, targets, exclude_countries_lst):
             gen = gen_zonal_stats(
                 targets.geometry,
                 os.path.join(
-                    "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                    output_dir, "input", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
                 ),
                 stats=[],
                 add_stats={"nansum": np.nansum},  # count NaN as zero for summation
@@ -121,7 +123,7 @@ def get_population(box_id, targets, exclude_countries_lst):
             population_density = point_query(
                 targets.centroid,
                 os.path.join(
-                    "data", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                    output_dir, "input", f"{code}_ppp_2020_UNadj_constrained.tif"
                 ),
             )
             # print(f"time for {code} pop density: ", time.time() - ss, "s")
@@ -159,7 +161,7 @@ def get_gdp(targets):
 
     # just pick centroid - GDP per capita doesn't vary at this fine granularity
     gdp_pc = []
-    fn = os.path.join("data", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc")
+    fn = os.path.join(output_dir, "input", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc")
     ds = nc4.Dataset(fn)
 
     lat_idx_arr = np.interp(
@@ -203,7 +205,7 @@ if __name__ == "__main__":
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
     with open(
-        os.path.join("data", "adminboundaries", "exclude_countries.txt"), "r"
+        os.path.join(output_dir, "input", "adminboundaries", "exclude_countries.txt"), "r"
     ) as file:
         exclude_countries_lst = json.load(file)
 
@@ -224,6 +226,6 @@ if __name__ == "__main__":
     # combine
     # print("saving intermediate files")
     targets_box.to_csv(
-        os.path.join("data", "processed", "all_boxes", box_id, f"targets_{box_id}.csv"),
+        os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"),
         index=False,
     )

@@ -45,13 +45,13 @@ wildcard_constraints:
     FILENAME="[^/]+",
 
 
+include: "rules/download/worldpop-population.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
 include: "rules/download/gridfinder.smk"
 include: "rules/download/storm-ibtracs.smk"
-include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
-include: "rules/download_all.smk"
+include: "rules/power_download_all.smk"
   
 include: "rules/process/split-world.smk"
 include: "rules/process/powerplants.smk"
@@ -60,14 +60,14 @@ include: "rules/process/split-gridfinder.smk"
 include: "rules/process/network.smk"
 include: "rules/process/connector.smk"
 include: "rules/process/exclude-countries.smk"
-include: "rules/process_all.smk"
+include: "rules/power_process_all.smk"
 
 include: "rules/intersect/region-boxes.smk"
 include: "rules/intersect/region-grid.smk"
 include: "rules/intersect/extract-wind.smk"
 include: "rules/intersect/gdp-loss.smk"
 include: "rules/intersect/merge-stats.smk"
-include: "rules/intersect_all.smk"
+include: "rules/power_intersect_all.smk"
 
 include: "rules/filter_osm_data.smk"
 include: "rules/create_overall_bbox.smk"

@@ -5,7 +5,7 @@
 out_powerplants = (
     expand(
         os.path.join(
-            "data", "processed", "all_boxes", "{box_id}", "powerplants_{box_id}.csv"
+            config['output_dir'], "power_processed", "all_boxes", "{box_id}", "powerplants_{box_id}.csv"
         ),
         box_id=all_boxes,
     ),
@@ -14,8 +14,8 @@ out_powerplants = (
 
 rule process_powerplants:
     input:
-        os.path.join("data", "powerplants", "global_power_plant_database.csv"),
-        os.path.join("data", "processed", "world_boxes_metadata.txt"),
+        os.path.join(config['output_dir'], "input", "powerplants", "global_power_plant_database.csv"),
+        os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
     output:
         out_powerplants,
     script:

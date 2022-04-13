@@ -6,25 +6,25 @@
 rule intersection_gdp_loss:
     input:
         os.path.join(
-            "data",
-            "intersection",
+            config['output_dir'],
+            "power_intersection",
             "storm_data",
             "all_winds",
             "{region}",
             "{sample}",
             "TC_r{region}_s{sample}_n{nh}.csv",
         ),
-        os.path.join("data", "intersection", "regions", "{region}_unit.gpkg"),
+        os.path.join(config['output_dir'], "power_intersection", "regions", "{region}_unit.gpkg"),
         [
             os.path.join(
-                "data", "processed", "all_boxes", f"{box_id}", f"targets_{box_id}.gpkg"
+                config['output_dir'], "power_processed", "all_boxes", f"{box_id}", f"targets_{box_id}.gpkg"
             )
             for box_id in all_boxes
         ],
         out_connector,
         os.path.join(
-            "data",
-            "intersection",
+            config['output_dir'],
+            "power_intersection",
             "storm_data",
             "all_winds",
             "{region}",
@@ -33,8 +33,8 @@ rule intersection_gdp_loss:
         ),
     output:
         os.path.join(
-            "data",
-            "intersection",
+            config['output_dir'],
+            "power_intersection",
             "storm_data",
             "individual_storms",
             "{region}",
@@ -46,5 +46,6 @@ rule intersection_gdp_loss:
         region="{region}",
         sample="{sample}",
         nh="{nh}",
+        output_dir = config['output_dir']
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")
