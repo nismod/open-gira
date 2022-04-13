@@ -16,7 +16,7 @@ try:
         snakemake.params["memory_storm_split"]
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]
-    output_dir = config['output_dir']
+    output_dir = snakemake.params['output_dir']
 except:
     raise RuntimeError("Snakemake parameters not found")
 

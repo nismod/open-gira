@@ -21,6 +21,8 @@ rule process_connector:
             box_id=all_boxes,
         ),
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
+    params:
+        output_dir = config['output_dir']
     output:
         out_connector,
     script:

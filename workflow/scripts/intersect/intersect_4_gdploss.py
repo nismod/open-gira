@@ -329,8 +329,7 @@ TC["number_hur"] = (
 # print("Loading wind")
 windfile = os.path.join(
     output_dir,
-    "input",
-    "intersection",
+    "power_intersection",
     "storm_data",
     "all_winds",
     region,

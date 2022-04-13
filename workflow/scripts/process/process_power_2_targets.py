@@ -123,7 +123,7 @@ def get_population(box_id, targets, exclude_countries_lst):
             population_density = point_query(
                 targets.centroid,
                 os.path.join(
-                    output_dir, "input", f"{code}_ppp_2020_UNadj_constrained.tif"
+                    output_dir, "input", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
                 ),
             )
             # print(f"time for {code} pop density: ", time.time() - ss, "s")
