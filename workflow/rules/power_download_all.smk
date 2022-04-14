@@ -1,6 +1,6 @@
 """Download all files
 
-Run all of the download rules, whether or not any futher rules in the pipeline require the data.
+Run all of the download rules, whether or not any further rules in the pipeline require the data.
 """
 
 
@@ -12,5 +12,4 @@ rule download_all:
         out_GDP,
         out_powerplant,
         out_gridfinder,
-        out_adminboundaries,
-        out_adminboundaries_codes,
+        out_adminboundaries_levels,
