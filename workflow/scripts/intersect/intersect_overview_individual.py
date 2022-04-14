@@ -53,7 +53,7 @@ except:  # if the user wishes to see the (partial) statistics before the full an
     outputs = [
         os.path.join(
             "results",
-            "power_output"
+            "power_output",
             "statistics",
             f"{region}",
             f"{sample}",

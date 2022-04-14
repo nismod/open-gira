@@ -29,7 +29,7 @@ exposure_threshold: 0.5
 # width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5
 
-# List of boxes to analyse (only). Put None to evaluate globally
+# List of boxes to analyse (only). Note that this must be known for the box_width_height value entered above. Put None to evaluate globally
 specific_boxes: [1102, 1103, 1104]
 
 # REGIONS #

@@ -1,5 +1,6 @@
 """Merges the gdp loss statistics.
 
+Provides an overview for all storms. This is useful for further analysis decisions and required to bring together the snakemake wildcards.
 """
 import os
 
@@ -51,7 +52,7 @@ def aggregate_input(wildcards):
     return ret
 
 
-rule merge_indiv_stats:
+rule merge_overview_indiv_stats:
     """Use this rule for the combined stats file for each region sample"""
     input:
         aggregate_input,
@@ -65,14 +66,14 @@ rule merge_indiv_stats:
             "combined_storm_statistics_{region}_{sample}.csv",
         ),
     script:
-        os.path.join("..", "..", "scripts", "intersect", "stat_merger_individual.py")
+        os.path.join("..", "..", "scripts", "intersect", "intersect_overview_individual.py")
 
 
-rule merge_all_stats:
+rule merge_overview_all_stats:
     """Use this rule for the combined stats file (all)"""
     input:
         all_indiv_stat_csv,
     output:
         stat_csv,
     script:
-        os.path.join("..", "..", "scripts", "intersect", "stat_merger.py")
+        os.path.join("..", "..", "scripts", "intersect", "intersect_overview.py")

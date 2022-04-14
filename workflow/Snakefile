@@ -68,8 +68,10 @@ include: "rules/intersect/region-boxes.smk"
 include: "rules/intersect/region-grid.smk"
 include: "rules/intersect/extract-wind.smk"
 include: "rules/intersect/gdp-loss.smk"
-include: "rules/intersect/merge-stats.smk"
+include: "rules/intersect/intersect-overview.smk"
 include: "rules/power_intersect_all.smk"
+
+include: "rules/power_analyse_all.smk"
 
 include: "rules/download_dataset.smk"
 include: "rules/filter_osm_data.smk"
