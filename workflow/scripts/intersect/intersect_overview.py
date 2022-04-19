@@ -38,7 +38,7 @@ except:  # if the user wishes to see the (partial) statistics before the full an
 df = pd.DataFrame()
 
 for input in inputs:
-    storm_stats = pd.read_csv(input)
+    storm_stats = pd.read_csv(input, keep_default_na=False)
     df = df.append(storm_stats, ignore_index=True)
 
 df.to_csv(str(output), index=False)

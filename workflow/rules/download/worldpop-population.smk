@@ -23,3 +23,8 @@ rule download_population:
         os.path.join(config['output_dir'], "input", "population", "{country}_ppp_2020_UNadj_constrained.tif"),
     script:
         "../../scripts/download/scrape_url.py"
+
+
+rule download_population_all:
+    input:
+        out_population
