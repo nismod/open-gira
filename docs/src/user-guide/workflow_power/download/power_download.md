@@ -9,7 +9,7 @@ The power analysis requires the following data
 - [STORM data](power_download_stormtracks.md)
 
 
-This data is not interlinked and forms the following simple workflow diagram for the `download_all` rule.
+This data is not interlinked (order irrelevant) and forms the following simple workflow diagram for the `download_all` rule.
 
 ![`download_all` rule workflow.](../img/dag_download_all.png)
 

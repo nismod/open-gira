@@ -1,5 +1,5 @@
 """
-This file downloads the plants data to geoparequet files
+This file processes the target data
 """
 
 from importing_modules import *
@@ -35,7 +35,7 @@ def combine(lsts):
             fix[j] = avgval
             count_overlap += 1
 
-    assert count_overlap / llen < 0.4  # assert less than 40% is overlap (rough)
+    assert count_overlap / llen < 0.4  # assert less than 40% is overlap (catch possible errors. None found in testing)
 
     all = [numpy.ma.masked] * llen
     for i in range(llen):
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
     with open(
-        os.path.join(output_dir, "input", "adminboundaries", "exclude_countries.txt"), "r"
+        os.path.join(output_dir, "power_processed", "exclude_countries.txt"), "r"
     ) as file:
         exclude_countries_lst = json.load(file)
 

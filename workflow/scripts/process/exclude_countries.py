@@ -33,7 +33,7 @@ for country in gadm36_countries:
         exclude_country_list.append(country)
 
 print("writing to file")
-folder_path = os.path.join(output_dir, "input", "adminboundaries")
+folder_path = os.path.join(output_dir, "power_processed")
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
 
