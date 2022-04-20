@@ -12,7 +12,7 @@ network data.
 
 The workflow is visualised as follows (including previous dependencies)
 
-![Process network workflow](../img/dag_network.png)
+![Process network workflow](../power_img/dag_network.png)
 
 Again, only one box is selected for visual clarity, however, many boxes are typically processed in parallel for the
 `process_target_box` rule.  Note that if there is no network in the box_id, then an empty .gpkg file is produced. This

@@ -10,7 +10,7 @@ Click on any image to view the full-size version.
 ## Simple view
 
 As a reminder, here's our simple workflow view again:
-[![Simplistic view of the workflow](../img/DAG-simple.png)](../img/DAG-simple.png)
+[![Simplistic view of the workflow](img/DAG-simple.png)](../img/DAG-simple.png)
 
 ## Multiple slices
 
@@ -18,7 +18,7 @@ Here is a more realistic (but slightly harder to follow) version of the previous
 DAG with `slice_count: 4`.
 In actual practice we'll often be using much higher `slice_count` values.
 In this tutorial, for instance, we use `slice_count: 36`.
-[![DAG of the workflow for 4 slices of the Tanzania database](../img/DAG-simple-slices.png)](../img/DAG-simple-slices.png)
+[![DAG of the workflow for 4 slices of the Tanzania database](img/DAG-simple-slices.png)](img/DAG-simple-slices.png)
 
 ## Multiple hazard and infrastructure datasets
 
@@ -37,10 +37,10 @@ infrastructure_datasets:
 
 slice_count: 1
 ```
-[![DAG of the workflow with multiple infrastructure and hazard datasets](../img/DAG-multiple.png)](../img/DAG-multiple.png)
+[![DAG of the workflow with multiple infrastructure and hazard datasets](img/DAG-multiple.png)](img/DAG-multiple.png)
 
 ## Full workflow
 
 Finally, we'll set the `slice_count` from the above config to `4` again, and glimpse the
 full workflow. Remember, though, we could have many more datasets and use many more slices.
-[![DAG of the full workflow](../img/DAG-multiple-slices.png)](../img/DAG-multiple-slices.png)
+[![DAG of the full workflow](img/DAG-multiple-slices.png)](img/DAG-multiple-slices.png)

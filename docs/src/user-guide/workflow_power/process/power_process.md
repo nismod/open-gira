@@ -11,6 +11,6 @@ The processing of the [input data](../download/power_download.md) is split into 
 
 Here, the order is important to the processing and the snakemake workflow can be visualised as follows.
 
-![`process_all` rule workflow with one box_id example](../img/dag_process_all.png)
+![`process_all` rule workflow with one box_id example](../power_img/dag_process_all.png)
 
 Note that this includes the [download workflow](../download/power_download.md) process too. We also note that for this visualisation only one box_id wildcard has been specified (box_1103) to prevent visual cluttering. Whilst this is possible, the input usually consists of many more box_id wildcards which will be processed in parallel. This of course depends on the config.yaml inputs (see more details [here](../../workflow_power/workflow_power.md))

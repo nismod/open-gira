@@ -53,8 +53,8 @@ The data we're looking at in the column chosen above we can see by enabling the
 roads lines and hazard raster in QGIS. 
 In the example below I've chosen somewhat arbitrary colours for different flood depths.
 
-![QGIS mapping of Tanzania under extreme flooding.](../../img/QGIS-intersection.png)
+![QGIS mapping of Tanzania under extreme flooding.](transport_img/QGIS-intersection.png)
 
 Here's an example of the same zoomed in on Dar es Salaam.
-![QGIS mapping of Dar es Salaam under extreme flooding.](../../img/QGIS-all_zoom.png)
+![QGIS mapping of Dar es Salaam under extreme flooding.](transport_img/QGIS-all_zoom.png)
 

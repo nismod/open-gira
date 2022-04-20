@@ -17,4 +17,4 @@ Load up the _lines_ in that and you should see that it doubles up the road lines
 around Dar es Salaam (Eastern coast of Tanzania).
 In the image below, we have recoloured the lines so that the lines for slice 32 are in yellow.
 
-![QGIS screenshot showing roads in red with a subsection overlaid in yellow.](../../img/QGIS-slice32.png)
+![QGIS screenshot showing roads in red with a subsection overlaid in yellow.](transport_img/QGIS-slice32.png)

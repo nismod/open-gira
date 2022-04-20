@@ -9,11 +9,11 @@ populated locations a GDP value based on its location (country) and population. 
 
 The individual target processing workflow is visualised as follows.
 
-![Target workflow for box_1103](../img/dag_targets.png)
+![Target workflow for box_1103](../power_img/dag_targets.png)
 
 However, as previously mentioned, there are likely to be many more boxes. To illustrate this, four boxes can be seen in the workflow below.
 
-![Target workflow for multiple boxes](../img/dag_targets_4.png)
+![Target workflow for multiple boxes](../power_img/dag_targets_4.png)
 
 With a `box_width_height` value of 5 (deg), there would be 2592 boxes. Note that if no targets exist in the box_id, then an empty .gpkg file is
 produced. This is to allow for consistent snakemake workflows as it can not be known in advance.

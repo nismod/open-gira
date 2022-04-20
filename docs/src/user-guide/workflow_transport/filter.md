@@ -14,11 +14,11 @@ Load `./results/input/tanzania-latest_filter-highway-core.osm.pbf`,
 and notice that there are fewer roads than in the previous file.
 We've coloured the roads in the new file in red.
 
-![QGIS screenshot showing red roads overlaid on black ones.](../../img/QGIS-filtered.png)
+![QGIS screenshot showing red roads overlaid on black ones.](transport_img/QGIS-filtered.png)
 
 If you zoom in a lot, you'll see there are many, many roads that are not included in this smaller file.
 Here, we've zoomed in on the port area of Dar es Salaam.
 
-![QGIS screenshot showing many black roads, a few of which have red roads on top.](../../img/QGIS-filtered_zoom.png)
+![QGIS screenshot showing many black roads, a few of which have red roads on top.](transport_img/QGIS-filtered_zoom.png)
 
 If you want to, you can do the same for the Wales datasets.
