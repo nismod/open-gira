@@ -2,7 +2,9 @@
 
 The idea behind this script is to take the [gridfinder input data](../download/power_download_gridfinder.md) and assign
 populated locations a GDP value based on its location (country) and population. We refer to the populated locations
-(e.g. villages, cities, etc) as targets. These will be the sinks of the power network.
+(e.g. villages, cities, etc) as targets. These will be the sinks of the power network. Below is an example figure in
+which the grey regions represent the target locations.
+![Target location example](../power_img/targets.png)
 
 
 ### Workflow

@@ -3,7 +3,7 @@
 """
 
 
-rule intersection_gdp_loss:
+rule intersect_damages:
     input:
         os.path.join(
             config['output_dir'],

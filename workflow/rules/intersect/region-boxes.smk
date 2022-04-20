@@ -25,7 +25,7 @@ region_box = expand(
 )
 
 
-rule intersect_regions_indiv:
+rule intersect_region_boxes:
     input:
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
         #os.path.join(config['output_dir'], "power_processed", "world_boxes.gpkg"),  # removed because opening on QGIS tampers with metadata
