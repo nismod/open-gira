@@ -21,9 +21,6 @@ The damage criteria is assumed to be a minimum wind speed of a category 1 hurric
 
 
 #### Step 4
-add gdp eqns etc`~~~~~~~TODO~~~~~~~`
-
-
 In order to assign each target a GDP loss value, we first create power network components. See an example below in which
 red circles are power plants and blue squares are the targets.
 
