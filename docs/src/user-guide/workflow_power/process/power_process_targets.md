@@ -6,6 +6,11 @@ populated locations a GDP value based on its location (country) and population. 
 which the grey regions represent the target locations.
 ![Target location example](../power_img/targets.png)
 
+#### Target GDP
+The GDP value for each target is assigned based on the multiplication of the GDP value per capita of the country in
+which the target is located and the population of the target.
+
+
 
 ### Workflow
 
