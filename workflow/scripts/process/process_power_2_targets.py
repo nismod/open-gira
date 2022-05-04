@@ -1,5 +1,5 @@
 """
-This file downloads the plants data to geoparequet files
+This file processes the target data
 """
 
 from importing_modules import *
@@ -10,6 +10,7 @@ try:
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
+
 
 
 def combine(lsts):
@@ -35,7 +36,7 @@ def combine(lsts):
             fix[j] = avgval
             count_overlap += 1
 
-    assert count_overlap / llen < 0.4  # assert less than 40% is overlap (rough)
+    assert count_overlap / llen < 0.4  # assert less than 40% is overlap (catch possible errors. None found in testing)
 
     all = [numpy.ma.masked] * llen
     for i in range(llen):
@@ -98,7 +99,8 @@ def get_population(box_id, targets, exclude_countries_lst):
 
     pop_all = []
     pop_d_all = []
-
+    country_all = [[]]*len(targets)
+    country_dict = {}  # {code1: {indices...}, code2: ... }
     for kk, code in enumerate(box_country_list_id):  # run for every country in the box
         print(f"{box_id}: {kk+1}/{len(box_country_list_id)} -- {code}")
 
@@ -119,17 +121,19 @@ def get_population(box_id, targets, exclude_countries_lst):
                     gen, desc=f"{code} population progress", total=len(targets.geometry)
                 )
             ]
-            ss = time.time()
             population_density = point_query(
                 targets.centroid,
                 os.path.join(
                     output_dir, "input", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
                 ),
             )
-            # print(f"time for {code} pop density: ", time.time() - ss, "s")
+            #country = [code] * len(targets)
         else:  # code does not have .tif data so list of None is applied
             populations = [None] * len(targets)
             population_density = [None] * len(targets)
+
+
+        country_dict[code] = {ii for ii, item in enumerate(populations) if not np.ma.is_masked(item) or population_density[ii]!=None}
 
         pop_all.append(populations)
         pop_d_all.append(population_density)
@@ -143,9 +147,14 @@ def get_population(box_id, targets, exclude_countries_lst):
         pop_all = combine(pop_all)
         pop_d_all = combine(pop_d_all)
 
+    for code, indices in country_dict.items():
+        for ii in indices:
+            country_all[ii] = code
+
     targets["population"] = pop_all
     targets["population_density_at_centroid"] = pop_d_all
     targets["population_density_at_centroid"].fillna(np.nan, inplace=True)
+    targets["country"] = country_all
 
     def estimate_population_from_density(row):
         if row.population is numpy.ma.masked:
@@ -205,7 +214,7 @@ if __name__ == "__main__":
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
     with open(
-        os.path.join(output_dir, "input", "adminboundaries", "exclude_countries.txt"), "r"
+        os.path.join(output_dir, "power_processed", "exclude_countries.txt"), "r"
     ) as file:
         exclude_countries_lst = json.load(file)
 
@@ -229,3 +238,4 @@ if __name__ == "__main__":
         os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"),
         index=False,
     )
+    print(f"Saved {box_id} targets")

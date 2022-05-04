@@ -21,8 +21,18 @@ try:
     nh = snakemake.params["nh"]
     output_dir = snakemake.params['output_dir']
 except:
-    raise RuntimeError("Snakemake parameters not found")
+    #raise RuntimeError("Snakemake parameters not found") TODO
+    region = 'NA'
+    sample = '0'
+    nh = '0_0_0'
+    output_dir = 'results'
 
+
+# TODO
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 def isNone(df):
     """Checks if dataframe contains solely the None row (required for snakemake and gpkg files)"""
@@ -501,13 +511,17 @@ else:
 
 print(f"{nh}: - saving")
 
-storm_path = os.path.join(
+storm_path_base = os.path.join(
     output_dir,
     "power_intersection",
     "storm_data",
     "individual_storms",
     region,
-    sample,
+    sample
+)
+
+storm_path = os.path.join(
+    storm_path_base,
     f"storm_{nh}",
 )
 if not os.path.exists(storm_path):
@@ -615,21 +629,38 @@ if not isNone(targets) and len(targets) != 0:
     assert f_50_75 >= 0
     assert f_75_1 >= 0
     assert f_1 >= 0
+
+    pop_affected = targets[targets['f_value']<1].population.sum()  # sum the population where the power after the storm is NOT the same as the nominal power (f<1 ie f!=1)
+    pop_f0 = targets[targets['f_value']==0].population.sum()  # sum the population which has no power (f=0)
+    pop_effective = ((1-targets['f_value'])*targets['population']).sum()  # effective population affected is the fraction of the population which has an effective power of 0 i.e. (1-f)*pop. This means with 100 people and f=0.2, pop_eff = 80.
+
+    countries_affected = '_'.join(targets.country.unique())  # join to one simple string country1_country2_country3...  This greatly simplified json and pandas handling later
+
+
 else:
     f_0, f_0_25, f_25_50, f_50_75, f_75_1 = [0] * 5
     num_affected = 0
     totdamage = 0
+    pop_affected = 0
+    pop_f0 = 0
+    pop_effective = 0
+    countries_affected = None
+
 
 stats_add = {
     "Storm ID": [nh],
     "Storm Region": [region],
-    "Damages (gdp)": [totdamage],
+    "GDP losses": [totdamage],
     "targets affected": [num_affected],
-    "targets operational 100%>op>75%": [f_75_1],
-    "targets operational 75%>=op>50%": [f_50_75],
-    "targets operational 50%>=op>25%": [f_25_50],
-    "targets operational 25%>=op>0%": [f_0_25],
-    "targets not operational (op=0%)": [f_0],
+    "targets 1>f>0_75": [f_75_1],
+    "targets 0_75>=f>0_5": [f_50_75],
+    "targets 0_5>=f>0_25": [f_25_50],
+    "targets 0_25>=f>0": [f_0_25],
+    "targets with no power (f=0)": [f_0],
+    "population affected": [pop_affected],
+    "population with no power (f=0)": [pop_f0],
+    "effective population affected": [pop_effective],
+    "affected countries": [countries_affected],
     "sim_run_date": [today.strftime("%d/%m/%Y")],
 }
 
@@ -641,3 +672,11 @@ with open(
     damagescsvpath, "w"
 ) as stormfile:  # open (overwrite) file for each storm year
     json.dump(stats_add, stormfile)
+
+# completed_file = os.path.join(storm_path_base, f'{sample}_{region}_completed_damages.txt')
+# if not os.path.isfile(completed_file):
+#     with open(
+#         completed_file, "w"
+#     ) as file:  # add dummy
+#         file.writelines(f"marks {region}_{sample} damage calculations as complete")
+

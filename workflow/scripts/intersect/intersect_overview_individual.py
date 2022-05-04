@@ -1,9 +1,21 @@
 """Collects all individual storm json statistics for each region sample and merges into one csv"""
 
+
+
+
+
 import os
 import json
 from tqdm import tqdm
 import pandas as pd
+
+
+import sys
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
+
 
 try:
     inputs_stats = snakemake.input
@@ -77,6 +89,7 @@ for (
         with open(data_stat, "r") as file:
             storm_stats = json.load(file)
             df_toadd = pd.DataFrame(storm_stats)
+
             df = df.append(df_toadd, ignore_index=True)
 
     if not os.path.exists(os.path.dirname(output)):

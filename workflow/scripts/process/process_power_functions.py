@@ -113,7 +113,7 @@ def idx(lat, lon, boxlen, lat_max, num_cols, lon_min, tot_boxes):
 
     boxlen - height and width of box
     lat_max - max lat value
-    num_cols - number of cols (i.e. number of boxes across the equator
+    num_cols - number of cols (i.e. number of boxes across the equator)
     lon_min - min lon value (lon_min can be negative)
     tot_boxes - total number of boxes
 

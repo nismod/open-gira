@@ -15,7 +15,7 @@ except:  # if the user wishes to see the (partial) statistics before the full an
     stat_path = os.path.join("results", "power_output", "statistics")
     inputs = []
     regions = [
-        os.path.basename(path) for path in os.listdir(stat_path) if path[-4:] != ".csv"
+        os.path.basename(path) for path in os.listdir(stat_path) if os.path.basename(path) in ["EP", "NA", "NI", "SI", "SP", "WP"]
     ]  # finds the regions (excludes any csv files in folder)
     for region in regions:
         samples = [
@@ -38,7 +38,7 @@ except:  # if the user wishes to see the (partial) statistics before the full an
 df = pd.DataFrame()
 
 for input in inputs:
-    storm_stats = pd.read_csv(input)
+    storm_stats = pd.read_csv(input, keep_default_na=False)
     df = df.append(storm_stats, ignore_index=True)
 
 df.to_csv(str(output), index=False)

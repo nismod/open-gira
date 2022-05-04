@@ -9,7 +9,7 @@ region_grid = expand(
 )
 
 
-rule intersect_grid_indiv:
+rule intersect_unit_generator:
     input:
         expand(
             os.path.join(

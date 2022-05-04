@@ -16,12 +16,13 @@ rule process_targets:
 
 rule process_target_box:
     input:  # note also require countries which intersect each box
-        #os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
+        os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
+        out_population,
         os.path.join(config['output_dir'], "power_processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
         os.path.join(config['output_dir'], "input", "gridfinder", "targets.tif"),
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
         os.path.join(config['output_dir'], "input", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc"),
-        os.path.join(config['output_dir'], "input", "adminboundaries", "exclude_countries.txt"),
+        os.path.join(config['output_dir'], "power_processed", "exclude_countries.txt"),
     output:
         os.path.join(
             config['output_dir'], "power_processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"

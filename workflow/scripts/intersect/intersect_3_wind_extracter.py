@@ -223,12 +223,12 @@ for nh_lst in tqdm(
     TC_all_lst = []
     ss = time.time()
     # for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
-    for unit_path_indiv, nh_unique in unit_paths_all.items():
+    for unit_path_indiv, nh_unique in tqdm(unit_paths_all.items(), total=len(unit_paths_all), desc='Loading units'):
         if (
             nh_unique != None
         ):  # if it is None, continue because it is unknown which nh are in which units
             if not any([x == y for x in nh_unique for y in nh_lst]):  # if no overlap
-                print("skipping")
+                #print("skipping")
                 continue  # then dont continue because no point loading as will be empty
 
         TC_add = pd.read_parquet(unit_path_indiv)
