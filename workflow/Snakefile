@@ -71,6 +71,11 @@ include: "rules/intersect/gdp-loss.smk"
 include: "rules/intersect/intersect-overview.smk"
 include: "rules/power_intersect_all.smk"
 
+include: "rules/analyse/analyse_rule_common.smk"  # must be first in analysis
+include: "rules/analyse/country_pair_matrix.smk"
+include: "rules/analyse/empirical_distribution.smk"
+include: "rules/analyse/target_analysis.smk"
+include: "rules/analyse/aggregate_levels.smk"
 include: "rules/power_analyse_all.smk"
 
 include: "rules/download_dataset.smk"

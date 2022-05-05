@@ -1,6 +1,7 @@
 """Plots the empirical distribution of storms for simple statistics for a range of threshold values
 
-This file is mainly for testing/plotting. The selected threshold values must first (each, separately) be computed using
+WARNING: This file is mainly for testing/plotting. In order to use this file:
+The selected threshold values must first (each, separately) be computed using
 the snakemake workflow. The combined_statistics.csv file must be renamed to combined_statistics_{thrval}.csv (do not
 move file) where {thrval} is the threshold value in m/s (integer value). A list (thrvals) must be onput in ## inputs ##
 containing the {thrval} values to be examined and plotted on the same graph.
@@ -14,22 +15,18 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
+from find_targets import find_targets
 
-
-if "linux" not in sys.platform:
-    # TODO remove
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+try:
+    output_dir = snakemake.params['output_dir']
+except:
+    output_dir = sys.argv[1]
 
 
 
 ## Inputs ##
-thrvals = [25, 33, 41]  # threshold values for storms
-
-region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
-sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-nh_eval = None  # list of storms to analyse (write None if none specified)
+thrvals = [17, 25, 33, 41, 49]  # threshold values for storms
+metrics = ['GDP losses', 'targets with no power (f=0)', 'population affected', 'population with no power (f=0)', 'effective population affected']
 
 ## ##
 
@@ -42,8 +39,8 @@ stat_path_empirical_data = os.path.join(stat_path, 'empirical', 'data')
 if not os.path.exists(stat_path_empirical_data):
     os.makedirs(stat_path_empirical_data)
 
-metrics = ['GDP losses', 'targets with no power (f=0)', 'population affected', 'population with no power (f=0)', 'effective population affected']
-#metrics = ['GDP losses']  # TODO remove
+_, rp_max = find_targets(output_dir, None, None, None)  # maximum return period
+
 
 for jj, thrval in enumerate(thrvals):
     print(thrval)
@@ -60,7 +57,6 @@ for jj, thrval in enumerate(thrvals):
         f.set_figheight(8)
 
         y = stats_sorted[metric]
-        rp_max = len(stats)  # maximum return period TODO change back to len(stats)/10**4 # TODO some storms never hit land, do we count?
         x_count = np.arange(1, rp_max, 1)
         x = rp_max/x_count  # this is how return periods are defined!!
         x = x[:len(y)][::-1]  # correct order
@@ -72,14 +68,17 @@ for jj, thrval in enumerate(thrvals):
         plt.ylabel(metric)
         plt.title(f"Empirical - {metric}")
 
-        plt.grid(axis='both', which='both')
-        plt.xscale("log")
+
         #f.set_xticks([20, 200, 500])
 
         if jj == len(thrvals) - 1:  # Last one
+
             plt.show()
-            plt.savefig(os.path.join(stat_path_empirical, f'empirical_{metric}__multi_thrval.png'))
+            plt.grid(axis='both', which='both')
+            plt.xscale("log")
             plt.legend()
+            plt.savefig(os.path.join(stat_path_empirical, f'empirical_{metric}__multi_thrval.png'))
+
 
 
 

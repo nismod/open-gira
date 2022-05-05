@@ -4,6 +4,8 @@
 """
 
 
-# rule intersect_all:
-#     input:
-#         ADD-HERE
+rule analyse_all:
+    input:
+        aggregate_levels_out,
+        empirical_distribution_out,
+        country_matrix_output

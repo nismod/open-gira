@@ -1,4 +1,4 @@
-"""Plots the empirical distribution of storms for simple statistics
+"""For each target performs parameter analysis/gathering
 
 The storms' .gpkg fxiles are examined, rather than the combined statistics .csv file. This is much slower but has a
 wider statistical applicability. Here this feature is used to save the metrics directly to the targets in a gpkg file.
@@ -10,32 +10,32 @@ Outputs gpkg file with metrics as target features (option to select top_select %
 """
 
 import os
-import numpy as np
-import sys
-import matplotlib.pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 import geopandas as gpd
 
 from find_targets import find_targets, avg
 
-if "linux" not in sys.platform:
-    # TODO remove
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
 
 
+try:
+    output_dir = snakemake.params['output_dir']
+    metrics_target = snakemake.params['metrics_target']
+    percentile = snakemake.params['top_select']  # percentile select (in percent). Set to 100 for all
+    increased_severity_sort = snakemake.params['increased_severity_sort']
+except:
+    raise RuntimeError("Please use snakemake to define inputs")
+assert 0<= percentile <= 100
+assert increased_severity_sort in [True, False]
+increased_severity_sort_bool = str(increased_severity_sort)[0]
 
 ## Inputs ##
-
 
 region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
 sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
 nh_eval = None  # list of storms to analyse (write None if none specified)
 
 
-top_select = 1 # top quantile select (in percent). Set to 100 for all
 ## ##
 
 
@@ -47,13 +47,13 @@ top_select = 1 # top quantile select (in percent). Set to 100 for all
 
 
 
-stat_path = os.path.join('results', 'power_output', 'statistics')
+stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
 stats = pd.read_csv(csv_path)
 
 
 
-target_paths, storm_tot = find_targets("results", region_eval, sample_eval, nh_eval)  # TODO config dir
+target_paths, storm_tot = find_targets(output_dir, region_eval, sample_eval, nh_eval)
 assert len(target_paths) <= storm_tot
 
 
@@ -63,31 +63,31 @@ assert len(target_paths) <= storm_tot
 stat_path_empirical = os.path.join(stat_path, 'empirical')
 if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
-stat_path_empirical_data = os.path.join(stat_path, 'empirical', 'data')
-if not os.path.exists(stat_path_empirical_data):
-    os.makedirs(stat_path_empirical_data)
 
 
-metrics_ylabel = {'population': 'Population affected [people]', 'mw_loss_storm': 'Total storm power loss [mw]', 'f_value': 'Operational value [-]', 'gdp_damage': 'GDP Losses [USD]'}  # dict to precisely label y axis
-metrics = ['population', 'mw_loss_storm', 'f_value', 'gdp_damage']
-assert all([metric_key in metrics_ylabel.keys() for metric_key in metrics])==True  # check all keys available
-metrics_avg = [avg(metric) for metric in metrics]
-metric_keys = metrics+metrics_avg
-metric_dict = dict(zip(metric_keys, [[]]*2*len(metrics)))
+metric_sortby = {'population':'population affected', 'mw_loss_storm': 'GDP losses', 'f_value': 'GDP losses', 'gdp_damage': 'GDP losses'}  # dict: sort the stats file for this metric key by its value
+assert all([metric_key in metric_sortby.keys() for metric_key in metrics_target])==True  # check all keys available
+metrics_target_avg = [avg(metric) for metric in metrics_target]
+metric_keys = metrics_target+metrics_target_avg
+metric_dict = dict(zip(metric_keys, [[]]*2*len(metrics_target)))
 
 
-top_select_frac = int((top_select/100)*storm_tot)  # top fraction
-print(f"Total {storm_tot}, stats on {len(stats)} and examining {top_select_frac}. Length targets is {len(target_paths)}")
+top_select_frac = int((percentile/100)*storm_tot)  # fraction
+if increased_severity_sort == True:
+    text_extra = " from least to most damage (i.e. percentile definition)"
+else:
+    text_extra = "from most to least damage (i.e. the top 'worst' storms)"
+print(f"Total {storm_tot}, stats on {len(stats)} and examining {top_select_frac} {text_extra}. Length targets is {len(target_paths)}")
 storm_id_metrics = {}  # dictionary {metric1: {stormids_top_quantile_for metric1...}, metric2: {stormids_top_quantile_for metric2...}, ... }
-for metric in metrics:
-    storm_id_metrics[metric] = set(stats.sort_values('population affected', ascending=False)['Storm ID'][:top_select_frac])  # TODO metric!!!  # saves a set of the top selected quantile (sorted by quantile)  #
+for metric in metrics_target:
+    storm_id_metrics[metric] = set(stats.sort_values(metric_sortby[metric], ascending=increased_severity_sort)['Storm ID'][:top_select_frac])  # saves a set of the top selected quantile (sorted appropriately)
 
-print(storm_id_metrics)
+
 
 metric_data = {}  # {target1: {metric1: val, metric2: ... , geometry: geom}, target2: {... } ...}
 
 
-# FILTER TARGET PATHS FOR STORM TODO for quantiles
+# FILTER TARGET PATHS FOR STORM
 
 for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', total=len(target_paths)):
     storm = os.path.basename(target_path).split('_n')[-1][:-5]  # extract storm
@@ -100,14 +100,14 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
             metric_data_new['geometry'] = target_indiv.geometry
             metric_data[target_indiv.id] = metric_data_new
 
-        for ii, metric in enumerate(metrics):  # add the metric data
+        for ii, metric in enumerate(metrics_target):  # add the metric data
             if storm in storm_id_metrics[metric]:  # only if in top selected quantile (sorted by metric)
 
                 metric_data[target_indiv.id][metric] = metric_data[target_indiv.id][metric] + [getattr(target_indiv, metric)]
 
 
 for target_key in metric_data.keys():
-    for metric in metrics:
+    for metric in metrics_target:
         metric_data[target_key][avg(metric)] = sum(metric_data[target_key][metric])/storm_tot  # find average
         metric_data[target_key][metric] = sum(metric_data[target_key][metric])  # overwrite the lists for the sum only
 
@@ -120,7 +120,7 @@ t_cols = list(targets_combined.columns)
 t_cols.remove('geometry')
 targets_combined = targets_combined.astype(dict(zip(t_cols, [float]*len(t_cols))))
 print(targets_combined.describe())
-folder_agg = os.path.join("results", "power_output", "statistics", "aggregate")  # TODO config dir
+folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
 if not os.path.exists(folder_agg):
     os.makedirs(folder_agg)
-targets_combined.to_file(os.path.join(folder_agg, f"targets_geo_top{int(top_select)}percent.gpkg"), driver='GPKG') #
+targets_combined.to_file(os.path.join(folder_agg, f"targets_geo_top{percentile}{increased_severity_sort_bool}percent.gpkg"), driver='GPKG') #

@@ -3,32 +3,32 @@ Ouputs a gpkg file with metrics as target features (can use QGIS to plot)
 """
 
 import os
-import numpy as np
 import sys
-import matplotlib.pyplot as plt
-import pandas as pd
 import fiona
 from tqdm import tqdm
 import geopandas as gpd
 from shapely.geometry import shape
 from find_targets import avg
 
-if "linux" not in sys.platform:
-    # TODO remove
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+try:
+    output_dir = snakemake.params['output_dir']
+    metrics_target = snakemake.params['metrics_target']
+    percentile = snakemake.params['top_select']  # percentile select (in percent). Set to 100 for all
+    increased_severity_sort = snakemake.params['increased_severity_sort']
+    layer_num = snakemake.params['aggregate_level']
+except:
+    raise RuntimeError("Please use snakemake to define inputs")
 
-output_dir = "results"  # TODO
-
-top_select = 1
-layer_num = 1
+increased_severity_sort_bool = str(increased_severity_sort)[0]  # either T or F
 
 
 
-metrics = ['population', 'mw_loss_storm', 'f_value', 'gdp_damage']  # will be a target feature (column in gpkg file)
-metrics_avg = [avg(metric) for metric in metrics]
-metric_keys = metrics+metrics_avg
+
+#metrics_target = ['population', 'mw_loss_storm', 'f_value', 'gdp_damage']  # will be a target feature (column in gpkg file)  # TODO make input
+
+
+metrics_target_avg = [avg(metric) for metric in metrics_target]
+metric_keys = metrics_target+metrics_target_avg
 
 
 with fiona.open(
@@ -43,8 +43,8 @@ with fiona.open(
     code_geoms_gpd = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs})
 
 
-folder_agg = os.path.join("results", "power_output", "statistics", "aggregate")  # TODO config dir
-examine_file = os.path.join(folder_agg, f"targets_geo_top{int(top_select)}percent.gpkg")
+folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
+examine_file = os.path.join(folder_agg, f"targets_geo_top{percentile}{increased_severity_sort_bool}percent.gpkg")
 
 
 quantile_file = gpd.read_file(examine_file)
@@ -52,13 +52,13 @@ quantile_file = gpd.read_file(examine_file)
 
 map_dict = {}
 for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), desc='geom_intersect'):
-    bool_list = [True if geom.intersects(geom_area.geometry) else False for geom in quantile_file.geometry]  # TODO check intersects
+    bool_list = [True if geom.intersects(geom_area.geometry) else False for geom in quantile_file.geometry]
 
     overlap_quantile = quantile_file[bool_list]
     if len(overlap_quantile) > 0:
         if geom_area.code not in map_dict.keys():
             map_dict[geom_area.code] = dict(zip(metric_keys, [[]]*len(metric_keys)))
-        for metric in metrics:
+        for metric in metrics_target:
             map_dict[geom_area.code][metric] = overlap_quantile[metric].sum()
             map_dict[geom_area.code][avg(metric)] = overlap_quantile[metric].mean()
 
@@ -69,5 +69,5 @@ for metric in metric_keys:
 
 code_geoms_gpd = code_geoms_gpd[code_geoms_gpd['gdp_damage']>0]
 
-
 code_geoms_gpd.to_file(examine_file.replace('percent', f'percent_aggregated_region'))
+print('Percentile written to file')

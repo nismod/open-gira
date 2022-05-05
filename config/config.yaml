@@ -49,3 +49,13 @@ storm_batches: 30
 
 # If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
 wind_rerun: False
+
+# Analysis #
+# Percentile to select (in percent) for geospatial analysis and visualisation. Set to 100 for all
+top_percentile_select: 99
+
+# Set increasing severity for top_percentile_select. True means top_percentile_select is the first top_percentile_select % of storms in increasing severity (i.e. standard percentile definition). False means the top top_percentile_select % worst storms are analysed.
+increased_severity_sort: True
+
+# Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
+aggregate_level: 1

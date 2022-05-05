@@ -1,4 +1,4 @@
-"""Plots the empirical storm relationship matrix between (two) countries
+"""Plots the empirical storm relationship matrix between (two) countries and conditional probability relationship
 
 """
 
@@ -7,26 +7,19 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
-import fiona
 from tqdm import tqdm
 import itertools as it
-import geopandas as gpd
-from shapely.geometry import shape
 
-if "linux" not in sys.platform:
-    # TODO remove
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+try:
+    output_dir = snakemake.params['output_dir']
+except:
+    output_dir = sys.argv[1]
+
 
 
 
 ## Inputs ##
 
-
-region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
-sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-nh_eval = None  # list of storms to analyse (write None if none specified)
 
 ## ##
 
@@ -52,7 +45,7 @@ def plot_relation_matrix(matrix, title, fig_num):
 
 
 ## load stats ##
-stat_path = os.path.join('results', 'power_output', 'statistics')
+stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
 stats = pd.read_csv(csv_path)
 storm_count = len(stats)
@@ -60,9 +53,6 @@ storm_count = len(stats)
 stat_path_empirical = os.path.join(stat_path, 'empirical')
 if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
-stat_path_empirical_data = os.path.join(stat_path, 'empirical', 'data')
-if not os.path.exists(stat_path_empirical_data):
-    os.makedirs(stat_path_empirical_data)
 
 country_storm_count = dict()  # dictionary {country1: number_of_storms, country2: ... }
 countries_overlap_master = dict()  # dictionary {country1_country2: total_overlap_storm_count, country1_country3: ... }  note that the values represent the intersection

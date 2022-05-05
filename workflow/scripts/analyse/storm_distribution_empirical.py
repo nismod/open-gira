@@ -9,39 +9,32 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
+from find_targets import find_targets
 
-
-if "linux" not in sys.platform:
-    # TODO remove
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+try:
+    output_dir = snakemake.params['output_dir']
+    metrics = snakemake.params['metrics']
+except:
+    output_dir = sys.argv[1]
+    metrics = sys.argv[2:]
 
 
 
 ## Inputs ##
 
 
-region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
-sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-nh_eval = None  # list of storms to analyse (write None if none specified)
-
 ## ##
 
-stat_path = os.path.join('results', 'power_output', 'statistics')
+stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 
 stat_path_empirical = os.path.join(stat_path, 'empirical')
 if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
-stat_path_empirical_data = os.path.join(stat_path, 'empirical', 'data')
-if not os.path.exists(stat_path_empirical_data):
-    os.makedirs(stat_path_empirical_data)
 
 csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
 stats = pd.read_csv(csv_path)
 
-
-metrics = ['GDP losses', 'targets with no power (f=0)', 'population affected', 'population with no power (f=0)', 'effective population affected']
+_, rp_max = find_targets(output_dir, None, None, None)  # maximum return period
 
 for ii, metric in enumerate(metrics):
     stats_sorted = stats.sort_values(metric)  # sort for damages
@@ -51,7 +44,7 @@ for ii, metric in enumerate(metrics):
     f.set_figheight(8)
 
     y = stats_sorted[metric]
-    rp_max = len(stats)  # maximum return period TODO change back to len(stats)/10**4 # TODO some storms never hit land, do we count?
+
     x_count = np.arange(1, rp_max, 1)
     x = rp_max/x_count  # this is how return periods are defined!!
     x = x[:len(y)][::-1]  # correct order
@@ -65,12 +58,10 @@ for ii, metric in enumerate(metrics):
 
     plt.grid(axis='both', which='both')
     plt.xscale("log")
-    #f.set_xticks([20, 200, 500])
 
 
-    plt.show()  # TODO do log
+    plt.show()
     plt.savefig(os.path.join(stat_path_empirical, f'empirical_{metric}.png'))
 
-
-
+print("Plotted all empirical")
 #  plt.close('all')
