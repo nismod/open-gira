@@ -2,7 +2,8 @@
 
 The power analysis workflow runs from the downloading of the data to the analysis of the intersection. First the
 parameters need to be set in the config.yaml file (`open-gira/config/config.yaml`). Each parameter is explained
-in this file and further explanations are found in the relevant workflow documentation.
+in this file and further explanations are found in the relevant workflow documentation. All documentation files for the power
+analysis will assume that `output_dir = results` when specifying paths.
 
 
 The workflow for the power analysis consists of 4 main steps
