@@ -100,5 +100,5 @@ The data for each storm (including damage parameters) is then found in `results/
 
 
 ### Rerunning damage calculations
-Should the damage calculations need to be rerun (due to e.g. damage tolerance adjustment) then you must delete `results/power_output/statistics/{region}/{sample}/combined_storm_statistics_{region}_{sample}.csv` for the corresponding region(s) and sample(s).
-AND delete (or rename) `results/power_intersection/storm_data/individual_storms`. Use `-n` at the end of the snakemake command to check this has worked with a dry run first.
+Should the damage calculations need to be rerun (due to e.g. damage tolerance adjustment) then you must delete `results/power_output/statistics/{region}/{sample}/combined_storm_statistics_{region}_{sample}.csv` for the corresponding region(s) and sample(s)
+AND delete (or rename) `results/power_intersection/storm_data/individual_storms`. Use `-n` at the end of the snakemake command to check this has worked with a dry run first before running the snakemake workflow.
