@@ -83,7 +83,7 @@ When `f=0` the target has no power after the storm and `f=1` means the target is
 When `0<=f<1` then the target is listed as affected by the storm. The effective population affected is the fraction of
 the population which has an effective power of 0 i.e. `pop_eff = (1-f)*pop` summed for each target. This means that if
 a target has a population of 100 people and `f=0.2`, `pop_eff = 80`. We can now define the damage parameter statistics that are considered:
-- GDP losses: indirect economic losses `~~~~~~check~~~~~~`
+- GDP losses: indirect economic losses
 - targets affected: number of targets which have the property `0<=f<1`
 - targets `1>f>0_75`
 - targets `0_75>=f>0_5`
@@ -91,7 +91,7 @@ a target has a population of 100 people and `f=0.2`, `pop_eff = 80`. We can now 
 - targets `0_25>=f>0`
 - targets with no power (`f=0`)
 - population affected: The population which is contained in affected targets (`0<=f<1`)
-- population with no power (f=0): The population which is contained in targets with no power after the storm (`f=0`)
+- population with no power (`f=0`): The population which is contained in targets with no power after the storm (`f=0`)
 - effective population affected: The population affected which is proportional to the f value of their respective targets
 - affected countries: All countries which have at least one target that is affected (`0<=f<1`)
 
