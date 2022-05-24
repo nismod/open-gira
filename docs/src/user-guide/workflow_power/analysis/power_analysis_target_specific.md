@@ -14,6 +14,6 @@ as `results/power_output/statistics/aggregate/targets_geo_top{top_percentile_sel
 if `increased_severity_sort = True` and `F` if `increased_severity_sort = False` to ensure no data is overwritten.
 
 One option now to visualise this data is to use the aggregate function in QGIS (or equivalent), however, this is a very time intensive process
-which is not found to be very flexible. Rather, it is recommended to use the [statistic aggregation](user-guide/workflow_power/analysis/power_analysis_aggregate_levels.md)
-script. Click [here](user-guide/workflow_power/analysis/power_analysis_aggregate_levels.md) to be directed onwards including
+which is not found to be very flexible. Rather, it is recommended to use the [statistic aggregation](power_analysis_aggregate_levels.md)
+script. Click [here](power_analysis_aggregate_levels.md) to be directed onwards including
 details on the rule to call the workflow.
