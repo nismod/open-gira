@@ -15,6 +15,7 @@ numpy
 rasterio
 rasterstats
 requests
+rtree
 snkit
 zenodo_get
 shapely

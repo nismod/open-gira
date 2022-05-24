@@ -28,12 +28,6 @@ except:
     output_dir = 'results'
 
 
-# TODO
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
 def isNone(df):
     """Checks if dataframe contains solely the None row (required for snakemake and gpkg files)"""
     if len(df) == 1 and df["id"].iloc[0] == None:
@@ -46,9 +40,8 @@ def read_edges_make_unique(fname):
     """Read edges and add unique link column"""
     edges = gpd.read_file(fname, layer="edges")
 
-    if len(edges) == 1:
-        if edges["id"].iloc[0] == None:  # no edges
-            edges["link"] = None
+    if isNone(edges):  # no edges
+        edges["link"] = None
     else:
         # create unique link id from from/to node ids
         edges["link"] = edges.apply(
@@ -596,7 +589,7 @@ if len(TC) != 0:
     TC_nh["lon"] = TC_nh["lon"].apply(lambda x: x if x <= 180 else x - 360)
 
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
-    storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})
+    storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})  # TODO add radius
     storm_track.to_file(
         os.path.join(storm_path, f"storm_track_r{region}_s{sample}_n{nh}.gpkg"),
         driver="GPKG",

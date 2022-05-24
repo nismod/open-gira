@@ -13,6 +13,34 @@ targets, plants, edges -> all files
 """
 
 from importing_modules import *
+# from process_power_functions import * # TODO
+
+
+
+
+# def patch_nearest_edge(point, edges):
+#     """Set up network
+#
+#     Find nearest edge to a point
+#     """
+#     print("used function")
+#     if type(point) == str:
+#         point = sw.loads(point)  # if point is found as string -> convert to Point(# #)
+#         print("changed to point")
+#     geom = point.buffer(1e-2)
+#     # print(point, " : ", type(point))
+#
+#     matches_idx = edges.sindex.nearest(geom.bounds)
+#     nearest_geom = min(
+#         [edges.iloc[match_idx] for match_idx in matches_idx],
+#         key=lambda match: point.distance(match.geometry),
+#     )
+#     return nearest_geom
+#
+#
+# snkit.network.nearest_edge = patch_nearest_edge
+
+
 
 try:
     box_id = snakemake.params["box_id"]

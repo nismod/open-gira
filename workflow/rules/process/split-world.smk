@@ -32,6 +32,7 @@ rule world_splitter:
     output:
         all_box_geoms,
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
+        os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
     params:
         boxlen_value=config["box_width_height"],
         output_dir = config['output_dir']
