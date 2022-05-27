@@ -9,7 +9,19 @@ as the `aggregate_level` parameter. See details on the level selection in the [d
 The parameter selection `aggregate_level = 0` equates to countries and so should a finder region be requested, then  `aggregate_level = 1` is recommended.
  `aggregate_level = 2` and above is feasible but comes at the cost of a longer computational time. An example for `aggregate_level = 1` is seen below (note that the legend must be generated through QGIS or elsewise).
 
-![Aggregate statistics with `aggregate_level = 1` example](../power_img/aggregate.png)
+
+![Aggregate statistics with `aggregate_level = 1` example](../power_img/aggregate2.png)
+
+Here we investigate the average population affected, however, the full list of selectable parameters is
+ - Population without power
+ - Effective population affected
+ - Population without power
+ - Power loss
+ - f_value
+ - GDP losses
+
+Both the mean and cumulative values for the above are calculated with the exception of the f_value which does not investigate the cumulative value as this would not
+make sense as a metric.
 
 
 The entire gathering and aggregation workflow can be called through the `analyse_aggregate_levels` rule.
