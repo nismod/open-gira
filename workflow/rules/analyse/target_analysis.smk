@@ -10,7 +10,10 @@ rule analyse_targets:
         output_dir = config['output_dir'],
         metrics_target = metrics_target,
         top_select = config['top_percentile_select'],
-        increased_severity_sort = config['increased_severity_sort']
+        increased_severity_sort = config['increased_severity_sort'],
+        region_eval = REGIONS,
+        sample_eval = SAMPLES,
+        nh_eval = config['specific_storm_analysis']
     output:
         os.path.join(stat_path, "aggregate", f"targets_geo_top{config['top_percentile_select']}{increased_severity_sort_bool}percent.gpkg")
     script:

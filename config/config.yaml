@@ -43,6 +43,9 @@ sample_upper: 0
 # Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
 samples_indiv: None
 
+# Direct damage cost per km (USD). 400000USD suggestion for upper limit
+reconstruction_cost: 400000
+
 # Further Configuration #
 # Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
 storm_batches: 30
@@ -59,3 +62,6 @@ increased_severity_sort: True
 
 # Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
 aggregate_level: 1
+
+# Specific storms to analyse in analyse_all workflow. In form of list of strings [#_#_#, #_#_#,... ]. Write None to include all
+specific_storm_analysis: ['0_2005_97']

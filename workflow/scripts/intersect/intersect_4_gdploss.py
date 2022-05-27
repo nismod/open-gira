@@ -6,7 +6,7 @@ import pandas as pd
 import geopandas as gpd
 import time
 from datetime import date
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Point
 import json
 import sys
 from damage_calculator import applythreshold
@@ -20,12 +20,17 @@ try:
     sample = snakemake.params["sample"]
     nh = snakemake.params["nh"]
     output_dir = snakemake.params['output_dir']
+    reconstruction_cost = snakemake.params['reconstruction_cost']
 except:
     #raise RuntimeError("Snakemake parameters not found") TODO
     region = 'NA'
     sample = '0'
-    nh = '0_0_0'
+    nh = '0_2005_97'
     output_dir = 'results'
+    reconstruction_cost = 400000
+
+reconstruction_cost = float(reconstruction_cost)
+assert reconstruction_cost >= 0
 
 
 def isNone(df):
@@ -320,7 +325,7 @@ TC.columns = [
     "landfall",
     "dis_land",
 ]  # https://www.nature.com/articles/s41597-020-0381-2.pdf
-TC = TC[["year", "number", "lat", "lon"]]
+TC = TC[["year", "number", "lat", "lon", "radius", "cat", "wind"]]
 TC["number_hur"] = (
     str(sample)
     + "_"
@@ -363,7 +368,7 @@ if not isNone(windfile):
     )
 
     start = time.time()
-
+    print('a')
     for jj, box_id in enumerate(
         box_id_affected
     ):  # extract the damaged edges using this for loop
@@ -520,7 +525,13 @@ storm_path = os.path.join(
 if not os.path.exists(storm_path):
     os.makedirs(storm_path)
 
+
+
+direct_damage_cost = 0
 if len(edges_affected) != 0:  # to prevent writing empty dataframe
+    # calculate direct damage cost
+    direct_damage_cost = reconstruction_cost*edges_affected.geometry.length.sum()
+
     edges_affected.to_file(
         os.path.join(
             storm_path, f"edges_affected__storm_r{region}_s{sample}_n{nh}.gpkg"
@@ -589,9 +600,18 @@ if len(TC) != 0:
     TC_nh["lon"] = TC_nh["lon"].apply(lambda x: x if x <= 180 else x - 360)
 
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
-    storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})  # TODO add radius
+    if len(coords) == 1:
+        coords = 2*coords  # to force Linestring
+
+    storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})  # stormtrack as a line
     storm_track.to_file(
         os.path.join(storm_path, f"storm_track_r{region}_s{sample}_n{nh}.gpkg"),
+        driver="GPKG",
+    )
+
+    storm_size = gpd.GeoDataFrame({"geometry":[Point(coord) for coord in coords], "radius":list(TC_nh.radius), "cat":list(TC_nh.cat), "wind":list(TC_nh.wind)})  # storm track points with extra features, for plotting
+    storm_size.to_file(
+        os.path.join(storm_path, f"storm_track_points_radius_r{region}_s{sample}_n{nh}.gpkg"),
         driver="GPKG",
     )
 
@@ -654,6 +674,7 @@ stats_add = {
     "population with no power (f=0)": [pop_f0],
     "effective population affected": [pop_effective],
     "affected countries": [countries_affected],
+    "reconstruction cost": [direct_damage_cost],
     "sim_run_date": [today.strftime("%d/%m/%Y")],
 }
 
@@ -665,11 +686,3 @@ with open(
     damagescsvpath, "w"
 ) as stormfile:  # open (overwrite) file for each storm year
     json.dump(stats_add, stormfile)
-
-# completed_file = os.path.join(storm_path_base, f'{sample}_{region}_completed_damages.txt')
-# if not os.path.isfile(completed_file):
-#     with open(
-#         completed_file, "w"
-#     ) as file:  # add dummy
-#         file.writelines(f"marks {region}_{sample} damage calculations as complete")
-

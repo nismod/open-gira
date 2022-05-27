@@ -46,6 +46,7 @@ rule intersect_damages:
         region="{region}",
         sample="{sample}",
         nh="{nh}",
-        output_dir = config['output_dir']
+        output_dir = config['output_dir'],
+        reconstruction_cost = config['reconstruction_cost']
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

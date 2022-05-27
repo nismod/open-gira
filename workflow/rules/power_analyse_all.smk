@@ -8,4 +8,5 @@ rule analyse_all:
     input:
         aggregate_levels_out,
         empirical_distribution_out,
-        country_matrix_output
+        country_matrix_output,
+        transmission_out

@@ -72,9 +72,15 @@ def find_targets(results_folder, region_eval, sample_eval, nh_eval):
     if len(target_paths) == 0:
         print('No target paths...!')
 
+    print(f'{len(target_paths)} targets and {storm_totals} total storms')
     return target_paths, storm_totals
 
 
 def avg(string_input):
     """Returns average key for string_input"""
     return string_input+"_avg"
+
+
+def sm(string_input):
+    """Returns sum key for string_input"""
+    return string_input+"_sum"
