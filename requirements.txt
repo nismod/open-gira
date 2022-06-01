@@ -1,21 +1,21 @@
-numpy==1.22.0  # avoid an AttributeError with numpy < 1.19 and pandas
-nismod-snail==0.2.1
-tqdm==4.62.3
-osmium==3.2.0
-pyarrow==6.0.0
-snakemake==6.15.1
-pytest==6.2.4
+cython==0.29.28
 geopandas==0.10.2
+matplotlib==3.5.1
 netCDF4
 networkx
-datetime
-pathos
+nismod-snail==0.2.1
+numpy==1.22.0  # avoid an AttributeError with numpy < 1.19 and pandas
+osmium==3.2.0
 pandas
-numpy
+pathos
+pyarrow==6.0.0
+pytest==6.2.4
 rasterio
 rasterstats
 requests
-snkit
-zenodo_get
+rtree==0.9.7
 shapely
-time
+snakemake==6.15.1
+snkit
+tqdm==4.62.3
+zenodo_get

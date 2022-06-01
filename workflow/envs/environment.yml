@@ -12,3 +12,5 @@ dependencies:
     - osmium==3.2.0
     - snakemake==6.15.1
     - geopandas==0.10.2
+    - rtree==0.9.7
+    - matplotlib==3.5.1

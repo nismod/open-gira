@@ -149,7 +149,14 @@ The pipeline consists in the following steps:
     `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`.
 11. Each .geoparquet file is processed to produce a .tif raster file showing the length
     of road affected by flooding greater than a threshold defined in the config.
-    These files are saved as `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/exposure_<hazard_tif_filename>`
+    These files are saved as `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/raster/exposure_<hazard_tif_filename>`
+12. Coastline data are downloaded from the NaturalEarthData.com service and saved in
+    `<output_dir>/input/coastlines/ne_10m_ocean`.
+13. Administrative boundary data are downloaded from the NaturalEarthData.com and saved in
+    `<output_dir>/input/admin-boundaries/zip/` and extracted to `<output_dir>/input/admin-boundaries/ne_50m/`
+14. The raster file from step 11 is combined with the coastline and admin boundary data from steps 12 and 13,
+    to produce an overall image showing the raster data in its geographical context, located in
+    `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/img/exposure_<hazard_tif_base_filename>.png`
 
 This is a directional acyclic graph (DAG) of a simplified version of the workflow
 that uses just one OSM dataset, one hazard dataset, and one slice:

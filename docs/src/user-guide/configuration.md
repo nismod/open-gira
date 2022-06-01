@@ -25,7 +25,20 @@ keep_tags: 'highway'
 # Filters definition -- base filename is used as the filter name
 osmium_tags_filters_file: "config/highway-core.txt"
 
-exposure_threshold: 0.5  # minimum flood depth (m) for inclusion in exposure rasters
+# Options for exposure tif file generation
+exposure_tifs:
+  # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+  exposure_threshold: 0.5
+  # Used when scaling raster files, values < 1 will downsample
+  scaling_factor: 0.1
+  # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
+  resampling_mode: 'bilinear'
+  # Options for plotting
+  plot:
+    # Keyword arguments for raster plotting
+    raster:
+      # Colour mapping to use for raster data
+      cmap: 'Reds'
 ```
 
 You should also have a `./config/highway-core.txt` file that looks like:

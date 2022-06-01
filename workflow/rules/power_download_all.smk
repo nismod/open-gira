@@ -12,4 +12,6 @@ rule download_all:
         out_GDP,
         out_powerplant,
         out_gridfinder,
+        f"{config['output_dir']}/input/admin-boundaries/gadm36.gpkg",
+        out_adminboundaries_codes,
         out_adminboundaries_levels,
