@@ -48,6 +48,10 @@ def run_test(target_name, command):
         # also see common.py.
         OutputChecker(data_path, expected_path, workdir).check()
 
+import geopandas
+import pandas
+from pandas.testing import assert_frame_equal
+
 
 class OutputChecker:
     def __init__(self, data_path, expected_path, workdir):

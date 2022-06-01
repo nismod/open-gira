@@ -1,13 +1,14 @@
 # Input data and output locations
 output_dir: 'results'
 
+## Aqueduct Analysis ##
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
 hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
   aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
 
-# OSM dataset
+# OSM dataset #
 infrastructure_datasets:
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
@@ -19,6 +20,7 @@ slice_count: 36
 keep_tags: 'highway'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+
 
 # Options for exposure tif file generation
 exposure_tifs:
@@ -34,3 +36,29 @@ exposure_tifs:
     raster:
       # Colour mapping to use for raster data
       cmap: 'Reds'
+
+
+## STORM Power Network Analysis ##
+# width and height of dataset-splitting box (must be factor of 180)
+box_width_height: 5
+
+# List of boxes to analyse (only). Note that this must be known for the box_width_height value entered above. Put None to evaluate globally
+specific_boxes: [1102, 1103, 1104]
+
+# REGIONS #
+# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
+regions: ["NA"]
+
+# SAMPLES #
+# Synthetic data sample upper value (inclusive).Value from 0 to 9 to analyse for all years and regions.
+sample_upper: 0
+
+# Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
+samples_indiv: None
+
+# Further Configuration #
+# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
+storm_batches: 30
+
+# If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
+wind_rerun: False

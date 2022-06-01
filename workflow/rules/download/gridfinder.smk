@@ -12,8 +12,8 @@ rule download_gridfinder:
     output:
         out_gridfinder,
     shell:
-        """
-        mkdir -p data/gridfinder
-        cd data/gridfinder
+        f"""
+        mkdir -p {config['output_dir']}/input/gridfinder
+        cd {config['output_dir']}/input/gridfinder
         zenodo_get 10.5281/zenodo.3628142
         """

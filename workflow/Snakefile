@@ -46,19 +46,34 @@ wildcard_constraints:
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
 
-r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
-COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 ##### load rules #####
 include: "rules/download/coastlines.smk"
-
+include: "rules/download/worldpop-population.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
 include: "rules/download/gridfinder.smk"
 include: "rules/download/storm-ibtracs.smk"
-include: "rules/download/worldpop-population.smk"
 include: "rules/download/wri-powerplants.smk"
-include: "rules/download_all.smk"
+include: "rules/power_download_all.smk"
+
+include: "rules/process/split-world.smk"
+include: "rules/process/powerplants.smk"
+include: "rules/process/targets.smk"
+include: "rules/process/split-gridfinder.smk"
+include: "rules/process/network.smk"
+include: "rules/process/connector.smk"
+include: "rules/process/exclude-countries.smk"
+include: "rules/power_process_all.smk"
+
+include: "rules/intersect/region-boxes.smk"
+include: "rules/intersect/region-grid.smk"
+include: "rules/intersect/extract-wind.smk"
+include: "rules/intersect/gdp-loss.smk"
+include: "rules/intersect/intersect-overview.smk"
+include: "rules/power_intersect_all.smk"
+
+include: "rules/power_analyse_all.smk"
 
 include: "rules/download_dataset.smk"
 include: "rules/filter_osm_data.smk"
@@ -110,4 +125,3 @@ rule clean_all:
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits
         """
-

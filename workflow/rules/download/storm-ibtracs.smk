@@ -32,10 +32,10 @@ rule download_stormtracks_fixed:
     output:
         out_fixed,
     shell:
-        """
+        f"""
         wget \
             --input-file=workflow/scripts/storm_fixed_return.txt \
-            --directory-prefix=data/stormtracks/fixed \
+            --directory-prefix={config['output_dir']}/input/stormtracks/fixed \
             --timestamping \
             --no-check-certificate
         """
@@ -45,12 +45,12 @@ rule download_stormtracks_events:
     output:
         out_events,
     shell:
-        """
+        f"""
         wget \
             --input-file=workflow/scripts/storm_tracks.txt \
-            --directory-prefix=data/stormtracks/events \
+            --directory-prefix={config['output_dir']}/input/stormtracks/events \
             --timestamping \
             --no-check-certificate \
             --content-disposition
-        unzip -o data/stormtracks/events/STORM_DATA3.zip -d data/stormtracks/events
+        unzip -o {config['output_dir']}/input/stormtracks/events/STORM_DATA3.zip -d {config['output_dir']}/input/stormtracks/events
         """

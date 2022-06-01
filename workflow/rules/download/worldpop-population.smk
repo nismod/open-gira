@@ -6,6 +6,9 @@ Reference
 https://www.worldpop.org/geodata/listing?id=79
 """
 
+r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
+COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
+
 out_population = expand(
     os.path.join(config['output_dir'], "input", "population", "{country}_ppp_2020_UNadj_constrained.tif"),
     country=COUNTRY_CODES,
@@ -13,7 +16,10 @@ out_population = expand(
 
 
 rule download_population:
+    params:
+        output_dir = config['output_dir'],
+        code_country="{country}"
     output:
-        out_population,
+        os.path.join(config['output_dir'], "input", "population", "{country}_ppp_2020_UNadj_constrained.tif"),
     script:
-        "../scripts/scrape_url.py"
+        "../../scripts/download/scrape_url.py"
