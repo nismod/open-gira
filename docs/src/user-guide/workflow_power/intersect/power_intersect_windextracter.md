@@ -19,7 +19,7 @@ After this, each storm will have a .csv file containing all wind speed parameter
 storms with a storm centre is within `hurr_buffer_dist = 1300 km` (of the unit) will be saved. This can be visualised as only saving 
 data within a 'buffer' of the storm track. A unit that is too far from the storm centre will be unaffected by the storm. The
 `hurr_buffer_dist` parameter is designed to capture this. Furthermore, in step 3., only storm parameters which have a
-`wind_location` value above `min_windlocmax = 10 m/s` and `wind_max` value above `min_windmax = 12 m/s` are considered.
+`wind_location` value above `min_windlocmax` and `wind_max` value above `min_windmax` are considered.
 Values below this can be considered negligible and will not cause infrastructure damage.
 
 Each storm has a unique identifier in the form #1_#2_#3 where #1 is the sample number from the [storm data](../download/power_download_stormtracks.md), #2 is
