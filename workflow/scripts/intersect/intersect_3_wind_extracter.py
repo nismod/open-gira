@@ -17,13 +17,14 @@ try:
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]
     output_dir = snakemake.params['output_dir']
+    minimum_threshold = snakemake.params['minimum_threshold']
 except:
     raise RuntimeError("Snakemake parameters not found")
 
 min_windlocmax = (
-    10  # minimum wind speed value (at unit) to consider significant to further save
+    float(minimum_threshold) - 10  # minimum wind speed value (at unit) to consider significant to further save
 )
-min_windmax = 12  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
+min_windmax = float(minimum_threshold) - 8  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
 hurr_buffer_dist = 1300  # maximum distance to consider to storm centre
 
 

@@ -9,4 +9,6 @@ rule analyse_all:
         aggregate_levels_out,
         empirical_distribution_out,
         country_matrix_output,
-        transmission_out
+        transmission_out,
+        percentile_out,
+        completed_files  # to ensure storms are all run

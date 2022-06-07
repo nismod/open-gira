@@ -18,6 +18,11 @@ if config["samples_indiv"] != "None":
 if len(SAMPLES) == 0:
     print("Samples incorrectly specified")
 
+STORMS = config["specific_storm_analysis"]
+if STORMS == 'None':
+    STORMS = None
+
+
 
 region_box = expand(
     os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),

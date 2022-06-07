@@ -6,7 +6,7 @@ Reference
 https://www.worldpop.org/geodata/listing?id=79
 """
 
-r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m")
+r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m", headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 out_population = expand(

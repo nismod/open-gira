@@ -36,7 +36,8 @@ checkpoint intersect_winds_indiv:
         all_boxes_compute=all_boxes,
         memory_storm_split=storm_batch_value,
         wind_rerun=wind_rerun_bool,
-        output_dir = config['output_dir']
+        output_dir = config['output_dir'],
+        minimum_threshold = config['minimum_threshold'],
     output:
         directory(
             os.path.join(

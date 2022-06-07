@@ -14,47 +14,38 @@ import pandas as pd
 from tqdm import tqdm
 import geopandas as gpd
 
-from find_targets import find_targets, avg, sm
+from common_functions import find_storm_files, avg, sm, ae, check_srn
 
 
 
 try:
     output_dir = snakemake.params['output_dir']
     metrics_target = snakemake.params['metrics_target']
-    percentile = snakemake.params['top_select']  # percentile select (in percent). Set to 100 for all
+    top_select = snakemake.params['top_select']  # select (in percent). Set to 100 for all
     increased_severity_sort = snakemake.params['increased_severity_sort']
     region_eval = snakemake.params['region_eval']
     sample_eval = snakemake.params['sample_eval']
     nh_eval = snakemake.params['nh_eval']
+    thrval = snakemake.params['central_threshold']
 except:  # for testing only
     output_dir = 'results'
     metrics_target = ['population_without_power', 'effective_population', 'affected_population', 'mw_loss_storm', 'f_value', 'gdp_damage']
-    percentile = 100
+    top_select = 100
     increased_severity_sort = True
     region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
     sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-    nh_eval = None  # list of storms to analyse (write None if none specified)
-    #raise RuntimeError("Please use snakemake to define inputs")
-
-import sys
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
-if sample_eval != None:
-    sample_eval = [str(s) if type(s)!=str else s for s in sample_eval]
-    assert all(type(x)==str for x in sample_eval)
-
-if region_eval != None:
-    assert all(type(x)==str for x in region_eval)
-
-if nh_eval != None:
-    assert all(type(x)==str for x in nh_eval)
+    nh_eval = ['0_2005_97']  # list of storms to analyse (write None if none specified)
+    thrval = 25
+    raise RuntimeError("Please use snakemake to define inputs")
 
 
 
-assert 0<= percentile <= 100
+
+region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
+
+
+
+assert 0<= top_select <= 100
 assert increased_severity_sort in [True, False]
 increased_severity_sort_bool = str(increased_severity_sort)[0]
 
@@ -62,20 +53,20 @@ increased_severity_sort_bool = str(increased_severity_sort)[0]
 
 
 
-## ##
-
-
 stat_path = os.path.join(output_dir, 'power_output', 'statistics')
-csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
-stats = pd.read_csv(csv_path)
+csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
+stats = pd.read_csv(csv_path, keep_default_na=False)
 
 
 
-target_paths, storm_tot = find_targets(output_dir, region_eval, sample_eval, nh_eval)
+target_paths, storm_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, thrval)
+if len(target_paths) == 0:
+    raise RuntimeError("No targets could be found. Shutting down process.")
 assert len(target_paths) <= storm_tot
 
-
-#  update target paths to include only nh in stats with the metric nonzero
+if nh_eval != None:
+    storm_tot = len(target_paths)
+    print('Only using total storm count from specified list (nh_eval) in config.yaml')
 
 
 stat_path_empirical = os.path.join(stat_path, 'empirical')
@@ -91,9 +82,9 @@ metric_keys = metrics_target_sum+metrics_target_avg
 metric_dict = dict(zip(metric_keys, [[]]*2*len(metrics_target)))
 
 
-top_select_frac = int((percentile/100)*storm_tot)  # fraction
+top_select_frac = int((top_select/100)*storm_tot)  # fraction
 if increased_severity_sort == True:
-    text_extra = " from least to most damage (i.e. percentile definition)"
+    text_extra = " from least to most damage"
 else:
     text_extra = "from most to least damage (i.e. the top 'worst' storms)"
 print(f"Total {storm_tot}, stats on {len(stats)} and examining {top_select_frac} {text_extra}. Length targets is {len(target_paths)}")
@@ -111,7 +102,7 @@ metric_data = {}  # wil include sums and averages of above
 for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', total=len(target_paths)):
     storm = os.path.basename(target_path).split('_n')[-1][:-5]  # extract storm
     #print(storm)
-    targets = gpd.read_file(target_path, dtype={'population':float, 'gdp_damage':float,'mw_loss_storm':float})#[['population', 'population_density_at_centroid', 'gdp', 'id', 'f_value', 'mw_loss_storm', 'gdp_damage', 'geometry']]
+    targets = gpd.read_file(target_path, dtype={'population':float, 'gdp_damage': float,'mw_loss_storm': float})#[['population', 'population_density_at_centroid', 'gdp', 'id', 'f_value', 'mw_loss_storm', 'gdp_damage', 'geometry']]
 
     # add population definitions
     zero_pop = [t.population if float(t.f_value)==0 else 0 for t in targets.itertuples()]
@@ -121,7 +112,7 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
     targets['affected_population'] = aff_pop
 
 
-    targets['f_value'] = 1 - targets['f_value'].astype(float)  # rescale f_rescale = 1 - f (this means that the storms with no damages contain f = 0 and so, later the average is correct. After averages are taken, it is rescaled back 1 - f_rescale
+    targets['f_value'] = 1 - targets['f_value'].astype(float)  # rescale f_rescale = 1 - f (this means that the storms with no damages (ie do not have gpkg files) have f = 0 and so, later the average (which of course has to include ALL storms) is correct. After averages are taken, it is rescaled back 1 - f_rescale
     for target_indiv in targets.itertuples():
         if target_indiv.id not in metric_data.keys():
             metric_data_new = dict(zip(metrics_target, [[]]*len(metrics_target)))  # empty (sub)dict with metrics as keys
@@ -139,12 +130,16 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
 
 for target_key in metric_data.keys():  # for each target.id
     for metric in metrics_target:  # for each metric
-        metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
-        metric_data[target_key][sm(metric)] = sum(metric_data_base[target_key][metric])  # find sum
-
         if 'f_value' in metric:
-            metric_data[target_key][sm(metric)] = None  # sum of f_value is irrelevant
+            #metric_data[target_key][sm(metric)] = None  # sum of f_value is irrelevant
+            metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
             metric_data[target_key][avg(metric)] = 1 - metric_data[target_key][avg(metric)]  # rescale back to correct
+        else:
+            metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
+            metric_sum = sum(metric_data_base[target_key][metric])
+            metric_data[target_key][sm(metric)] = metric_sum  # find sum
+            #metric_data[target_key][ae(metric)] = metric_sum / years_tot  # annually expected
+
 
 targets_combined = gpd.GeoDataFrame(metric_data).T  # include transpose due to list
 t_cols = list(targets_combined.columns)
@@ -155,5 +150,5 @@ print(targets_combined.describe())
 folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
 if not os.path.exists(folder_agg):
     os.makedirs(folder_agg)
-targets_combined.to_file(os.path.join(folder_agg, f"targets_geo_top{percentile}{increased_severity_sort_bool}percent.gpkg"), driver='GPKG')
+targets_combined.to_file(os.path.join(folder_agg, f"targets_geo_top{top_select}{increased_severity_sort_bool}percent.gpkg"), driver='GPKG')
 print('Written to file')

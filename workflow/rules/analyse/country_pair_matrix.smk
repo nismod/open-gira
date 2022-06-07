@@ -11,9 +11,10 @@ country_matrix_output = [os.path.join(stat_path, 'empirical', title_unint+".png"
 
 rule analyse_country_matrix:
     input:
-        os.path.join(stat_path, 'combined_storm_statistics.csv')
+        os.path.join(stat_path, f"combined_storm_statistics_{config['central_threshold']}.csv")
     params:
-        output_dir = config['output_dir']
+        output_dir = config['output_dir'],
+        central_threshold = config['central_threshold']
     output:
         country_matrix_output
     script:

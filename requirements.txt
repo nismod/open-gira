@@ -6,9 +6,12 @@ pyarrow==6.0.0
 snakemake==6.15.1
 pytest==6.2.4
 geopandas==0.10.2
+geopy
 netCDF4
 networkx
 datetime
+distutils
+matplotlib
 pathos
 pandas
 numpy

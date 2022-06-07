@@ -9,21 +9,35 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
-from find_targets import find_targets
+from common_functions import find_storm_files, check_srn
 
 try:
     output_dir = snakemake.params['output_dir']
     metrics = snakemake.params['metrics']
-except:
-    output_dir = sys.argv[1]
-    metrics = sys.argv[2:]
+    region_eval = snakemake.params['region_eval']
+    sample_eval = snakemake.params['sample_eval']
+    nh_eval = snakemake.params['nh_eval']
+    central_threshold = snakemake.params['central_threshold']
+    minimum_threshold = snakemake.params['minimum_threshold']
+    maximum_threshold = snakemake.params['maximum_threshold']
+except:  # for testing only
+    output_dir = 'results'
+    metrics = ['GDP losses', 'targets with no power (f=0)', 'population affected', 'population with no power (f=0)', 'effective population affected']
+    region_eval = None
+    sample_eval = None
+    nh_eval = None
+    central_threshold = 25
+    minimum_threshold = 20
+    maximum_threshold = 30
+    raise RuntimeError("Please use snakemake to define inputs")
 
 
 
 ## Inputs ##
 
 
-## ##
+region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
+
 
 stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 
@@ -31,27 +45,69 @@ stat_path_empirical = os.path.join(stat_path, 'empirical')
 if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
 
-csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
-stats = pd.read_csv(csv_path)
 
-_, rp_max = find_targets(output_dir, None, None, None)  # maximum return period
+
+_, rp_max, _ = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, 20)  # maximum return period (tot number of years)
+
+def stat_file(thrval):
+    """Returns pandas stat file for thrval value"""
+    csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
+    return pd.read_csv(csv_path, keep_default_na=False)
+
+def y_vals(df, metric):
+    """Returns an array of sorted points of the metric column in the df. """
+    stats_sorted = df.sort_values(metric)  # sort for damages
+    stats_sorted = stats_sorted[stats_sorted[metric]!=0]  # remove zeros
+    y = np.array(stats_sorted[metric])
+    return y
+
+def extme(y, len_reach):
+    """Extends y with zeros at front to length len_reach"""
+    if len(y) > len_reach:
+        raise RuntimeError("len_reach is incorrectly specified")
+
+    if len(y) < len_reach:
+        zero_extend = np.zeros(len_reach - len(y))  # extension
+        if len(y) != 0:
+            y = np.concatenate((zero_extend, y))  # join
+        else:
+            y = zero_extend
+    return y
+
+
+def y_extend(y1, y2, y3):
+    """Extends (front) to include 0s to reach len(y_i)==max_i(y_i) for all y"""
+    maxlen = max(len(y1), len(y2), len(y3))
+    return extme(y1, maxlen), extme(y2, maxlen), extme(y3, maxlen)
+
+
+stats_min = stat_file(minimum_threshold)
+stats_max = stat_file(maximum_threshold)
+stats_cen = stat_file(central_threshold)
 
 for ii, metric in enumerate(metrics):
-    stats_sorted = stats.sort_values(metric)  # sort for damages
-    stats_sorted = stats_sorted[stats_sorted[metric]!=0]  # remove zeros
+
     f = plt.figure(ii)
     f.set_figwidth(10)
     f.set_figheight(8)
 
-    y = stats_sorted[metric]
+    y_min_base = y_vals(stats_min, metric)
+    y_max_base = y_vals(stats_max, metric)
+    y_cen_base = y_vals(stats_cen, metric)
 
-    x_count = np.arange(1, rp_max, 1)
-    x = rp_max/x_count  # this is how return periods are defined!!
-    x = x[:len(y)][::-1]  # correct order
+    y_min, y_max, y_cen = y_extend(y_min_base, y_max_base, y_cen_base)
+
+    x_count = np.arange(1, len(y_cen)+1, 1)
+    x = rp_max/x_count  # this is how return periods are defined
+    x = x[::-1]  # correct order
 
 
+    plt.fill_between(x, y_min, y_max, color='b', alpha=0.5)
+    plt.plot(x, y_min, label=f'Minimum wind threshold ({minimum_threshold}m/s)')  # plot interpolated line
+    plt.plot(x, y_max, label=f'Maximum wind threshold ({maximum_threshold}m/s)')  # plot interpolated line
+    plt.plot(x, y_cen, color='r', label=f'Central wind threshold ({central_threshold}m/s)')  # plot interpolated line
+    plt.scatter(x, y_cen, s=2, color='r')  # plot data points
 
-    plt.scatter(x, y, s=2, color='b')
     plt.xlabel('Return Period')
     plt.ylabel(metric)
     plt.title(f"Empirical - {metric}")
@@ -59,7 +115,7 @@ for ii, metric in enumerate(metrics):
     plt.grid(axis='both', which='both')
     plt.xscale("log")
 
-
+    plt.legend()
     plt.show()
     plt.savefig(os.path.join(stat_path_empirical, f'empirical_{metric}.png'))
 

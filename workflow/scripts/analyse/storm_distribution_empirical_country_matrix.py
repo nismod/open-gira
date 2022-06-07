@@ -12,16 +12,17 @@ import itertools as it
 
 try:
     output_dir = snakemake.params['output_dir']
+    thrval = snakemake.params['central_threshold']
 except:
     output_dir = sys.argv[1]
+    thrval = sys.argv[2]
+    #raise RuntimeError("Please use snakemake to define inputs")
 
 
 
 
 ## Inputs ##
 
-
-## ##
 
 def plot_relation_matrix(matrix, title, fig_num):
     """Plots and saves imshow"""
@@ -46,8 +47,8 @@ def plot_relation_matrix(matrix, title, fig_num):
 
 ## load stats ##
 stat_path = os.path.join(output_dir, 'power_output', 'statistics')
-csv_path = os.path.join(stat_path, 'combined_storm_statistics.csv')
-stats = pd.read_csv(csv_path)
+csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
+stats = pd.read_csv(csv_path, keep_default_na=False)
 storm_count = len(stats)
 
 stat_path_empirical = os.path.join(stat_path, 'empirical')
@@ -58,25 +59,25 @@ country_storm_count = dict()  # dictionary {country1: number_of_storms, country2
 countries_overlap_master = dict()  # dictionary {country1_country2: total_overlap_storm_count, country1_country3: ... }  note that the values represent the intersection
 all_countries = set()  # set of all countries investigated
 for jj, stats_indiv in tqdm(enumerate(stats['affected countries']), desc='Iterating targets', total=len(stats)):
+    if type(stats_indiv) == str:  # First check for string
+        if len(stats_indiv) >= 1:  # Then (if string) check not ""
+            individual_countries = stats_indiv.split('_')
+            all_countries.update(individual_countries)
 
-    if type(stats_indiv) == str:
-        individual_countries = stats_indiv.split('_')
-        all_countries.update(individual_countries)
+            for country_a, country_b in it.combinations(individual_countries, 2):  # for each unique country
+                country1 = min(country_a, country_b)
+                country2 = max(country_a, country_b)
+                country_key = country1+"_"+country2  # min first then max (str)
+                if country_key in countries_overlap_master.keys():
+                    countries_overlap_master[country_key] = countries_overlap_master[country_key] + 1  # one more storm which has both countries (intersection)
+                else:
+                    countries_overlap_master[country_key] = 1
 
-        for country_a, country_b in it.combinations(individual_countries, 2):  # for each unique country
-            country1 = min(country_a, country_b)
-            country2 = max(country_a, country_b)
-            country_key = country1+"_"+country2  # min first then max (str)
-            if country_key in countries_overlap_master.keys():
-                countries_overlap_master[country_key] = countries_overlap_master[country_key] + 1  # one more storm which has both countries (intersection)
-            else:
-                countries_overlap_master[country_key] = 1
-
-        for country in individual_countries:
-            if country in country_storm_count.keys():
-                country_storm_count[country] = country_storm_count[country] + 1  # one more storm
-            else:
-                country_storm_count[country] = 1  # first storm
+            for country in individual_countries:
+                if country in country_storm_count.keys():
+                    country_storm_count[country] = country_storm_count[country] + 1  # one more storm
+                else:
+                    country_storm_count[country] = 1  # first storm
 
 # set country index
 all_countries_list = list(all_countries)
@@ -112,8 +113,4 @@ plot_relation_matrix(country_matrix_unint, title_unint, 0)
 
 title_condprob = "Given country A is hit, what is the likelihood also B is hit"
 plot_relation_matrix(country_matrix_condprob, title_condprob, 1)
-
-
-
-
 #  plt.close('all')

@@ -4,12 +4,9 @@ Provides an overview for all storms. This is useful for further analysis decisio
 """
 import os
 
-
-
-stat_csv = expand(os.path.join(
-    config['output_dir'], "power_output", "statistics", "combined_storm_statistics_{thrval}.csv"
-), thrval=THRESHOLDS)
-
+stat_csv = os.path.join(
+    config['output_dir'], "power_output", "statistics", "combined_storm_statistics.csv"
+)
 all_indiv_stat_csv = expand(
     os.path.join(
         config['output_dir'],
@@ -17,11 +14,10 @@ all_indiv_stat_csv = expand(
         "statistics",
         "{region}",
         "{sample}",
-        "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+        "combined_storm_statistics_{region}_{sample}.csv",
     ),
     region=REGIONS,
     sample=SAMPLES,
-    thrval=THRESHOLDS
 )
 
 
@@ -45,7 +41,6 @@ def aggregate_input(wildcards):
             "{region}",
             "{sample}",
             "storm_{nh}",
-            "{thrval}",
             "storm_r{region}_s{sample}_n{nh}.txt",
         ),
         nh=glob_wildcards(
@@ -53,7 +48,6 @@ def aggregate_input(wildcards):
         ).nh,
         region=wildcards.region,
         sample=wildcards.sample,
-        thrval=wildcards.thrval
     )
     return ret
 
@@ -69,7 +63,7 @@ rule merge_overview_indiv_stats:
             "statistics",
             "{region}",
             "{sample}",
-            "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+            "combined_storm_statistics_{region}_{sample}.csv",
         ),
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_overview_individual.py")
@@ -81,7 +75,5 @@ rule merge_overview_all_stats:
         all_indiv_stat_csv,
     output:
         stat_csv,
-    params:
-        thresholds=THRESHOLDS
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_overview.py")

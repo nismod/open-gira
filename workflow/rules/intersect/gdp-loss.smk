@@ -2,6 +2,9 @@
 
 """
 
+assert config['central_threshold'] >= config['minimum_threshold']
+assert config['central_threshold'] <= config['maximum_threshold']
+THRESHOLDS = [config['central_threshold'], config['minimum_threshold'], config['maximum_threshold']]
 
 rule intersect_damages:
     input:
@@ -32,7 +35,7 @@ rule intersect_damages:
             "{region}_{sample}_completed.txt",
         ),
     output:
-        os.path.join(
+        [os.path.join(
             config['output_dir'],
             "power_intersection",
             "storm_data",
@@ -40,13 +43,18 @@ rule intersect_damages:
             "{region}",
             "{sample}",
             "storm_{nh}",
-            "storm_r{region}_s{sample}_n{nh}.txt",
-        ),
+            f"{thrval}",
+            "storm_r{region}_s{sample}_n{nh}.txt") for thrval in THRESHOLDS]
     params:
         region="{region}",
         sample="{sample}",
         nh="{nh}",
         output_dir = config['output_dir'],
-        reconstruction_cost = config['reconstruction_cost']
+        reconstruction_cost_lowmedium = config['reconstruction_cost_lowmedium'],
+        reconstruction_cost_high = config['reconstruction_cost_high'],
+        central_threshold = config['central_threshold'],
+        minimum_threshold = config['minimum_threshold'],
+        maximum_threshold = config['maximum_threshold'],
+        all_boxes = all_boxes
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

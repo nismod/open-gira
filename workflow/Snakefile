@@ -76,6 +76,8 @@ include: "rules/analyse/country_pair_matrix.smk"
 include: "rules/analyse/empirical_distribution.smk"
 include: "rules/analyse/target_analysis.smk"
 include: "rules/analyse/aggregate_levels.smk"
+include: "rules/analyse/transmission_aggregate.smk"
+include: "rules/analyse/extract_percentile.smk"
 include: "rules/power_analyse_all.smk"
 
 include: "rules/download_dataset.smk"

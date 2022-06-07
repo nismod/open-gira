@@ -155,7 +155,7 @@ if __name__ == "__main__":
     # timer(start)
 
     # print("processing edges GeoData")
-    edges = edges[["id", "source_id", "box_id", "type", "geometry"]]
+    edges = edges[["id", "source_id", "box_id", "type", "geometry", "source"]]
     # timer(start)
 
     # Process network
