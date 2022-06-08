@@ -1,0 +1,14 @@
+# to install this environment:
+# conda env create -f environment.yml
+name: open-gira
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pip:  # delegate to pip for majority of packages
+    - -r requirements.txt
+  - jupyter             # notebook support
+  - nb_conda_kernels    # notebook support
+  - ipykernel           # notebook support
