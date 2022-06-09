@@ -25,10 +25,10 @@ all_box_geoms = expand(
     box_id=all_boxes,
 )
 
-print('!!!!!!! UNCOMMENT INPUT !!!!!!!!!!!!!!!!!!!!!!!!! REPORT THIS IF THIS MESSAGE IS STILL VISIBLE !!')
+
 rule world_splitter:
-    # input:
-    #     os.path.join(config['output_dir'], "input", "adminboundaries", "gadm36_levels.gpkg"),
+    input:
+        os.path.join(config['output_dir'], "input", "adminboundaries", "gadm36_levels.gpkg"),
     output:
         all_box_geoms,
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),

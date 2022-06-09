@@ -111,8 +111,7 @@ def sm(string_input):
 
 def ae(string_input):
     """Returns anually expected key for string_input"""
-    raise NotImplementedError("Anually expected calculations not implemented")
-    #return string_input+"_anually-expected"
+    return string_input+"_anually-expected"
 
 def check_srn(region_eval, sample_eval, nh_eval):
     """Performs some checks and fixes"""

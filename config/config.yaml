@@ -67,7 +67,7 @@ wind_rerun: False
 
 # Analysis #
 # Percentage of storms to select for geospatial analysis and visualisation. Set to 100 for all
-top_select: 99
+top_select: 100
 
 # Set increasing severity for top_select. True means top_select is the first top_select% of storms in increasing severity (i.e. first one is the least damaging storm). False means the top top_select% worst storms are analysed (i.e. first on is the most damaging storm)
 increased_severity_sort: True

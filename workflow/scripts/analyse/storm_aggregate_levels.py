@@ -31,8 +31,8 @@ metrics_target_nof = metrics_target.copy()
 metrics_target_nof.remove('f_value')
 metrics_target_avg = [avg(metric) for metric in metrics_target]
 metrics_target_sum = [sm(metric) for metric in metrics_target_nof]  # f_value does not make sense for sum
-#metrics_target_ae = [ae(metric) for metric in metrics_target_nof]  # f_value does not make sense for ae
-metric_keys = metrics_target_sum+metrics_target_avg#+metrics_target_ae
+metrics_target_ae = [ae(metric) for metric in metrics_target_nof]  # f_value does not make sense for ae
+metric_keys = metrics_target_sum+metrics_target_avg+metrics_target_ae
 
 
 
@@ -91,7 +91,7 @@ for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), de
             else:
                 map_dict[geom_area.code][sm(metric)] = overlap_quantile[sm(metric)].sum()
                 map_dict[geom_area.code][avg(metric)] = overlap_quantile[avg(metric)].mean()
-                #map_dict[geom_area.code][ae(metric)] = overlap_quantile[ae(metric)].sum()
+                map_dict[geom_area.code][ae(metric)] = overlap_quantile[ae(metric)].sum()
 
         quantile_file = quantile_file[~quantile_file['index'].isin(remove_id)]  # remove classified targets
 

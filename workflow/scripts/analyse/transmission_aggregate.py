@@ -43,6 +43,18 @@ with open(boxes_county_file, 'r') as src:
 
 
 transmission_paths, storm_tot, years_tot = find_storm_files('edges', output_dir, region_eval, sample_eval, nh_eval, thrval)
+return_periods_count = np.arange(1, years_tot+1, 1)
+return_periods_ = years_tot/return_periods_count
+return_periods = return_periods_[::-1]
+
+
+stat_path = os.path.join(output_dir, 'power_output', 'statistics')
+csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
+stats = pd.read_csv(csv_path, keep_default_na=False)
+storms_increasing_severity = stats.sort_values('reconstruction cost', ascending=True)['Storm ID']
+storm_id_metrics_weighting = dict(zip(storms_increasing_severity, return_periods))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
+
+
 
 folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
 if not os.path.exists(folder_agg):
@@ -66,19 +78,23 @@ else:
     transmission_dict = dict()
     transmission_lst = []
     for ii, transmission_path in tqdm(enumerate(transmission_paths), desc='Iterating transmission lines', total=len(transmission_paths)):
+
+        storm = os.path.basename(transmission_path).split('_n')[-1][:-5]  # extract storm
+
         transmission = gpd.read_file(transmission_path)[['link', 'geometry','box_id', 'reconstruction_cost']]
         countries_relevant = countries_relevant.union(set().union(*[set(boxes_country[box]) for box in transmission.box_id.unique()]))  # update relevant countires
         for transmission_indiv_link in set(transmission.link):
             if transmission_indiv_link in transmission_dict.keys():
                 transmission_dict[transmission_indiv_link][0] += 1
 
-        new_dict = {transmission_indiv.link: [1, transmission_indiv.geometry,  transmission_indiv.reconstruction_cost] for transmission_indiv in transmission.itertuples() if transmission_indiv.link not in transmission_dict.keys()}
+        weighting_factor = 1/storm_id_metrics_weighting[storm]  # return period weighting factor for annual expected
+        new_dict = {transmission_indiv.link: [1, transmission_indiv.geometry,  transmission_indiv.reconstruction_cost, weighting_factor*transmission_indiv.reconstruction_cost] for transmission_indiv in transmission.itertuples() if transmission_indiv.link not in transmission_dict.keys()}
         transmission_dict.update(new_dict)
 
     max_val = max([x[0] for x in transmission_dict.values()])
     print('Max value: ', max_val)
 
-    transmission_master = gpd.GeoDataFrame({'link': transmission_dict.keys(), 'count_damage':[x[0] for x in transmission_dict.values()], 'geometry':[x[1] for x in transmission_dict.values()], 'reconstruction_cost':[x[2] for x in transmission_dict.values()]})
+    transmission_master = gpd.GeoDataFrame({'link': transmission_dict.keys(), 'count_damage':[x[0] for x in transmission_dict.values()], 'geometry':[x[1] for x in transmission_dict.values()], 'reconstruction_cost':[x[2] for x in transmission_dict.values()], 'reconstruction_cost_annual_expected':[x[3] for x in transmission_dict.values()]})
 
 
 
@@ -111,7 +127,7 @@ else:
 
 
     map_dict = {}
-    print(len(transmission_master))
+    map_dict_ae = {}  # annual expected
 
     for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), desc='geom_intersect'):
 
@@ -131,14 +147,16 @@ else:
                 #if 'reconstruction_cost' not in overlap_tranmission.columns.values:
                 if geom_area.code not in map_dict.keys() and 'reconstruction_cost' in overlap_tranmission.columns.values:
                     map_dict[geom_area.code] = overlap_tranmission.reconstruction_cost.sum()
+                    map_dict_ae[geom_area.code] = overlap_tranmission.reconstruction_cost_annual_expected.sum()
                 else:
                     map_dict[geom_area.code] = map_dict[geom_area.code] + overlap_tranmission.reconstruction_cost.sum()
+                    map_dict_ae[geom_area.code] = map_dict_ae[geom_area.code] + overlap_tranmission.reconstruction_cost_annual_expected.sum()
 
                 transmission_master = transmission_master[~transmission_master.link.isin(overlap_tranmission.link)]  # remove from code_geoms_gpd_transmission_master
 
     code_geoms_gpd['reconstruction_cost_sum'] = code_geoms_gpd['code'].map(map_dict).fillna(0)
     code_geoms_gpd['reconstruction_cost_avg'] = code_geoms_gpd['reconstruction_cost_sum']/storm_tot  # average over all hitting storms
-    #code_geoms_gpd['reconstruction_cost_annual-expected'] = code_geoms_gpd['reconstruction_cost_sum']/years_tot
+    code_geoms_gpd['reconstruction_cost_annual_expected'] = code_geoms_gpd['code'].map(map_dict_ae).fillna(0)
 
     code_geoms_gpd.to_file(recon_path, driver='GPKG')
     print('written to file')

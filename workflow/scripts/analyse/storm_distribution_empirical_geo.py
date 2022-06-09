@@ -12,6 +12,7 @@ Outputs gpkg file with metrics as target features (option to select top_select %
 import os
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 import geopandas as gpd
 
 from common_functions import find_storm_files, avg, sm, ae, check_srn
@@ -57,8 +58,6 @@ stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
 stats = pd.read_csv(csv_path, keep_default_na=False)
 
-
-
 target_paths, storm_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, thrval)
 if len(target_paths) == 0:
     raise RuntimeError("No targets could be found. Shutting down process.")
@@ -74,12 +73,18 @@ if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
 
 
+# return period
+x_count = np.arange(1, years_tot+1, 1)
+x_ = years_tot/x_count
+x = x_[::-1]
+
 metric_sortby = {'population_without_power':'population with no power (f=0)', 'effective_population':'effective population affected', 'affected_population':'population affected', 'mw_loss_storm': 'GDP losses', 'f_value': 'GDP losses', 'gdp_damage': 'GDP losses'}  # dict: sort the stats file for this metric key by its value
 assert all([metric_key in metric_sortby.keys() for metric_key in metrics_target])==True  # check all keys available
 metrics_target_avg = [avg(metric) for metric in metrics_target]
 metrics_target_sum = [sm(metric) for metric in metrics_target]
 metric_keys = metrics_target_sum+metrics_target_avg
 metric_dict = dict(zip(metric_keys, [[]]*2*len(metrics_target)))
+metrics_target_w_ae = metrics_target + [ae(metric) for metric in metrics_target]  # add annually expected
 
 
 top_select_frac = int((top_select/100)*storm_tot)  # fraction
@@ -89,8 +94,11 @@ else:
     text_extra = "from most to least damage (i.e. the top 'worst' storms)"
 print(f"Total {storm_tot}, stats on {len(stats)} and examining {top_select_frac} {text_extra}. Length targets is {len(target_paths)}")
 storm_id_metrics = {}  # dictionary {metric1: {stormids_top_quantile_for metric1...}, metric2: {stormids_top_quantile_for metric2...}, ... }
+storm_id_metrics_weighting = {}  # dictionary for weighting {metric1: {stormid1: weighting1, stormid2: weighting2, ...}, metric2: ... }. This is later used for expected annual
 for metric in metrics_target:
     storm_id_metrics[metric] = set(stats.sort_values(metric_sortby[metric], ascending=increased_severity_sort)['Storm ID'][:top_select_frac])  # saves a set of the top selected quantile (sorted appropriately)
+    storms_increasing_severity = stats.sort_values(metric_sortby[metric], ascending=True)['Storm ID'][:top_select_frac]
+    storm_id_metrics_weighting[metric] = dict(zip(storms_increasing_severity, x))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
 
 
 
@@ -99,7 +107,8 @@ metric_data = {}  # wil include sums and averages of above
 
 # FILTER TARGET PATHS FOR STORM
 
-for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', total=len(target_paths)):
+metric_list_order = dict(zip(metrics_target, [[]]*len(metrics_target)))  # dictionary {metric1: [stormA, stormB, ...], metric2: ... }  order of which storms analysed for that metric.
+for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets', total=len(target_paths)):
     storm = os.path.basename(target_path).split('_n')[-1][:-5]  # extract storm
     #print(storm)
     targets = gpd.read_file(target_path, dtype={'population':float, 'gdp_damage': float,'mw_loss_storm': float})#[['population', 'population_density_at_centroid', 'gdp', 'id', 'f_value', 'mw_loss_storm', 'gdp_damage', 'geometry']]
@@ -115,7 +124,7 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
     targets['f_value'] = 1 - targets['f_value'].astype(float)  # rescale f_rescale = 1 - f (this means that the storms with no damages (ie do not have gpkg files) have f = 0 and so, later the average (which of course has to include ALL storms) is correct. After averages are taken, it is rescaled back 1 - f_rescale
     for target_indiv in targets.itertuples():
         if target_indiv.id not in metric_data.keys():
-            metric_data_new = dict(zip(metrics_target, [[]]*len(metrics_target)))  # empty (sub)dict with metrics as keys
+            metric_data_new = dict(zip(metrics_target_w_ae, [[]]*len(metrics_target_w_ae)))  # empty (sub)dict with metrics as keys
             # metric_data_new['geometry'] = target_indiv.geometry
             # metric_data_new['country'] = target_indiv.country
             metric_data_base[target_indiv.id] = metric_data_new
@@ -125,9 +134,12 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
         for ii, metric in enumerate(metrics_target):  # add the metric data
             if storm in storm_id_metrics[metric]:  # only if in top selected quantile (sorted by metric)
 
-                metric_data_base[target_indiv.id][metric] = metric_data_base[target_indiv.id][metric] + [getattr(target_indiv, metric)]
+                metric_value = getattr(target_indiv, metric)
+                weighting_factor = 1/storm_id_metrics_weighting[metric][storm]
+                metric_data_base[target_indiv.id][metric] = metric_data_base[target_indiv.id][metric] + [metric_value]
+                metric_data_base[target_indiv.id][ae(metric)] = metric_data_base[target_indiv.id][ae(metric)] + [weighting_factor*metric_value]  # adding the factor here is equivalent to later summing and then including the factor (commutative)
 
-
+# TODO here i have to keep track of which storm which target to sum weighted, use dict keys are targets and weights are values maybe?
 for target_key in metric_data.keys():  # for each target.id
     for metric in metrics_target:  # for each metric
         if 'f_value' in metric:
@@ -138,7 +150,8 @@ for target_key in metric_data.keys():  # for each target.id
             metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
             metric_sum = sum(metric_data_base[target_key][metric])
             metric_data[target_key][sm(metric)] = metric_sum  # find sum
-            #metric_data[target_key][ae(metric)] = metric_sum / years_tot  # annually expected
+
+            metric_data[target_key][ae(metric)] = sum(metric_data_base[target_key][ae(metric)])  # annually expected, factor included already
 
 
 targets_combined = gpd.GeoDataFrame(metric_data).T  # include transpose due to list
