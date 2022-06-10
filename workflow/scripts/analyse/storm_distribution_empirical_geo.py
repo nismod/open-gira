@@ -74,8 +74,8 @@ if not os.path.exists(stat_path_empirical):
 
 
 # return period
-x_count = np.arange(1, years_tot+1, 1)
-x_ = years_tot/x_count
+x_count = np.arange(1, storm_tot+1, 1)
+x_ = storm_tot/x_count
 x = x_[::-1]
 
 metric_sortby = {'population_without_power':'population with no power (f=0)', 'effective_population':'effective population affected', 'affected_population':'population affected', 'mw_loss_storm': 'GDP losses', 'f_value': 'GDP losses', 'gdp_damage': 'GDP losses'}  # dict: sort the stats file for this metric key by its value
@@ -129,7 +129,7 @@ for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets
             # metric_data_new['country'] = target_indiv.country
             metric_data_base[target_indiv.id] = metric_data_new
 
-            metric_data[target_indiv.id] = dict({'geometry':target_indiv.geometry, 'country': target_indiv.country})  # set up for later
+            metric_data[target_indiv.id] = dict({'geometry':target_indiv.geometry, 'country': target_indiv.country, 'population': target_indiv.population})  # set up for later
 
         for ii, metric in enumerate(metrics_target):  # add the metric data
             if storm in storm_id_metrics[metric]:  # only if in top selected quantile (sorted by metric)

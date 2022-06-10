@@ -18,6 +18,9 @@ try:
     wind_rerun = snakemake.params["wind_rerun"]
     output_dir = snakemake.params['output_dir']
     minimum_threshold = snakemake.params['minimum_threshold']
+    wind_file_start = snakemake.params['wind_file_start']
+    wind_file_end = snakemake.params['wind_file_end']
+    storm_model_type = snakemake.params['storm_model_type']
 except:
     raise RuntimeError("Snakemake parameters not found")
 
@@ -101,7 +104,8 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
-    "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    #"STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)
 TC.columns = [
@@ -351,6 +355,6 @@ for nh_lst in tqdm(
 with open(
     os.path.join(all_winds_path, f"{region}_{sample}_completed.txt"), "w"
 ) as file:  # add dummy
-    file.writelines(f"Delete this file to rerun all {region}/{sample} winds")
+    file.writelines(f"Winds generated using {storm_model_type} model")
 
 print(f"Total time {round((time.time()-start)/60,3)}")

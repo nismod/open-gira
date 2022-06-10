@@ -23,13 +23,7 @@ checkpoint intersect_winds_indiv:
         os.path.join(
             config['output_dir'], "input", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
         ),
-        os.path.join(
-            config['output_dir'],
-            "input",
-            "stormtracks",
-            "events",
-            "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
-        ),
+        out_events
     params:
         region="{region}",
         sample="{sample}",
@@ -38,6 +32,9 @@ checkpoint intersect_winds_indiv:
         wind_rerun=wind_rerun_bool,
         output_dir = config['output_dir'],
         minimum_threshold = config['minimum_threshold'],
+        storm_model_type = config['storm_model_type'],
+        wind_file_start = wind_file_start,
+        wind_file_end = wind_file_end
     output:
         directory(
             os.path.join(

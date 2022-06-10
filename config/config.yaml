@@ -26,6 +26,9 @@ exposure_threshold: 0.5
 
 
 ## STORM Power Network Analysis ##
+# Storm model type. Options: constant (no climate effects), CMCC-CM2-VHR4, CNRM-CM6-1-HR, EC-Earth3P-HR, HadGEM3-GC31-HM.
+storm_model_type: constant
+
 # Failure threshold central value m/s. This value is the threshold at which the network assets are expected to fail based on available literature. The recommended setting is 40 m/s
 central_threshold: 25
 

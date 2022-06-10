@@ -33,22 +33,6 @@ except:  # for testing only
 
 
 
-## Inputs ##
-
-
-region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
-
-
-stat_path = os.path.join(output_dir, 'power_output', 'statistics')
-
-stat_path_empirical = os.path.join(stat_path, 'empirical')
-if not os.path.exists(stat_path_empirical):
-    os.makedirs(stat_path_empirical)
-
-
-
-_, rp_max, _ = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, 20)  # maximum return period (tot number of years)
-
 def stat_file(thrval):
     """Returns pandas stat file for thrval value"""
     csv_path = os.path.join(stat_path, f'combined_storm_statistics_{thrval}.csv')
@@ -73,6 +57,27 @@ def extme(y, len_reach):
         else:
             y = zero_extend
     return y
+
+
+
+## Inputs ##
+
+
+region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
+
+
+stat_path = os.path.join(output_dir, 'power_output', 'statistics')
+
+stat_path_empirical = os.path.join(stat_path, 'empirical')
+if not os.path.exists(stat_path_empirical):
+    os.makedirs(stat_path_empirical)
+
+stat_path_empirical_data = os.path.join(stat_path_empirical, 'empirical_plotting_data')
+if not os.path.exists(stat_path_empirical_data):
+    os.makedirs(stat_path_empirical_data)
+
+
+_, rp_max, _ = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, central_threshold)  # maximum return period (tot number of years)
 
 
 def y_extend(y1, y2, y3):
@@ -102,9 +107,9 @@ for ii, metric in enumerate(metrics):
     x = x[::-1]  # correct order
 
 
-    plt.fill_between(x, y_min, y_max, color='b', alpha=0.5)
-    plt.plot(x, y_min, label=f'Minimum wind threshold ({minimum_threshold}m/s)')  # plot interpolated line
-    plt.plot(x, y_max, label=f'Maximum wind threshold ({maximum_threshold}m/s)')  # plot interpolated line
+    plt.fill_between(x, y_min, y_max, color=((138/256,171/256, 1)), alpha=0.2)
+    plt.plot(x, y_min, color='b', linestyle=':', label=f'Minimum wind threshold ({minimum_threshold}m/s)')  # plot interpolated line
+    plt.plot(x, y_max, color='b', linestyle='--', label=f'Maximum wind threshold ({maximum_threshold}m/s)')  # plot interpolated line
     plt.plot(x, y_cen, color='r', label=f'Central wind threshold ({central_threshold}m/s)')  # plot interpolated line
     plt.scatter(x, y_cen, s=2, color='r')  # plot data points
 
@@ -118,6 +123,10 @@ for ii, metric in enumerate(metrics):
     plt.legend()
     plt.show()
     plt.savefig(os.path.join(stat_path_empirical, f'empirical_{metric}.png'))
+
+    # save data (in case of replot)
+    data_save = pd.DataFrame({'x':x, 'y_min': y_min, 'y_max': y_max, 'y_cen': y_cen})
+    data_save.to_csv(os.path.join(stat_path_empirical_data, f"empirical_{metric}_plotting_data.csv"), index=False)
 
 print("Plotted all empirical")
 #  plt.close('all')

@@ -814,10 +814,8 @@ if len(TC) != 0:
     TC_nh["lon"] = TC_nh["lon"].apply(lambda x: x if x <= 180 else x - 360)
 
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
-    if len(coords) == 1:
-        coords = 2*coords  # to force Linestring
 
-    if len(coords) != 0:
+    if len(coords) >= 2:
         storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})  # stormtrack as a line
         storm_track.to_file(
             os.path.join(storm_path, f"storm_track_r{region}_s{sample}_n{nh}.gpkg"),

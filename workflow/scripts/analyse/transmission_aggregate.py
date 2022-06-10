@@ -43,7 +43,7 @@ with open(boxes_county_file, 'r') as src:
 
 
 transmission_paths, storm_tot, years_tot = find_storm_files('edges', output_dir, region_eval, sample_eval, nh_eval, thrval)
-return_periods_count = np.arange(1, years_tot+1, 1)
+return_periods_count = np.arange(1, storm_tot+1, 1)
 return_periods_ = years_tot/return_periods_count
 return_periods = return_periods_[::-1]
 

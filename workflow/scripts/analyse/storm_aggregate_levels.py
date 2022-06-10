@@ -93,6 +93,10 @@ for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), de
                 map_dict[geom_area.code][avg(metric)] = overlap_quantile[avg(metric)].mean()
                 map_dict[geom_area.code][ae(metric)] = overlap_quantile[ae(metric)].sum()
 
+                if 'population' in metric:
+                    map_dict[geom_area.code][f"{metric}_annually-expected_region_fraction"] = overlap_quantile[ae(metric)].sum()/overlap_quantile.population.sum()  # fraction of total target populations in the quantile file overlap (ie all targets in the geometry area)
+
+
         quantile_file = quantile_file[~quantile_file['index'].isin(remove_id)]  # remove classified targets
 
 

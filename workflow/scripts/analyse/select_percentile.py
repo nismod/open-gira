@@ -7,15 +7,6 @@ import numpy as np
 import pandas as pd
 from distutils.dir_util import copy_tree
 from common_functions import find_storm_files, check_srn
-"""Selects the percentile storm as specified in the config file and copies into power_output/statistics/percentile/
-
-"""
-
-import os
-import numpy as np
-import pandas as pd
-from distutils.dir_util import copy_tree
-from common_functions import find_storm_files, check_srn
 
 
 
@@ -58,8 +49,8 @@ rp_percentile = 1/((100-percentile)/100)  # calculate the return period value
 
 metrics_none = True  # set to False when a metric is covering a damage storm with the specified percentile
 for metric in metrics_target:
-    x_count = np.arange(1, years_tot+1, 1)
-    x_ = years_tot/x_count
+    x_count = np.arange(1, storm_tot+1, 1)
+    x_ = storm_tot/x_count
     x = x_[::-1]
 
     idx = len(x[x>=rp_percentile])  # find index
