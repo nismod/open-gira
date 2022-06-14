@@ -21,6 +21,7 @@ numpy==1.22.0  # AttributeError with numpy<1.19 and pandas
 pandas
 pyarrow==6.0.0
 netCDF4
+openpyxl
 
 # graphing
 networkx
