@@ -84,6 +84,7 @@ include: "rules/convert_to_geoparquet.smk"
 include: "rules/intersection.smk"
 include: "rules/join_data.smk"
 include: "rules/make_exposure_tif.smk"
+include: "rules/clean_and_annotate_road_network.smk"
 
 ##### target rules #####
 
