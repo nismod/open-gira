@@ -663,7 +663,7 @@ if __name__ == '__main__':
         output_path = snakemake.output[0]
         administrative_data_path = snakemake.config["administrative_boundaries_data_path"]
         road_speeds_path = snakemake.config["road_speeds_path"]
-        rehabiliation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
+        rehabilitation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
         transport_costs_path = snakemake.config["transport_costs_path"]
         default_shoulder_width_metres = snakemake.config["road_default_shoulder_width_metres"]
         default_lane_width_metres = snakemake.config["road_default_lane_width_metres"]
@@ -671,12 +671,23 @@ if __name__ == '__main__':
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        osm_geoparquet_path, output_path, administrative_road_path, road_speeds_path, rehabilitation_costs_path, \
+        osm_geoparquet_path, output_path, administrative_data_path, road_speeds_path, rehabilitation_costs_path, \
             transport_costs_path, default_shoulder_width_metres, default_lane_width_metres, \
             flow_cost_time_factor = sys.argv[1:]
-        # TODO: comments for likely args when running from command line, e.g.
-        # osm_geoparquet_path = '../../results/?'
-        # output_path = '../../results/?'
+        # osm_geoparquet_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
+        # output_path = ../../results/tanzania-latest_filter-highway-core.gpkg
+        # administrative_data_path = ../../local_data/gadm36_levels_continents.gpkg
+        # road_speeds_path = ../../local_data/global_road_speeds.xlsx
+        # rehabilitation_costs_path = ../../local_data/rehabilitation_costs.xlsx
+        # transport_costs_path = ../../local_data/transport_costs.csv
+        # default_shoulder_width_metres = 1.5
+        # default_lane_width_metres = 6.5
+        # flow_cost_time_factor = 0.49
+
+    # cast script arguments to numeric types where necessary
+    default_shoulder_width_metres = float(default_shoulder_width_metres)
+    default_lane_width_metres = float(default_lane_width_metres)
+    flow_cost_time_factor = float(flow_cost_time_factor)
 
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
     logging.info("Creating network from geoparquet and annotating with cost and administrative data")
