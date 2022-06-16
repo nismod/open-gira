@@ -7,7 +7,7 @@ The climate-changing synthetic cyclone storm data is retrieved from https://data
  - CNRM-CM6-1-HR
  - EC-Earth3P-HR
  - HAdGEM3-GC31-HM
- - 
+
 For more details on these models see "Impact of Model Resolution on Tropical Cyclone Simulation Using the HighResMIP–PRIMAVERA Multimodel Ensemble, Journal of Climate" by M. J., Camp et al. from 2020.
 
 The model choice is specified in the config file.
