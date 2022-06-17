@@ -10,24 +10,33 @@ hazard_datasets:
 
 # OSM dataset #
 infrastructure_datasets:
+  africa-latest: 'http://download.geofabrik.de/africa-latest.osm.pbf'
+  egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
-#  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 1
+
+# road, rail, etc.
+transport_type: 'road'
+
 # Osmium tags to retain in the geoparquet files
 # these must be specified as a single string, with each tag comma seperated e.g. 'highway, surface'
 keep_tags: 'highway, surface, bridge, maxspeed, lanes'
 # Filters definition: only keep objects with highway tags from the following set
-osmium_tags_filters_file: "config/highway-core.txt"
+osmium_tags_filters_file: "config/highway-secondary.txt"
+# CRS OSM uses
+osm_epsg: 4326
 
+# road network specific configuration
 # location of input data for annotating road networks
 road_default_shoulder_width_metres: 1.5
 road_default_lane_width_metres: 6.5
 road_flow_cost_time_factor: 0.49
-# if the following data can be sourced online, remove these config entries and download instead
+# if the following data can be sourced/hosted online, remove these config entries and download instead
 administrative_boundaries_data_path: 'local_data/gadm36_levels_continents.gpkg'
 road_speeds_path: 'local_data/global_road_speeds.xlsx'
 road_rehabilitation_costs_path: 'local_data/rehabilitation_costs.xlsx'
