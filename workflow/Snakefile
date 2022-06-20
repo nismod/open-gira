@@ -87,6 +87,7 @@ include: "rules/make_exposure_tif.smk"
 
 include: "rules/create_transport_network.smk"
 include: "rules/annotate_road_network.smk"
+include: "rules/join_network.smk"
 
 ##### target rules #####
 
