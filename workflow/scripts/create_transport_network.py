@@ -8,8 +8,6 @@ from typing import Any, Callable
 import warnings
 
 import geopandas as gpd
-import tqdm
-tqdm.tqdm.pandas()
 
 import snkit
 
@@ -209,15 +207,17 @@ def create_network(
 if __name__ == '__main__':
     try:
         osm_geoparquet_path = snakemake.input[0]
-        output_path = snakemake.output[0]
+        nodes_output_path = snakemake.output[0]
+        edges_output_path = snakemake.output[1]
         network_type = snakemake.config["transport_type"]  # used to label edge IDs and index transport tariffs
         osm_epsg = snakemake.config["osm_epsg"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        osm_geoparquet_path, output_path, transport_type, osm_epsg = sys.argv[1:]
+        osm_geoparquet_path, nodes_output_path, edges_output_path, transport_type, osm_epsg = sys.argv[1:]
         # osm_geoparquet_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
-        # output_path = ../../results/geopackage/tanzania-latest_filter-highway-core_road_network.gpkg
+        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
+        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
         # transport_type = road
         # osm_epsg = 4326
 
@@ -240,7 +240,7 @@ if __name__ == '__main__':
     network.nodes.set_crs(epsg=osm_epsg, inplace=True)
 
     logging.info('Writing network to disk')
-    network.edges.to_file(output_path, driver='GPKG', layer='edges')
-    network.nodes.to_file(output_path, driver='GPKG', layer='nodes')
+    network.edges.to_parquet(edges_output_path)
+    network.nodes.to_parquet(nodes_output_path)
 
     logging.info('Done creating network')

@@ -5,6 +5,7 @@
 import logging
 import sys
 from typing import Tuple
+import warnings
 
 import geopandas as gpd
 import pandas as pd
@@ -469,8 +470,10 @@ def annotate_tariff_flow_costs(
 
 if __name__ == '__main__':
     try:
-        network_path = snakemake.input[0]
-        output_path = snakemake.output[0]
+        nodes_path = snakemake.input[0]
+        edges_path = snakemake.input[1]
+        output_nodes_path = snakemake.output[0]
+        output_edges_path = snakemake.output[1]
         administrative_data_path = snakemake.config["administrative_boundaries_data_path"]
         road_speeds_path = snakemake.config["road_speeds_path"]
         rehabilitation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
@@ -482,11 +485,14 @@ if __name__ == '__main__':
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        network_path, output_path, administrative_data_path, road_speeds_path, rehabilitation_costs_path, \
-            transport_costs_path, default_shoulder_width_metres, default_lane_width_metres, \
-            flow_cost_time_factor, osm_epsg = sys.argv[1:]
-        # network_path = ../../results/geopackage/tanzania-latest_filter-highway-core/slice-0_road_network.gpkg
-        # output_path = ../../results/geopackage/tanzania-latest_filter-highway-core/slice-0_road_network_annotated.gpkg
+        nodes_path, edges_path, output_nodes_path, output_edges_path, administrative_data_path, \
+            road_speeds_path, rehabilitation_costs_path, transport_costs_path, \
+            default_shoulder_width_metres, default_lane_width_metres, flow_cost_time_factor, \
+            osm_epsg = sys.argv[1:]
+        # nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
+        # edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # output_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes_annotated.geoparquet
+        # output_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges_annotated.geoparquet
         # administrative_data_path = ../../local_data/gadm36_levels_continents.gpkg
         # road_speeds_path = ../../local_data/global_road_speeds.xlsx
         # rehabilitation_costs_path = ../../local_data/rehabilitation_costs.xlsx
@@ -506,8 +512,8 @@ if __name__ == '__main__':
 
     logging.info('Reading network from disk')
     annotated_network = snkit.network.Network(
-        edges=gpd.read_file(network_path, layer='edges'),
-        nodes=gpd.read_file(network_path, layer='nodes'),
+        edges=gpd.read_parquet(edges_path),
+        nodes=gpd.read_parquet(nodes_path),
     )
     logging.info(
         f'Network contains {len(annotated_network.edges)} edges and {len(annotated_network.nodes)} nodes'
@@ -548,7 +554,8 @@ if __name__ == '__main__':
     )
 
     logging.info('Writing network to disk')
-    annotated_network.edges.to_file(output_path, driver='GPKG', layer='edges')
-    annotated_network.nodes.to_file(output_path, driver='GPKG', layer='nodes')
+    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
+    annotated_network.edges.to_parquet(output_edges_path)
+    annotated_network.nodes.to_parquet(output_nodes_path)
 
     logging.info('Done annotating network with flow and rehabilitation data')
