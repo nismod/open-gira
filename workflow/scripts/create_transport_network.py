@@ -87,21 +87,6 @@ def clean_OSM_ways(ways: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     if not necessary_columns.issubset(set(ways.columns.values)):
         raise ValueError(f"{ways.columns.values} does not contain {set(ways.columns.values) - necessary_columns}")
 
-    # drop anything we don't need
-    to_drop = {
-        'way_id',
-        'segment_id',
-        'start_node_reference',
-        'start_node_longitude',
-        'start_node_latitude',
-        'start_node_degree',
-        'end_node_reference',
-        'end_node_longitude',
-        'end_node_latitude',
-        'end_node_degree',
-    }
-    ways = ways.drop(to_drop, axis='columns')
-
     # check we have only linestrings
     assert set(ways.geometry.type.values) == {'LineString'}
 
