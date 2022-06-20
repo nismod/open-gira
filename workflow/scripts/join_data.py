@@ -21,8 +21,9 @@
 # Usage: python join_data [FILE] [output]
 # Example: python join_data file1.geoparguet file2.geoparguet joined.geoparguet
 
-import sys
 import logging
+import sys
+import warnings
 
 import geopandas as gpd
 import numpy as np
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     except NameError:
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
+
+    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
 
     # When getting the input files from snakemake, there is no
     # garantee that they will always in the same order. Sort them for
