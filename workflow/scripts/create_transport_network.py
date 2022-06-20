@@ -214,8 +214,24 @@ if __name__ == '__main__':
     # NB though that .geoparquet is not the format to use for archiving.
     warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
 
+    try:
+        osm_extract = gpd.read_parquet(osm_geoparquet_path)
+    except ValueError as error:
+        # if the input parquet file does not contain a geometry column, geopandas
+        # will raise a ValueError rather than try to procede
+        logging.info(
+            f"{error}\n"
+            "writing empty files and skipping processing..."
+        )
+
+        # snakemake requires that output files exist though, so write empty ones
+        empty_gdf = gpd.GeoDataFrame([])
+        empty_gdf.to_parquet(edges_output_path)
+        empty_gdf.to_parquet(nodes_output_path)
+        sys.exit(0)  # exit gracefully so snakemake will continue
+
     network = create_network(
-        edges=clean_OSM_ways(gpd.read_parquet(osm_geoparquet_path)),
+        edges=clean_OSM_ways(osm_extract),
         nodes=None,
         node_edge_prefix=network_type
     )

@@ -22,17 +22,34 @@
 # Example: python join_data file1.geoparguet file2.geoparguet joined.geoparguet
 
 import sys
+import logging
+
 import geopandas as gpd
 import numpy as np
 import pandas
-import logging
 
 
 def append_data(base, slice_files):
     slice_files.pop()
     if len(slice_files) == 0:
         return base
-    base = base.append(gpd.read_parquet(slice_files[-1]))
+
+    try:
+        gdf = gpd.read_parquet(slice_files[-1])
+    except ValueError as error:
+        # if the input parquet file does not contain a geometry column, geopandas
+        # will raise a ValueError rather than try to procede
+        logging.info(
+            f"{error}\n"
+        )
+
+        # snakemake requires that output files exist though, so write empty ones
+        gdf = gpd.GeoDataFrame([])
+
+    # glue the dataframes together
+    # N.B. there is no geopandas concat, so use pandas and then create a new gdf
+    base = gpd.GeoDataFrame(pandas.concat([base, gdf]), crs=base.crs)
+
     return append_data(base, slice_files)
 
 
@@ -40,8 +57,9 @@ def add_custom_node_references(base):
     """
     When converting to .geoparquet we added nodes at the bounding box edges.
     These nodes have no reference. We need to make it easy to identify nodes by
-    ensuring that nodes in the same location have the same reference.
-    We'll make it easy on ourselves by giving our inserted nodes negative reference numbers.
+    ensuring that nodes in the same location have the same reference.  We'll
+    make it easy on ourselves by giving our inserted nodes negative reference
+    numbers.
     """
     # Find start nodes with no reference
     na_start_nodes = base[base.start_node_reference.isna()] \
@@ -104,7 +122,15 @@ if __name__ == "__main__":
     # reverse the order of files to keep the first file on top.
     slice_files = slice_files[::-1]
 
-    base = gpd.read_parquet(slice_files[-1])
+    try:
+        base = gpd.read_parquet(slice_files[-1])
+    except ValueError as error:
+        # if the input parquet file does not contain a geometry column, geopandas
+        # will raise a ValueError rather than try to procede
+        logging.info("base input file empty... suppressing geopandas exception")
+
+        base = gpd.GeoDataFrame([])
+
     base = append_data(base, slice_files)
     base = add_custom_node_references(base)
     base.to_parquet(output_file)

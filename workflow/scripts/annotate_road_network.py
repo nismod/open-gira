@@ -91,7 +91,7 @@ def annotate_country_continent(network: snkit.network.Network, countries: gpd.Ge
 
     # for those nodes which weren't within a country geometry, label them with the nearest country
     # use a projected CRS so sjoin_nearest can more accurately compute distances
-    # this is only valid for ~10 degrees longitude chunks?
+    # N.B. these projected UTM CRS are given for 6 degrees longitude sectors
     exterior_nodes = nodes[~nodes["node_id"].isin(interior_nodes["node_id"].values.tolist())]
     exterior_nodes = gpd.sjoin_nearest(
         exterior_nodes[["node_id", "geometry"]].to_crs(projected_crs),
@@ -511,6 +511,24 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
     logging.info('Reading network from disk')
+    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
+    try:
+        edges = gpd.read_parquet(edges_path)
+        nodes = gpd.read_parquet(nodes_path)
+    except ValueError as error:
+        # if the input parquet file does not contain a geometry column, geopandas
+        # will raise a ValueError rather than try to procede
+        logging.info(
+            f"{error}\n"
+            "writing empty files and skipping processing..."
+        )
+
+        # snakemake requires that output files exist though, so write empty ones
+        empty_gdf = gpd.GeoDataFrame([])
+        empty_gdf.to_parquet(output_edges_path)
+        empty_gdf.to_parquet(output_nodes_path)
+        sys.exit(0)  # exit gracefully so snakemake will continue
+
     annotated_network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path),
         nodes=gpd.read_parquet(nodes_path),
@@ -554,7 +572,6 @@ if __name__ == '__main__':
     )
 
     logging.info('Writing network to disk')
-    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
     annotated_network.edges.to_parquet(output_edges_path)
     annotated_network.nodes.to_parquet(output_nodes_path)
 
