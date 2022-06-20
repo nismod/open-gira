@@ -18,7 +18,7 @@ infrastructure_datasets:
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 1
+slice_count: 9
 
 # road, rail, etc.
 transport_type: 'road'
