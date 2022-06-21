@@ -17,7 +17,9 @@ pathos
 tqdm==4.62.3
 
 # data handling
-numpy==1.22.0  # AttributeError with numpy<1.19 and pandas
+# AttributeError with numpy<1.19 and pandas
+# numba requires 1.18 <= numpy <= 1.21
+numpy~=1.21.0
 pandas
 pyarrow==6.0.0
 netCDF4
@@ -29,6 +31,9 @@ networkx
 # data retrieval
 requests
 zenodo_get
+
+# plotting
+matplotlib
 
 # development
 pytest==6.2.4
