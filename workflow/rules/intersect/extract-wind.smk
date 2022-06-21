@@ -31,10 +31,12 @@ checkpoint intersect_winds_indiv:
         memory_storm_split=storm_batch_value,
         wind_rerun=wind_rerun_bool,
         output_dir = config['output_dir'],
-        minimum_threshold = config['minimum_threshold'],
         storm_model_type = config['storm_model_type'],
         wind_file_start = wind_file_start,
-        wind_file_end = wind_file_end
+        wind_file_end = wind_file_end,
+        central_threshold = config['central_threshold'],
+        minimum_threshold = config['minimum_threshold'],
+        maximum_threshold = config['maximum_threshold']
     output:
         directory(
             os.path.join(

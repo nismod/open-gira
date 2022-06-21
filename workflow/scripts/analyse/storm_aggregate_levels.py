@@ -17,14 +17,21 @@ try:
     increased_severity_sort = snakemake.params['increased_severity_sort']
     layer_num = snakemake.params['aggregate_level']
 except:  # for testing only
-    # output_dir = 'results'
-    # metrics_target = ['population_without_power', 'effective_population', 'affected_population', 'mw_loss_storm', 'f_value', 'gdp_damage']
-    # top_select = 100
-    # increased_severity_sort = True
-    # layer_num = 1
-    raise RuntimeError("Please use snakemake to define inputs")
+    output_dir = 'results'
+    metrics_target = ['population_without_power', 'effective_population', 'affected_population', 'mw_loss_storm', 'f_value', 'gdp_damage']
+    top_select = 100
+    increased_severity_sort = True
+    layer_num = 1
+    #raise RuntimeError("Please use snakemake to define inputs")
 
 increased_severity_sort_bool = str(increased_severity_sort)[0]  # either T or F
+
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
+
+#target_paths, storm_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, thrval)
 
 
 metrics_target_nof = metrics_target.copy()
@@ -94,7 +101,10 @@ for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), de
                 map_dict[geom_area.code][ae(metric)] = overlap_quantile[ae(metric)].sum()
 
                 if 'population' in metric:
-                    map_dict[geom_area.code][f"{metric}_annually-expected_region_fraction"] = overlap_quantile[ae(metric)].sum()/overlap_quantile.population.sum()  # fraction of total target populations in the quantile file overlap (ie all targets in the geometry area)
+                    new_key = f"{metric}_annually-expected_region_fraction"
+                    if new_key not in metric_keys:
+                        metric_keys.append(new_key)
+                    map_dict[geom_area.code][new_key] = overlap_quantile[ae(metric)].sum()/overlap_quantile.population.sum()  # TODO times this by storm_tot? # fraction of total target populations in the quantile file overlap (ie all targets in the geometry area)
 
 
         quantile_file = quantile_file[~quantile_file['index'].isin(remove_id)]  # remove classified targets

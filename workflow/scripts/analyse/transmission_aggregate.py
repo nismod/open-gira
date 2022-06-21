@@ -23,15 +23,18 @@ try:
     nh_eval = snakemake.params['nh_eval']
     thrval = snakemake.params['central_threshold']
 except:
-    # output_dir = 'results' #sys.argv[1]
-    # layer_num = 1
-    # region_eval = ['NA'] #["NA"]  # list of regions to analyse (write None if none specified)
-    # sample_eval = ['0'] #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-    # nh_eval = ['0_0_5']  # list of storms to analyse (write None if none specified)
-    # thrval = 25
-    raise RuntimeError("Please use snakemake to define inputs")
+    output_dir = 'results' #sys.argv[1]
+    layer_num = 1
+    region_eval = ['NA'] #["NA"]  # list of regions to analyse (write None if none specified)
+    sample_eval = ['0'] #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
+    nh_eval = ['0_2017_66']  # list of storms to analyse (write None if none specified)
+    thrval = 41
+    #raise RuntimeError("Please use snakemake to define inputs")
 
-
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
 
@@ -43,6 +46,7 @@ with open(boxes_county_file, 'r') as src:
 
 
 transmission_paths, storm_tot, years_tot = find_storm_files('edges', output_dir, region_eval, sample_eval, nh_eval, thrval)
+
 return_periods_count = np.arange(1, storm_tot+1, 1)
 return_periods_ = years_tot/return_periods_count
 return_periods = return_periods_[::-1]
@@ -54,7 +58,9 @@ stats = pd.read_csv(csv_path, keep_default_na=False)
 storms_increasing_severity = stats.sort_values('reconstruction cost', ascending=True)['Storm ID']
 storm_id_metrics_weighting = dict(zip(storms_increasing_severity, return_periods))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
 
-
+# storm_tot = len(stats)  # TODO
+# #raise RuntimeError("delete above")
+# print("THIS MESSAGE SHOULD BE GONE")
 
 folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
 if not os.path.exists(folder_agg):
@@ -121,42 +127,51 @@ else:
 
     code_geoms_gpd = code_geoms_gpd.sort_values('len', ascending=False)
 
+    pre_len = len(transmission_master)
+    transmission_master = transmission_master[~transmission_master.geometry.isna()]  # remomve null geometries
+    post_len = len(transmission_master)
+    if post_len/pre_len < 0.7 and pre_len > 50:  # small check
+        print('Possibly issue as 30%+ of transmission lines are being removed for having no geometry')
+
 
     transmission_bounds = [t.bounds for t in transmission_master.geometry]
     transmission_master['lon_min'], transmission_master['lat_min'], transmission_master['lon_max'], transmission_master['lat_max'] = zip(*transmission_bounds)
 
-
     map_dict = {}
     map_dict_ae = {}  # annual expected
+    map_dict_ll = {}  # len_lines
 
     for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), desc='geom_intersect'):
-
 
         minx, miny, maxx, maxy = geom_area.geometry.bounds
         s1 = time.time()
         transmission_master_bounded = transmission_master[(transmission_master.lon_min >= minx) & (transmission_master.lon_max <= maxx) & (transmission_master.lat_min >= miny) & (transmission_master.lat_max <= maxy)]  # only check within bounding box
 
+
+
         if len(transmission_master_bounded) >= 1:
             #bool_list = [True if t.intersects(geom_area.geometry) else False for t in tqdm(transmission_master_bounded.geometry, desc='geom bool', total=len(transmission_master_bounded))]
             bool_list = [True if t.intersects(geom_area.geometry) else False for t in transmission_master_bounded.geometry]
 
+            overlap_transmission = transmission_master_bounded[bool_list]
 
-            overlap_tranmission = transmission_master_bounded[bool_list]
+            if len(overlap_transmission) >= 1:
 
-            if len(overlap_tranmission) >= 1:
-                #if 'reconstruction_cost' not in overlap_tranmission.columns.values:
-                if geom_area.code not in map_dict.keys() and 'reconstruction_cost' in overlap_tranmission.columns.values:
-                    map_dict[geom_area.code] = overlap_tranmission.reconstruction_cost.sum()
-                    map_dict_ae[geom_area.code] = overlap_tranmission.reconstruction_cost_annual_expected.sum()
+                map_dict_ll[geom_area.code] = overlap_transmission.geometry.length.sum()  # note down degree length
+
+                if geom_area.code not in map_dict.keys() and 'reconstruction_cost' in overlap_transmission.columns.values:
+                    map_dict[geom_area.code] = sum(overlap_transmission.reconstruction_cost*overlap_transmission.count_damage)
+                    map_dict_ae[geom_area.code] = sum(overlap_transmission.reconstruction_cost_annual_expected*overlap_transmission.count_damage)
                 else:
-                    map_dict[geom_area.code] = map_dict[geom_area.code] + overlap_tranmission.reconstruction_cost.sum()
-                    map_dict_ae[geom_area.code] = map_dict_ae[geom_area.code] + overlap_tranmission.reconstruction_cost_annual_expected.sum()
+                    map_dict[geom_area.code] = map_dict[geom_area.code] + sum(overlap_transmission.reconstruction_cost*overlap_transmission.count_damage)
+                    map_dict_ae[geom_area.code] = map_dict_ae[geom_area.code] + sum(overlap_transmission.reconstruction_cost_annual_expected*overlap_transmission.count_damage)
 
-                transmission_master = transmission_master[~transmission_master.link.isin(overlap_tranmission.link)]  # remove from code_geoms_gpd_transmission_master
+                transmission_master = transmission_master[~transmission_master.link.isin(overlap_transmission.link)]  # remove from code_geoms_gpd_transmission_master
 
     code_geoms_gpd['reconstruction_cost_sum'] = code_geoms_gpd['code'].map(map_dict).fillna(0)
     code_geoms_gpd['reconstruction_cost_avg'] = code_geoms_gpd['reconstruction_cost_sum']/storm_tot  # average over all hitting storms
     code_geoms_gpd['reconstruction_cost_annual_expected'] = code_geoms_gpd['code'].map(map_dict_ae).fillna(0)
+    code_geoms_gpd['reconstruction_cost_annual_expected_fraction_normalised'] = (code_geoms_gpd['reconstruction_cost_annual_expected']/(code_geoms_gpd['code'].map(map_dict_ll))).fillna(0)  # This metric divides by the total unit length of transmission lines in that region.
 
     code_geoms_gpd.to_file(recon_path, driver='GPKG')
     print('written to file')

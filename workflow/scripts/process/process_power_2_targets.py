@@ -8,9 +8,15 @@ try:
     box_id = snakemake.params["box_id"]
     output_dir = snakemake.params['output_dir']
 except:
-    output_dir = sys.argv[1]
-    box_id = sys.argv[2]
+    # output_dir = sys.argv[1]
+    # box_id = sys.argv[2]
+    output_dir = 'results'
+    box_id = 'box_1028'
 
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 
 def combine(lsts):
@@ -128,12 +134,14 @@ def get_population(box_id, targets, exclude_countries_lst):
                 ),
             )
             #country = [code] * len(targets)
+            country_dict[code] = {ii for ii, item in enumerate(populations) if not np.ma.is_masked(item) or population_density[ii]!=None}
+
         else:  # code does not have .tif data so list of None is applied
             populations = [None] * len(targets)
             population_density = [None] * len(targets)
 
 
-        country_dict[code] = {ii for ii, item in enumerate(populations) if not np.ma.is_masked(item) or population_density[ii]!=None}
+
 
         pop_all.append(populations)
         pop_d_all.append(population_density)

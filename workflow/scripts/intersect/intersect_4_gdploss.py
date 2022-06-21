@@ -29,17 +29,18 @@ try:
     maximum_threshold = snakemake.params['maximum_threshold']
     all_boxes = snakemake.params['all_boxes']
 except:
-    #raise RuntimeError("Snakemake parameters not found") TODO
+    raise RuntimeError("Snakemake parameters not found") #  TODO
     region = 'NA'
-    sample = '1'
-    nh = '1_10_11'
+    sample = '0'
+    nh = '0_425_8'
     output_dir = 'results'
     reconstruction_cost_lowmedium = 200000
     reconstruction_cost_high = 400000
-    central_threshold = 20
-    minimum_threshold = 25
-    maximum_threshold = 30  # TODO add functionality for no min or max, just central (or not..)
+    central_threshold = 41
+    minimum_threshold = 38
+    maximum_threshold = 44  # TODO add functionality for no min or max, just central (or not..)
     all_boxes = ['box_955', 'box_956', 'box_957', 'box_884']
+    all_boxes = [f'box_{num}' for num in [809, 810, 811, 812, 880, 881, 882, 883, 884, 952, 955, 956, 957, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1097, 1098, 1099, 1103, 1104]]
 
 if 'linux' not in sys.platform:  # TODO
     import os
@@ -129,12 +130,13 @@ def network_name(box_id):
     return fname
 
 
-def component_select(box_id, node_set, network_dict):
+def component_select(box_id, node_set, network_dict, all_boxes):
     """Finds the connected component(s) in box_id which contain(s) node_set
     Input:
         box_id: str
         node_set: set of nodes which are required to be in the connected component(s)
         network_dict: dictionary of (nodes, edges) corresponding to the box_id keys (to reduce time on loading, only do once)
+        all_boxes: list of boxes outside of which not to be examined
     Output:
         nodes: dataframe of nodes connected to node_set
         edges: dataframe of edges connected to edge_set
@@ -184,7 +186,7 @@ def component_select(box_id, node_set, network_dict):
                     for v_conn in v_lst
                     if v_conn["from_id"] in comp_init.difference(node_set_in_comp_init)
                 ]
-                for k, v_lst in connectors.items()
+                for k, v_lst in connectors.items() if k in all_boxes
             }  # add the nodes (to_id) if the from_id is in the component (but not if connected to the previous box)
             node_set = node_set.difference(
                 node_set_in_comp_init
@@ -262,6 +264,7 @@ def combine_networks(
 
     conn_dict = {k: v for k, v in conn_dict.items() if k in all_boxes}  # filter
 
+
     conn_set = set().union(
         *conn_dict.values()
     )  # conn set will contain a set of links which have to be explored
@@ -279,6 +282,7 @@ def combine_networks(
             to_examine
         )  # pick one from to_examine (which is irrelevant)
 
+        #print(f'examining {box_id_examine}')
         if (
             box_id_examine not in network_dict.keys()
         ):  # if not in the dictionary, then add it
@@ -290,8 +294,13 @@ def combine_networks(
         to_examine = to_examine.difference({box_id_examine})
 
         nodes_examine, edges_examine, conn_set, to_examine_newboxes = component_select(
-            box_id_examine, conn_set, network_dict
-        )  # extract the network components which connect to any node in conn_set, thenupdate conn_set to not include these are more
+            box_id_examine, conn_set, network_dict, all_boxes
+        )  # extract the network components which connect to any node in conn_set, then update conn_set to not include these are more
+        # if len(nodes_examine) > 0:
+        #     nodes_examine.to_file(os.path.join('tester', f'{count}_nodes.gpkg'), driver='GPKG')
+        # if len(edges_examine) > 0:
+        #     edges_examine.to_file(os.path.join('tester', f'{edge_damaged.id}_{count}_edges.gpkg'), driver='GPKG')
+
         nodes = nodes.append(nodes_examine)  # add
         edges = edges.append(edges_examine)  # add
         to_examine = to_examine.union(to_examine_newboxes)  # update
@@ -427,10 +436,10 @@ def direct_damage(linestring_df):   # TODO make this function non copy paste and
 
     for ii in range(len(linestring_df)):
         damage = 0
-        transmission_type = linestring_df.iloc[ii].source  # TODO check
+        transmission_type = linestring_df.iloc[ii].source
         if transmission_type == None:
             transmission_type = 'openstreetmap'
-        transmission_max_wind = linestring_df.iloc[ii].wind_location  # TODO check
+        transmission_max_wind = linestring_df.iloc[ii].wind_location
 
         if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
             line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
@@ -548,8 +557,12 @@ if not isNone(windfile):
 
     print(f"Investigating storm {nh}")
     winds_ev_filtered = applythreshold(winds_ev_all, minimum_threshold)
-    ID_affected = list(winds_ev_filtered["ID_point"])
-    ID2wind = dict(zip(winds_ev_filtered['ID_point'], winds_ev_filtered['wind_location']))  # dictionary {ID_point1: wind_speed1, ID_point2: wind_speed2, ...}
+
+    winds_ev_filtered_todict = winds_ev_filtered[['ID_point', 'wind_location']]
+    winds_ev_filtered_todict = winds_ev_filtered_todict.groupby('ID_point').max().reset_index()  # pick max wind for each unit
+
+    ID_affected = list(winds_ev_filtered_todict["ID_point"])
+    ID2wind = dict(zip(winds_ev_filtered_todict['ID_point'], winds_ev_filtered_todict['wind_location']))  # dictionary {ID_point1: wind_speed1, ID_point2: wind_speed2, ...}
     box_id_affected = winds_ev_filtered["box_id"].unique()
     box_id_affected = [box for box in box_id_affected if box in all_boxes]  # only include if box is in examining boxes
 
@@ -610,6 +623,9 @@ if not isNone(windfile):
 
     ## Now all the damaged edges can be found in nodes & edges
     G = create_graph(nodes, edges)
+
+    # if len(edges) > 0:
+    #     edges.to_file(os.path.join('tester', f'ALL_edges.gpkg'), driver='GPKG')
 
     components = list(nx.connected_components(G))
 

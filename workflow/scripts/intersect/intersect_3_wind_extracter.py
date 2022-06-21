@@ -17,10 +17,12 @@ try:
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]
     output_dir = snakemake.params['output_dir']
-    minimum_threshold = snakemake.params['minimum_threshold']
     wind_file_start = snakemake.params['wind_file_start']
     wind_file_end = snakemake.params['wind_file_end']
     storm_model_type = snakemake.params['storm_model_type']
+    central_threshold = snakemake.params['central_threshold']
+    minimum_threshold = snakemake.params['minimum_threshold']
+    maximum_threshold = snakemake.params['maximum_threshold']
 except:
     raise RuntimeError("Snakemake parameters not found")
 
@@ -162,6 +164,9 @@ for unit in tqdm(grid_box.itertuples(), desc="distances", total=len(grid_box)):
         str(unit.longitude)[:7].replace(".", "d").replace("-", "m")
         + "x"
         + str(unit.latitude)[:7].replace(".", "d").replace("-", "m")
+        + "xx"
+        + storm_model_type
+        + f"-l{minimum_threshold}c{central_threshold}u{maximum_threshold}"
     )  # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
     unit_path_indiv = os.path.join(unit_path, unique_num + ".parquet")
     if not os.path.isfile(unit_path_indiv):

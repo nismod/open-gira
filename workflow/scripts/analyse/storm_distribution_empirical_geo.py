@@ -125,8 +125,6 @@ for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets
     for target_indiv in targets.itertuples():
         if target_indiv.id not in metric_data.keys():
             metric_data_new = dict(zip(metrics_target_w_ae, [[]]*len(metrics_target_w_ae)))  # empty (sub)dict with metrics as keys
-            # metric_data_new['geometry'] = target_indiv.geometry
-            # metric_data_new['country'] = target_indiv.country
             metric_data_base[target_indiv.id] = metric_data_new
 
             metric_data[target_indiv.id] = dict({'geometry':target_indiv.geometry, 'country': target_indiv.country, 'population': target_indiv.population})  # set up for later
@@ -143,9 +141,9 @@ for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets
 for target_key in metric_data.keys():  # for each target.id
     for metric in metrics_target:  # for each metric
         if 'f_value' in metric:
-            #metric_data[target_key][sm(metric)] = None  # sum of f_value is irrelevant
-            metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
-            metric_data[target_key][avg(metric)] = 1 - metric_data[target_key][avg(metric)]  # rescale back to correct
+            metric_data[target_key][avg(metric)] = 1 - sum(metric_data_base[target_key][metric])/storm_tot  # find average and rescale back to correct
+
+            metric_data[target_key][ae(metric)] = 1 - sum(metric_data_base[target_key][ae(metric)])  # find average and rescale back to correct
         else:
             metric_data[target_key][avg(metric)] = sum(metric_data_base[target_key][metric])/storm_tot  # find average
             metric_sum = sum(metric_data_base[target_key][metric])

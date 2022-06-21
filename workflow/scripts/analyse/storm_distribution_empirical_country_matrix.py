@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 import itertools as it
+import json
 
 try:
     output_dir = snakemake.params['output_dir']
@@ -54,6 +55,9 @@ storm_count = len(stats)
 stat_path_empirical = os.path.join(stat_path, 'empirical')
 if not os.path.exists(stat_path_empirical):
     os.makedirs(stat_path_empirical)
+stat_path_empirical_data = os.path.join(stat_path_empirical, 'empirical_plotting_data')
+if not os.path.exists(stat_path_empirical_data):
+    os.makedirs(stat_path_empirical_data)
 
 country_storm_count = dict()  # dictionary {country1: number_of_storms, country2: ... }
 countries_overlap_master = dict()  # dictionary {country1_country2: total_overlap_storm_count, country1_country3: ... }  note that the values represent the intersection
@@ -85,9 +89,24 @@ all_countries_list.sort()  # ensure each run same output
 country_index = dict(zip(all_countries_list, list(range(len(all_countries)))))  # {country1: 0, country2: 1, country3: 2, ...}
 
 # create matrix nore that the row number corresponds to the country in the country index (same for column)
-country_matrix_unint = np.zeros((len(country_index), len(country_index)))  # union intersection matrix
+country_matrix_unint = -1*np.ones((len(country_index), len(country_index)))  # union intersection matrix
 country_matrix_condprob = country_matrix_unint.copy()  # conditional probability matrix
 
+
+# note any non-overlapping
+for country_a, country_b in it.combinations(all_countries, 2):  # for each unique country
+    country1 = min(country_a, country_b)
+    country2 = max(country_a, country_b)
+    key1 = country1+"_"+country2
+    key2 = country2+"_"+country1
+    if key1 not in countries_overlap_master.keys():
+        countries_overlap_master[key1] = 0  # note no intersection
+
+    if country1 not in country_storm_count.keys():
+        country_storm_count[country1] = 0  # note no storms
+
+    if country2 not in country_storm_count.keys():
+        country_storm_count[country2] = 0  # note no storms
 
 # assign data
 for country_pair, count in countries_overlap_master.items():
@@ -101,8 +120,22 @@ for country_pair, count in countries_overlap_master.items():
     country_matrix_condprob[country_index[country2], country_index[country1]] = count/country_storm_count[country2]  # given country 2 is hit, what is likelyhood of country 1 being hit
 
 # remove 0
-country_matrix_unint[country_matrix_unint == 0] = np.nan
-country_matrix_condprob[country_matrix_condprob == 0] = np.nan
+country_matrix_unint[country_matrix_unint == -1] = np.nan
+country_matrix_condprob[country_matrix_condprob == -1] = np.nan
+
+
+dfA = pd.DataFrame(country_matrix_unint)
+dfA.columns = all_countries_list
+dfA.index = all_countries_list
+dfA.to_csv(os.path.join(stat_path_empirical_data, 'country_matrix_other.csv'))
+
+dfB = pd.DataFrame(country_matrix_condprob)
+dfB.columns = all_countries_list
+dfB.index = all_countries_list
+dfB.to_csv(os.path.join(stat_path_empirical_data, 'country_matrix_both.csv'))
+
+
+
 
 x = list(range(len(country_index)))*len(country_index)
 y = []
