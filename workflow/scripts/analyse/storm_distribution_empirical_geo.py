@@ -35,8 +35,8 @@ except:  # for testing only
     increased_severity_sort = True
     region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)
     sample_eval = None #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-    nh_eval = ['0_2005_97']  # list of storms to analyse (write None if none specified)
-    thrval = 25
+    nh_eval = None #['0_2005_97']  # list of storms to analyse (write None if none specified)
+    thrval = 43
     raise RuntimeError("Please use snakemake to define inputs")
 
 
@@ -108,7 +108,7 @@ metric_data = {}  # wil include sums and averages of above
 # FILTER TARGET PATHS FOR STORM
 
 metric_list_order = dict(zip(metrics_target, [[]]*len(metrics_target)))  # dictionary {metric1: [stormA, stormB, ...], metric2: ... }  order of which storms analysed for that metric.
-for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets', total=len(target_paths)):
+for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', total=len(target_paths)):
     storm = os.path.basename(target_path).split('_n')[-1][:-5]  # extract storm
     #print(storm)
     targets = gpd.read_file(target_path, dtype={'population':float, 'gdp_damage': float,'mw_loss_storm': float})#[['population', 'population_density_at_centroid', 'gdp', 'id', 'f_value', 'mw_loss_storm', 'gdp_damage', 'geometry']]
@@ -137,7 +137,6 @@ for jj, target_path in tqdm(enumerate(target_paths[:8]), desc='Iterating targets
                 metric_data_base[target_indiv.id][metric] = metric_data_base[target_indiv.id][metric] + [metric_value]
                 metric_data_base[target_indiv.id][ae(metric)] = metric_data_base[target_indiv.id][ae(metric)] + [weighting_factor*metric_value]  # adding the factor here is equivalent to later summing and then including the factor (commutative)
 
-# TODO here i have to keep track of which storm which target to sum weighted, use dict keys are targets and weights are values maybe?
 for target_key in metric_data.keys():  # for each target.id
     for metric in metrics_target:  # for each metric
         if 'f_value' in metric:

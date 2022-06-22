@@ -14,6 +14,8 @@ import json
 from tqdm import tqdm
 import time
 from common_functions import find_storm_files, check_srn
+from geopy import distance
+
 
 try:
     output_dir = snakemake.params['output_dir']
@@ -35,6 +37,33 @@ if 'linux' not in sys.platform:  # TODO
     import os
     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
     os.chdir(path)
+
+
+def eval_dist(linestring_df):
+    """"Evaluate the coordinate dataframe and returns distance in km"""
+
+    dist_tot = 0
+    for ii in range(len(linestring_df)):
+        if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
+            line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
+            dist_tot += eval_coordist(line_coords)
+
+        else:  #multistring
+            for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
+                line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
+                dist_tot += eval_coordist(line_coords)
+
+    return dist_tot
+
+def eval_coordist(coords):
+    """Evaluate the coordinates and returns distance in km"""
+    dist = 0
+    line_coords = [(x[1], x[0]) for x in coords]
+    if len(line_coords) >= 2:
+        for jj in range(len(line_coords)-1):
+            dist += distance.distance(line_coords[jj], line_coords[jj+1]).km  # add the km length of that row
+    return dist
+
 
 region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
 
@@ -157,7 +186,7 @@ else:
 
             if len(overlap_transmission) >= 1:
 
-                map_dict_ll[geom_area.code] = overlap_transmission.geometry.length.sum()  # note down degree length
+                map_dict_ll[geom_area.code] = eval_dist(overlap_transmission)  # note down degree length
 
                 if geom_area.code not in map_dict.keys() and 'reconstruction_cost' in overlap_transmission.columns.values:
                     map_dict[geom_area.code] = sum(overlap_transmission.reconstruction_cost*overlap_transmission.count_damage)

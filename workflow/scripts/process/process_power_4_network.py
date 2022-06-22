@@ -41,13 +41,13 @@ from importing_modules import *
 # snkit.network.nearest_edge = patch_nearest_edge
 
 
-
 try:
     box_id = snakemake.params["box_id"]
     output_dir = snakemake.params['output_dir']
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
+
 
 
 def timer(s):
@@ -139,6 +139,17 @@ if __name__ == "__main__":
             output_dir, "power_processed", "all_boxes", f"{box_id}", f"gridfinder_{box_id}.gpkg"
         )
     )
+
+
+    # this file contains manual fixes required for the network
+    connector_fixes = pd.read_csv(os.path.join('workflow', 'scripts', 'process', 'connector_fixes.csv'))
+    if len(connector_fixes) >= 1:
+        for ii, fix in enumerate(connector_fixes.itertuples()):
+            geom = LineString([(fix.X1, fix.Y1), (fix.X2, fix.Y2)])
+            append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom}
+            edges = edges.append(append_line, ignore_index=True)
+
+
 
     if len(edges) == 1 and edges["geometry"].any() == None:  # catch empty
         edges = gpd.GeoDataFrame(columns=edges.columns)

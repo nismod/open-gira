@@ -55,6 +55,8 @@ rule intersect_damages:
         central_threshold = config['central_threshold'],
         minimum_threshold = config['minimum_threshold'],
         maximum_threshold = config['maximum_threshold'],
+        wind_file_start = wind_file_start,
+        wind_file_end = wind_file_end,
         all_boxes = all_boxes
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

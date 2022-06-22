@@ -24,7 +24,19 @@ try:
     minimum_threshold = snakemake.params['minimum_threshold']
     maximum_threshold = snakemake.params['maximum_threshold']
 except:
-    raise RuntimeError("Snakemake parameters not found")
+    #raise RuntimeError("Snakemake parameters not found")
+    region = 'NA'
+    sample = 0
+    all_boxes = [f'box_{num}' for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]]
+    nh_split = 2500
+    wind_rerun = False
+    output_dir = 'results'
+    wind_file_start = 'STORM_DATA_CMCC-CM2-VHR4_'
+    wind_file_end = '_IBTRACSDELTA'
+    storm_model_type = 'CMCC-CM2-VHR4'
+    central_threshold = 43
+    minimum_threshold = 39
+    maximum_threshold = 47
 
 min_windlocmax = (
     float(minimum_threshold) - 10  # minimum wind speed value (at unit) to consider significant to further save
@@ -57,6 +69,7 @@ def haversine(lon1, lat1, lon2_lst, lat2_lst):
 
 
 def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
+    lat = lat*np.pi/180
     distance = distance * 1000
     r = r * 1000
     rho = 1.10
