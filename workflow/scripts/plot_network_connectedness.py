@@ -67,18 +67,19 @@ def plot_component_size(components: Iterable[set[str]]) -> Tuple[plt.Figure, plt
 if __name__ == "__main__":
 
     try:
-        network_path = snakemake.input[0]
-        plot_output_path = snakemake.output[0]
+        nodes_path = snakemake.input[0]
+        edges_path = snakemake.input[1]
+        plot_path = snakemake.output[0]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        network_path, plot_output_path = sys.argv[1:]
-        # network_path = ../../results/?
-        # output_path = ../../results/?
+        nodes_path, edges_path, plot_path = sys.argv[1:]
+        # nodes_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
+        # edges_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
+        # plot_path = ../../results/tanzania-mini_filter-highway-core/road_connectedness.pdf
 
-    # 'layer' is assuming a geopackage as input
-    edges = gpd.read_file(network_path, layer='edges')
-    nodes = gpd.read_file(network_path, layer='nodes')
+    edges = gpd.read_parquet(edges_path)
+    nodes = gpd.read_parquet(nodes_path)
     edges, nodes, components = network_components(edges, nodes)
     f, ax = plot_component_size(components)
-    f.savefig(plot_output_path)
+    f.savefig(plot_path)

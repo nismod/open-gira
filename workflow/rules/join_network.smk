@@ -37,3 +37,18 @@ rule join_network_edges:
 Test with:
 snakemake --cores all results/tanzania-mini_filter-highway-core/road_edges.geoparquet
 """
+
+
+rule plot_network_connectedness:
+    input:
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet",
+    output:
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_connectedness.pdf"
+    script:
+        "../scripts/plot_network_connectedness.py"
+
+"""
+Test with:
+snakemake --cores all results/tanzania-mini_filter-highway-core/road_connectedness.pdf
+"""
