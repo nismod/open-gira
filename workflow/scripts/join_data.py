@@ -1,5 +1,4 @@
-# Takes a list of geoparquet files and join corresponding
-# geodataframes.
+# Takes a list of geoparquet files containing geodataframes and joins them
 
 # file1.geoparguet
 # id obs1 obs2 geometry
@@ -18,15 +17,14 @@
 # 2  A    B    GEOM0
 # 3  C    D    GEOM1
 
-# Usage: python join_data [FILE] [output]
-# Example: python join_data file1.geoparguet file2.geoparguet joined.geoparguet
+# Usage: python join_data.py [FILE] [output]
+# Example: python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
 
 import logging
 import sys
 import warnings
 
 import geopandas as gpd
-import numpy as np
 import pandas
 
 
@@ -54,59 +52,6 @@ def append_data(base, slice_files):
     return append_data(base, slice_files)
 
 
-def add_custom_node_references(base):
-    """
-    When converting to .geoparquet we added nodes at the bounding box edges.
-    These nodes have no reference. We need to make it easy to identify nodes by
-    ensuring that nodes in the same location have the same reference.  We'll
-    make it easy on ourselves by giving our inserted nodes negative reference
-    numbers.
-    """
-    # Find start nodes with no reference
-    na_start_nodes = base[base.start_node_reference.isna()] \
-        [['start_node_longitude','start_node_latitude']] \
-        .copy() \
-        .rename(columns={
-            'start_node_longitude': 'lon',
-            'start_node_latitude': 'lat'
-        })
-    # and end nodes with no reference
-    na_end_nodes = base[base.end_node_reference.isna()] \
-        [['end_node_longitude','end_node_latitude']] \
-        .copy() \
-        .rename(columns={
-            'end_node_longitude': 'lon',
-            'end_node_latitude': 'lat'
-        })
-    # stitch them together, dropping any duplicate coordinates
-    nodes = pandas.concat([na_start_nodes, na_end_nodes]).drop_duplicates()
-    # give them ids
-    nodes_n = len(nodes)
-    nodes['node_reference'] = np.arange(nodes_n)[::-1] - nodes_n
-
-    # merge on against start nodes and fill na values
-    base = base.merge(
-        nodes,
-        left_on=['start_node_longitude', 'start_node_latitude'],
-        right_on=['lon', 'lat'],
-        how='left'
-    ).drop(columns=['lon','lat'])
-    base.start_node_reference = base.start_node_reference.fillna(base.node_reference)
-    base = base.drop(columns='node_reference')
-
-    # merge on against end nodes and fill na values
-    base = base.merge(
-        nodes,
-        left_on=['end_node_longitude', 'end_node_latitude'],
-        right_on=['lon', 'lat'],
-        how='left'
-    ).drop(columns=['lon','lat'])
-    base.end_node_reference = base.end_node_reference.fillna(base.node_reference)
-    base = base.drop(columns='node_reference')
-
-    return base
-
-
 if __name__ == "__main__":
     try:
         slice_files = snakemake.input
@@ -127,7 +72,7 @@ if __name__ == "__main__":
 
     try:
         base = gpd.read_parquet(slice_files[-1])
-    except ValueError as error:
+    except ValueError:
         # if the input parquet file does not contain a geometry column, geopandas
         # will raise a ValueError rather than try to procede
         logging.info("base input file empty... suppressing geopandas exception")
@@ -135,5 +80,4 @@ if __name__ == "__main__":
         base = gpd.GeoDataFrame([])
 
     base = append_data(base, slice_files)
-    base = add_custom_node_references(base)
     base.to_parquet(output_file)
