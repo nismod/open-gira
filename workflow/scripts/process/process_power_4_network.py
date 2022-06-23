@@ -47,7 +47,13 @@ try:
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
+    # output_dir = 'results'
+    # box_id = 'box_1104'
 
+# if 'linux' not in sys.platform:  # TODO
+#     import os
+#     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+#     os.chdir(path)
 
 
 def timer(s):
@@ -140,14 +146,17 @@ if __name__ == "__main__":
         )
     )
 
+    box_id_box = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"))
 
     # this file contains manual fixes required for the network
     connector_fixes = pd.read_csv(os.path.join('workflow', 'scripts', 'process', 'connector_fixes.csv'))
     if len(connector_fixes) >= 1:
         for ii, fix in enumerate(connector_fixes.itertuples()):
-            geom = LineString([(fix.X1, fix.Y1), (fix.X2, fix.Y2)])
-            append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom}
-            edges = edges.append(append_line, ignore_index=True)
+            if box_id_box.contains(Point(fix.X1, fix.Y1)).any():
+                print(f'Adding connector fix {ii}')
+                geom = LineString([(fix.X1, fix.Y1), (fix.X2, fix.Y2)])
+                append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom}
+                edges = edges.append(append_line, ignore_index=True)
 
 
 
