@@ -16,7 +16,7 @@ rule download_gadm:
         out_adminboundaries,
     shell:
         f"""
-        wget https://biogeo.ucdavis.edu/data/gadm3.6/gadm36_gpkg.zip \
+        wget https://geodata.ucdavis.edu/gadm/gadm3.6/gpkg/gadm36_gpkg.zip \
             --directory-prefix={config['output_dir']}/input/adminboundaries
         unzip -o {config['output_dir']}/input/adminboundaries/gadm36_gpkg.zip -d {config['output_dir']}/input/adminboundaries
         """
@@ -28,7 +28,7 @@ rule download_gadm_by_country:
         os.path.join(config['output_dir'], "input", "adminboundaries", "gadm36_{code}.gpkg"),
     shell:
         """
-        wget https://biogeo.ucdavis.edu/data/gadm3.6/gpkg/gadm36_{wildcards.code}_gpkg.zip \
+        wget https://geodata.ucdavis.edu/gadm/gadm3.6/gpkg/gadm36_{wildcards.code}_gpkg.zip \
             --directory-prefix={config['output_dir']}/input/adminboundaries
         unzip -o {config['output_dir']}/input/adminboundaries/gadm36_{wildcards.code}_gpkg.zip -d {config['output_dir']}/input/adminboundaries
         """
@@ -44,7 +44,7 @@ rule download_gadm_levels:
         out_adminboundaries_levels,
     shell:
         f"""
-        wget https://biogeo.ucdavis.edu/data/gadm3.6/gadm36_levels_gpkg.zip \
+        wget https://geodata.ucdavis.edu/gadm/gadm3.6/gadm36_levels_gpkg.zip \
             --directory-prefix={config['output_dir']}/input/adminboundaries
         unzip -o {config['output_dir']}/input/adminboundaries/gadm36_levels_gpkg.zip -d {config['output_dir']}/input/adminboundaries
         """
