@@ -16,21 +16,21 @@ import snkit
 
 def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
     """
-    Read administrative data (country ISO, country geometry, continent) from disk
+    Read administrative data (country ISO, country geometry) from disk
 
     Arguments:
-        file_path (str): Location of file with country and continent data
+        file_path (str): Location of file with country data
         to_epsg (int): EPSG code to project data to
 
     Returns:
-        gpd.GeoDataFrame: Table of country, continent and geometry data
+        gpd.GeoDataFrame: Table of country and geometry data
     """
 
     # read file
     gdf = gpd.read_file(file_path)
 
     # check schema is as expected
-    expected_columns = {'GID_0', 'NAME_0', 'ISO_A3', 'NAME', 'CONTINENT', 'geometry'}
+    expected_columns = {'GID_0', 'NAME_0', 'geometry'}
     assert expected_columns == set(gdf.columns.values)
 
     # reproject if desired
@@ -42,22 +42,22 @@ def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataF
     gdf = gdf.explode(ignore_index=True)
 
     # rename these columns first so we don't have to do this twice (to nodes and edges) later
-    gdf.rename(columns={"ISO_A3": "iso_code", "CONTINENT": "continent"}, inplace=True)
+    gdf.rename(columns={"GID_0": "iso_code"}, inplace=True)
 
     # sort by and return
-    return gdf.sort_values(by=["continent", "iso_code"], ascending=True)
+    return gdf.sort_values(by=["iso_code"], ascending=True)
 
 
-def annotate_country_continent(network: snkit.network.Network, countries: gpd.GeoDataFrame, crs_epsg: int) -> snkit.network.Network:
+def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame, crs_epsg: int) -> snkit.network.Network:
     """
-    Label network edges and nodes with their country ISO code and continent
+    Label network edges and nodes with their country ISO code
 
     Arguments:
         network (snkit.network.Network): Network to label with geographic information
             network.edges should have 'edge_id', 'from_node_id', 'to_node_id', 'geometry'
             network.nodes should have 'node_id', 'geometry'
         countries (gpd.GeoDataFrame): Table expected to contain the following columns:
-            'GID_0', 'NAME_0', 'iso_code', 'NAME', 'continent', 'geometry'
+            'iso_code', 'NAME_0', 'geometry'
         crs_epsg (int): EPSG code for a standard CRS to use to compare geometries
 
     Returns
@@ -74,7 +74,7 @@ def annotate_country_continent(network: snkit.network.Network, countries: gpd.Ge
     logging.info(f"Inferred a suitable projection CRS of: {projected_crs}")
 
     # often we only want these columns
-    core_node_columns = ["node_id", "iso_code", "continent", "geometry"]
+    core_node_columns = ["node_id", "iso_code", "geometry"]
 
     # spatial join nodes geometries to their containing country, retain only node geometries
     interior_nodes = gpd.sjoin(
@@ -113,26 +113,26 @@ def annotate_country_continent(network: snkit.network.Network, countries: gpd.Ge
         crs=input_crs
     )
 
-    # set edge.from_node_id from node.node_id and use iso_code and continent of from node as edge start
+    # set edge.from_node_id from node.node_id and use iso_code of from node as edge start
     edges = pd.merge(
         edges,
-        nodes[["node_id", "iso_code", "continent"]],
+        nodes[["node_id", "iso_code"]],
         how="left",
         left_on=["from_node_id"],
         right_on=["node_id"]
     )
-    edges.rename(columns={"iso_code": "from_iso", "continent": "from_continent"}, inplace=True)
+    edges.rename(columns={"iso_code": "from_iso"}, inplace=True)
     edges.drop("node_id", axis=1, inplace=True)
 
-    # set edge.to_node_id from node.node_id and use iso_code and continent of from node as edge end
+    # set edge.to_node_id from node.node_id and use iso_code of from node as edge end
     edges = pd.merge(
         edges,
-        nodes[["node_id", "iso_code", "continent"]],
+        nodes[["node_id", "iso_code"]],
         how="left",
         left_on=["to_node_id"],
         right_on=["node_id"]
     )
-    edges.rename(columns={"iso_code": "to_iso", "continent": "to_continent"}, inplace=True)
+    edges.rename(columns={"iso_code": "to_iso"}, inplace=True)
     edges.drop("node_id", axis=1, inplace=True)
 
     # encode country in id strings
@@ -472,9 +472,9 @@ if __name__ == '__main__':
     try:
         nodes_path = snakemake.input[0]
         edges_path = snakemake.input[1]
+        administrative_data_path = snakemake.input[2]
         output_nodes_path = snakemake.output[0]
         output_edges_path = snakemake.output[1]
-        administrative_data_path = snakemake.config["administrative_boundaries_data_path"]
         road_speeds_path = snakemake.config["road_speeds_path"]
         rehabilitation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
         transport_costs_path = snakemake.config["transport_costs_path"]
@@ -485,15 +485,15 @@ if __name__ == '__main__':
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        nodes_path, edges_path, output_nodes_path, output_edges_path, administrative_data_path, \
+        nodes_path, edges_path, administrative_data_path, output_nodes_path, output_edges_path, \
             road_speeds_path, rehabilitation_costs_path, transport_costs_path, \
             default_shoulder_width_metres, default_lane_width_metres, flow_cost_time_factor, \
             osm_epsg = sys.argv[1:]
         # nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # administrative_data_path = ../../results/input/adminboundaries/gadm36_levels.gpkg
         # output_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes_annotated.geoparquet
         # output_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges_annotated.geoparquet
-        # administrative_data_path = ../../local_data/gadm36_levels_continents.gpkg
         # road_speeds_path = ../../local_data/global_road_speeds.xlsx
         # rehabilitation_costs_path = ../../local_data/rehabilitation_costs.xlsx
         # transport_costs_path = ../../local_data/transport_costs.csv
@@ -537,8 +537,8 @@ if __name__ == '__main__':
         f'Network contains {len(annotated_network.edges)} edges and {len(annotated_network.nodes)} nodes'
     )
 
-    logging.info('Annotating network with administrative (country and continent) data')
-    annotated_network = annotate_country_continent(
+    logging.info('Annotating network with administrative data')
+    annotated_network = annotate_country(
         annotated_network,
         get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
         osm_epsg

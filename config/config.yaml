@@ -37,7 +37,6 @@ road_default_shoulder_width_metres: 1.5
 road_default_lane_width_metres: 6.5
 road_flow_cost_time_factor: 0.49
 # if the following data can be sourced/hosted online, remove these config entries and download instead
-administrative_boundaries_data_path: 'local_data/gadm36_levels_continents.gpkg'
 road_speeds_path: 'local_data/global_road_speeds.xlsx'
 road_rehabilitation_costs_path: 'local_data/rehabilitation_costs.xlsx'
 transport_costs_path: 'local_data/transport_costs.csv'
