@@ -470,11 +470,11 @@ def annotate_tariff_flow_costs(
 
 if __name__ == '__main__':
     try:
-        nodes_path = snakemake.input[0]
-        edges_path = snakemake.input[1]
-        administrative_data_path = snakemake.input[2]
-        output_nodes_path = snakemake.output[0]
-        output_edges_path = snakemake.output[1]
+        nodes_path = snakemake.input["nodes"]
+        edges_path = snakemake.input["edges"]
+        administrative_data_path = snakemake.input["admin"]
+        output_nodes_path = snakemake.output["nodes"]
+        output_edges_path = snakemake.output["edges"]
         road_speeds_path = snakemake.config["road_speeds_path"]
         rehabilitation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
         transport_costs_path = snakemake.config["transport_costs_path"]

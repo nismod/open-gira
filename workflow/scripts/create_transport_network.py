@@ -192,8 +192,8 @@ def create_network(
 if __name__ == '__main__':
     try:
         osm_geoparquet_path = snakemake.input[0]
-        nodes_output_path = snakemake.output[0]
-        edges_output_path = snakemake.output[1]
+        nodes_output_path = snakemake.output["nodes"]
+        edges_output_path = snakemake.output["edges"]
         network_type = snakemake.config["transport_type"]  # used to label edge IDs and index transport tariffs
         osm_epsg = snakemake.config["osm_epsg"]
     except NameError:

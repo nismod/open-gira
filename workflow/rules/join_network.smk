@@ -41,10 +41,10 @@ snakemake --cores all results/tanzania-mini_filter-highway-core/road_edges.geopa
 
 rule plot_network_connectedness:
     input:
-        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
-        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet",
+        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
+        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet",
     output:
-        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_connectedness.pdf"
+        plot="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_connectedness.pdf"
     script:
         "../scripts/plot_network_connectedness.py"
 

@@ -6,8 +6,8 @@ rule create_transport_network:
     output:
         # can we parameterise the network type (i.e. road) in the output filename?
         # config["transport_type"] is presumably available
-        "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_nodes.geoparquet",
-        "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_edges.geoparquet"
+        nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_nodes.geoparquet",
+        edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_edges.geoparquet"
     script:
         "../scripts/create_transport_network.py"
 

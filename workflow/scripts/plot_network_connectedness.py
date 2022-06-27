@@ -67,9 +67,9 @@ def plot_component_size(components: Iterable[set[str]]) -> Tuple[plt.Figure, plt
 if __name__ == "__main__":
 
     try:
-        nodes_path = snakemake.input[0]
-        edges_path = snakemake.input[1]
-        plot_path = snakemake.output[0]
+        nodes_path = snakemake.input["nodes"]
+        edges_path = snakemake.input["edges"]
+        plot_path = snakemake.output["plot"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
