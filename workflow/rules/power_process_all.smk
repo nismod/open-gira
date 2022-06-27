@@ -5,5 +5,5 @@
 
 rule process_all:
     input:
-        out_network,
+        #out_network,
         out_connector,

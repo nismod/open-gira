@@ -11,49 +11,23 @@ targets, plants, no edges -> targets file but connected=False, plants file but c
 targets, no plants, edges -> targets file, dummy plants file, edges file
 targets, plants, edges -> all files
 """
+import snkit.network
 
 from importing_modules import *
-# from process_power_functions import * # TODO
-
-
-
-
-# def patch_nearest_edge(point, edges):
-#     """Set up network
-#
-#     Find nearest edge to a point
-#     """
-#     print("used function")
-#     if type(point) == str:
-#         point = sw.loads(point)  # if point is found as string -> convert to Point(# #)
-#         print("changed to point")
-#     geom = point.buffer(1e-2)
-#     # print(point, " : ", type(point))
-#
-#     matches_idx = edges.sindex.nearest(geom.bounds)
-#     nearest_geom = min(
-#         [edges.iloc[match_idx] for match_idx in matches_idx],
-#         key=lambda match: point.distance(match.geometry),
-#     )
-#     return nearest_geom
-#
-#
-# snkit.network.nearest_edge = patch_nearest_edge
-
 
 try:
     box_id = snakemake.params["box_id"]
     output_dir = snakemake.params['output_dir']
 except:
-    output_dir = sys.argv[1]
-    box_id = sys.argv[2]
-    # output_dir = 'results'
-    # box_id = 'box_1104'
+    # output_dir = sys.argv[1]
+    # box_id = sys.argv[2]
+    output_dir = 'results'
+    box_id = 'box_1029'
 
-# if 'linux' not in sys.platform:  # TODO
-#     import os
-#     path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-#     os.chdir(path)
+if 'linux' not in sys.platform:  # TODO
+    import os
+    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
+    os.chdir(path)
 
 
 def timer(s):
@@ -146,17 +120,6 @@ if __name__ == "__main__":
         )
     )
 
-    box_id_box = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"))
-
-    # this file contains manual fixes required for the network
-    connector_fixes = pd.read_csv(os.path.join('workflow', 'scripts', 'process', 'connector_fixes.csv'))
-    if len(connector_fixes) >= 1:
-        for ii, fix in enumerate(connector_fixes.itertuples()):
-            if box_id_box.contains(Point(fix.X1, fix.Y1)).any():
-                print(f'Adding connector fix {ii}')
-                geom = LineString([(fix.X1, fix.Y1), (fix.X2, fix.Y2)])
-                append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom}
-                edges = edges.append(append_line, ignore_index=True)
 
 
 
@@ -272,6 +235,29 @@ if __name__ == "__main__":
             warnings.simplefilter(action="ignore", category=FutureWarning)
             network = snkit.network.add_topology(network, id_col="id")
         # timer(start)
+
+
+        box_id_box = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"))
+
+        # this file contains manual fixes required for the network
+        connector_fixes = pd.read_csv(os.path.join('workflow', 'scripts', 'process', 'connector_fixes.csv'))
+
+        if len(connector_fixes) >= 1:
+            for ii, fix in enumerate(connector_fixes.itertuples()):
+                if box_id_box.contains(Point(fix.X1, fix.Y1)).any():
+                    print(f'Adding connector fix {ii}')
+                    first_point = snkit.network.nearest_node(Point(fix.X1, fix.Y1), network.nodes)
+                    from_id = first_point.id
+                    from_loc = first_point.geometry
+                    second_point = snkit.network.nearest_node(Point(fix.X2, fix.Y2), network.nodes)
+                    to_id = second_point.id
+                    to_loc = second_point.geometry
+                    geom = LineString([from_loc, to_loc])
+                    append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom, 'from_id': from_id, 'to_id': to_id}
+                    network.edges = network.edges.append(append_line, ignore_index=True)
+
+
+
 
         network.edges["box_id"] = box_id
 
