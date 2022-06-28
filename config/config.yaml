@@ -37,9 +37,9 @@ road_default_shoulder_width_metres: 1.5
 road_default_lane_width_metres: 6.5
 road_flow_cost_time_factor: 0.49
 # if the following data can be sourced/hosted online, remove these config entries and download instead
-road_speeds_path: 'local_data/global_road_speeds.xlsx'
-road_rehabilitation_costs_path: 'local_data/rehabilitation_costs.xlsx'
-transport_costs_path: 'local_data/transport_costs.csv'
+road_speeds_path: 'bundled_data/global_road_speeds.xlsx'
+road_rehabilitation_costs_path: 'bundled_data/rehabilitation_costs.xlsx'
+transport_costs_path: 'bundled_data/transport_costs.csv'
 
 # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
 exposure_threshold: 0.5

@@ -494,9 +494,9 @@ if __name__ == '__main__':
         # administrative_data_path = ../../results/input/adminboundaries/gadm36_levels.gpkg
         # output_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes_annotated.geoparquet
         # output_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges_annotated.geoparquet
-        # road_speeds_path = ../../local_data/global_road_speeds.xlsx
-        # rehabilitation_costs_path = ../../local_data/rehabilitation_costs.xlsx
-        # transport_costs_path = ../../local_data/transport_costs.csv
+        # road_speeds_path = ../../bundled_data/global_road_speeds.xlsx
+        # rehabilitation_costs_path = ../../bundled_data/rehabilitation_costs.xlsx
+        # transport_costs_path = ../../bundled_data/transport_costs.csv
         # default_shoulder_width_metres = 1.5
         # default_lane_width_metres = 6.5
         # flow_cost_time_factor = 0.49
