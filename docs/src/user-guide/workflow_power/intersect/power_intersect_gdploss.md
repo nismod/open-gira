@@ -5,7 +5,7 @@ for an individual storm.
 
 The process consists of the following:
 1. Load the [wind parameter data](power_intersect_windextracter.md) from the storm
-2. For each unit, determine if the damage criteria is met
+2. For each unit, determine if the damage criteria is met (for the lower, central and upper damage thresholds)
 3. For these damaged units, mark any infrastructure within these units as damaged
 4. Calculate the damage parameters when infrastructure fails
 5. Save the damaged units and associated infrastructure components and targets to gpkg files 
@@ -15,9 +15,8 @@ The process consists of the following:
 A few notes should be made on this process.
 
 #### Step 2
-The damage criteria is assumed to be a minimum wind speed of a category 1 hurricane. This corresponds to
-33 m/s.
-`~~~~~~UPDATE IF CHANGED~~~~~~`
+The (central) damage criteria is assumed to be a minimum wind speed of a category 2 hurricane. This corresponds to
+43 m/s. The lower threshold is set to 39 m/s and upper to 47 m/s.
 
 
 #### Step 4
