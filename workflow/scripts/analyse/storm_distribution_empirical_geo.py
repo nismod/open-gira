@@ -15,7 +15,7 @@ from tqdm import tqdm
 import numpy as np
 import geopandas as gpd
 
-from common_functions import find_storm_files, avg, sm, ae, check_srn
+from common_functions import find_storm_files, avg, sm, ae, check_srn, traprule
 
 
 
@@ -63,9 +63,9 @@ if len(target_paths) == 0:
     raise RuntimeError("No targets could be found. Shutting down process.")
 assert len(target_paths) <= storm_tot
 
-if nh_eval != None:
-    storm_tot = len(target_paths)
-    print('Only using total storm count from specified list (nh_eval) in config.yaml')
+# if nh_eval != None:
+#     storm_tot = len(target_paths)
+#     print('Only using total storm count from specified list (nh_eval) in config.yaml')
 
 
 stat_path_empirical = os.path.join(stat_path, 'empirical')
@@ -75,7 +75,7 @@ if not os.path.exists(stat_path_empirical):
 
 # return period
 x_count = np.arange(1, storm_tot+1, 1)
-x_ = storm_tot/x_count
+x_ = years_tot/x_count
 x = x_[::-1]
 
 metric_sortby = {'population_without_power':'population with no power (f=0)', 'effective_population':'effective population affected', 'affected_population':'population affected', 'mw_loss_storm': 'GDP losses', 'f_value': 'GDP losses', 'gdp_damage': 'GDP losses'}  # dict: sort the stats file for this metric key by its value
@@ -94,11 +94,11 @@ else:
     text_extra = "from most to least damage (i.e. the top 'worst' storms)"
 print(f"Total {storm_tot}, stats on {len(stats)} and examining {top_select_frac} {text_extra}. Length targets is {len(target_paths)}")
 storm_id_metrics = {}  # dictionary {metric1: {stormids_top_quantile_for metric1...}, metric2: {stormids_top_quantile_for metric2...}, ... }
-storm_id_metrics_weighting = {}  # dictionary for weighting {metric1: {stormid1: weighting1, stormid2: weighting2, ...}, metric2: ... }. This is later used for expected annual
+#storm_id_metrics_weighting = {}  # dictionary for weighting {metric1: {stormid1: weighting1, stormid2: weighting2, ...}, metric2: ... }. This is later used for expected annual
 for metric in metrics_target:
     storm_id_metrics[metric] = set(stats.sort_values(metric_sortby[metric], ascending=increased_severity_sort)['Storm ID'][:top_select_frac])  # saves a set of the top selected quantile (sorted appropriately)
     storms_increasing_severity = stats.sort_values(metric_sortby[metric], ascending=True)['Storm ID'][:top_select_frac]
-    storm_id_metrics_weighting[metric] = dict(zip(storms_increasing_severity, x))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
+    #storm_id_metrics_weighting[metric] = dict(zip(storms_increasing_severity, x))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
 
 
 
@@ -133,9 +133,9 @@ for jj, target_path in tqdm(enumerate(target_paths), desc='Iterating targets', t
             if storm in storm_id_metrics[metric]:  # only if in top selected quantile (sorted by metric)
 
                 metric_value = getattr(target_indiv, metric)
-                weighting_factor = 1/storm_id_metrics_weighting[metric][storm]
+                #weighting_factor = 1/storm_id_metrics_weighting[metric][storm]
                 metric_data_base[target_indiv.id][metric] = metric_data_base[target_indiv.id][metric] + [metric_value]
-                metric_data_base[target_indiv.id][ae(metric)] = metric_data_base[target_indiv.id][ae(metric)] + [weighting_factor*metric_value]  # adding the factor here is equivalent to later summing and then including the factor (commutative)
+                #metric_data_base[target_indiv.id][ae(metric)] = metric_data_base[target_indiv.id][ae(metric)] + [weighting_factor*metric_value]  # adding the factor here is equivalent to later summing and then including the factor (commutative)
 
 for target_key in metric_data.keys():  # for each target.id
     for metric in metrics_target:  # for each metric
@@ -148,7 +148,7 @@ for target_key in metric_data.keys():  # for each target.id
             metric_sum = sum(metric_data_base[target_key][metric])
             metric_data[target_key][sm(metric)] = metric_sum  # find sum
 
-            metric_data[target_key][ae(metric)] = sum(metric_data_base[target_key][ae(metric)])  # annually expected, factor included already
+            metric_data[target_key][ae(metric)] = traprule(metric_data_base[target_key][metric], 1/years_tot)  # annually expected
 
 
 targets_combined = gpd.GeoDataFrame(metric_data).T  # include transpose due to list

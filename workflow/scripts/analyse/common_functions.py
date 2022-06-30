@@ -134,5 +134,14 @@ def check_srn(region_eval, sample_eval, nh_eval):
 
     return region_eval, sample_eval, nh_eval
 
+def traprule(lst, spacing):
+    """Trapezium rule"""
+    if len(lst) == 0:
+        return 0
+    if len(lst) == 1:
+        return lst[0]*spacing  # dummy
+    else:
+        return 0.5*spacing*(lst[0] + lst[-1] + sum(lst[1:-1]))
+
 
 

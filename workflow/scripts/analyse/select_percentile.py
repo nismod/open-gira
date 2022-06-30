@@ -33,6 +33,8 @@ assert 0 <= percentile <= 100
 region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
 
 target_paths, storm_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, thrval)
+years_tot_all = 1000
+
 
 stat_path = os.path.join(output_dir, 'power_output', 'statistics')
 stat_path_percentile = os.path.join(stat_path, 'percentile')
@@ -50,13 +52,13 @@ rp_percentile = 1/((100-percentile)/100)  # calculate the return period value
 metrics_none = True  # set to False when a metric is covering a damage storm with the specified percentile
 for metric in metrics_target:
     x_count = np.arange(1, storm_tot+1, 1)
-    x_ = storm_tot/x_count
+    x_ = years_tot/x_count
     x = x_[::-1]
 
     idx = len(x[x>=rp_percentile])  # find index
 
     storm_select = stats.sort_values(metric_sortby[metric], ascending=False)  # select percentile
-    print(f"idx {idx}, len {len(stats)}, {years_tot}, {percentile}, {rp_percentile}")
+    #print(f"idx {idx}, len {len(stats)}, {years_tot}, {percentile}, {rp_percentile}")
     if idx <= len(stats) - 1:  # if idx > number of storms, there is no damage for that storm
         metrics_none = True  # now, override
         storm_region = storm_select['Storm Region'].iloc[idx]

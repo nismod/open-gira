@@ -22,7 +22,7 @@ except:  # for testing only
     top_select = 100
     increased_severity_sort = True
     layer_num = 1
-    #raise RuntimeError("Please use snakemake to define inputs")
+    raise RuntimeError("Please use snakemake to define inputs")
 
 increased_severity_sort_bool = str(increased_severity_sort)[0]  # either T or F
 
@@ -59,7 +59,7 @@ with fiona.open(
     for feature in src_code:
         if feature["properties"]["GID_0"] in countries_relevant:  # only include search in countries that contain targets
             code_geoms.append(shape(feature["geometry"]))
-            code_GIDs.append(feature["properties"]["GID_1"])
+            code_GIDs.append(feature["properties"][f"GID_{layer_num}"])
     print("creating dataframe")
     code_geoms_gpd = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs}, crs="EPSG:4326")
 
@@ -104,7 +104,7 @@ for geom_area in tqdm(code_geoms_gpd.itertuples(), total=len(code_geoms_gpd), de
                     new_key = f"{metric}_annually-expected_region_fraction"
                     if new_key not in metric_keys:
                         metric_keys.append(new_key)
-                    map_dict[geom_area.code][new_key] = overlap_quantile[ae(metric)].sum()/overlap_quantile.population.sum()  # TODO times this by storm_tot? # fraction of total target populations in the quantile file overlap (ie all targets in the geometry area)
+                    map_dict[geom_area.code][new_key] = overlap_quantile[ae(metric)].sum()/overlap_quantile.population.sum()  # fraction of total target populations in the quantile file overlap (ie all targets in the geometry area)
 
 
         quantile_file = quantile_file[~quantile_file['index'].isin(remove_id)]  # remove classified targets

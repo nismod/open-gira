@@ -20,6 +20,7 @@ rasterstats
 requests
 rtree
 snkit
+snakemake
 zenodo_get
 shapely
 time

@@ -791,6 +791,10 @@ if not isNone(windfile):
                         )
                     )  # add target of box
 
+
+                if 'target_3_box_957' in targets.id.values:
+                    targets = targets[targets.id!='target_3_box_957']
+
                 targets = target_mapper("f_value", targets, nodes)  # map f_value
                 targets = target_mapper("mw_loss_storm", targets, nodes)  # map mw loss after storm
                 targets = target_mapper("gdp_damage", targets, nodes)  # map gdp damage from storm

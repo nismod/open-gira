@@ -31,7 +31,7 @@ except:
     sample_eval = ['0'] #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
     nh_eval = ['0_2017_66']  # list of storms to analyse (write None if none specified)
     thrval = 41
-    #raise RuntimeError("Please use snakemake to define inputs")
+    raise RuntimeError("Please use snakemake to define inputs")
 
 if 'linux' not in sys.platform:  # TODO
     import os
@@ -54,6 +54,26 @@ def eval_dist(linestring_df):
                 dist_tot += eval_coordist(line_coords)
 
     return dist_tot
+
+
+def eval_dist_lst(linestring_df):
+    """"Evaluate the coordinate dataframe and returns distance list in km"""
+
+    lst = []
+    for ii in range(len(linestring_df)):
+        dist_tot = 0
+        if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
+            line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
+            dist_tot = eval_coordist(line_coords)
+
+        else:  #multistring
+            for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
+                line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
+                dist_tot = eval_coordist(line_coords)
+
+        lst.append(dist_tot)
+
+    return lst
 
 def eval_coordist(coords):
     """Evaluate the coordinates and returns distance in km"""
@@ -122,7 +142,7 @@ else:
             if transmission_indiv_link in transmission_dict.keys():
                 transmission_dict[transmission_indiv_link][0] += 1
 
-        weighting_factor = 1/storm_id_metrics_weighting[storm]  # return period weighting factor for annual expected
+        weighting_factor = 1/years_tot  # return period weighting factor for annual expected. Note this is a pretty good approximation to the trapezium rule for large n
         new_dict = {transmission_indiv.link: [1, transmission_indiv.geometry,  transmission_indiv.reconstruction_cost, weighting_factor*transmission_indiv.reconstruction_cost] for transmission_indiv in transmission.itertuples() if transmission_indiv.link not in transmission_dict.keys()}
         transmission_dict.update(new_dict)
 
@@ -131,7 +151,9 @@ else:
 
     transmission_master = gpd.GeoDataFrame({'link': transmission_dict.keys(), 'count_damage':[x[0] for x in transmission_dict.values()], 'geometry':[x[1] for x in transmission_dict.values()], 'reconstruction_cost':[x[2] for x in transmission_dict.values()], 'reconstruction_cost_annual_expected':[x[3] for x in transmission_dict.values()]})
 
+    eval_dist_lst_output = eval_dist_lst(transmission_master)
 
+    transmission_master['reconstruction_cost_annual_expected_per_km'] = [transmission_master['reconstruction_cost_annual_expected'].iloc[jj]/eval_dist_lst_output[jj] if eval_dist_lst_output[jj] !=0 else 0 for jj in range(len(transmission_master))]
 
     transmission_master.to_file(freq_hit_path, driver='GPKG')
 
@@ -145,7 +167,7 @@ else:
         for feature in src_code:
             if feature["properties"]["GID_0"] in countries_relevant:  # only include search in countries that contain targets
                 code_geoms.append(shape(feature["geometry"]))
-                code_GIDs.append(feature["properties"]["GID_1"])
+                code_GIDs.append(feature["properties"][f"GID_{layer_num}"])
         print("creating dataframe")
         code_geoms_gpd = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs})
 

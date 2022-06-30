@@ -77,7 +77,7 @@ if not os.path.exists(stat_path_empirical_data):
     os.makedirs(stat_path_empirical_data)
 
 
-_, rp_max, _ = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, central_threshold)  # maximum return period (tot number of years)
+_, storms_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, central_threshold)  # maximum return period (tot number of years)
 
 
 def y_extend(y1, y2, y3):
@@ -103,7 +103,7 @@ for ii, metric in enumerate(metrics):
     y_min, y_max, y_cen = y_extend(y_min_base, y_max_base, y_cen_base)
 
     x_count = np.arange(1, len(y_cen)+1, 1)
-    x = rp_max/x_count  # this is how return periods are defined
+    x = years_tot/x_count  # this is how return periods are defined
     x = x[::-1]  # correct order
 
 
