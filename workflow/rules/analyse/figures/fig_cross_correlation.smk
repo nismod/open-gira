@@ -1,8 +1,4 @@
-"""XXX
-
-
-constant (no climate effects), CMCC-CM2-VHR4, CNRM-CM6-1-HR, EC-Earth3P-HR, HadGEM3-GC31-HM
-
+"""Plots the cross correlation JHR and future differences
 
 """
 import os

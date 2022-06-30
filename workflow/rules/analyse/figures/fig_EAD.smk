@@ -1,9 +1,4 @@
-"""Aggregates  # TODO
-
-
-
-constant (no climate effects), CMCC-CM2-VHR4, CNRM-CM6-1-HR, EC-Earth3P-HR, HadGEM3-GC31-HM
-
+"""Aggregates EAD and finds difference. For indivudal asset and aggregate
 
 """
 import os
@@ -19,6 +14,8 @@ merge_key_EAD_agg_norm = 'code'
 
 ## individual assets ##
 metric_EAD_indiv = 'reconstruction_cost_annual_expected'
+metric_EAD_indiv_perc = 'perc_'+metric_EAD_indiv
+metric_EAD_indiv_perkm = metric_EAD_indiv+'_per_km'
 merge_key_EAD_indiv = 'link'
 
 
@@ -28,8 +25,10 @@ out_diff_EAD_agg = os.path.join(config['output_dir'], 'power_figures', 'intermed
 out_diff_EAD_agg_norm = os.path.join(config['output_dir'], 'power_figures', 'intermediate_files', f'difference_{merge_key_EAD_agg_norm}_{metric_EAD_agg_norm}.gpkg')
 out_diff_EAD_indiv = os.path.join(config['output_dir'], 'power_figures', 'intermediate_files', f'difference_{merge_key_EAD_indiv}_{metric_EAD_indiv}.gpkg')
 
-
-
+out_diff_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'difference_perc_recon.png')
+out_current_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'current_recon_per_km.png')
+out_diff_EAD_plot = os.path.join(config['output_dir'], 'power_figures', 'difference_recon.png')
+out_diff_EAD_plot_norm = os.path.join(config['output_dir'], 'power_figures', 'difference_recon_norm.png')
 
 ## aggregated (absolute) ##
 rule fig_aggregate_EAD_agg:
@@ -55,6 +54,23 @@ rule fig_diff_EAD_agg:
         out_diff_EAD_agg
     script:
         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'diff_agg.py')
+
+
+# rule fig_diff_EAD_agg_plot:
+#       """Not ideal plot as varies a lot by total km in region"""
+#     input:
+#         out_diff_EAD_agg
+#     params:
+#         metric = metric_EAD_agg,
+#         vmax = 500000,
+#         vmin = -500000,
+#         cmap = 'RdBu_r',
+#         linewidth = None
+#     output:
+#         out_diff_EAD_plot
+#     script:
+#         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'plotter.py')
+
 
 
 
@@ -83,13 +99,27 @@ rule fig_diff_EAD_agg_norm:
     script:
         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'diff_agg.py')
 
+# rule fig_diff_EAD_agg_plot_norm:  # TODO need to rerun outputs to get all keys
+#     input:
+#         out_diff_EAD_agg
+#     params:
+#         metric = metric_EAD_agg_norm,
+#         vmax = 5000,
+#         vmin = -5000,
+#         cmap = 'RdBu_r',
+#         linewidth = None
+#     output:
+#         out_diff_EAD_plot_norm
+#     script:
+#         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'plotter.py')
+#
 
 
 
 ## individual assets ##
 rule fig_aggregate_EAD_indiv:
     input:
-        [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'aggregate', "transmission_line_frequency_hit.gpkg") for model in models_future]
+        in_agg_EAD_indiv = [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'aggregate', "transmission_line_frequency_hit.gpkg") for model in models_future]
     params:
         output_dir = config['output_dir'],
         metric = metric_EAD_indiv,
@@ -110,4 +140,37 @@ rule fig_diff_EAD_indiv:
         out_diff_EAD_indiv
     script:
         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'diff_agg.py')
+
+
+
+rule fig_diff_EAD_indiv_plot:
+    """Plots difference"""
+    input:
+        out_diff_EAD_indiv
+    params:
+        metric = metric_EAD_indiv_perc,
+        vmax = 100,
+        vmin = -100,
+        cmap = 'RdBu_r',
+        linewidth = master_linewidth
+    output:
+        out_diff_EAD_indiv_plot
+    script:
+        os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'plotter.py')
+
+rule fig_current_EAD_indiv_plot:
+    """Plots current"""
+    input:
+        os.path.join(config['output_dir'], f'power_output-constant', 'statistics', 'aggregate', "transmission_line_frequency_hit.gpkg")
+    params:
+        metric = metric_EAD_indiv_perkm,
+        vmax = 50,
+        vmin = 0,
+        cmap = 'Reds',
+        linewidth = master_linewidth
+    output:
+        out_current_EAD_indiv_plot
+    script:
+        os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'plotter.py')
+
 

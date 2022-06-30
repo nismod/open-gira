@@ -15,6 +15,7 @@ name_cc_future = 'Future'
 name_cc_future_diff = 'Future minus current'
 name_cc_future_perc_diff = 'Future minus current (change in percent of current)'
 
+master_linewidth = .55  # linewidth when lines in GeoDataFrame
 
 # prelim checks
 all_folders = [os.path.join(config['output_dir'], f'power_output-{model}') for model in models_all]

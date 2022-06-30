@@ -1,4 +1,4 @@
-"""XXX
+"""Plots the cdfs for EAD and EACA
 
 """
 import os
