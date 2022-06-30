@@ -4,8 +4,11 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import os
+
 
 try:
+    output_dir = snakemake.params['output_dir']
     plotfile = str(snakemake.input)
     output = str(snakemake.output)
     metric = snakemake.params['metric']
@@ -21,12 +24,15 @@ except:
     vmax = 30
     vmin = -30
     cmap = 'RdBu_r'
-    linewidth = 1
-    raise RuntimeError("Please use snakemake to define inputs")
+    linewidth = .55
+    output_dir = 'results'
+    #raise RuntimeError("Please use snakemake to define inputs")
 
 
-print('Uncomment line below and world.plot (for testing speedup, was off)')
-world = gpd.read_file("C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/input/adminboundaries/gadm36_levels.gpkg", layer=0)
+#print('Uncomment line below and world.plot (for testing speedup, was off)')
+world_file = os.path.join(output_dir, 'input', 'adminboundaries', 'gadm36_levels.gpkg')
+#world_file = """C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/input/adminboundaries/gadm36_levels.gpkg"""
+world = gpd.read_file(world_file, layer=0)
 
 minx = -87
 maxx = -63
@@ -48,7 +54,8 @@ ax.set_ylim(miny, maxy)
 
 world.plot(ax=ax, color=(.9,.9,.9))  # TODO
 data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':metric})
+#world.boundary.plot(ax=ax, linewidth=.01, color=(0.5,0.5,0.5))
 fig.set_figheight(11)
 fig.set_figwidth(20)
-plt.savefig(output, dpi=200)
+plt.savefig(output, dpi=200, bbox_inches='tight')
 print(f'Saved {output}')

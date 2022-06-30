@@ -46,6 +46,7 @@ rule fig_plot_current_EACA:
     input:
         rules.fig_aggregate_EACA.input.in_agg_EACA[0]  # constant
     params:
+        output_dir = config['output_dir'],
         metric = metric_EACA,
         vmax = 50000,
         vmin = 0,
@@ -63,6 +64,7 @@ rule fig_plot_diff_EACA:
     input:
         rules.fig_diff_EACA.output.out_diff_EACA
     params:
+        output_dir = config['output_dir'],
         metric = metric_EACA_perc,
         vmax = 30,
         vmin = -30,

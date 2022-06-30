@@ -61,6 +61,7 @@ rule fig_diff_EAD_agg:
 #     input:
 #         out_diff_EAD_agg
 #     params:
+#         output_dir = config['output_dir'],
 #         metric = metric_EAD_agg,
 #         vmax = 500000,
 #         vmin = -500000,
@@ -103,6 +104,7 @@ rule fig_diff_EAD_agg_norm:
 #     input:
 #         out_diff_EAD_agg
 #     params:
+#         output_dir = config['output_dir']
 #         metric = metric_EAD_agg_norm,
 #         vmax = 5000,
 #         vmin = -5000,
@@ -148,6 +150,7 @@ rule fig_diff_EAD_indiv_plot:
     input:
         out_diff_EAD_indiv
     params:
+        output_dir = config['output_dir'],
         metric = metric_EAD_indiv_perc,
         vmax = 100,
         vmin = -100,
@@ -163,6 +166,7 @@ rule fig_current_EAD_indiv_plot:
     input:
         os.path.join(config['output_dir'], f'power_output-constant', 'statistics', 'aggregate', "transmission_line_frequency_hit.gpkg")
     params:
+        output_dir = config['output_dir'],
         metric = metric_EAD_indiv_perkm,
         vmax = 50,
         vmin = 0,

@@ -54,7 +54,7 @@ include: "rules/download/gridfinder.smk"
 include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/power_download_all.smk"
-  
+
 include: "rules/process/split-world.smk"
 include: "rules/process/powerplants.smk"
 include: "rules/process/targets.smk"
