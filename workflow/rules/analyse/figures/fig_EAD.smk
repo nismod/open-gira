@@ -33,7 +33,7 @@ out_diff_EAD_plot_norm = os.path.join(config['output_dir'], 'power_figures', 'di
 ## aggregated (absolute) ##
 rule fig_aggregate_EAD_agg:
     input:
-        [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'aggregate', "transmission_line_reconstruction_costs.gpkg") for model in models_future]
+        [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'aggregate', "transmission_line_reconstruction_costs.gpkg") for model in models_future],
     params:
         output_dir = config['output_dir'],
         metric = metric_EAD_agg,

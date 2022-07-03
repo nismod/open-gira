@@ -6,6 +6,7 @@ import os
 
 rule figures_all:
     input:
+        initial_checks,
         out_diff_EACA_file,
         out_diff_EAD_agg,
         out_diff_EAD_agg_norm,

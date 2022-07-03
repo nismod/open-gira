@@ -18,8 +18,18 @@ name_cc_future_perc_diff = 'Future minus current (change in percent of current)'
 master_linewidth = .55  # linewidth when lines in GeoDataFrame
 
 # prelim checks
-all_folders = [os.path.join(config['output_dir'], f'power_output-{model}') for model in models_all]
+# all_folders = [os.path.join(config['output_dir'], f'power_output-{model}') for model in models_all]
 
-for folder in all_folders:  # check exist
-    if not os.path.exists(folder):
-        raise RuntimeWarning(f"\n----------------\nFolder {folder} does not exist. Can not proceed. Check that the workflow for {os.path.basename(folder)} has been completed and/or correctly named in {config['output_dir']} directory.\n----------------\n")
+# for folder in all_folders:  # check exist
+#     if not os.path.exists(folder):
+#         raise RuntimeWarning(f"\n----------------\nFolder {folder} does not exist. Can not proceed. Check that the workflow for {os.path.basename(folder)} has been completed and/or correctly named in {config['output_dir']} directory.\n----------------\n")
+
+initial_checks = os.path.join(config['output_dir'], 'power_figures', 'initial_checks.txt')
+rule fig_checks:
+    params:
+        output_dir = config['output_dir'],
+        models_all = models_all
+    output:
+        initial_checks
+    script:
+        os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'fig_initial.py')
