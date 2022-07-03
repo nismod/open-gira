@@ -28,6 +28,8 @@ except:
     output_dir = 'results'
     #raise RuntimeError("Please use snakemake to define inputs")
 
+max_dist = .5
+
 
 #print('Uncomment line below and world.plot (for testing speedup, was off)')
 world_file = os.path.join(output_dir, 'input', 'adminboundaries', 'gadm36_levels.gpkg')
@@ -42,6 +44,7 @@ miny = 16
 
 
 
+
 fig, ax = plt.subplots(1, 1, frameon = False)
 
 data = gpd.read_file(plotfile)
@@ -51,6 +54,15 @@ cax = divider.append_axes("right", size="5%", pad=0.1)
 
 ax.set_xlim(minx, maxx)
 ax.set_ylim(miny, maxy)
+
+
+# filter data
+if linewidth:  # if not None
+    data['len'] = [len(list(geom[1].coords)) for geom in data.geometry.items()]  # number of points on linestring
+    data['geolen'] = [geom[1].length for geom in data.geometry.items()]
+    data = data[~((data.len==2) & (data.geolen > max_dist))]  # filter overly long for visual
+
+
 
 world.plot(ax=ax, color=(.9,.9,.9))  # TODO
 data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':metric})

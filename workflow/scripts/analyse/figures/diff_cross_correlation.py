@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 try:
     output_dir = snakemake.params['output_dir']
     inputs = snakemake.input
-    remove = snakemake.params['remove']
+    remove = snakemake.params['remove_countries']
     name_cc_future_perc_diff = snakemake.params['name_cc_future_perc_diff']
     name_cc_future_diff = snakemake.params['name_cc_future_diff']
 except:

@@ -15,7 +15,7 @@ out_agg_EACA_plot_perc = os.path.join(config['output_dir'], 'power_figures', 'EA
 out_agg_EACA_plot = os.path.join(config['output_dir'], 'power_figures', 'EACA_current_aggregate.png')
 
 out_diff_EACA_file = os.path.join(config['output_dir'], 'power_figures', 'intermediate_files', f'difference_{merge_key_EACA}_{metric_EACA}.gpkg')
-print(os.path.join('workflow', 'scripts', 'analyse', 'figures', 'mean_agg.py'))
+
 rule fig_aggregate_EACA:
     input:
         in_agg_EACA = [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'aggregate', f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent_aggregated_region.gpkg") for model in models_future]

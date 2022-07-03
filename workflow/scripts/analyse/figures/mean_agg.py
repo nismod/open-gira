@@ -15,14 +15,6 @@ try:
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 
-# # metric
-# metric = 'effective_population_anually-expected'
-# metric = 'reconstruction_cost_annual_expected_fraction_normalised'
-# metric = 'reconstruction_cost_annual_expected'
-#
-# # key to merge metric on
-# merge_key = 'code'
-# #merge_key = 'link'
 
 plot_path = os.path.join(output_dir, 'power_figures')
 if not os.path.exists(plot_path):

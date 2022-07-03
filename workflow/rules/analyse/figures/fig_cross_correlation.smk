@@ -15,7 +15,7 @@ rule fig_cross_correlation:
         in_cc
     params:
         output_dir = config['output_dir'],
-        remove = remove_countries,
+        remove_countries = remove_countries,
         name_cc_future = name_cc_future,
         name_cc_constant = name_cc_constant
     output:
@@ -29,7 +29,7 @@ rule fig_cross_correlation_diff:
         in_cc
     params:
         output_dir = config['output_dir'],
-        remove = remove_countries,
+        remove_countries = remove_countries,
         name_cc_future_diff = name_cc_future_diff,
         name_cc_future_perc_diff = name_cc_future_perc_diff
     output:

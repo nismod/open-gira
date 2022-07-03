@@ -461,7 +461,12 @@ def direct_damage(linestring_df):   # TODO make this function non copy paste and
     return damage_lst
 
 
+def map_col(df1, df2, col_name):
+    '''Maps df on link from col_name on df1 to df2'''
 
+    dict_map = dict(zip(df1['link'], df1[col_name]))
+    df2[col_name] = df2['link'].map(dict_map)
+    return df2
 
 
 ## End function ##
@@ -594,6 +599,11 @@ if not isNone(windfile):
             layer="edges",
         )
 
+
+
+
+
+        ### OPTION 1 - Just keep overlay on damaged ID points ###
         box_edges["link"] = box_edges.apply(
             lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
         )  # consistent naming
@@ -604,9 +614,29 @@ if not isNone(windfile):
 
         box_edges_affected = box_edges[box_edges.link.isin(box_edges_affected_forid['link'].unique())]
 
-        # box_edges_affected["link"] = box_edges_affected.apply(
+
+
+        # ### OPTION 2 - Any line that intersects an ID Point ###
+        # box_edges["link"] = box_edges.apply(
         #     lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
         # )  # consistent naming
+        #
+        # box_edges_affected_forid = box_edges.overlay(
+        #     polys_affected, how="intersection"
+        # )  # keeps edges that are affected grid points (only a part has to be in)
+        #
+        #
+        # # print(f'len box_edges = {len(box_edges)}')
+        # box_edges_affected = box_edges[box_edges.link.isin(box_edges_affected_forid['link'].unique())]
+        # box_edges_affected = map_col(box_edges_affected_forid, box_edges_affected, 'ID_point')
+        # box_edges_affected = map_col(box_edges_affected_forid, box_edges_affected, 'region')
+        # box_edges_affected = map_col(box_edges_affected_forid, box_edges_affected, 'box_id_poly')
+
+
+
+
+        ### END OPTION ###
+
 
         edges_affected = edges_affected.append(
             box_edges_affected

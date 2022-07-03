@@ -31,7 +31,7 @@ except:
     sample_eval = ['0'] #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
     nh_eval = ['0_2017_66']  # list of storms to analyse (write None if none specified)
     thrval = 41
-    raise RuntimeError("Please use snakemake to define inputs")
+    #raise RuntimeError("Please use snakemake to define inputs")
 
 if 'linux' not in sys.platform:  # TODO
     import os
@@ -155,6 +155,27 @@ else:
 
     transmission_master['reconstruction_cost_annual_expected_per_km'] = [transmission_master['reconstruction_cost_annual_expected'].iloc[jj]/eval_dist_lst_output[jj] if eval_dist_lst_output[jj] !=0 else 0 for jj in range(len(transmission_master))]
 
+
+    # Fix geometries cut by units
+    links = set(transmission_master.link.unique())
+    link_boxes = set([f"box_{l.split('__')[0].split('_')[-1]}" for l in links]+[f"box_{l.split('__')[1].split('_')[-1]}" for l in links])
+    for ii, box_id in enumerate(link_boxes):
+        if ii == 0:
+            box_network = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"network_{box_id}.gpkg"))
+        else:
+            box_network_add = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"network_{box_id}.gpkg"))
+            box_network = box_network.append(box_network_add)
+
+    box_network["link"] = box_network.apply(
+        lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
+    )  # consistent naming
+
+
+    geom_dict = dict(zip(box_network['link'], box_network['geometry']))
+
+
+    transmission_master['geometry'] = transmission_master['link'].map(geom_dict)  # fix truncated geoms
+
     transmission_master.to_file(freq_hit_path, driver='GPKG')
 
     # Then aggregate
@@ -223,6 +244,8 @@ else:
     code_geoms_gpd['reconstruction_cost_avg'] = code_geoms_gpd['reconstruction_cost_sum']/storm_tot  # average over all hitting storms
     code_geoms_gpd['reconstruction_cost_annual_expected'] = code_geoms_gpd['code'].map(map_dict_ae).fillna(0)
     code_geoms_gpd['reconstruction_cost_annual_expected_fraction_normalised'] = (code_geoms_gpd['reconstruction_cost_annual_expected']/(code_geoms_gpd['code'].map(map_dict_ll))).fillna(0)  # This metric divides by the total unit length of transmission lines in that region.
+
+
 
     code_geoms_gpd.to_file(recon_path, driver='GPKG')
     print('written to file')
