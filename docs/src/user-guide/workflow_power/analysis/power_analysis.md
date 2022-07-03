@@ -11,3 +11,4 @@ These steps can be executed in one by entering `snakemake -s workflow/Snakefile 
 that if the `intersect_all`, `process_all` and/or `download_all` rules have not already run, then they will be run through this command
 automatically.
 
+See XXX for figure generation
