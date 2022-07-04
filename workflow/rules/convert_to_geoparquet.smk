@@ -5,8 +5,6 @@ def aggregate_input(wildcards):
     checkpoint_output = checkpoints.slice.get(**wildcards).output[0]
     # Handle the slice wildcard manually, because it's not set by the slice.smk rule
     input = expand(os.path.join(checkpoint_output, "{SLICE_SLUG}.osm.pbf"), SLICE_SLUG=wildcards.SLICE_SLUG)
-    print(f"checkpoint_output={checkpoint_output}")
-    print(f"input={input}")
     return input
 
 rule convert_to_geoparquet:
