@@ -6,11 +6,12 @@ the storm data and plots (according to the metric) the empirical distribution. T
 - targets with no power (f=0)
 - population affected
 - population with no power (f=0)
-- effective population affected
+- effective population affected (EACA see paper)
+- Reconstruction costs (EAD see paper)
 
-An example for GDP losses and population affected are seen (sequentially) below.
-![GDP Losses example](../power_img/empirical_GDP%20losses.png)
-![Population affected example](../power_img/empirical_population%20affected.png)
+An example for EACA and EAD are seen (sequentially) below.
+![EACA example](../power_img/EACA.png)
+![EAD example](../power_img/EAD.png)
 
 
 Each metric is saved to an image plot in `results/power_output/statistics/empirical`.
