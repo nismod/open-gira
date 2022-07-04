@@ -20,7 +20,7 @@ Here we investigate the average population affected, however, the full list of s
  - f_value
  - GDP losses
 
-Both the mean and cumulative values for the above are calculated with the exception of the f_value which does not investigate the cumulative value as this would not
+Both the anually expected and cumulative values for the above are calculated with the exception of the f_value which does not investigate the cumulative value as this would not
 make sense as a metric.
 
 
