@@ -1,20 +1,19 @@
-"""Takes a gpkg file and aggregates to chosen level
+"""Writes EAD and EACA metrics to file in power_figures
 
 """
 import os
-aggregate_levels_out = os.path.join(stat_path, "aggregate", f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent_aggregated_region.gpkg")
-rule analyse_aggregate_levels:
+
+out_EAD_EACA = [os.path.join(config['output_dir'], 'power_figures', f"{metric}_total.txt") for metric in ['EAD', 'EACA']]
+
+rule fig_EAD_EACA:
     input:
-        os.path.join(stat_path, "aggregate", f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent.gpkg"),
-        os.path.join(config['output_dir'], "input", "adminboundaries", f"gadm36_levels.gpkg")
+        [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'empirical', 'empirical_plotting_data', 'empirical_effective population affected_plotting_data.csv') for model in models_all],
+        [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'empirical', 'empirical_plotting_data', 'empirical_reconstruction cost_plotting_data.csv') for model in models_all]
     params:
         output_dir = config['output_dir'],
-        metrics_target = metrics_target,
-        top_select = config['top_select'],
-        increased_severity_sort = config['increased_severity_sort'],
-        aggregate_level = config['aggregate_level']
+        models_future = models_future
     output:
-        aggregate_levels_out
+        out_EAD_EACA
     script:
-        os.path.join('..', '..', 'scripts', 'analyse' ,'storm_aggregate_levels.py')
+        os.path.join('..', '..', '..', 'scripts', 'analyse' , 'figures', 'EAD_EACA-finder.py')
 

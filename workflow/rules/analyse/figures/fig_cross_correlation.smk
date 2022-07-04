@@ -6,8 +6,8 @@ import os
 
 in_cc = [os.path.join(config['output_dir'], f'power_output-{model}', 'statistics', 'empirical', "empirical_plotting_data", "country_matrix_both.csv") for model in models_all]
 
-out_cc_file = [os.path.join(config['output_dir'], 'power_figures', f"{name_cc_constant}.png"), os.path.join(config['output_dir'], 'power_figures', f"{name_cc_future}.png")]
-out_cc_file_diff = [os.path.join(config['output_dir'], 'power_figures', f"{name_cc_future_diff}.png"), os.path.join(config['output_dir'], 'power_figures', f"{name_cc_future_perc_diff}.png")]
+out_cc_file = [os.path.join(config['output_dir'], 'power_figures', f"JHR_{name_cc_constant}.png"), os.path.join(config['output_dir'], 'power_figures', f"JHR_{name_cc_future}.png")]
+out_cc_file_diff = [os.path.join(config['output_dir'], 'power_figures', f"JHR_{name_cc_future_diff}.png"), os.path.join(config['output_dir'], 'power_figures', f"JHR_{name_cc_future_perc_diff}.png")]
 
 
 rule fig_cross_correlation:

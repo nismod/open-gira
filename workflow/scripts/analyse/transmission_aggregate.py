@@ -69,7 +69,7 @@ def eval_dist_lst(linestring_df):
         else:  #multistring
             for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
                 line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
-                dist_tot = eval_coordist(line_coords)
+                dist_tot += eval_coordist(line_coords)
 
         lst.append(dist_tot)
 

@@ -52,11 +52,12 @@ def plot_relation_matrix(matrix, country_index, title, fig_num):
     plt.xticks(list(country_index_plot.values()), labels=list(country_index_plot.keys()), rotation=90)
     plt.ylabel('Country A')
 
-    plt.title(title)
-    plt.colorbar()
+    #plt.title(title)
+    cbar = plt.colorbar()
+    cbar.set_label(f'JHR ({title}) [-]', rotation=90)
 
     plt.show()
-    plt.savefig(os.path.join(plot_path, title))
+    plt.savefig(os.path.join(plot_path, f'JHR_{title}'), bbox_inches='tight')
     print(f'Saved {title}')
 
 

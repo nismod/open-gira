@@ -22,9 +22,9 @@ rule fig_aggregate_EACA:
     params:
         output_dir = config['output_dir'],
         metric = metric_EACA,
-        merge_key = merge_key_EACA
+        merge_key = merge_key_EACA,
     output:
-        out_agg_EACA = out_agg_EACA_file
+        out_agg_EACA = out_agg_EACA_file#
     script:
         os.path.join("..", "..", "..", "scripts", "analyse", "figures", "mean_agg.py")
 
@@ -51,7 +51,8 @@ rule fig_plot_current_EACA:
         vmax = 50000,
         vmin = 0,
         cmap = 'Reds',
-        linewidth = None
+        linewidth = None,
+        legend_name = 'EACA (constant climate) [people]'
     output:
         out_agg_EACA_plot
     script:
@@ -69,7 +70,8 @@ rule fig_plot_diff_EACA:
         vmax = 30,
         vmin = -30,
         cmap = 'RdBu_r',
-        linewidth = None
+        linewidth = None,
+        legend_name = 'EACA change [% of constant climate]'
     output:
         out_agg_EACA_plot_perc
     script:

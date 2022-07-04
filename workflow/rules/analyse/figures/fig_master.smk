@@ -19,5 +19,6 @@ rule figures_all:
         out_agg_EACA_plot_perc,
         out_diff_EAD_indiv_plot,
         out_current_EAD_indiv_plot,
+        out_EAD_EACA,
         #out_diff_EAD_plot,
         #out_diff_EAD_plot_norm

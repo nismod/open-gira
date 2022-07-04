@@ -80,13 +80,13 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
 
 plt.xlabel('Return Period [years]')
 plt.ylabel(f'{metric} [{unit}]')
-plt.title(f"Empirical - {metric}")
+#plt.title(f"Empirical - {metric}")
 
 plt.grid(axis='both', which='both')
 plt.xscale("log")
 
 plt.legend()
 
-plt.savefig(output)
+plt.savefig(output, bbox_inches='tight')
 
 plt.show()

@@ -25,10 +25,10 @@ out_diff_EAD_agg = os.path.join(config['output_dir'], 'power_figures', 'intermed
 out_diff_EAD_agg_norm = os.path.join(config['output_dir'], 'power_figures', 'intermediate_files', f'difference_{merge_key_EAD_agg_norm}_{metric_EAD_agg_norm}.gpkg')
 out_diff_EAD_indiv = os.path.join(config['output_dir'], 'power_figures', 'intermediate_files', f'difference_{merge_key_EAD_indiv}_{metric_EAD_indiv}.gpkg')
 
-out_diff_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'difference_perc_recon.png')
-out_current_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'current_recon_per_km.png')
-out_diff_EAD_plot = os.path.join(config['output_dir'], 'power_figures', 'difference_recon.png')
-out_diff_EAD_plot_norm = os.path.join(config['output_dir'], 'power_figures', 'difference_recon_norm.png')
+out_diff_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'EAD_difference_perc_recon.png')
+out_current_EAD_indiv_plot = os.path.join(config['output_dir'], 'power_figures', 'EAD_current_recon_per_km.png')
+out_diff_EAD_plot = os.path.join(config['output_dir'], 'power_figures', 'EAD_difference_recon.png')
+out_diff_EAD_plot_norm = os.path.join(config['output_dir'], 'power_figures', 'EAD_difference_recon_norm.png')
 
 ## aggregated (absolute) ##
 rule fig_aggregate_EAD_agg:
@@ -155,7 +155,8 @@ rule fig_diff_EAD_indiv_plot:
         vmax = 100,
         vmin = -100,
         cmap = 'RdBu_r',
-        linewidth = master_linewidth
+        linewidth = master_linewidth,
+        legend_name = 'EAD change per km [% of constant climate]'
     output:
         out_diff_EAD_indiv_plot
     script:
@@ -168,10 +169,11 @@ rule fig_current_EAD_indiv_plot:
     params:
         output_dir = config['output_dir'],
         metric = metric_EAD_indiv_perkm,
-        vmax = 50,
+        vmax = 250,
         vmin = 0,
         cmap = 'Reds',
-        linewidth = master_linewidth
+        linewidth = master_linewidth,
+        legend_name = 'EAD per km [USD]'
     output:
         out_current_EAD_indiv_plot
     script:

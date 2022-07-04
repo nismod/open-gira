@@ -5,7 +5,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-
+from shapely.geometry import LineString
 
 try:
     output_dir = snakemake.params['output_dir']
@@ -16,6 +16,7 @@ try:
     vmin = snakemake.params['vmin']
     cmap = snakemake.params['cmap']
     linewidth = snakemake.params['linewidth']
+    legend_name = snakemake.params['legend_name']
 except:
     plotfile = "C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/power_figures/intermediate_files/difference_link_reconstruction_cost_annual_expected.gpkg"
     output = "C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/power_figures/fig1.png"
@@ -26,6 +27,7 @@ except:
     cmap = 'RdBu_r'
     linewidth = .55
     output_dir = 'results'
+    legend_name = 'LEG NAME'
     #raise RuntimeError("Please use snakemake to define inputs")
 
 max_dist = .5
@@ -43,6 +45,26 @@ miny = 16
 
 
 
+def eval_dist_lst(linestring_df):
+    """"Evaluate the coordinate dataframe and returns distance list in km"""
+
+    lst = []
+    for ii in range(len(linestring_df)):
+        dist_tot = 0
+        if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
+            line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
+            dist_tot = len(line_coords)
+
+        else:  #multistring
+            for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
+                line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
+                dist_tot += len(line_coords)
+
+        lst.append(dist_tot)
+
+    return lst
+
+
 
 
 fig, ax = plt.subplots(1, 1, frameon = False)
@@ -58,14 +80,25 @@ ax.set_ylim(miny, maxy)
 
 # filter data
 if linewidth:  # if not None
-    data['len'] = [len(list(geom[1].coords)) for geom in data.geometry.items()]  # number of points on linestring
+    data['len'] = eval_dist_lst(data)  # number of points on linestring
     data['geolen'] = [geom[1].length for geom in data.geometry.items()]
     data = data[~((data.len==2) & (data.geolen > max_dist))]  # filter overly long for visual
 
 
+if vmax == 'evenmax' and vmin == 'evenmin':  # ensure either side of zero is equal distance from vmax and vmin
+    vmax = max(data[metric].max(), -data[metric].min())
+    vmin = max(-data[metric].max(), data[metric].min())
+
+
+if vmax == 'max':
+    vmax = data[metric].max()
+if vmin == 'min':
+    vmin = data[metric].min()
+
+
 
 world.plot(ax=ax, color=(.9,.9,.9))  # TODO
-data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':metric})
+data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':legend_name})
 #world.boundary.plot(ax=ax, linewidth=.01, color=(0.5,0.5,0.5))
 fig.set_figheight(11)
 fig.set_figwidth(20)

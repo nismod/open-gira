@@ -85,6 +85,7 @@ include: "rules/analyse/figures/fig_CDFs.smk"
 include: "rules/analyse/figures/fig_EACA.smk"
 include: "rules/analyse/figures/fig_EAD.smk"
 include: "rules/analyse/figures/fig_cross_correlation.smk"
+include: "rules/analyse/figures/fig_EAD_EACA.smk"
 include: "rules/analyse/figures/fig_master.smk"
 
 include: "rules/download_dataset.smk"

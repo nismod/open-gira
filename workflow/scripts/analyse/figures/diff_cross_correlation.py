@@ -49,18 +49,22 @@ def plot_relation_matrix(matrix, country_index, title, fig_num, perc):
 
     if perc == True:
         plt.imshow(matrix, cmap='RdBu_r', vmax=50, vmin=-50)
+        ext = ' [% of constant climate]'
     else:
         plt.imshow(matrix, cmap='RdBu_r', vmax=0.1, vmin=-0.1)
+        ext = ' [-]'
     plt.xlabel('Country B')
     plt.yticks(list(country_index_plot.values()), labels=list(country_index_plot.keys()))
     plt.xticks(list(country_index_plot.values()), labels=list(country_index_plot.keys()), rotation=90)
     plt.ylabel('Country A')
 
-    plt.title(title)
-    plt.colorbar()
+    #plt.title(title)
+    cbar = plt.colorbar()
+    cbar.set_label(f'JHR change{ext}', rotation=90)
+
 
     plt.show()
-    plt.savefig(os.path.join(plot_path, title))
+    plt.savefig(os.path.join(plot_path, f'JHR_{title}'), bbox_inches='tight')
     print(f'Saved {title}')
 
 

@@ -6,12 +6,17 @@ must have one named constant"""
 
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 
 
-files_path_master = 'M:/Users/maxrob/Documents/OXFORD/ECI RA/Paper_figures/EAD_EACA/data'
-plot_path = 'M:/Users/maxrob/Documents/OXFORD/ECI RA/Paper_figures/EAD_EACA'
+try:
+    output_dir = snakemake.params['output_dir']
+    models_future = snakemake.params['models_future']
+except:
+    raise RuntimeError("Please use snakemake to define inputs")
+
+
+
 
 def traprule(lst, spacing):
     """Trapezium rule"""
@@ -24,18 +29,21 @@ def traprule(lst, spacing):
 
 metrics = ['EAD', 'EACA']
 metric_unit = {'EAD': 'USD', 'EACA': 'people'}
+metric_file = {'EAD': 'empirical_reconstruction cost_plotting_data.csv', 'EACA': 'empirical_effective population affected_plotting_data.csv'}
+
 
 for metric in metrics:
-    data_constant = pd.read_csv(os.path.join('data', metric, 'constant.csv'))
+    write_lst = []
+    data_constant = pd.read_csv(os.path.join(output_dir, 'power_output-constant', 'statistics', 'empirical', 'empirical_plotting_data', metric_file[metric]))
     print(f'\n\n {metric}')
-    csv_files = [x for x in os.listdir(os.path.join('data', metric)) if 'constant' not in x]
-    for ii, csv_file in enumerate(csv_files):
+    for ii, model in enumerate(models_future):
         # if ii >=1:
         #     break
+        model_path = os.path.join(output_dir, f'power_output-{model}', 'statistics', 'empirical', 'empirical_plotting_data', metric_file[metric])
         if ii == 0:
-            data = pd.read_csv(os.path.join('data', metric, csv_file))
+            data = pd.read_csv(model_path)
         else:
-            data_new = pd.read_csv(os.path.join('data', metric,  csv_file))
+            data_new = pd.read_csv(model_path)
             data = pd.merge(data, data_new, how='outer', on=['x'], suffixes=(f'_A{ii}', f'_B{ii}'))
 
     col_lst = ['y_cen', 'y_min', 'y_max']
@@ -57,8 +65,13 @@ for metric in metrics:
 
 
         metric_unit_indiv = metric_unit[metric]
-        print(f'{df_name}: {metric} = {format(metric_X, ".1E")} {metric_unit_indiv}, UR: {format(metric_L, ".1E")} {metric_unit_indiv} - {format(metric_U, ".1E")} {metric_unit_indiv}')
+        details_metric = f'{df_name}: {metric} = {format(metric_X, ".1E")} {metric_unit_indiv}, UR: {format(metric_L, ".1E")} {metric_unit_indiv} - {format(metric_U, ".1E")} {metric_unit_indiv}'
+        print(details_metric)
+        write_lst.append(details_metric)
 
-input('\n\npress enter')
+    txt_file = os.path.join(output_dir, 'power_figures', f"{metric}_total.txt")
+    with open(txt_file, 'w') as f:
+        f.write(write_lst[0]+'  ||  ')
+        f.write(write_lst[1])
 
 

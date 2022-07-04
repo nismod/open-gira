@@ -10,8 +10,8 @@ import os
 models_future = ['CMCC-CM2-VHR4', 'CNRM-CM6-1-HR', 'EC-Earth3P-HR', 'HadGEM3-GC31-HM']
 models_all = ['constant']+models_future  # constant MUST be first
 remove_countries = ['USA', 'VEN', 'CYM', 'VCT', 'BHS', 'ATG', 'DMA', 'LCA', 'TTO']
-name_cc_constant = 'Constant'
-name_cc_future = 'Future'
+name_cc_constant = 'constant climate'
+name_cc_future = 'future climate'
 name_cc_future_diff = 'Future minus current'
 name_cc_future_perc_diff = 'Future minus current (change in percent of current)'
 
