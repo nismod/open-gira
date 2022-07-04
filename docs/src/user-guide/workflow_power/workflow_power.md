@@ -31,6 +31,6 @@ Furthermore, adding `-n` at the end will allow for a 'dry-run' in which the work
 executed. This allows for the user to check expected workflow outputs. Lastly, should the workflow be interruped
 (not recommended), then `--rerun-incomplete` should be added on the end of the command.
 
-If issues occur, it is recommended to doo each of the four commands separately. Each workflow process has a further detailed
+If issues occur, it is recommended to do each of the four commands separately. Each workflow process has a further detailed
 explanation and possible issue workarounds. An overview of these files can be found [here](../../SUMMARY.md).
 
