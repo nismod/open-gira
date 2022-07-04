@@ -30,7 +30,7 @@ if not os.path.exists(plot_path):
 metric = 'EAD'
 unit = 'USD'
 if EACA:
-    metric = 'Effective population affected'
+    metric = 'EACA'
     unit = 'people'
 
 

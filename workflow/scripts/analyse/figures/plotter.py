@@ -99,7 +99,7 @@ if vmin == 'min':
 
 world.plot(ax=ax, color=(.9,.9,.9))  # TODO
 data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':legend_name})
-#world.boundary.plot(ax=ax, linewidth=.01, color=(0.5,0.5,0.5))
+data.boundary.plot(ax=ax, linewidth=.1, color=(0.5,0.5,0.5))
 fig.set_figheight(11)
 fig.set_figwidth(20)
 plt.savefig(output, dpi=200, bbox_inches='tight')
