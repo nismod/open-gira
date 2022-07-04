@@ -23,6 +23,8 @@ The `{rule command}` options are as follows
 3. Intersect: `intersect_all`
 4. Analyse: `analyse_all`
 
+Note that the `figures_all` command to generate the figures (c.f. [here](analysis/power_analysis_figures.md]) can only be used once the main 4 steps (see above) have been completed.
+
 By running any command, the previous ones will be included (e.g. if `intersect_all` is called, then `download_all` and `process_all` are also performed).
 The `{core_numbers}` represents the maximum number of cores that snakemake will be allocated.
 Furthermore, adding `-n` at the end will allow for a 'dry-run' in which the workflow processes are shown but not
