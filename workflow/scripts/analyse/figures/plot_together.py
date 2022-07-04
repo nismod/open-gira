@@ -42,8 +42,7 @@ data_constant = pd.read_csv(inputs[0])
 
 
 for ii, csv_file in enumerate(csv_files):
-    # if ii >=1:
-    #     break
+
     print(csv_file)
     if ii == 0:
         data = pd.read_csv(csv_file)
@@ -58,7 +57,7 @@ for col_id in col_lst:
 
 data = data[col_lst+['x']]
 if EACA:
-    data = data[:-7]  # TODO why
+    data = data[:-7]  # dependent on data
 
 
 
@@ -80,8 +79,6 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
 
 plt.xlabel('Return Period [years]')
 plt.ylabel(f'{metric} [{unit}]')
-#plt.title(f"Empirical - {metric}")
-
 plt.grid(axis='both', which='both')
 plt.xscale("log")
 

@@ -17,7 +17,7 @@ try:
 except:
     output_dir = sys.argv[1]
     thrval = sys.argv[2]
-    #raise RuntimeError("Please use snakemake to define inputs")
+    raise RuntimeError("Please use snakemake to define inputs")
 
 
 

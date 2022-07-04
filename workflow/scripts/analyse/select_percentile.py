@@ -58,7 +58,7 @@ for metric in metrics_target:
     idx = len(x[x>=rp_percentile])  # find index
 
     storm_select = stats.sort_values(metric_sortby[metric], ascending=False)  # select percentile
-    #print(f"idx {idx}, len {len(stats)}, {years_tot}, {percentile}, {rp_percentile}")
+
     if idx <= len(stats) - 1:  # if idx > number of storms, there is no damage for that storm
         metrics_none = True  # now, override
         storm_region = storm_select['Storm Region'].iloc[idx]

@@ -31,12 +31,8 @@ except:
     sample_eval = ['0'] #[0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
     nh_eval = ['0_2017_66']  # list of storms to analyse (write None if none specified)
     thrval = 41
-    #raise RuntimeError("Please use snakemake to define inputs")
+    raise RuntimeError("Please use snakemake to define inputs")
 
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
 
 
 def eval_dist(linestring_df):
@@ -107,9 +103,7 @@ stats = pd.read_csv(csv_path, keep_default_na=False)
 storms_increasing_severity = stats.sort_values('reconstruction cost', ascending=True)['Storm ID']
 storm_id_metrics_weighting = dict(zip(storms_increasing_severity, return_periods))  # dictionary {storm1: return_period_of_storm1, storm2: ... }
 
-# storm_tot = len(stats)  # TODO
-# #raise RuntimeError("delete above")
-# print("THIS MESSAGE SHOULD BE GONE")
+
 
 folder_agg = os.path.join(output_dir, "power_output", "statistics", "aggregate")
 if not os.path.exists(folder_agg):
@@ -222,7 +216,7 @@ else:
 
 
         if len(transmission_master_bounded) >= 1:
-            #bool_list = [True if t.intersects(geom_area.geometry) else False for t in tqdm(transmission_master_bounded.geometry, desc='geom bool', total=len(transmission_master_bounded))]
+
             bool_list = [True if t.intersects(geom_area.geometry) else False for t in transmission_master_bounded.geometry]
 
             overlap_transmission = transmission_master_bounded[bool_list]

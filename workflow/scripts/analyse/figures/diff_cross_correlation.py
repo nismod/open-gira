@@ -20,12 +20,6 @@ assert type(remove) == list
 
 
 
-
-#remove = ['USA', 'VEN', 'CYM', 'VCT', 'BHS']  # countries to remove
-#remove = ['USA', 'VEN', 'CYM', 'VCT', 'BHS', 'ATG', 'DMA', 'LCA', 'TTO']  # countries to remove
-
-
-
 plot_path = os.path.join(output_dir, 'power_figures')
 if not os.path.exists(plot_path):
     os.makedirs(plot_path)
@@ -69,11 +63,8 @@ def plot_relation_matrix(matrix, country_index, title, fig_num, perc):
 
 
 
-#files_sorted = [[file for file in inputs if 'constant' in file], [file for file in inputs if 'constant' not in file]]  # TODO fix
 files_sorted = [[inputs[0]], inputs[1:]]
 
-# files_sorted = [[file for file in files if 'constant' in file]]
-# files_sorted = [[file for file in files if 'constant' not in file]]
 
 datas = []
 for ii, files in enumerate(files_sorted):

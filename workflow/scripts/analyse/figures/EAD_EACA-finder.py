@@ -37,8 +37,7 @@ for metric in metrics:
     data_constant = pd.read_csv(os.path.join(output_dir, 'power_output-constant', 'statistics', 'empirical', 'empirical_plotting_data', metric_file[metric]))
     print(f'\n\n {metric}')
     for ii, model in enumerate(models_future):
-        # if ii >=1:
-        #     break
+
         model_path = os.path.join(output_dir, f'power_output-{model}', 'statistics', 'empirical', 'empirical_plotting_data', metric_file[metric])
         if ii == 0:
             data = pd.read_csv(model_path)
@@ -49,7 +48,7 @@ for metric in metrics:
     col_lst = ['y_cen', 'y_min', 'y_max']
     for col_id in col_lst:
         data[col_id] = data[[c for c in data.columns if col_id in c]].mean(axis=1)
-    data = data[col_lst+['x']][:-7]  # TODO why
+    data = data[col_lst+['x']][:-7]  # data specific
 
     data_dict = {'current climate': data_constant, 'future climate': data}
     for ii, (df_name, df) in enumerate(data_dict.items()):

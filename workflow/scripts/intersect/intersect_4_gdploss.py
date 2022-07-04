@@ -31,7 +31,7 @@ try:
     wind_file_end = snakemake.params['wind_file_end']
     all_boxes = snakemake.params['all_boxes']
 except:
-    raise RuntimeError("Snakemake parameters not found") # TODO
+    raise RuntimeError("Snakemake parameters not found")
     region = 'NA'
     sample = '0'
     nh = '0_148_11'
@@ -42,16 +42,13 @@ except:
     wind_file_end = '_IBTRACSDELTA'
     central_threshold = 43
     minimum_threshold = 39
-    maximum_threshold = 47  # TODO add functionality for no min or max, just central (or not..)
+    maximum_threshold = 47
     all_boxes = ['box_955', 'box_956', 'box_957', 'box_884']
     all_boxes = [f'box_{num}' for num in [809, 810, 811, 812, 880, 881, 882, 883, 884, 952, 955, 956, 957, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1097, 1098, 1099, 1103, 1104]]
     all_boxes = [f'box_{num}' for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]]
 
 
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+
 
 
 reconstruction_cost_high = float(reconstruction_cost_high)
@@ -396,28 +393,6 @@ def add_stats(targets, storm_path_thrval, direct_damage_cost):
 
 
 
-# def dist_km(linestring_df):   # TODO make this function non copy paste and fix the depreciaton errors. Also fix the supression errors of processing file
-#     """For a dataframe where the geometry consists of linestrings, returns the distance in km"""
-#     len_km = 0
-#
-#     for ii in range(len(linestring_df)):
-#         if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
-#             line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
-#             line_coords = [(x[1], x[0]) for x in line_coords]  # switch lon lat
-#             #print(line_coords)
-#             if len(line_coords) >= 2:
-#                 for jj in range(len(line_coords)-1):
-#                     len_km += distance.distance(line_coords[jj], line_coords[jj+1]).km  # add the km length of that row
-#         else:  #multistring
-#             for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
-#                 line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
-#                 line_coords = [(x[1], x[0]) for x in line_coords]
-#                 #print(line_coords)
-#                 if len(line_coords) >= 2:
-#                     for jj in range(len(line_coords)-1):
-#                         len_km += distance.distance(line_coords[jj], line_coords[jj+1]).km  # add the km length of that row
-#     return len_km
-
 
 
 def eval_coords(coords, type, wind, fragility_data):
@@ -434,7 +409,7 @@ def eval_coords(coords, type, wind, fragility_data):
     return cost
 
 
-def direct_damage(linestring_df):   # TODO make this function non copy paste and fix the depreciaton errors. Also fix the supression errors of processing file
+def direct_damage(linestring_df):
     """For a dataframe where the geometry consists of linestrings, returns a list of direct damages (order of linestring_df) based on fragility curve"""
 
 
@@ -793,7 +768,7 @@ if not isNone(windfile):
                 direct_damages = direct_damage(edges_affected_thrval)
                 direct_damage_cost = sum(direct_damages)
                 edges_affected_thrval['reconstruction_cost'] = direct_damages
-                # TODO add here damage costs using fragility and pop-days
+
 
                 edges_affected_thrval.to_file(
                     os.path.join(

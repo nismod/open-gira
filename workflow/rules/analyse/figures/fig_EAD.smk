@@ -100,7 +100,7 @@ rule fig_diff_EAD_agg_norm:
     script:
         os.path.join("..", "..", "..", 'scripts', 'analyse', 'figures', 'diff_agg.py')
 
-# rule fig_diff_EAD_agg_plot_norm:  # TODO need to rerun outputs to get all keys
+# rule fig_diff_EAD_agg_plot_norm:
 #     input:
 #         out_diff_EAD_agg
 #     params:

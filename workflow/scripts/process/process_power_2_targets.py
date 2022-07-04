@@ -8,15 +8,9 @@ try:
     box_id = snakemake.params["box_id"]
     output_dir = snakemake.params['output_dir']
 except:
-    # output_dir = sys.argv[1]
-    # box_id = sys.argv[2]
-    output_dir = 'results'
-    box_id = 'box_1028'
+    output_dir = sys.argv[1]
+    box_id = sys.argv[2]
 
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
 
 
 def combine(lsts):

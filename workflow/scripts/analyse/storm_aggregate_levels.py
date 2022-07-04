@@ -26,12 +26,6 @@ except:  # for testing only
 
 increased_severity_sort_bool = str(increased_severity_sort)[0]  # either T or F
 
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
-
-#target_paths, storm_tot, years_tot = find_storm_files('targets', output_dir, region_eval, sample_eval, nh_eval, thrval)
 
 
 metrics_target_nof = metrics_target.copy()

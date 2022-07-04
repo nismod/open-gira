@@ -14,7 +14,6 @@ import geopandas as gpd
 import time
 
 
-
 try:
     metric = snakemake.params['metric']
     merge_key = snakemake.params['merge_key']
@@ -22,15 +21,6 @@ try:
     output = snakemake.output
 except:
     raise RuntimeError("Please use snakemake to define inputs")
-
-#
-# data_source = 'data'
-# metric = 'effective_population_anually-expected'
-# #metric = 'reconstruction_cost_annual_expected'
-# #metric = 'reconstruction_cost_annual_expected_fraction_normalised'
-#
-# merge_key = 'code'
-# #merge_key = 'link'
 
 
 assert len(inputs) == 2

@@ -18,8 +18,8 @@ try:
     linewidth = snakemake.params['linewidth']
     legend_name = snakemake.params['legend_name']
 except:
-    plotfile = "C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/power_figures/intermediate_files/difference_link_reconstruction_cost_annual_expected.gpkg"
-    output = "C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/power_figures/fig1.png"
+    plotfile = "N/A"
+    output = "N/A"
     metric = 'effective_population_anually-expected'
     metric = 'perc_reconstruction_cost_annual_expected'
     vmax = 30
@@ -28,14 +28,12 @@ except:
     linewidth = .55
     output_dir = 'results'
     legend_name = 'LEG NAME'
-    #raise RuntimeError("Please use snakemake to define inputs")
+    raise RuntimeError("Please use snakemake to define inputs")
 
 max_dist = .5
 
 
-#print('Uncomment line below and world.plot (for testing speedup, was off)')
 world_file = os.path.join(output_dir, 'input', 'adminboundaries', 'gadm36_levels.gpkg')
-#world_file = """C:/Users/maxor/Documents/PYTHON/GIT/open-gira/results/input/adminboundaries/gadm36_levels.gpkg"""
 world = gpd.read_file(world_file, layer=0)
 
 minx = -87
@@ -97,7 +95,7 @@ if vmin == 'min':
 
 
 
-world.plot(ax=ax, color=(.9,.9,.9))  # TODO
+world.plot(ax=ax, color=(.9,.9,.9))
 data.plot(column=metric, ax=ax, linewidth=linewidth, legend=True, cmap=cmap, vmax=vmax, vmin=vmin, cax=cax, legend_kwds={'label':legend_name})
 data.boundary.plot(ax=ax, linewidth=.1, color=(0.5,0.5,0.5))
 fig.set_figheight(11)

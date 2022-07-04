@@ -19,15 +19,8 @@ try:
     box_id = snakemake.params["box_id"]
     output_dir = snakemake.params['output_dir']
 except:
-    # output_dir = sys.argv[1]
-    # box_id = sys.argv[2]
-    output_dir = 'results'
-    box_id = 'box_1029'
-
-if 'linux' not in sys.platform:  # TODO
-    import os
-    path = """C:\\Users\\maxor\\Documents\\PYTHON\\GIT\\open-gira"""
-    os.chdir(path)
+    output_dir = sys.argv[1]
+    box_id = sys.argv[2]
 
 
 def timer(s):
@@ -169,7 +162,7 @@ if __name__ == "__main__":
             # timer(start)
 
             geod = Geod(ellps="WGS84")
-            edge_limit = 20_000  # meters   # TODO 200_000 vs 20_000
+            edge_limit = 20_000  # meters   # TODO
 
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,

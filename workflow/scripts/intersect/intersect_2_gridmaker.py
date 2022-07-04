@@ -135,8 +135,6 @@ def create_grid_box(box_id, idx, totboxes):
 
 if __name__ == "__main__":
     nodesuse = max(1, cpu_count() - 2)
-    if "linux" not in sys.platform:
-        nodesuse = 10  # for testing
 
     with open(
         os.path.join(output_dir, "power_intersection", "regions", f"{region}_boxes.txt"), "r"
