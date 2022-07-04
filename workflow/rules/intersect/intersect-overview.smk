@@ -5,14 +5,19 @@ Provides an overview for all storms. This is useful for further analysis decisio
 import os
 
 
-
-stat_csv = expand(os.path.join(
-    config['output_dir'], "power_output", "statistics", "combined_storm_statistics_{thrval}.csv"
-), thrval=THRESHOLDS)
+stat_csv = expand(
+    os.path.join(
+        config["output_dir"],
+        "power_output",
+        "statistics",
+        "combined_storm_statistics_{thrval}.csv",
+    ),
+    thrval=THRESHOLDS,
+)
 
 all_indiv_stat_csv = expand(
     os.path.join(
-        config['output_dir'],
+        config["output_dir"],
         "power_output",
         "statistics",
         "{region}",
@@ -21,7 +26,7 @@ all_indiv_stat_csv = expand(
     ),
     region=REGIONS,
     sample=SAMPLES,
-    thrval=THRESHOLDS
+    thrval=THRESHOLDS,
 )
 
 
@@ -38,7 +43,7 @@ def aggregate_input(wildcards):
 
     ret = expand(
         os.path.join(
-            config['output_dir'],
+            config["output_dir"],
             "power_intersection",
             "storm_data",
             "individual_storms",
@@ -53,7 +58,7 @@ def aggregate_input(wildcards):
         ).nh,
         region=wildcards.region,
         sample=wildcards.sample,
-        thrval=wildcards.thrval
+        thrval=wildcards.thrval,
     )
     return ret
 
@@ -64,7 +69,7 @@ rule merge_overview_indiv_stats:
         aggregate_input,
     output:
         os.path.join(
-            config['output_dir'],
+            config["output_dir"],
             "power_output",
             "statistics",
             "{region}",
@@ -72,7 +77,9 @@ rule merge_overview_indiv_stats:
             "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
         ),
     script:
-        os.path.join("..", "..", "scripts", "intersect", "intersect_overview_individual.py")
+        os.path.join(
+            "..", "..", "scripts", "intersect", "intersect_overview_individual.py"
+        )
 
 
 rule merge_overview_all_stats:
@@ -82,6 +89,6 @@ rule merge_overview_all_stats:
     output:
         stat_csv,
     params:
-        thresholds=THRESHOLDS
+        thresholds=THRESHOLDS,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_overview.py")

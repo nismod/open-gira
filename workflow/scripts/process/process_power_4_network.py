@@ -17,7 +17,7 @@ from importing_modules import *
 
 try:
     box_id = snakemake.params["box_id"]
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
@@ -109,12 +109,13 @@ if __name__ == "__main__":
 
     edges = gpd.read_file(
         os.path.join(
-            output_dir, "power_processed", "all_boxes", f"{box_id}", f"gridfinder_{box_id}.gpkg"
+            output_dir,
+            "power_processed",
+            "all_boxes",
+            f"{box_id}",
+            f"gridfinder_{box_id}.gpkg",
         )
     )
-
-
-
 
     if len(edges) == 1 and edges["geometry"].any() == None:  # catch empty
         edges = gpd.GeoDataFrame(columns=edges.columns)
@@ -229,28 +230,45 @@ if __name__ == "__main__":
             network = snkit.network.add_topology(network, id_col="id")
         # timer(start)
 
-
-        box_id_box = gpd.read_file(os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"))
+        box_id_box = gpd.read_file(
+            os.path.join(
+                output_dir,
+                "power_processed",
+                "all_boxes",
+                box_id,
+                f"geom_{box_id}.gpkg",
+            )
+        )
 
         # this file contains manual fixes required for the network
-        connector_fixes = pd.read_csv(os.path.join('workflow', 'scripts', 'process', 'connector_fixes.csv'))
+        connector_fixes = pd.read_csv(
+            os.path.join("workflow", "scripts", "process", "connector_fixes.csv")
+        )
 
         if len(connector_fixes) >= 1:
             for ii, fix in enumerate(connector_fixes.itertuples()):
                 if box_id_box.contains(Point(fix.X1, fix.Y1)).any():
-                    print(f'Adding connector fix {ii}')
-                    first_point = snkit.network.nearest_node(Point(fix.X1, fix.Y1), network.nodes)
+                    print(f"Adding connector fix {ii}")
+                    first_point = snkit.network.nearest_node(
+                        Point(fix.X1, fix.Y1), network.nodes
+                    )
                     from_id = first_point.id
                     from_loc = first_point.geometry
-                    second_point = snkit.network.nearest_node(Point(fix.X2, fix.Y2), network.nodes)
+                    second_point = snkit.network.nearest_node(
+                        Point(fix.X2, fix.Y2), network.nodes
+                    )
                     to_id = second_point.id
                     to_loc = second_point.geometry
                     geom = LineString([from_loc, to_loc])
-                    append_line = {'source_id':f'fix{ii}', 'source':'gridfinder', 'box_id':box_id, 'geometry': geom, 'from_id': from_id, 'to_id': to_id}
+                    append_line = {
+                        "source_id": f"fix{ii}",
+                        "source": "gridfinder",
+                        "box_id": box_id,
+                        "geometry": geom,
+                        "from_id": from_id,
+                        "to_id": to_id,
+                    }
                     network.edges = network.edges.append(append_line, ignore_index=True)
-
-
-
 
         network.edges["box_id"] = box_id
 

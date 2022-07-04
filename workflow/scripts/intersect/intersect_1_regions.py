@@ -10,7 +10,7 @@ from shapely.geometry import box
 
 try:
     region = snakemake.params["region"]
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
     region = sys.argv[2]
@@ -18,7 +18,11 @@ except:
 
 gdf_box = gpd.read_file(os.path.join(output_dir, "power_processed", "world_boxes.gpkg"))
 fn = os.path.join(
-    output_dir, "input",  "stormtracks", "fixed", f"STORM_FIXED_RETURN_PERIODS_{region}.nc"
+    output_dir,
+    "input",
+    "stormtracks",
+    "fixed",
+    f"STORM_FIXED_RETURN_PERIODS_{region}.nc",
 )
 ds = nc4.Dataset(fn)
 lon_min, lat_min, lon_max, lat_max = (
@@ -43,7 +47,7 @@ else:
 boxes_in_region = list(gdf_boxes_in_region["box_id"])
 
 with open(
-    os.path.join(output_dir, "power_processed",  "world_boxes_metadata.txt"), "r"
+    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
 ) as filejson:
     box_country_dict = json.load(filejson)["box_country_dict"]
 
@@ -54,7 +58,11 @@ for box_id in boxes_in_region_copy:
         continue
     gridfinder_box = gpd.read_file(
         os.path.join(
-            output_dir, "power_processed",  "all_boxes", box_id, f"gridfinder_{box_id}.gpkg"
+            output_dir,
+            "power_processed",
+            "all_boxes",
+            box_id,
+            f"gridfinder_{box_id}.gpkg",
         )
     )
     if (
@@ -63,7 +71,7 @@ for box_id in boxes_in_region_copy:
         boxes_in_region.remove(box_id)
         print(f"{box_id} contains land but is empty")
 
-region_path = os.path.join(output_dir, "power_intersection",  "regions")
+region_path = os.path.join(output_dir, "power_intersection", "regions")
 if not os.path.exists(region_path):
     os.makedirs(region_path)
 

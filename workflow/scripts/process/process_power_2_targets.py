@@ -6,11 +6,10 @@ from importing_modules import *
 
 try:
     box_id = snakemake.params["box_id"]
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
-
 
 
 def combine(lsts):
@@ -36,7 +35,9 @@ def combine(lsts):
             fix[j] = avgval
             count_overlap += 1
 
-    assert count_overlap / llen < 0.4  # assert less than 40% is overlap (catch possible errors. None found in testing)
+    assert (
+        count_overlap / llen < 0.4
+    )  # assert less than 40% is overlap (catch possible errors. None found in testing)
 
     all = [numpy.ma.masked] * llen
     for i in range(llen):
@@ -62,7 +63,9 @@ def get_target_areas(box_id):
     geod = Geod(ellps="WGS84")
 
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
-    with rasterio.open(os.path.join(output_dir, "input", "gridfinder", "targets.tif")) as src:
+    with rasterio.open(
+        os.path.join(output_dir, "input", "gridfinder", "targets.tif")
+    ) as src:
 
         # for each country (see: code) overlay connections to distribution grid
         try:
@@ -99,7 +102,7 @@ def get_population(box_id, targets, exclude_countries_lst):
 
     pop_all = []
     pop_d_all = []
-    country_all = [[]]*len(targets)
+    country_all = [[]] * len(targets)
     country_dict = {}  # {code1: {indices...}, code2: ... }
     for kk, code in enumerate(box_country_list_id):  # run for every country in the box
         print(f"{box_id}: {kk+1}/{len(box_country_list_id)} -- {code}")
@@ -108,7 +111,10 @@ def get_population(box_id, targets, exclude_countries_lst):
             gen = gen_zonal_stats(
                 targets.geometry,
                 os.path.join(
-                    output_dir, "input", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                    output_dir,
+                    "input",
+                    "population",
+                    f"{code}_ppp_2020_UNadj_constrained.tif",
                 ),
                 stats=[],
                 add_stats={"nansum": np.nansum},  # count NaN as zero for summation
@@ -124,18 +130,22 @@ def get_population(box_id, targets, exclude_countries_lst):
             population_density = point_query(
                 targets.centroid,
                 os.path.join(
-                    output_dir, "input", "population", f"{code}_ppp_2020_UNadj_constrained.tif"
+                    output_dir,
+                    "input",
+                    "population",
+                    f"{code}_ppp_2020_UNadj_constrained.tif",
                 ),
             )
-            #country = [code] * len(targets)
-            country_dict[code] = {ii for ii, item in enumerate(populations) if not np.ma.is_masked(item) or population_density[ii]!=None}
+            # country = [code] * len(targets)
+            country_dict[code] = {
+                ii
+                for ii, item in enumerate(populations)
+                if not np.ma.is_masked(item) or population_density[ii] != None
+            }
 
         else:  # code does not have .tif data so list of None is applied
             populations = [None] * len(targets)
             population_density = [None] * len(targets)
-
-
-
 
         pop_all.append(populations)
         pop_d_all.append(population_density)
@@ -237,7 +247,9 @@ if __name__ == "__main__":
     # combine
     # print("saving intermediate files")
     targets_box.to_csv(
-        os.path.join(output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"),
+        os.path.join(
+            output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"
+        ),
         index=False,
     )
     print(f"Saved {box_id} targets")

@@ -21,34 +21,63 @@ try:
     region = snakemake.params["region"]
     sample = snakemake.params["sample"]
     nh = snakemake.params["nh"]
-    output_dir = snakemake.params['output_dir']
-    reconstruction_cost_lowmedium = snakemake.params['reconstruction_cost_lowmedium']
-    reconstruction_cost_high = snakemake.params['reconstruction_cost_high']
-    central_threshold = snakemake.params['central_threshold']
-    minimum_threshold = snakemake.params['minimum_threshold']
-    maximum_threshold = snakemake.params['maximum_threshold']
-    wind_file_start = snakemake.params['wind_file_start']
-    wind_file_end = snakemake.params['wind_file_end']
-    all_boxes = snakemake.params['all_boxes']
+    output_dir = snakemake.params["output_dir"]
+    reconstruction_cost_lowmedium = snakemake.params["reconstruction_cost_lowmedium"]
+    reconstruction_cost_high = snakemake.params["reconstruction_cost_high"]
+    central_threshold = snakemake.params["central_threshold"]
+    minimum_threshold = snakemake.params["minimum_threshold"]
+    maximum_threshold = snakemake.params["maximum_threshold"]
+    wind_file_start = snakemake.params["wind_file_start"]
+    wind_file_end = snakemake.params["wind_file_end"]
+    all_boxes = snakemake.params["all_boxes"]
 except:
     raise RuntimeError("Snakemake parameters not found")
-    region = 'NA'
-    sample = '0'
-    nh = '0_148_11'
-    output_dir = 'results'
+    region = "NA"
+    sample = "0"
+    nh = "0_148_11"
+    output_dir = "results"
     reconstruction_cost_lowmedium = 200000
     reconstruction_cost_high = 400000
-    wind_file_start = 'STORM_DATA_CMCC-CM2-VHR4_'
-    wind_file_end = '_IBTRACSDELTA'
+    wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
+    wind_file_end = "_IBTRACSDELTA"
     central_threshold = 43
     minimum_threshold = 39
     maximum_threshold = 47
-    all_boxes = ['box_955', 'box_956', 'box_957', 'box_884']
-    all_boxes = [f'box_{num}' for num in [809, 810, 811, 812, 880, 881, 882, 883, 884, 952, 955, 956, 957, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1097, 1098, 1099, 1103, 1104]]
-    all_boxes = [f'box_{num}' for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]]
-
-
-
+    all_boxes = ["box_955", "box_956", "box_957", "box_884"]
+    all_boxes = [
+        f"box_{num}"
+        for num in [
+            809,
+            810,
+            811,
+            812,
+            880,
+            881,
+            882,
+            883,
+            884,
+            952,
+            955,
+            956,
+            957,
+            1024,
+            1025,
+            1026,
+            1027,
+            1028,
+            1029,
+            1030,
+            1031,
+            1097,
+            1098,
+            1099,
+            1103,
+            1104,
+        ]
+    ]
+    all_boxes = [
+        f"box_{num}" for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]
+    ]
 
 
 reconstruction_cost_high = float(reconstruction_cost_high)
@@ -56,6 +85,7 @@ assert reconstruction_cost_high >= 0
 reconstruction_cost_lowmedium = float(reconstruction_cost_lowmedium)
 assert reconstruction_cost_lowmedium >= 0
 threshold_list = [central_threshold, minimum_threshold, maximum_threshold]
+
 
 def isNone(df):
     """Checks if dataframe contains solely the None row (required for snakemake and gpkg files)"""
@@ -189,7 +219,8 @@ def component_select(box_id, node_set, network_dict, all_boxes):
                     for v_conn in v_lst
                     if v_conn["from_id"] in comp_init.difference(node_set_in_comp_init)
                 ]
-                for k, v_lst in connectors.items() if k in all_boxes
+                for k, v_lst in connectors.items()
+                if k in all_boxes
             }  # add the nodes (to_id) if the from_id is in the component (but not if connected to the previous box)
             node_set = node_set.difference(
                 node_set_in_comp_init
@@ -222,16 +253,18 @@ def component_select(box_id, node_set, network_dict, all_boxes):
     return nodes, edges, node_set, conn_boxes
 
 
-def combine_networks(
-    edge_damaged, all_boxes
-):
+def combine_networks(edge_damaged, all_boxes):
     """finds adjacent boxes which are connected to original box_id and adds to nodes and edges.
     Returns all nodes and edges (both connected into base_box). edge_damaged is dataframe input containing link and box_id and id
     Searches strictly only in all_boxes"""
 
     box_id_orig = edge_damaged.box_id
     fname = os.path.join(
-        output_dir, "power_processed", "all_boxes", box_id_orig, f"network_{box_id_orig}.gpkg"
+        output_dir,
+        "power_processed",
+        "all_boxes",
+        box_id_orig,
+        f"network_{box_id_orig}.gpkg",
     )
     nodes_orig, edges_orig = read_network(
         fname
@@ -267,13 +300,11 @@ def combine_networks(
 
     conn_dict = {k: v for k, v in conn_dict.items() if k in all_boxes}  # filter
 
-
     conn_set = set().union(
         *conn_dict.values()
     )  # conn set will contain a set of links which have to be explored
 
     to_examine = set(conn_dict.keys())  # set of boxes to examine
-
 
     count = 0
     network_dict = (
@@ -285,7 +316,7 @@ def combine_networks(
             to_examine
         )  # pick one from to_examine (which is irrelevant)
 
-        #print(f'examining {box_id_examine}')
+        # print(f'examining {box_id_examine}')
         if (
             box_id_examine not in network_dict.keys()
         ):  # if not in the dictionary, then add it
@@ -325,6 +356,7 @@ def target_mapper(feature, targets, nodes):
     )  # map to targets, note which are not connected (with 'remove_me')
     return targets[targets.f_value != "remove_me"]  # remove unwanted targets
 
+
 def add_stats(targets, storm_path_thrval, direct_damage_cost):
     """Write the stats to a txt file. Requires target gpd, storm_path_thrval and direct damage cost value"""
     today = date.today()
@@ -351,11 +383,19 @@ def add_stats(targets, storm_path_thrval, direct_damage_cost):
         assert f_75_1 >= 0
         assert f_1 >= 0
 
-        pop_affected = targets[targets['f_value']<1].population.sum()  # sum the population where the power after the storm is NOT the same as the nominal power (f<1 ie f!=1)
-        pop_f0 = targets[targets['f_value']==0].population.sum()  # sum the population which has no power (f=0)
-        pop_effective = ((1-targets['f_value'])*targets['population']).sum()  # effective population affected is the fraction of the population which has an effective power of 0 i.e. (1-f)*pop. This means with 100 people and f=0.2, pop_eff = 80.
+        pop_affected = targets[
+            targets["f_value"] < 1
+        ].population.sum()  # sum the population where the power after the storm is NOT the same as the nominal power (f<1 ie f!=1)
+        pop_f0 = targets[
+            targets["f_value"] == 0
+        ].population.sum()  # sum the population which has no power (f=0)
+        pop_effective = (
+            (1 - targets["f_value"]) * targets["population"]
+        ).sum()  # effective population affected is the fraction of the population which has an effective power of 0 i.e. (1-f)*pop. This means with 100 people and f=0.2, pop_eff = 80.
 
-        countries_affected = '_'.join(targets.country.unique())  # join to one simple string country1_country2_country3...  This greatly simplified json and pandas handling later
+        countries_affected = "_".join(
+            targets.country.unique()
+        )  # join to one simple string country1_country2_country3...  This greatly simplified json and pandas handling later
 
     else:
         f_0, f_0_25, f_25_50, f_50_75, f_75_1 = [0] * 5
@@ -384,7 +424,8 @@ def add_stats(targets, storm_path_thrval, direct_damage_cost):
         "sim_run_date": [today.strftime("%d/%m/%Y")],
     }
 
-    damagescsvpath = os.path.join(storm_path_thrval, f"storm_r{region}_s{sample}_n{nh}.txt",
+    damagescsvpath = os.path.join(
+        storm_path_thrval, f"storm_r{region}_s{sample}_n{nh}.txt"
     )
     with open(
         damagescsvpath, "w"
@@ -392,19 +433,22 @@ def add_stats(targets, storm_path_thrval, direct_damage_cost):
         json.dump(stats_add, stormfile)
 
 
-
-
-
 def eval_coords(coords, type, wind, fragility_data):
     """Evaluate the coordinates and returns direct damage"""
     dist = 0
     fragility_curve = fragility_data[type]
-    cost_per_km = fragility_curve['factor']*np.interp(wind, fragility_curve['curve']['wind_speed'], fragility_curve['curve']['fragility'])
+    cost_per_km = fragility_curve["factor"] * np.interp(
+        wind,
+        fragility_curve["curve"]["wind_speed"],
+        fragility_curve["curve"]["fragility"],
+    )
     line_coords = [(x[1], x[0]) for x in coords]
     if len(line_coords) >= 2:
-        for jj in range(len(line_coords)-1):
-            dist += distance.distance(line_coords[jj], line_coords[jj+1]).km  # add the km length of that row
-    cost = dist*cost_per_km
+        for jj in range(len(line_coords) - 1):
+            dist += distance.distance(
+                line_coords[jj], line_coords[jj + 1]
+            ).km  # add the km length of that row
+    cost = dist * cost_per_km
 
     return cost
 
@@ -412,67 +456,73 @@ def eval_coords(coords, type, wind, fragility_data):
 def direct_damage(linestring_df):
     """For a dataframe where the geometry consists of linestrings, returns a list of direct damages (order of linestring_df) based on fragility curve"""
 
-
     damage_lst = []
 
     for ii in range(len(linestring_df)):
         damage = 0
         transmission_type = linestring_df.iloc[ii].source
         if transmission_type == None:
-            transmission_type = 'openstreetmap'
+            transmission_type = "openstreetmap"
         transmission_max_wind = linestring_df.iloc[ii].wind_location
 
-        if type(linestring_df.iloc[ii].geometry) == type(LineString([[1,2],[3,4]])):  # check is linestring
-            line_coords = list(linestring_df.iloc[ii].geometry.coords)  # extract the coordinates of a row
-            damage += eval_coords(line_coords, transmission_type, transmission_max_wind, fragility_data)
+        if type(linestring_df.iloc[ii].geometry) == type(
+            LineString([[1, 2], [3, 4]])
+        ):  # check is linestring
+            line_coords = list(
+                linestring_df.iloc[ii].geometry.coords
+            )  # extract the coordinates of a row
+            damage += eval_coords(
+                line_coords, transmission_type, transmission_max_wind, fragility_data
+            )
 
-        else:  #multistring
-            for ms in range(len(linestring_df.iloc[ii]['geometry'].geoms)):
-                line_coords = list(linestring_df.iloc[ii].geometry[ms].coords)  # extract the coordinates of a row
+        else:  # multistring
+            for ms in range(len(linestring_df.iloc[ii]["geometry"].geoms)):
+                line_coords = list(
+                    linestring_df.iloc[ii].geometry[ms].coords
+                )  # extract the coordinates of a row
 
-                damage += eval_coords(line_coords, transmission_type, transmission_max_wind, fragility_data)
+                damage += eval_coords(
+                    line_coords,
+                    transmission_type,
+                    transmission_max_wind,
+                    fragility_data,
+                )
         damage_lst.append(damage)
 
     return damage_lst
 
 
 def map_col(df1, df2, col_name):
-    '''Maps df on link from col_name on df1 to df2'''
+    """Maps df on link from col_name on df1 to df2"""
 
-    dict_map = dict(zip(df1['link'], df1[col_name]))
-    df2[col_name] = df2['link'].map(dict_map)
+    dict_map = dict(zip(df1["link"], df1[col_name]))
+    df2[col_name] = df2["link"].map(dict_map)
     return df2
 
 
 ## End function ##
 # open fragility curve now (once, rather than every time needed)
-fragility_folder = os.path.join('workflow', 'scripts')
-lowmedium_fragility = pd.read_csv(os.path.join(fragility_folder, 'lowmedium_fragility.csv'))
-lowmedium_fragility.columns = ['wind_speed', 'fragility']
-high_fragility = pd.read_csv(os.path.join(fragility_folder, 'high_fragility.csv'))
-high_fragility.columns = ['wind_speed', 'fragility']
-fragility_data = {'gridfinder': {'curve': lowmedium_fragility, 'factor':reconstruction_cost_lowmedium}, 'openstreetmap': {'curve': high_fragility, 'factor':reconstruction_cost_high}}  # dictionary, if type of key then use fragility curve of value
-
-
-
-
-
-
+fragility_folder = os.path.join("workflow", "scripts")
+lowmedium_fragility = pd.read_csv(
+    os.path.join(fragility_folder, "lowmedium_fragility.csv")
+)
+lowmedium_fragility.columns = ["wind_speed", "fragility"]
+high_fragility = pd.read_csv(os.path.join(fragility_folder, "high_fragility.csv"))
+high_fragility.columns = ["wind_speed", "fragility"]
+fragility_data = {
+    "gridfinder": {
+        "curve": lowmedium_fragility,
+        "factor": reconstruction_cost_lowmedium,
+    },
+    "openstreetmap": {"curve": high_fragility, "factor": reconstruction_cost_high},
+}  # dictionary, if type of key then use fragility curve of value
 
 
 storm_path_base = os.path.join(
-    output_dir,
-    "power_intersection",
-    "storm_data",
-    "individual_storms",
-    region,
-    sample
+    output_dir, "power_intersection", "storm_data", "individual_storms", region, sample
 )
 
-storm_path = os.path.join(
-    storm_path_base,
-    f"storm_{nh}",
-)
+storm_path = os.path.join(storm_path_base, f"storm_{nh}")
 if not os.path.exists(storm_path):
     os.makedirs(storm_path)
 
@@ -544,13 +594,22 @@ if not isNone(windfile):
     print(f"Investigating storm {nh}")
     winds_ev_filtered = applythreshold(winds_ev_all, minimum_threshold)
 
-    winds_ev_filtered_todict = winds_ev_filtered[['ID_point', 'wind_location']]
-    winds_ev_filtered_todict = winds_ev_filtered_todict.groupby('ID_point').max().reset_index()  # pick max wind for each unit
+    winds_ev_filtered_todict = winds_ev_filtered[["ID_point", "wind_location"]]
+    winds_ev_filtered_todict = (
+        winds_ev_filtered_todict.groupby("ID_point").max().reset_index()
+    )  # pick max wind for each unit
 
     ID_affected = list(winds_ev_filtered_todict["ID_point"])
-    ID2wind = dict(zip(winds_ev_filtered_todict['ID_point'], winds_ev_filtered_todict['wind_location']))  # dictionary {ID_point1: wind_speed1, ID_point2: wind_speed2, ...}
+    ID2wind = dict(
+        zip(
+            winds_ev_filtered_todict["ID_point"],
+            winds_ev_filtered_todict["wind_location"],
+        )
+    )  # dictionary {ID_point1: wind_speed1, ID_point2: wind_speed2, ...}
     box_id_affected = winds_ev_filtered["box_id"].unique()
-    box_id_affected = [box for box in box_id_affected if box in all_boxes]  # only include if box is in examining boxes
+    box_id_affected = [
+        box for box in box_id_affected if box in all_boxes
+    ]  # only include if box is in examining boxes
 
     # print("- grid")
     grid_data = gpd.read_file(
@@ -569,14 +628,14 @@ if not isNone(windfile):
 
         box_edges = gpd.read_file(
             os.path.join(
-                output_dir, "power_processed",  "all_boxes", box_id, f"network_{box_id}.gpkg"
+                output_dir,
+                "power_processed",
+                "all_boxes",
+                box_id,
+                f"network_{box_id}.gpkg",
             ),
             layer="edges",
         )
-
-
-
-
 
         ### OPTION 1 - Just keep overlay on damaged ID points ###
         box_edges["link"] = box_edges.apply(
@@ -587,9 +646,9 @@ if not isNone(windfile):
             polys_affected, how="intersection"
         )  # keeps edges that are affected grid points (only a part has to be in)
 
-        box_edges_affected = box_edges[box_edges.link.isin(box_edges_affected_forid['link'].unique())]
-
-
+        box_edges_affected = box_edges[
+            box_edges.link.isin(box_edges_affected_forid["link"].unique())
+        ]
 
         # ### OPTION 2 - Any line that intersects an ID Point ###
         # box_edges["link"] = box_edges.apply(
@@ -607,11 +666,7 @@ if not isNone(windfile):
         # box_edges_affected = map_col(box_edges_affected_forid, box_edges_affected, 'region')
         # box_edges_affected = map_col(box_edges_affected_forid, box_edges_affected, 'box_id_poly')
 
-
-
-
         ### END OPTION ###
-
 
         edges_affected = edges_affected.append(
             box_edges_affected
@@ -623,7 +678,11 @@ if not isNone(windfile):
     print("Starting network connection expansion")
     startx = time.time()
 
-    for edge_damaged in tqdm(edges_affected.itertuples(), desc='iterating damaged edges', total=len(edges_affected)):
+    for edge_damaged in tqdm(
+        edges_affected.itertuples(),
+        desc="iterating damaged edges",
+        total=len(edges_affected),
+    ):
 
         if edge_damaged.link not in edges.link.values:
             # print('New link')
@@ -678,14 +737,13 @@ if not isNone(windfile):
                 0
             )  # maps the nominal values to the node dataframe
 
-
     #############################
 
     if len(edges_affected) != 0:
-        edges_affected['wind_location'] = edges_affected['ID_point'].map(ID2wind)  # map the wind values for later filtering
-        polys_affected['wind_location'] = polys_affected['ID_point'].map(ID2wind)
-
-
+        edges_affected["wind_location"] = edges_affected["ID_point"].map(
+            ID2wind
+        )  # map the wind values for later filtering
+        polys_affected["wind_location"] = polys_affected["ID_point"].map(ID2wind)
 
     for thrval in threshold_list:
         # redefinitions, other variables will be overwritten
@@ -694,15 +752,17 @@ if not isNone(windfile):
         if not os.path.exists(storm_path_thrval):
             os.makedirs(storm_path_thrval)
 
-        if 'wind_location' not in edges_affected.columns:
-            print('No edges affected')
+        if "wind_location" not in edges_affected.columns:
+            print("No edges affected")
             add_stats(gpd.GeoDataFrame(), storm_path_thrval, 0)  # write stats to file
         else:
 
-
-            edges_affected_thrval = edges_affected[edges_affected['wind_location']>=thrval]  # need to be redefined
-            polys_affected_thrval = polys_affected[polys_affected['wind_location']>=thrval]  # need to be redefined
-
+            edges_affected_thrval = edges_affected[
+                edges_affected["wind_location"] >= thrval
+            ]  # need to be redefined
+            polys_affected_thrval = polys_affected[
+                polys_affected["wind_location"] >= thrval
+            ]  # need to be redefined
 
             if len(edges) != 0 and len(nodes) != 0:
                 ## Split damaged components ##
@@ -739,9 +799,9 @@ if not isNone(windfile):
                             )
                         }  # dictionary {target1: mw_for_target1, target2: mw_for_target2, ... }  Each target then has a new damaged mw: tot_mw_subnetwork * target_gdp / tot_gdp (for the sub-network in which the target is located).
 
-                        nodes["post_storm_mw"] = nodes["post_storm_mw"] + nodes["id"].map(
-                            component_target_mw_storm_allocation
-                        ).fillna(
+                        nodes["post_storm_mw"] = nodes["post_storm_mw"] + nodes[
+                            "id"
+                        ].map(component_target_mw_storm_allocation).fillna(
                             0
                         )  # maps the nominal values to the node dataframe
 
@@ -755,11 +815,7 @@ if not isNone(windfile):
                     "gdp"
                 ]  # equivalent gdp value
 
-
-
-
             print(f"{nh}, {thrval}m/s: - saving")
-
 
             #############################
             direct_damage_cost = 0
@@ -767,23 +823,23 @@ if not isNone(windfile):
                 # calculate direct damage cost
                 direct_damages = direct_damage(edges_affected_thrval)
                 direct_damage_cost = sum(direct_damages)
-                edges_affected_thrval['reconstruction_cost'] = direct_damages
-
+                edges_affected_thrval["reconstruction_cost"] = direct_damages
 
                 edges_affected_thrval.to_file(
                     os.path.join(
-                        storm_path_thrval, f"edges_affected__storm_r{region}_s{sample}_n{nh}.gpkg"
+                        storm_path_thrval,
+                        f"edges_affected__storm_r{region}_s{sample}_n{nh}.gpkg",
                     ),
                     driver="GPKG",
                 )
             if len(polys_affected_thrval) != 0:  # to prevent writing empty dataframe
                 polys_affected_thrval.to_file(
                     os.path.join(
-                        storm_path_thrval, f"units_affected__storm_r{region}_s{sample}_n{nh}.gpkg"
+                        storm_path_thrval,
+                        f"units_affected__storm_r{region}_s{sample}_n{nh}.gpkg",
                     ),
                     driver="GPKG",
                 )
-
 
             ## Targets ##
 
@@ -802,14 +858,16 @@ if not isNone(windfile):
                         )
                     )  # add target of box
 
-
-                if 'target_3_box_957' in targets.id.values:
-                    targets = targets[targets.id!='target_3_box_957']
+                if "target_3_box_957" in targets.id.values:
+                    targets = targets[targets.id != "target_3_box_957"]
 
                 targets = target_mapper("f_value", targets, nodes)  # map f_value
-                targets = target_mapper("mw_loss_storm", targets, nodes)  # map mw loss after storm
-                targets = target_mapper("gdp_damage", targets, nodes)  # map gdp damage from storm
-
+                targets = target_mapper(
+                    "mw_loss_storm", targets, nodes
+                )  # map mw loss after storm
+                targets = target_mapper(
+                    "gdp_damage", targets, nodes
+                )  # map gdp damage from storm
 
             target_cols = [
                 "index",
@@ -828,19 +886,21 @@ if not isNone(windfile):
             ]
             if len(targets) != 0:  # if not empty
                 targets.to_file(
-                    os.path.join(storm_path_thrval, f"targets__storm_r{region}_s{sample}_n{nh}.gpkg"),
+                    os.path.join(
+                        storm_path_thrval,
+                        f"targets__storm_r{region}_s{sample}_n{nh}.gpkg",
+                    ),
                     driver="GPKG",
                 )
 
-
-
-            add_stats(targets, storm_path_thrval, direct_damage_cost)  # write stats to file
+            add_stats(
+                targets, storm_path_thrval, direct_damage_cost
+            )  # write stats to file
 
     #############################
 else:
     print(f"No data in windfile for {nh}")
     nodes = pd.DataFrame()
-
 
 
 # write storm track file
@@ -853,18 +913,29 @@ if len(TC) != 0:
     coords = [((lon, lat)) for lon, lat in zip(TC_nh["lon"], TC_nh["lat"])]
 
     if len(coords) >= 2:
-        storm_track = gpd.GeoDataFrame({"geometry": [LineString(coords)]})  # stormtrack as a line
+        storm_track = gpd.GeoDataFrame(
+            {"geometry": [LineString(coords)]}
+        )  # stormtrack as a line
         storm_track.to_file(
             os.path.join(storm_path, f"storm_track_r{region}_s{sample}_n{nh}.gpkg"),
             driver="GPKG",
         )
 
-        print('stormsize')
-        storm_size = gpd.GeoDataFrame({"geometry":[Point(coord) for coord in coords], "radius":list(TC_nh.radius), "cat":list(TC_nh.cat), "wind":list(TC_nh.wind)})  # storm track points with extra features, for plotting
+        print("stormsize")
+        storm_size = gpd.GeoDataFrame(
+            {
+                "geometry": [Point(coord) for coord in coords],
+                "radius": list(TC_nh.radius),
+                "cat": list(TC_nh.cat),
+                "wind": list(TC_nh.wind),
+            }
+        )  # storm track points with extra features, for plotting
         storm_size.to_file(
-            os.path.join(storm_path, f"storm_track_points_radius_r{region}_s{sample}_n{nh}.gpkg"),
+            os.path.join(
+                storm_path, f"storm_track_points_radius_r{region}_s{sample}_n{nh}.gpkg"
+            ),
             driver="GPKG",
         )
     else:
-        print('No storm track data')
-print(f'Finished_{nh}')
+        print("No storm track data")
+print(f"Finished_{nh}")

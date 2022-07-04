@@ -8,15 +8,16 @@ rule make_exposure_img:
     input:
         hazard_dir="{OUTPUT_DIR}/exposure/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/raster/",
         coastline="{OUTPUT_DIR}/input/coastlines/ne_10m_ocean/",
-        boundaries="{OUTPUT_DIR}/input/admin-boundaries/ne_50m/"
+        boundaries="{OUTPUT_DIR}/input/admin-boundaries/ne_50m/",
     output:
-        directory("{OUTPUT_DIR}/exposure/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/img")
+        directory("{OUTPUT_DIR}/exposure/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/img"),
     params:
         # Put the extensions in params because otherwise SNAKEMAKE doesn't find them
         coastline="ne_10m_ocean.shp",
-        boundaries="ne_50m_admin_0_countries.shp"
+        boundaries="ne_50m_admin_0_countries.shp",
     script:
         "../scripts/make_exposure_img.py"
+
 
 """
 Test with:

@@ -1,9 +1,6 @@
 """Collects all individual storm json statistics for each region sample and merges into one csv"""
 
 
-
-
-
 import os
 import json
 from tqdm import tqdm

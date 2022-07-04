@@ -12,4 +12,4 @@ rule analyse_all:
         transmission_out,
         percentile_out,
         out_connector,
-        completed_files  # to ensure storms are all run
+        completed_files,  # to ensure storms are all run

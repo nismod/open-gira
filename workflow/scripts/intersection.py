@@ -16,6 +16,7 @@ from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
 
+
 def main(network_edges_path, hazard_tifs, output_path):
     """
     Split the entries in network_edges_path according to the cells they occupy in the
@@ -33,7 +34,9 @@ def main(network_edges_path, hazard_tifs, output_path):
     -------
     (void)
     """
-    hazard_tifs_basenames = [re.sub("\\.tif$", "", os.path.basename(tif)) for tif in hazard_tifs]
+    hazard_tifs_basenames = [
+        re.sub("\\.tif$", "", os.path.basename(tif)) for tif in hazard_tifs
+    ]
 
     # Read metadata for a single raster
     logging.info("Determining raster grid properties")
@@ -46,15 +49,19 @@ def main(network_edges_path, hazard_tifs, output_path):
     logging.info("Checking raster grid consistency")
     for hazard in tqdm(hazard_tifs[1:]):
         with rasterio.open(hazard) as raster:
-            if raster_width != raster.width or \
-                    raster_height != raster.height or \
-                    raster_transform != list(raster.transform):
-                raise AttributeError((
-                    f"Raster attribute mismatch in file {hazard}:\n"
-                    f"Height: expected={raster_height}; actual={raster.height}\n"
-                    f"Width: expected={raster_width}; actual={raster.width}\n"
-                    f"Transform equal? {'True' if list(raster.transform) == raster_transform else 'False'}"
-                ))
+            if (
+                raster_width != raster.width
+                or raster_height != raster.height
+                or raster_transform != list(raster.transform)
+            ):
+                raise AttributeError(
+                    (
+                        f"Raster attribute mismatch in file {hazard}:\n"
+                        f"Height: expected={raster_height}; actual={raster.height}\n"
+                        f"Width: expected={raster_width}; actual={raster.width}\n"
+                        f"Transform equal? {'True' if list(raster.transform) == raster_transform else 'False'}"
+                    )
+                )
 
     # Read network edges
     logging.info("Read edges")
@@ -62,7 +69,12 @@ def main(network_edges_path, hazard_tifs, output_path):
         core_edges = geopandas.read_parquet(network_edges_path)
     except ValueError:
         logging.info("No data in geometry column, writing empty files.")
-        columns = ['geometry', *pandas.read_parquet(network_edges_path).columns, "length_km", *hazard_tifs_basenames]
+        columns = [
+            "geometry",
+            *pandas.read_parquet(network_edges_path).columns,
+            "length_km",
+            *hazard_tifs_basenames,
+        ]
         write_empty_files(columns, output_path)
         return
 
@@ -72,10 +84,7 @@ def main(network_edges_path, hazard_tifs, output_path):
     for i in tqdm(range(len(core_edges))):
         # split edge
         splits = split_linestring(
-            core_edges.geometry[i],
-            raster_width,
-            raster_height,
-            raster_transform,
+            core_edges.geometry[i], raster_width, raster_height, raster_transform
         )
         # add to collection
         for s in splits:
@@ -90,34 +99,28 @@ def main(network_edges_path, hazard_tifs, output_path):
     logging.info("Find indices")
 
     def get_indices(geom):
-        x, y = get_cell_indices(
-            geom,
-            raster_width,
-            raster_height,
-            raster_transform)
+        x, y = get_cell_indices(geom, raster_width, raster_height, raster_transform)
         x = x % raster_width
         y = y % raster_height
         return [x, y]
 
-    core_splits['cell_index'] = core_splits.geometry.progress_apply(get_indices)
+    core_splits["cell_index"] = core_splits.geometry.progress_apply(get_indices)
 
     logging.info("Segment length")
     geod = Geod(ellps="WGS84")
-    core_splits['length_km'] = core_splits.geometry.progress_apply(geod.geometry_length) / 1e3
+    core_splits["length_km"] = (
+        core_splits.geometry.progress_apply(geod.geometry_length) / 1e3
+    )
 
     logging.info("Add hazard values")
     for i in tqdm(range(len(hazard_tifs))):
-        associate_raster(
-            core_splits,
-            hazard_tifs_basenames[i],
-            hazard_tifs[i]
-        )
+        associate_raster(core_splits, hazard_tifs_basenames[i], hazard_tifs[i])
 
     logging.info("Write data")
     core_splits.to_parquet(output_path)
 
     logging.info("Write data without geometry")
-    pandas.DataFrame(core_splits.drop(columns=['geometry'])).to_parquet(
+    pandas.DataFrame(core_splits.drop(columns=["geometry"])).to_parquet(
         re.sub("\\.geoparquet$", ".parquet", output_path, re.IGNORECASE)
     )
 
@@ -132,9 +135,7 @@ def associate_raster(df, key, fname, band_number=1):
 
 def write_empty_files(columns, outputs_path):
     try:
-        empty_geodf = geopandas.GeoDataFrame(
-            columns=columns, geometry="geometry"
-        )
+        empty_geodf = geopandas.GeoDataFrame(columns=columns, geometry="geometry")
     except ValueError:
         raise ValueError("Empty dataframe must contain a geometry column")
     logging.info("Write data")
@@ -149,16 +150,12 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
-        network_edges_path = snakemake.input['network']
-        hazard_dir = snakemake.input['tifs']
-        output_path = snakemake.output['geoparquet']
+        network_edges_path = snakemake.input["network"]
+        hazard_dir = snakemake.input["tifs"]
+        output_path = snakemake.output["geoparquet"]
     except NameError:
         print(sys.argv)
-        (
-            network_edges_path,
-            hazard_dir,
-            output_path,
-        ) = sys.argv[1:]
+        (network_edges_path, hazard_dir, output_path) = sys.argv[1:]
         # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
         # output_path = '../../results/test.geoparquet'
         # hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
@@ -166,15 +163,15 @@ if __name__ == "__main__":
     tifs = glob.glob(os.path.join(hazard_dir, "*.tif"))
 
     if len(tifs) == 0:
-        raise ValueError((
-            f"The list of hazard .tif files is empty. Check they were downloaded to "
-            f"{hazard_dir}"
-        ))
+        raise ValueError(
+            (
+                f"The list of hazard .tif files is empty. Check they were downloaded to "
+                f"{hazard_dir}"
+            )
+        )
 
     # print(f"hazard_dir={hazard_dir}")
     # print(f"tifs={tifs}")
     main(
-        network_edges_path=network_edges_path,
-        hazard_tifs=tifs,
-        output_path=output_path
+        network_edges_path=network_edges_path, hazard_tifs=tifs, output_path=output_path
     )

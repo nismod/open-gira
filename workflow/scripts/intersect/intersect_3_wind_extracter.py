@@ -16,32 +16,37 @@ try:
         snakemake.params["memory_storm_split"]
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]
-    output_dir = snakemake.params['output_dir']
-    wind_file_start = snakemake.params['wind_file_start']
-    wind_file_end = snakemake.params['wind_file_end']
-    storm_model_type = snakemake.params['storm_model_type']
-    central_threshold = snakemake.params['central_threshold']
-    minimum_threshold = snakemake.params['minimum_threshold']
-    maximum_threshold = snakemake.params['maximum_threshold']
+    output_dir = snakemake.params["output_dir"]
+    wind_file_start = snakemake.params["wind_file_start"]
+    wind_file_end = snakemake.params["wind_file_end"]
+    storm_model_type = snakemake.params["storm_model_type"]
+    central_threshold = snakemake.params["central_threshold"]
+    minimum_threshold = snakemake.params["minimum_threshold"]
+    maximum_threshold = snakemake.params["maximum_threshold"]
 except:
-    #raise RuntimeError("Snakemake parameters not found")
-    region = 'NA'
+    # raise RuntimeError("Snakemake parameters not found")
+    region = "NA"
     sample = 0
-    all_boxes = [f'box_{num}' for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]]
+    all_boxes = [
+        f"box_{num}" for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]
+    ]
     nh_split = 2500
     wind_rerun = False
-    output_dir = 'results'
-    wind_file_start = 'STORM_DATA_CMCC-CM2-VHR4_'
-    wind_file_end = '_IBTRACSDELTA'
-    storm_model_type = 'CMCC-CM2-VHR4'
+    output_dir = "results"
+    wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
+    wind_file_end = "_IBTRACSDELTA"
+    storm_model_type = "CMCC-CM2-VHR4"
     central_threshold = 43
     minimum_threshold = 39
     maximum_threshold = 47
 
 min_windlocmax = (
-    float(minimum_threshold) - 10  # minimum wind speed value (at unit) to consider significant to further save
+    float(minimum_threshold)
+    - 10  # minimum wind speed value (at unit) to consider significant to further save
 )
-min_windmax = float(minimum_threshold) - 8  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
+min_windmax = (
+    float(minimum_threshold) - 8
+)  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
 hurr_buffer_dist = 1300  # maximum distance to consider to storm centre
 
 
@@ -69,7 +74,7 @@ def haversine(lon1, lat1, lon2_lst, lat2_lst):
 
 
 def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
-    lat = lat*np.pi/180
+    lat = lat * np.pi / 180
     distance = distance * 1000
     r = r * 1000
     rho = 1.10
@@ -119,7 +124,7 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
-    #"STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    # "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
     f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)
@@ -246,12 +251,14 @@ for nh_lst in tqdm(
     TC_all_lst = []
     ss = time.time()
     # for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
-    for unit_path_indiv, nh_unique in tqdm(unit_paths_all.items(), total=len(unit_paths_all), desc='Loading units'):
+    for unit_path_indiv, nh_unique in tqdm(
+        unit_paths_all.items(), total=len(unit_paths_all), desc="Loading units"
+    ):
         if (
             nh_unique != None
         ):  # if it is None, continue because it is unknown which nh are in which units
             if not any([x == y for x in nh_unique for y in nh_lst]):  # if no overlap
-                #print("skipping")
+                # print("skipping")
                 continue  # then dont continue because no point loading as will be empty
 
         TC_add = pd.read_parquet(unit_path_indiv)

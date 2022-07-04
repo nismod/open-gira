@@ -1,17 +1,16 @@
 """Plots heatmap difference (future mean - current) with modifications"""
 
 
-
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
 try:
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
     inputs = snakemake.input
-    remove = snakemake.params['remove_countries']
-    name_cc_future_perc_diff = snakemake.params['name_cc_future_perc_diff']
-    name_cc_future_diff = snakemake.params['name_cc_future_diff']
+    remove = snakemake.params["remove_countries"]
+    name_cc_future_perc_diff = snakemake.params["name_cc_future_perc_diff"]
+    name_cc_future_diff = snakemake.params["name_cc_future_diff"]
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 
@@ -19,8 +18,7 @@ except:
 assert type(remove) == list
 
 
-
-plot_path = os.path.join(output_dir, 'power_figures')
+plot_path = os.path.join(output_dir, "power_figures")
 if not os.path.exists(plot_path):
     os.makedirs(plot_path)
 
@@ -39,28 +37,34 @@ def plot_relation_matrix(matrix, country_index, title, fig_num, perc):
             matrix = matrix.drop(c, axis=0)
             del country_index_plot[c]
 
-    country_index_plot = dict(zip(country_index_plot.keys(), range(len(country_index_plot))))  # update
+    country_index_plot = dict(
+        zip(country_index_plot.keys(), range(len(country_index_plot)))
+    )  # update
 
     if perc == True:
-        plt.imshow(matrix, cmap='RdBu_r', vmax=50, vmin=-50)
-        ext = ' [% of constant climate]'
+        plt.imshow(matrix, cmap="RdBu_r", vmax=50, vmin=-50)
+        ext = " [% of constant climate]"
     else:
-        plt.imshow(matrix, cmap='RdBu_r', vmax=0.1, vmin=-0.1)
-        ext = ' [-]'
-    plt.xlabel('Country B')
-    plt.yticks(list(country_index_plot.values()), labels=list(country_index_plot.keys()))
-    plt.xticks(list(country_index_plot.values()), labels=list(country_index_plot.keys()), rotation=90)
-    plt.ylabel('Country A')
+        plt.imshow(matrix, cmap="RdBu_r", vmax=0.1, vmin=-0.1)
+        ext = " [-]"
+    plt.xlabel("Country B")
+    plt.yticks(
+        list(country_index_plot.values()), labels=list(country_index_plot.keys())
+    )
+    plt.xticks(
+        list(country_index_plot.values()),
+        labels=list(country_index_plot.keys()),
+        rotation=90,
+    )
+    plt.ylabel("Country A")
 
-    #plt.title(title)
+    # plt.title(title)
     cbar = plt.colorbar()
-    cbar.set_label(f'JHR change{ext}', rotation=90)
-
+    cbar.set_label(f"JHR change{ext}", rotation=90)
 
     plt.show()
-    plt.savefig(os.path.join(plot_path, f'JHR_{title}'), bbox_inches='tight')
-    print(f'Saved {title}')
-
+    plt.savefig(os.path.join(plot_path, f"JHR_{title}"), bbox_inches="tight")
+    print(f"Saved {title}")
 
 
 files_sorted = [[inputs[0]], inputs[1:]]
@@ -75,14 +79,14 @@ for ii, files in enumerate(files_sorted):
         else:
             data = data + pd.read_csv(file_indiv, index_col=0)
 
-    data = data / (jj+1)
+    data = data / (jj + 1)
     datas.append(data)
     c_dict = dict(zip(data.columns, range(len(data.columns))))
 
 assert len(datas) == 2
 
 # abs
-data_plot = 100*(datas[1] - datas[0])/datas[0]  # percentage
+data_plot = 100 * (datas[1] - datas[0]) / datas[0]  # percentage
 name = name_cc_future_perc_diff
 plot_relation_matrix(data_plot, c_dict, name, 0, True)
 
@@ -90,5 +94,3 @@ plot_relation_matrix(data_plot, c_dict, name, 0, True)
 data_plot = datas[1] - datas[0]
 name = name_cc_future_diff
 plot_relation_matrix(data_plot, c_dict, name, 1, False)
-
-

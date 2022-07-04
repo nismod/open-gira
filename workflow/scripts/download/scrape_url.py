@@ -4,7 +4,7 @@ import sys
 
 try:
     country_ident = snakemake.params["code_country"]
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     country_ident = sys.argv[1]
     output_dir = sys.argv[2]
@@ -13,7 +13,9 @@ except:
 country_url = (
     "https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m?iso3=" + country_ident
 )
-country_data = requests.get(country_url, headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}).json()
+country_data = requests.get(
+    country_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+).json()
 link = country_data["data"][0]["files"][0]
 
 fname = os.path.join(

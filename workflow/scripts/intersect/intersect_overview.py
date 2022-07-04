@@ -6,12 +6,9 @@ import os
 try:
     inputs = snakemake.input
     outputs = snakemake.output
-    thresholds = snakemake.params['thresholds']
+    thresholds = snakemake.params["thresholds"]
 except:
     raise NotImplementedError("use snakemake")
-
-
-
 
 
 for thrval in thresholds:
@@ -32,4 +29,4 @@ for thrval in thresholds:
     else:
         print("Merged")
 
-print('Merged all')
+print("Merged all")

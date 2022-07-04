@@ -1,13 +1,14 @@
 # Create *-extracts.json file that determines the bounding boxes of the slices
 rule create_bbox_extracts:
     input:
-        "{OUTPUT_DIR}/json/{DATASET}.json"
+        "{OUTPUT_DIR}/json/{DATASET}.json",
     params:
-        filter_slug=f"filter-{filter_slug}"
+        filter_slug=f"filter-{filter_slug}",
     output:
-        "{OUTPUT_DIR}/json/{DATASET}_extracts.geojson"
+        "{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     script:
         "../scripts/prepare-extracts.py"
+
 
 """
 Test with:
