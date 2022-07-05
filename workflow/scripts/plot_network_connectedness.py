@@ -2,43 +2,56 @@
 Plotting tools for analysing network connectedness
 """
 
+from collections import defaultdict
+import os
 import sys
 from typing import Iterable, Tuple
 
-import pandas as pd
+import datashader as ds
+from datashader.utils import export_image
 import geopandas as gpd
-import networkx
-import numpy as np
 import matplotlib.pyplot as plt
-import tqdm
+from matplotlib import colors
+import numpy as np
+import spatialpandas
+
+import snkit
 
 
-def network_components(edges: pd.DataFrame, nodes: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, list[set]]:
-    """
-    Label nodes and edges with a component_id, where for any given component_id, all nodes
-    labelled such are connected to one another.
-    """
+def random_cmap(n) -> colors.LinearSegmentedColormap:
+    """Create a colormap with n random colors."""
 
-    # build graph
-    graph = networkx.Graph()
-    graph.add_nodes_from(nodes.id.values)
-    graph.add_edges_from(zip(edges.from_node, edges.to_node))
+    rgb = np.random.rand(n, 3)
+    # bolt on a column of ones for the alpha channel
+    rgba = np.c_[rgb, np.ones(n)]
+    return colors.LinearSegmentedColormap.from_list('random', rgba)
 
-    # list of sets of nodes
-    # each set is a component, an 'island' of nodes
-    components = list(networkx.connected_components(graph))
 
-    # assign component_id to edges and nodes
-    component_id_col: str = "component_id"
-    for index, component in tqdm.tqdm(enumerate(components)):
-        # indexing the edges with both the from and the to nodes should be redundant here
-        edges.loc[(edges.from_node.isin(component) | edges.to_node.isin(component)), component_id_col] = index
-        nodes.loc[nodes["id"].isin(component), component_id_col] = index
+def plot_components_map(network: snkit.network.Network) -> ds.transfer_functions.Image:
+    """Draw a map of all the edges in the network. Uses datashader for speed."""
 
-    for obj in [nodes, edges]:
-        obj[component_id_col] = obj[component_id_col].astype(int)
+    # use spatialpandas rather than geopandas ;) thanks python ecosystem
+    # datashader requires input data to be in this format
+    edges = spatialpandas.GeoDataFrame(network.edges)
 
-    return edges, nodes, components
+    # this will probably break near the poles or with the whole planet,
+    # but try and estimate the canvas size from the geometry bounding box
+    pixels_per_degree = 100
+    x0, y0, x1, y1 = edges.geometry.total_bounds
+    cvs = ds.Canvas(
+        plot_width=int(pixels_per_degree * (x1 - x0)),
+        plot_height=int(pixels_per_degree * (y1 - y0))
+    )
+
+    # datashader is all about aggregating data down to a raster...
+    # take the mean value of component_id for all the edges on that pixel
+    # unfortunately the mode is not (yet) available, but this works fine for now
+    agg = cvs.line(edges, geometry='geometry', agg=ds.mean('component_id'))
+
+    # color the map according to a random colormap (should show each island in the network)
+    image = ds.transfer_functions.shade(agg, how='log', cmap=random_cmap(len(edges)))
+
+    return image
 
 
 def plot_component_size(components: Iterable[set[str]]) -> Tuple[plt.Figure, plt.axis]:
@@ -73,17 +86,38 @@ if __name__ == "__main__":
     try:
         nodes_path = snakemake.input["nodes"]
         edges_path = snakemake.input["edges"]
-        plot_path = snakemake.output["plot"]
+        population_plot_path = snakemake.output["component_population"]
+        map_path = snakemake.output["component_map"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        nodes_path, edges_path, plot_path = sys.argv[1:]
+        nodes_path, edges_path, population_plot_path, map_path = sys.argv[1:]
         # nodes_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
         # edges_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
-        # plot_path = ../../results/tanzania-mini_filter-highway-core/road_connectedness.pdf
+        # population_plot_path = ../../results/tanzania-mini_filter-highway-core/road_component_population.pdf
+        # map_path = ../../results/tanzania-mini_filter-highway-core/road_network_map_by_component.pdf
 
-    edges = gpd.read_parquet(edges_path)
-    nodes = gpd.read_parquet(nodes_path)
-    edges, nodes, components = network_components(edges, nodes)
-    f, ax = plot_component_size(components)
-    f.savefig(plot_path)
+    # build a network from files on disk
+    network = snkit.network.Network(
+        # rename to use snkit naming conventions
+        # this is necessary as snkit.network.add_component_ids assumes certain column names
+        edges=gpd.read_parquet(edges_path).rename({"edge_id": "id", "from_node_id": "from_id", "to_node_id": "to_id"}, axis="columns"),
+        nodes=gpd.read_parquet(nodes_path).rename({"node_id": "id"}, axis="columns")
+    )
+
+    # annotate it with component ids
+    network = snkit.network.add_component_ids(network)
+
+    # component_id -> set of edges in that component
+    components: dict = defaultdict(set)
+    for edge in network.edges.itertuples():
+        components[edge.component_id].add(edge.id)
+
+    # bar chart of component edge populations
+    fig, ax = plot_component_size(list(components.values()))
+    fig.savefig(population_plot_path)
+
+    # map coloured by component id
+    map_image = plot_components_map(network)
+    stem, ext = os.path.splitext(map_path)
+    export_image(map_image, stem, fmt=ext, background="black")

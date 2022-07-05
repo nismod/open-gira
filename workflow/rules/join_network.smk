@@ -44,11 +44,12 @@ rule plot_network_connectedness:
         nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
         edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet",
     output:
-        plot="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_connectedness.pdf"
+        component_population="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_component_population.pdf",
+        component_map="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_network_map_by_component.png"
     script:
         "../scripts/plot_network_connectedness.py"
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/road_connectedness.pdf
+snakemake --cores all results/tanzania-mini_filter-highway-core/road_component_population.pdf
 """
