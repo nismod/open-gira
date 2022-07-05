@@ -58,7 +58,7 @@ for col_id in col_lst:
 
 
 data = data[col_lst + ["x"]]
-if EACA:
+if not EACA:
     data = data[:-7]  # dependent on data
 
 

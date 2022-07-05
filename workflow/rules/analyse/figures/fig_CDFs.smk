@@ -40,7 +40,7 @@ rule fig_cdfs_EAD:
         in_cdf_EAD,
     params:
         output_dir=config["output_dir"],
-        EACA=True,
+        EACA=False,
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],
@@ -57,7 +57,7 @@ rule fig_cdfs_EACA:
         in_cdf_EACA,
     params:
         output_dir=config["output_dir"],
-        EACA=False,  # EAD
+        EACA=True,  # EAD
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],

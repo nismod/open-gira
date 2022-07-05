@@ -62,7 +62,7 @@ for metric in metrics:
     col_lst = ["y_cen", "y_min", "y_max"]
     for col_id in col_lst:
         data[col_id] = data[[c for c in data.columns if col_id in c]].mean(axis=1)
-    data = data[col_lst + ["x"]][:-7]  # data specific
+    data = data[col_lst + ["x"]]#[:-7]  # data specific
 
     data_dict = {"current climate": data_constant, "future climate": data}
     for ii, (df_name, df) in enumerate(data_dict.items()):
