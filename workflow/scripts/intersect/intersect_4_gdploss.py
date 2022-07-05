@@ -638,17 +638,13 @@ if not isNone(windfile):
         )
 
         ### OPTION 1 - Just keep overlay on damaged ID points ###
-        box_edges["link"] = box_edges.apply(
-            lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
-        )  # consistent naming
-
-        box_edges_affected_forid = box_edges.overlay(
+        box_edges_affected = box_edges.overlay(
             polys_affected, how="intersection"
         )  # keeps edges that are affected grid points (only a part has to be in)
 
-        box_edges_affected = box_edges[
-            box_edges.link.isin(box_edges_affected_forid["link"].unique())
-        ]
+        box_edges_affected["link"] = box_edges_affected.apply(
+            lambda e: "__".join(sorted([e.from_id, e.to_id])), axis=1
+        )  # consistent naming
 
         # ### OPTION 2 - Any line that intersects an ID Point ###
         # box_edges["link"] = box_edges.apply(
