@@ -10,6 +10,7 @@ import geopandas as gpd
 import networkx
 import numpy as np
 import matplotlib.pyplot as plt
+import tqdm
 
 
 def network_components(edges: pd.DataFrame, nodes: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, list[set]]:
@@ -20,8 +21,8 @@ def network_components(edges: pd.DataFrame, nodes: pd.DataFrame) -> Tuple[pd.Dat
 
     # build graph
     graph = networkx.Graph()
-    graph.add_nodes_from(n.node_id for n in nodes.itertuples())
-    graph.add_edges_from((e.from_node_id, e.to_node_id) for e in edges.itertuples())
+    graph.add_nodes_from(nodes.id.values)
+    graph.add_edges_from(zip(edges.from_node, edges.to_node))
 
     # list of sets of nodes
     # each set is a component, an 'island' of nodes
@@ -29,10 +30,13 @@ def network_components(edges: pd.DataFrame, nodes: pd.DataFrame) -> Tuple[pd.Dat
 
     # assign component_id to edges and nodes
     component_id_col: str = "component_id"
-    for index, component in enumerate(components):
+    for index, component in tqdm.tqdm(enumerate(components)):
         # indexing the edges with both the from and the to nodes should be redundant here
-        edges.loc[(edges.from_node_id.isin(component) | edges.to_node_id.isin(component)), component_id_col] = index
-        nodes.loc[nodes["node_id"].isin(component), component_id_col] = index
+        edges.loc[(edges.from_node.isin(component) | edges.to_node.isin(component)), component_id_col] = index
+        nodes.loc[nodes["id"].isin(component), component_id_col] = index
+
+    for obj in [nodes, edges]:
+        obj[component_id_col] = obj[component_id_col].astype(int)
 
     return edges, nodes, components
 

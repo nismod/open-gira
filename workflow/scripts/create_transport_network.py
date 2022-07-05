@@ -178,13 +178,13 @@ def create_network(
 
     network.edges.rename(
         columns={
-            'from_id': 'from_node_id',
-            'to_id': 'to_node_id',
+            'from_id': 'from_node',
+            'to_id': 'to_node',
             'id': 'edge_id'
         },
         inplace=True
     )
-    network.nodes.rename(columns={'id': 'node_id'}, inplace=True)
+    network.nodes.rename(columns={'id': 'id'}, inplace=True)
 
     return network
 
