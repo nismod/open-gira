@@ -54,8 +54,8 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
 
     Arguments:
         network (snkit.network.Network): Network to label with geographic information
-            network.edges should have 'edge_id', 'from_node', 'to_node', 'geometry'
-            network.nodes should have 'id', 'geometry'
+            network.edges should have 'edge_id', 'from_node_id', 'to_node_id', 'geometry'
+            network.nodes should have 'node_id', 'geometry'
         countries (gpd.GeoDataFrame): Table expected to contain the following columns:
             'iso_code', 'NAME_0', 'geometry'
         crs_epsg (int): EPSG code for a standard CRS to use to compare geometries
@@ -74,32 +74,32 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
     logging.info(f"Inferred a suitable projection CRS of: {projected_crs}")
 
     # often we only want these columns
-    core_node_columns = ["id", "iso_code", "geometry"]
+    core_node_columns = ["node_id", "iso_code", "geometry"]
 
     # spatial join nodes geometries to their containing country, retain only node geometries
     interior_nodes = gpd.sjoin(
         # subset nodes to only id
-        nodes[["id", "geometry"]].to_crs(input_crs),
+        nodes[["node_id", "geometry"]].to_crs(input_crs),
         countries.to_crs(input_crs),
         how="left",
         predicate='within'
     ).reset_index()
     interior_nodes = interior_nodes[~interior_nodes["iso_code"].isna()]
     interior_nodes = interior_nodes[core_node_columns]
-    interior_nodes = interior_nodes.drop_duplicates(subset=["id"], keep="first")
+    interior_nodes = interior_nodes.drop_duplicates(subset=["node_id"], keep="first")
     logging.info(f"Found {len(interior_nodes)} nodes that are within a country geometry")
 
     # for those nodes which weren't within a country geometry, label them with the nearest country
     # use a projected CRS so sjoin_nearest can more accurately compute distances
     # N.B. these projected UTM CRS are given for 6 degrees longitude sectors
-    exterior_nodes = nodes[~nodes["id"].isin(interior_nodes["id"].values.tolist())]
+    exterior_nodes = nodes[~nodes["node_id"].isin(interior_nodes["node_id"].values.tolist())]
     exterior_nodes = gpd.sjoin_nearest(
-        exterior_nodes[["id", "geometry"]].to_crs(projected_crs),
+        exterior_nodes[["node_id", "geometry"]].to_crs(projected_crs),
         countries.to_crs(projected_crs),
         how="left"
     ).reset_index()
     exterior_nodes = exterior_nodes[core_node_columns]
-    exterior_nodes = exterior_nodes.drop_duplicates(subset=["id"], keep="first")
+    exterior_nodes = exterior_nodes.drop_duplicates(subset=["node_id"], keep="first")
     logging.info(
         f"Found {len(exterior_nodes)} nodes external to all country geometries, labelled "
         "these with their nearest country"
@@ -113,32 +113,32 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
         crs=input_crs
     )
 
-    # set edge.from_node from node.id and use iso_code of from node as edge start
+    # set edge.from_node_id from node.node_id and use iso_code of from node as edge start
     edges = pd.merge(
         edges,
-        nodes[["id", "iso_code"]],
+        nodes[["node_id", "iso_code"]],
         how="left",
-        left_on=["from_node"],
-        right_on=["id"]
+        left_on=["from_node_id"],
+        right_on=["node_id"]
     )
     edges.rename(columns={"iso_code": "from_iso"}, inplace=True)
-    edges.drop("id", axis=1, inplace=True)
+    edges.drop("node_id", axis=1, inplace=True)
 
-    # set edge.to_node from node.id and use iso_code of from node as edge end
+    # set edge.to_node_id from node.node_id and use iso_code of from node as edge end
     edges = pd.merge(
         edges,
-        nodes[["id", "iso_code"]],
+        nodes[["node_id", "iso_code"]],
         how="left",
-        left_on=["to_node"],
-        right_on=["id"]
+        left_on=["to_node_id"],
+        right_on=["node_id"]
     )
     edges.rename(columns={"iso_code": "to_iso"}, inplace=True)
-    edges.drop("id", axis=1, inplace=True)
+    edges.drop("node_id", axis=1, inplace=True)
 
     # encode country in id strings
-    nodes["id"] = nodes.apply(lambda x: f"{x.iso_code}_{x.id}", axis=1)
-    edges["from_node"] = edges.apply(lambda x: f"{x.from_iso}_{x.from_node}", axis=1)
-    edges["to_node"] = edges.apply(lambda x: f"{x.to_iso}_{x.to_node}", axis=1)
+    nodes["node_id"] = nodes.apply(lambda x: f"{x.iso_code}_{x.node_id}", axis=1)
+    edges["from_node_id"] = edges.apply(lambda x: f"{x.from_iso}_{x.from_node_id}", axis=1)
+    edges["to_node_id"] = edges.apply(lambda x: f"{x.to_iso}_{x.to_node_id}", axis=1)
     edges["edge_id"] = edges.apply(lambda x: f"{x.from_iso}_{x.to_iso}_{x.edge_id}", axis=1)
 
     network.nodes = nodes
