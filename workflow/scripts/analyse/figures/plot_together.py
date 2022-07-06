@@ -31,7 +31,7 @@ if not os.path.exists(plot_path):
 
 metric = "EAD"
 unit = "USD"
-if EACA:
+if EACA==True:
     metric = "EACA"
     unit = "people"
 
@@ -58,8 +58,8 @@ for col_id in col_lst:
 
 
 data = data[col_lst + ["x"]]
-if not EACA:
-    data = data[:-7]  # dependent on data
+# if not EACA:
+#     data = data[:-7]  # dependent on data
 
 
 data_dict = {"future climate": data, "current climate": data_constant}
@@ -74,7 +74,7 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
     c1 = (0, 1 - 1 / (ii + 1), 1 / (ii + 1))
 
     cen_name = f"{df_name}"
-    if EACA:
+    if EACA==True:
         plt.fill_between(x, y_min, y_max, color=c1, alpha=0.2)
         plt.plot(
             x,

@@ -3,8 +3,8 @@
 """
 import os
 
-cdf_EAD = "empirical_effective population affected_plotting_data"
-cdf_EACA = "empirical_reconstruction cost_plotting_data"
+cdf_EACA = "empirical_effective population affected_plotting_data"
+cdf_EAD = "empirical_reconstruction cost_plotting_data"
 in_cdf_EAD = [
     os.path.join(
         config["output_dir"],
