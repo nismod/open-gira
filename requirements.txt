@@ -1,13 +1,16 @@
 cython==0.29.28
 geopandas==0.10.2
+geopy
+datetime
+distutilsp
 matplotlib==3.5.1
 netCDF4
 networkx
 nismod-snail==0.2.1
 numpy==1.22.0  # avoid an AttributeError with numpy < 1.19 and pandas
 osmium==3.2.0
-pandas
 pathos
+pandas
 pyarrow==6.0.0
 pytest==6.2.4
 rasterio

@@ -8,8 +8,8 @@ rule process_exclude_countries:
         out_adminboundaries_levels,
         out_population,
     params:
-        output_dir = config['output_dir']
+        output_dir=config["output_dir"],
     output:
-        os.path.join(config['output_dir'], "input", "adminboundaries", "exclude_countries.txt"),
+        os.path.join(config["output_dir"], "power_processed", "exclude_countries.txt"),
     script:
         os.path.join("..", "..", "scripts", "process", "exclude_countries.py")

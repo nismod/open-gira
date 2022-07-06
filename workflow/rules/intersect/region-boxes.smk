@@ -18,6 +18,10 @@ if config["samples_indiv"] != "None":
 if len(SAMPLES) == 0:
     print("Samples incorrectly specified")
 
+STORMS = config["specific_storm_analysis"]
+if STORMS == "None":
+    STORMS = None
+
 
 region_box = expand(
     os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
@@ -25,16 +29,22 @@ region_box = expand(
 )
 
 
-rule intersect_regions_indiv:
+rule intersect_region_boxes:
     input:
-        os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
+        os.path.join(
+            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+        ),
         #os.path.join(config['output_dir'], "power_processed", "world_boxes.gpkg"),  # removed because opening on QGIS tampers with metadata
         os.path.join(
-            config['output_dir'], "input", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
+            config["output_dir"],
+            "input",
+            "stormtracks",
+            "fixed",
+            "STORM_FIXED_RETURN_PERIODS_{region}.nc",
         ),
         expand(
             os.path.join(
-                config['output_dir'],
+                config["output_dir"],
                 "power_processed",
                 "all_boxes",
                 "{box_id}",
@@ -43,10 +53,12 @@ rule intersect_regions_indiv:
             box_id=all_boxes,
         ),
     output:
-        os.path.join(config['output_dir'], "power_intersection", "regions", "{region}_boxes.txt"),
+        os.path.join(
+            config["output_dir"], "power_intersection", "regions", "{region}_boxes.txt"
+        ),
     params:
         region="{region}",
-        output_dir = config['output_dir']
+        output_dir=config["output_dir"],
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py")
 

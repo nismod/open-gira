@@ -17,25 +17,23 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     try:
-        hazard_dir = snakemake.input['hazard_dir']
-        coastline = os.path.join(snakemake.input['coastline'], snakemake.params['coastline'])
-        boundaries = os.path.join(snakemake.input['boundaries'], snakemake.params['boundaries'])
+        hazard_dir = snakemake.input["hazard_dir"]
+        coastline = os.path.join(
+            snakemake.input["coastline"], snakemake.params["coastline"]
+        )
+        boundaries = os.path.join(
+            snakemake.input["boundaries"], snakemake.params["boundaries"]
+        )
         output_dir = snakemake.output[0]
 
         try:
-            opts_dict = snakemake.config['exposure_tifs']['plot']
+            opts_dict = snakemake.config["exposure_tifs"]["plot"]
         except KeyError:
             opts_dict = {}
 
     except NameError:
         print(sys.argv)
-        (
-            hazard_dir,
-            coastline,
-            boundaries,
-            output_dir,
-            opts_dict
-        ) = sys.argv[1:]
+        (hazard_dir, coastline, boundaries, output_dir, opts_dict) = sys.argv[1:]
         # hazard_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/'
         # coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
         # boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
@@ -46,9 +44,9 @@ if __name__ == "__main__":
     def opt(s, default=None):
         return opts_dict[s] if s in opts_dict.keys() else default
 
-    raster_opts = opt('raster', {'cmap': 'Reds'})
-    coastline_opts = opt('coastline', {'facecolor': '#87cefa'})
-    boundary_opts = opt('boundary', {'edgecolor': '#000000'})
+    raster_opts = opt("raster", {"cmap": "Reds"})
+    coastline_opts = opt("coastline", {"facecolor": "#87cefa"})
+    boundary_opts = opt("boundary", {"edgecolor": "#000000"})
 
     logging.info(f"Saving images to {output_dir}")
     if not os.path.exists(output_dir):
@@ -61,7 +59,7 @@ if __name__ == "__main__":
     logging.debug("Preparing administrative boundary data.")
     bounds = gp.read_file(boundaries)
 
-    hazard_files = glob.glob(os.path.join(hazard_dir, '*.tif'))
+    hazard_files = glob.glob(os.path.join(hazard_dir, "*.tif"))
     logging.info(f"Found {len(hazard_files)} .tif files in {hazard_dir}")
 
     for hazard_tif in hazard_files:
@@ -72,12 +70,14 @@ if __name__ == "__main__":
             # The CRS we'll use as the boss is the hazard raster file CRS.
             plt_crs = hazard.crs.to_epsg()
             band = hazard.read()
-            hazard_rect = shape.Polygon([
-                (hazard.bounds.left, hazard.bounds.top),
-                (hazard.bounds.right, hazard.bounds.top),
-                (hazard.bounds.right, hazard.bounds.bottom),
-                (hazard.bounds.left, hazard.bounds.bottom),
-            ])
+            hazard_rect = shape.Polygon(
+                [
+                    (hazard.bounds.left, hazard.bounds.top),
+                    (hazard.bounds.right, hazard.bounds.top),
+                    (hazard.bounds.right, hazard.bounds.bottom),
+                    (hazard.bounds.left, hazard.bounds.bottom),
+                ]
+            )
 
             # Make axes
             fig, ax = plt.subplots(dpi=300)
@@ -89,13 +89,15 @@ if __name__ == "__main__":
             # Plot coastline
             coast_tmp = coast.to_crs(plt_crs)
             coast_tmp = coast_tmp.geometry.clip(hazard_rect)
-            coast_tmp.plot(ax=ax, edgecolor='none', zorder=2, **coastline_opts)
+            coast_tmp.plot(ax=ax, edgecolor="none", zorder=2, **coastline_opts)
 
             # Plot boundaries
             bounds_tmp = bounds.to_crs(plt_crs)
             bounds_tmp = bounds_tmp.geometry.clip(hazard_rect)
-            bounds_tmp.plot(ax=ax, facecolor='none', zorder=3, **boundary_opts)
+            bounds_tmp.plot(ax=ax, facecolor="none", zorder=3, **boundary_opts)
 
-            output_path = os.path.join(output_dir, re.sub('\\.tiff?$', '.png', os.path.basename(hazard_tif)))
+            output_path = os.path.join(
+                output_dir, re.sub("\\.tiff?$", ".png", os.path.basename(hazard_tif))
+            )
             logging.info(f"Saving {output_path}")
             plt.savefig(output_path)

@@ -13,27 +13,28 @@ def aggregate_input(wildcards):
     # print(f"input={input}")
     return input
 
+
 # This is a checkpoint because it outputs to a directory we want to ensure is up to date in later rules.
 # Specifically, intersection.smk looks for all *.tif files in the output directory.
 checkpoint trim_hazard_data:
     input:
         files=aggregate_input,
-        json="{OUTPUT_DIR}/json/{DATASET}.json"
+        json="{OUTPUT_DIR}/json/{DATASET}.json",
     output:
-        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}")
+        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}"),
     run:
         os.system(f"mkdir --parents {output}")
 
         with open(input.json, "r") as j:
             dict = load(j)
-            xmin, ymin, xmax, ymax = dict['extracts'][0]['bbox']
+            xmin, ymin, xmax, ymax = dict["extracts"][0]["bbox"]
 
         for f in input.files:
             print(f"Trimming {f} for {wildcards.HAZARD_SLUG}, {wildcards.DATASET}.")
             out_file = f"{output}/{os.path.basename(f)}"
             os.system(f"gdalwarp -te {xmin} {ymin} {xmax} {ymax} {f} {out_file}")
 
-"""
-Test with:
-snakemake --cores all results/input/hazard-aqueduct-river/tanzania-mini
-"""
+        """
+        Test with:
+        snakemake --cores all results/input/hazard-aqueduct-river/tanzania-mini
+        """
