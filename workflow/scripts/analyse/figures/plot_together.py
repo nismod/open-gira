@@ -72,26 +72,32 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
     c3 = (138 / 256 / (ii + 1), 171 / 256 / (ii + 1), 1)
     c2 = (1 / (ii + 1), 0, 1 - 1 / (ii + 1))
     c1 = (0, 1 - 1 / (ii + 1), 1 / (ii + 1))
-    plt.fill_between(x, y_min, y_max, color=c1, alpha=0.2)
-    plt.plot(
-        x,
-        y_min,
-        color=c1,
-        linestyle=":",
-        label=f"{df_name} - Minimum wind threshold ({minimum_threshold}m/s)",
-    )  # plot interpolated line
-    plt.plot(
-        x,
-        y_max,
-        color=c1,
-        linestyle="--",
-        label=f"{df_name} - Maximum wind threshold ({maximum_threshold}m/s)",
-    )  # plot interpolated line
+
+    cen_name = f"{df_name}"
+    if EACA:
+        plt.fill_between(x, y_min, y_max, color=c1, alpha=0.2)
+        plt.plot(
+            x,
+            y_min,
+            color=c1,
+            linestyle=":",
+            label=f"{df_name} - Minimum wind threshold ({minimum_threshold}m/s)",
+        )  # plot interpolated line
+        plt.plot(
+            x,
+            y_max,
+            color=c1,
+            linestyle="--",
+            label=f"{df_name} - Maximum wind threshold ({maximum_threshold}m/s)",
+        )  # plot interpolated line
+        cen_name = f"{df_name} - Central wind threshold ({central_threshold}m/s)"
+
+
     plt.plot(
         x,
         y_cen,
         color=c2,
-        label=f"{df_name} - Central wind threshold ({central_threshold}m/s)",
+        label=cen_name,
     )  # plot interpolated line
     plt.scatter(x, y_cen, s=2, color=c2)  # plot data points
 
