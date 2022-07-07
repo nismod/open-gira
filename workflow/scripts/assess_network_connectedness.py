@@ -3,16 +3,18 @@ Plotting tools for analysing network connectedness
 """
 
 from collections import defaultdict
+import json
 import os
 import sys
-from typing import Iterable, Tuple
+from typing import Iterable
 
 import datashader as ds
 from datashader.utils import export_image
 import geopandas as gpd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-import numpy as np
+import pandas as pd
 import spatialpandas
 
 import snkit
@@ -30,8 +32,8 @@ def random_cmap(n) -> colors.LinearSegmentedColormap:
 def plot_components_map(network: snkit.network.Network) -> ds.transfer_functions.Image:
     """Draw a map of all the edges in the network. Uses datashader for speed."""
 
-    # use spatialpandas rather than geopandas ;) thanks python ecosystem
-    # datashader requires input data to be in this format
+    # use spatialpandas rather than geopandas ;) lol thanks python ecosystem
+    # datashader requires input data to be of this type
     edges = spatialpandas.GeoDataFrame(network.edges)
 
     # this will probably break near the poles or with the whole planet,
@@ -54,7 +56,7 @@ def plot_components_map(network: snkit.network.Network) -> ds.transfer_functions
     return image
 
 
-def plot_component_size(components: Iterable[set[str]]) -> Tuple[plt.Figure, plt.axis]:
+def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt.axis]:
     """Plot a bar chart of the size of each network component."""
 
     f, ax = plt.subplots(figsize=(8, 6))
@@ -88,14 +90,16 @@ if __name__ == "__main__":
         edges_path = snakemake.input["edges"]
         population_plot_path = snakemake.output["component_population"]
         map_path = snakemake.output["component_map"]
+        components_path = snakemake.output["component_data"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        nodes_path, edges_path, population_plot_path, map_path = sys.argv[1:]
+        nodes_path, edges_path, population_plot_path, map_path, components_path = sys.argv[1:]
         # nodes_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
         # edges_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
         # population_plot_path = ../../results/tanzania-mini_filter-highway-core/road_component_population.pdf
         # map_path = ../../results/tanzania-mini_filter-highway-core/road_network_map_by_component.pdf
+        # components_path = ../../results/tanzania-mini_filter-highway-core/road_components.parquet
 
     # build a network from files on disk
     network = snkit.network.Network(
@@ -108,13 +112,23 @@ if __name__ == "__main__":
     # annotate it with component ids
     network = snkit.network.add_component_ids(network)
 
-    # component_id -> set of edges in that component
-    components: dict = defaultdict(set)
+    # extract the component data
+    # 'edge_ids' or 'node_ids' -> component_id -> set of element ids
+    component_map: dict[int, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     for edge in network.edges.itertuples():
-        components[edge.component_id].add(edge.id)
+        component_map['edge_ids'][edge.component_id].add(edge.id)
+    for node in network.nodes.itertuples():
+        component_map['node_ids'][node.component_id].add(node.id)
+    # build a pandas dataframe from the components
+    df = pd.DataFrame(component_map).sort_index()
+    df.index = df.index.rename("component_id")
+
+    # write out nodes and edges of each component
+    df.to_parquet(components_path)
 
     # bar chart of component edge populations
-    fig, ax = plot_component_size(list(components.values()))
+    edges_by_component: list[set[str]] = [c['edges'] for c in component_map.values()]
+    fig, ax = plot_component_size(df.edge_ids)
     fig.savefig(population_plot_path)
 
     # map coloured by component id
