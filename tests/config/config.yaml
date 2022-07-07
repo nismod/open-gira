@@ -10,12 +10,19 @@ hazard_datasets:
 infrastructure_datasets:
   tanzania-mini: 'external_files/tanzania-mini.osm.pbf'
 
-# Number of slices to cut dataset into -- must be a square number
-slice_count: 1
-# Edge attributes list for network/hazard intersection.
-keep_tags: 'highway'
+# Osmium tags to retain in the geoparquet files
+# these must be specified as a single string, with each tag comma seperated e.g. 'highway, surface'
+keep_tags: 'highway, surface, bridge, maxspeed, lanes'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+# CRS OSM uses
+osm_epsg: 4326
+
+# Number of slices to cut dataset into -- must be a square number
+slice_count: 1
+
+# road, rail, etc.
+transport_type: 'road'
 
 exposure_threshold: 0.5
 
