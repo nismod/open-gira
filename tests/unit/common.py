@@ -1,6 +1,7 @@
 """
 Common code for unit testing of rules generated with Snakemake 6.15.1.
 """
+
 import re
 import shutil
 import sys
@@ -8,6 +9,7 @@ from pathlib import Path, PurePosixPath
 import subprocess as sp
 import os
 from tempfile import TemporaryDirectory
+
 import geopandas
 import pandas
 
@@ -47,10 +49,6 @@ def run_test(target_name, command):
         # and overwrite the method `compare_files(generated_file, expected_file),
         # also see common.py.
         OutputChecker(data_path, expected_path, workdir).check()
-
-import geopandas
-import pandas
-from pandas.testing import assert_frame_equal
 
 
 class OutputChecker:
@@ -98,7 +96,7 @@ class OutputChecker:
             """
             NOTE: This test will **fail** if the geoparquet file does not contain geography data columns.
             This can happen where the convert_to_geoparquet job does not find any roads to write.
-            We leave this failure in because it is usually unintentional that you're testing with a 
+            We leave this failure in because it is usually unintentional that you're testing with a
             dataset where _none_ of the slices have road data, and these tests should be targeted at
             slices that _do_ have road data.
             """
@@ -110,14 +108,18 @@ class OutputChecker:
         if re.search("\\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
             generated = read(generated_file)
             expected = read(expected_file)
-            # horribly slow but gives useful information on failures
-            for r in range(len(generated)):
-                try:
-                    assert str(generated[r:r+1]) == str(expected[r:r+1])
-                except AssertionError as e:
-                    print(f">>> FAILURE at row {r}.")
-                    print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
-                    raise e
+            # use dataframe.equals to quickly check for complete table equality
+            if generated.equals(expected):
+                return
+            else:
+                # horribly slow but gives useful information on failures
+                for r in range(len(generated)):
+                    try:
+                        assert str(generated[r:r+1]) == str(expected[r:r+1])
+                    except AssertionError as e:
+                        print(f">>> FAILURE at row {r}.")
+                        print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
+                        raise e
         else:
             print(f">>> Method=cmp", file=sys.stderr)
             try:
