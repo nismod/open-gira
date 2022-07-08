@@ -80,4 +80,5 @@ if __name__ == "__main__":
         base = gpd.GeoDataFrame([])
 
     base = append_data(base, slice_files)
+    base = base.reset_index(drop=True)
     base.to_parquet(output_file)
