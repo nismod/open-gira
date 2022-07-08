@@ -120,6 +120,8 @@ class OutputChecker:
                         print(f">>> FAILURE at row {r}.")
                         print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
                         raise e
+                else:
+                    raise RuntimeError("couldn't find mismatch between dataframes...")
         else:
             print(f">>> Method=cmp", file=sys.stderr)
             try:
