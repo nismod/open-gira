@@ -1,4 +1,4 @@
-"""Download Worldpop population counts, constrained individual countries 2020 UN adjusted 
+"""Download Worldpop population counts, constrained individual countries 2020 UN adjusted
 (100m resolution)
 
 Reference
@@ -13,19 +13,35 @@ headers = {
     'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0',
 }
 r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m", headers=headers)
+
 COUNTRY_CODES = [row["iso3"] for row in r.json()["data"]]
 
 out_population = expand(
-    os.path.join(config['output_dir'], "input", "population", "{country}_ppp_2020_UNadj_constrained.tif"),
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "population",
+        "{country}_ppp_2020_UNadj_constrained.tif",
+    ),
     country=COUNTRY_CODES,
 )
 
 
 rule download_population:
     params:
-        output_dir = config['output_dir'],
-        code_country="{country}"
+        output_dir=config["output_dir"],
+        code_country="{country}",
     output:
-        os.path.join(config['output_dir'], "input", "population", "{country}_ppp_2020_UNadj_constrained.tif"),
+        os.path.join(
+            config["output_dir"],
+            "input",
+            "population",
+            "{country}_ppp_2020_UNadj_constrained.tif",
+        ),
     script:
         "../../scripts/download/scrape_url.py"
+
+
+rule download_population_all:
+    input:
+        out_population,

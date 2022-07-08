@@ -7,14 +7,15 @@ import glob
 import fiona
 
 try:
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
 
 
-
 with fiona.open(
-    os.path.join(output_dir, "input", "adminboundaries", "gadm36_levels.gpkg"), "r", layer=0
+    os.path.join(output_dir, "input", "adminboundaries", "gadm36_levels.gpkg"),
+    "r",
+    layer=0,
 ) as src_code:
     gadm36_countries = []
     for feature in src_code:
@@ -33,7 +34,7 @@ for country in gadm36_countries:
         exclude_country_list.append(country)
 
 print("writing to file")
-folder_path = os.path.join(output_dir, "input", "adminboundaries")
+folder_path = os.path.join(output_dir, "power_processed")
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
 

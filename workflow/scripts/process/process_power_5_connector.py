@@ -5,14 +5,15 @@ from importing_modules import *
 
 
 try:
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
 
 network_paths = glob.glob(
-    os.path.join(output_dir, "power_processed", "all_boxes", "box_*", "network_box_*.gpkg")
+    os.path.join(
+        output_dir, "power_processed", "all_boxes", "box_*", "network_box_*.gpkg"
+    )
 )  # finds the network_{box_id}.gpkg files that exist in all_boxes
-
 
 
 with open(
@@ -21,10 +22,6 @@ with open(
     world_boxes_metadata = json.load(filejson)
 num_cols = world_boxes_metadata["num_cols"]
 tot_boxes = world_boxes_metadata["tot_boxes"]
-
-
-
-
 
 
 for network_path in tqdm(
@@ -83,7 +80,11 @@ for network_path in tqdm(
                     )  # update master dict with neighbour dict
     with open(
         os.path.join(
-            output_dir, "power_processed", "all_boxes", box_id, f"connector_{box_id}.txt"
+            output_dir,
+            "power_processed",
+            "all_boxes",
+            box_id,
+            f"connector_{box_id}.txt",
         ),
         "w",
     ) as file_ex:

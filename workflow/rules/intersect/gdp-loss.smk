@@ -2,11 +2,19 @@
 
 """
 
+assert config["central_threshold"] >= config["minimum_threshold"]
+assert config["central_threshold"] <= config["maximum_threshold"]
+THRESHOLDS = [
+    config["central_threshold"],
+    config["minimum_threshold"],
+    config["maximum_threshold"],
+]
 
-rule intersection_gdp_loss:
+
+rule intersect_damages:
     input:
         os.path.join(
-            config['output_dir'],
+            config["output_dir"],
             "power_intersection",
             "storm_data",
             "all_winds",
@@ -14,16 +22,22 @@ rule intersection_gdp_loss:
             "{sample}",
             "TC_r{region}_s{sample}_n{nh}.csv",
         ),
-        os.path.join(config['output_dir'], "power_intersection", "regions", "{region}_unit.gpkg"),
+        os.path.join(
+            config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
+        ),
         [
             os.path.join(
-                config['output_dir'], "power_processed", "all_boxes", f"{box_id}", f"targets_{box_id}.gpkg"
+                config["output_dir"],
+                "power_processed",
+                "all_boxes",
+                f"{box_id}",
+                f"targets_{box_id}.gpkg",
             )
             for box_id in all_boxes
         ],
         out_connector,
         os.path.join(
-            config['output_dir'],
+            config["output_dir"],
             "power_intersection",
             "storm_data",
             "all_winds",
@@ -32,20 +46,32 @@ rule intersection_gdp_loss:
             "{region}_{sample}_completed.txt",
         ),
     output:
-        os.path.join(
-            config['output_dir'],
-            "power_intersection",
-            "storm_data",
-            "individual_storms",
-            "{region}",
-            "{sample}",
-            "storm_{nh}",
-            "storm_r{region}_s{sample}_n{nh}.txt",
-        ),
+        [
+            os.path.join(
+                config["output_dir"],
+                "power_intersection",
+                "storm_data",
+                "individual_storms",
+                "{region}",
+                "{sample}",
+                "storm_{nh}",
+                f"{thrval}",
+                "storm_r{region}_s{sample}_n{nh}.txt",
+            )
+            for thrval in THRESHOLDS
+        ],
     params:
         region="{region}",
         sample="{sample}",
         nh="{nh}",
-        output_dir = config['output_dir']
+        output_dir=config["output_dir"],
+        reconstruction_cost_lowmedium=config["reconstruction_cost_lowmedium"],
+        reconstruction_cost_high=config["reconstruction_cost_high"],
+        central_threshold=config["central_threshold"],
+        minimum_threshold=config["minimum_threshold"],
+        maximum_threshold=config["maximum_threshold"],
+        wind_file_start=wind_file_start,
+        wind_file_end=wind_file_end,
+        all_boxes=all_boxes,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

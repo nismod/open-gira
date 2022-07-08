@@ -6,16 +6,19 @@ import re
 # Specifically, trim_hazard_data.smk looks for all *.tif files in the output directory.
 from tempfile import TemporaryDirectory
 
+
 checkpoint download_hazard_datasets:
     output:
-        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw")
+        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw"),
     run:
         with TemporaryDirectory() as tmpdir:
             input_file_key = re.sub("^hazard-", "", wildcards.HAZARD_SLUG)
-            input_file = config['hazard_datasets'][input_file_key]
+            input_file = config["hazard_datasets"][input_file_key]
             # Download remote input file if necessary
             if re.match("https?://", input_file):
-                os.system(f"wget {input_file} --output-document={tmpdir}/hazard_sources.txt")
+                os.system(
+                    f"wget {input_file} --output-document={tmpdir}/hazard_sources.txt"
+                )
                 input_file = f"{tmpdir}/hazard_sources.txt"
 
             # Split input_file into local and remote resources
@@ -41,7 +44,7 @@ checkpoint download_hazard_datasets:
                     sources.writelines(remote_files)
                 os.system(f"cd {target_dir} && wget --no-clobber -i {tmpdir}/input.txt")
 
-"""
-Test with:
-snakemake --cores all results/input/hazard-aqueduct-river/raw
-"""
+        """
+        Test with:
+        snakemake --cores all results/input/hazard-aqueduct-river/raw
+        """

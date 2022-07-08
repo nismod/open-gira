@@ -6,7 +6,6 @@ common functions required to perform preprocessing
 from importing_modules import *
 
 
-
 def adj(idx, num_cols, tot_boxes):
     """Returns the indices of all boxes that touch the idx box (incl at corners). Note the top and bottom are cut offs but either left or right side is connected
     num_cols - number of cols (i.e. number of boxes across the equator
@@ -101,8 +100,6 @@ def adj(idx, num_cols, tot_boxes):
     return adjacent
 
 
-
-
 def idx(lat, lon, boxlen, lat_max, num_cols, lon_min, tot_boxes):
     """Returns box index.
     input:
@@ -113,7 +110,7 @@ def idx(lat, lon, boxlen, lat_max, num_cols, lon_min, tot_boxes):
 
     boxlen - height and width of box
     lat_max - max lat value
-    num_cols - number of cols (i.e. number of boxes across the equator
+    num_cols - number of cols (i.e. number of boxes across the equator)
     lon_min - min lon value (lon_min can be negative)
     tot_boxes - total number of boxes
 
@@ -157,7 +154,6 @@ def idxbox(lats, lons, boxlen, lat_max, num_cols, lon_min, tot_boxes):
     """Returns a list of box_id values for the corresponding lats and lons"""
     boxes = idx(lats, lons, boxlen, lat_max, num_cols, lon_min, tot_boxes)
     return [f"box_{int(elem)}" for elem in boxes]
-
 
 
 def adjbox(box_idx, num_cols, tot_boxes):

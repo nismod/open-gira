@@ -5,12 +5,10 @@ from importing_modules import *
 
 try:
     boxlen = snakemake.params["boxlen_value"]
-    output_dir = snakemake.params['output_dir']
+    output_dir = snakemake.params["output_dir"]
 except:
     output_dir = sys.argv[1]
     boxlen = sys.argv[2]
-
-
 
 
 boxlen = float(boxlen)
@@ -41,7 +39,9 @@ if __name__ == "__main__":
 
     print("loading country layer=0")
     with fiona.open(
-        os.path.join(output_dir, "input", "adminboundaries", f"gadm36_levels.gpkg"), "r", layer=0
+        os.path.join(output_dir, "input", "adminboundaries", f"gadm36_levels.gpkg"),
+        "r",
+        layer=0,
     ) as src_code:
         code_geoms = []
         code_GIDs = []
@@ -87,7 +87,9 @@ if __name__ == "__main__":
 
     print("creating box folders")
     for box_id in gdf_area["box_id"]:
-        all_boxes_path = os.path.join(output_dir, "power_processed", "all_boxes", f"{box_id}")
+        all_boxes_path = os.path.join(
+            output_dir, "power_processed", "all_boxes", f"{box_id}"
+        )
         if not os.path.exists(all_boxes_path):
             os.makedirs(all_boxes_path)
 
@@ -96,7 +98,11 @@ if __name__ == "__main__":
     ):  # separately so that world_boxes.gpkg can be opened on QGIS without having to rerun snakemake
         gdf_box.to_file(
             os.path.join(
-                output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"
+                output_dir,
+                "power_processed",
+                "all_boxes",
+                box_id,
+                f"geom_{box_id}.gpkg",
             ),
             driver="GPKG",
         )

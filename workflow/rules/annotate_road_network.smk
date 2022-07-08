@@ -4,7 +4,7 @@ rule annotate_road_network:
     input:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_nodes.geoparquet",
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_edges.geoparquet",
-        admin="{OUTPUT_DIR}/input/adminboundaries/gadm36_levels.gpkg",
+        admin="{OUTPUT_DIR}/input/admin-boundaries/gadm36_levels.gpkg",
     output:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_nodes_annotated.geoparquet",
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_edges_annotated.geoparquet",

@@ -47,9 +47,12 @@ wildcard_constraints:
     FILENAME="[^/]+",
 
 
+##### load rules #####
+include: "rules/download/coastlines.smk"
 include: "rules/download/worldpop-population.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/gadm.smk"
+include: "rules/download/natural-earth.smk"
 include: "rules/download/gridfinder.smk"
 include: "rules/download/storm-ibtracs.smk"
 include: "rules/download/wri-powerplants.smk"
@@ -71,7 +74,22 @@ include: "rules/intersect/gdp-loss.smk"
 include: "rules/intersect/intersect-overview.smk"
 include: "rules/power_intersect_all.smk"
 
+include: "rules/analyse/analyse_rule_common.smk"  # must be first in analysis
+include: "rules/analyse/country_pair_matrix.smk"
+include: "rules/analyse/empirical_distribution.smk"
+include: "rules/analyse/target_analysis.smk"
+include: "rules/analyse/aggregate_levels.smk"
+include: "rules/analyse/transmission_aggregate.smk"
+include: "rules/analyse/extract_percentile.smk"
 include: "rules/power_analyse_all.smk"
+
+include: "rules/analyse/figures/fig_initial.smk"
+include: "rules/analyse/figures/fig_CDFs.smk"
+include: "rules/analyse/figures/fig_EACA.smk"
+include: "rules/analyse/figures/fig_EAD.smk"
+include: "rules/analyse/figures/fig_cross_correlation.smk"
+include: "rules/analyse/figures/fig_EAD_EACA.smk"
+include: "rules/analyse/figures/fig_master.smk"
 
 include: "rules/download_dataset.smk"
 include: "rules/filter_osm_data.smk"
@@ -84,6 +102,7 @@ include: "rules/convert_to_geoparquet.smk"
 include: "rules/intersection.smk"
 include: "rules/join_data.smk"
 include: "rules/make_exposure_tif.smk"
+include: "rules/make_exposure_img.smk"
 
 include: "rules/create_transport_network.smk"
 include: "rules/annotate_road_network.smk"
@@ -91,7 +110,7 @@ include: "rules/join_network.smk"
 
 ##### target rules #####
 
-# Require the completed single .geoparquet file to be present for each hazard
+# Require the completed overlay image file to be present for each hazard
 rule all:
     input:
         expand(
@@ -99,7 +118,8 @@ rule all:
                 f"{config['output_dir']}",
                 "exposure",
                 f"{{dataset}}_filter-{filter_slug}",
-                f"hazard-{{hazard}}"
+                f"hazard-{{hazard}}",
+                "img"
             ),
             dataset=config['infrastructure_datasets'].keys(),
             hazard=config['hazard_datasets'].keys()

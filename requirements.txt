@@ -6,6 +6,8 @@ rasterio
 rasterstats
 osmium==3.2.0
 pyrosm
+geopy               # geocoding client
+rtree==0.9.7        # spatial indexing
 
 # OPSIS
 nismod-snail==0.2.1
@@ -22,6 +24,7 @@ tqdm==4.62.3
 numpy~=1.21.0
 pandas
 pyarrow==6.0.0
+cython==0.29.28
 netCDF4
 openpyxl
 
@@ -33,7 +36,7 @@ requests
 zenodo_get
 
 # plotting
-matplotlib
+matplotlib==3.5.1
 
 # development
 pytest==6.2.4
