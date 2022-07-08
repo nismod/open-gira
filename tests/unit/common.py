@@ -91,6 +91,7 @@ class OutputChecker:
             )
 
     def compare_files(self, generated_file, expected_file):
+
         print(f">>> Compare {generated_file} vs {expected_file}", file=sys.stderr)
         if re.search("\\.geoparquet$", str(generated_file), re.IGNORECASE):
             """
@@ -108,10 +109,14 @@ class OutputChecker:
         if re.search("\\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
             generated = read(generated_file)
             expected = read(expected_file)
+
             # use dataframe.equals to quickly check for complete table equality
             if generated.equals(expected):
                 return
             else:
+                if len(generated) != len(expected):
+                    raise ValueError(f"tables not of same length, {len(generated)=} & {len(expected)=}")
+
                 # horribly slow but gives useful information on failures
                 for r in range(len(generated)):
                     try:
@@ -122,6 +127,7 @@ class OutputChecker:
                         raise e
                 else:
                     raise RuntimeError("couldn't find mismatch between dataframes...")
+
         else:
             print(f">>> Method=cmp", file=sys.stderr)
             try:
@@ -129,4 +135,5 @@ class OutputChecker:
             except sp.CalledProcessError as e:
                 print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
                 raise e
+
         print(f">>> OK", file=sys.stderr)
