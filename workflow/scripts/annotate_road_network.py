@@ -491,7 +491,7 @@ if __name__ == '__main__':
             osm_epsg = sys.argv[1:]
         # nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
-        # administrative_data_path = ../../results/input/adminboundaries/gadm36_levels.gpkg
+        # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
         # output_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes_annotated.geoparquet
         # output_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges_annotated.geoparquet
         # road_speeds_path = ../../bundled_data/global_road_speeds.xlsx

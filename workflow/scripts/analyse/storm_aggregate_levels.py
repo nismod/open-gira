@@ -60,7 +60,7 @@ countries_relevant = set(
 
 print(f"loading level {layer_num} data")
 with fiona.open(
-    os.path.join(output_dir, "input", "adminboundaries", f"gadm36_levels.gpkg"),
+    os.path.join(output_dir, "input", "admin-boundaries", f"gadm36_levels.gpkg"),
     "r",
     layer=layer_num,
 ) as src_code:
