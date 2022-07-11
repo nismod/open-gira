@@ -40,3 +40,5 @@ matplotlib==3.5.1
 
 # development
 pytest==6.2.4
+black
+flake8
