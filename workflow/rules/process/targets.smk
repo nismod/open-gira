@@ -4,7 +4,13 @@
 
 
 out_targets = expand(
-    os.path.join(config['output_dir'], "power_processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"),
+    os.path.join(
+        config["output_dir"],
+        "power_processed",
+        "all_boxes",
+        "{box_id}",
+        "targets_{box_id}.csv",
+    ),
     box_id=all_boxes,
 )
 
@@ -25,10 +31,14 @@ rule process_target_box:
         os.path.join(config['output_dir'], "input", "adminboundaries", "exclude_countries.txt"),
     output:
         os.path.join(
-            config['output_dir'], "power_processed", "all_boxes", "{box_id}", "targets_{box_id}.csv"
+            config["output_dir"],
+            "power_processed",
+            "all_boxes",
+            "{box_id}",
+            "targets_{box_id}.csv",
         ),
     params:
         box_id="{box_id}",
-        output_dir = config['output_dir']
+        output_dir=config["output_dir"],
     script:
         os.path.join("..", "..", "scripts", "process", "process_power_2_targets.py")

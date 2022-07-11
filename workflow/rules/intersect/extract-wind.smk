@@ -12,35 +12,44 @@ except:
 wind_rerun_bool = config["wind_rerun"]
 assert wind_rerun_bool in [True, False]
 
+
 checkpoint intersect_winds_indiv:
     """Find the .csv files for the wind speed details at each unit. 
     IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
                still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
     it clears all existing files matching the output."""
     input:
-        os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
-        os.path.join(config['output_dir'], "power_intersection", "regions", "{region}_unit.gpkg"),
         os.path.join(
-            config['output_dir'], "input", "stormtracks", "fixed", "STORM_FIXED_RETURN_PERIODS_{region}.nc"
+            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
         ),
         os.path.join(
-            config['output_dir'],
+            config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
+        ),
+        os.path.join(
+            config["output_dir"],
             "input",
             "stormtracks",
-            "events",
-            "STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
+            "fixed",
+            "STORM_FIXED_RETURN_PERIODS_{region}.nc",
         ),
+        out_events,
     params:
         region="{region}",
         sample="{sample}",
         all_boxes_compute=all_boxes,
         memory_storm_split=storm_batch_value,
         wind_rerun=wind_rerun_bool,
-        output_dir = config['output_dir']
+        output_dir=config["output_dir"],
+        storm_model_type=config["storm_model_type"],
+        wind_file_start=wind_file_start,
+        wind_file_end=wind_file_end,
+        central_threshold=config["central_threshold"],
+        minimum_threshold=config["minimum_threshold"],
+        maximum_threshold=config["maximum_threshold"],
     output:
         directory(
             os.path.join(
-                config['output_dir'],
+                config["output_dir"],
                 "power_intersection",
                 "storm_data",
                 "all_winds",
@@ -49,7 +58,7 @@ checkpoint intersect_winds_indiv:
             )
         ),
         os.path.join(
-            config['output_dir'],
+            config["output_dir"],
             "power_intersection",
             "storm_data",
             "all_winds",

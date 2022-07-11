@@ -39,7 +39,7 @@ jobs:
       with:
         auto-update-conda: true
         python-version: '3.9'
-        environment-file: workflow/envs/environment.yml
+        environment-file: environment.yml
 
     - name: Test with pytest
       # Bash shells do not use ~/.profile or ~/.bashrc so these shells

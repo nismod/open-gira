@@ -5,7 +5,7 @@ Intersect the infrastructure data with the hazard (storms)
 
 completed_files = expand(
     os.path.join(
-        config['output_dir'],
+        config["output_dir"],
         "power_intersection",
         "storm_data",
         "all_winds",

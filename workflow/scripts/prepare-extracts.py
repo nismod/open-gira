@@ -42,10 +42,10 @@ def slice_subextracts(initial_bbox, n):
 
 
 try:
-    slice_count = int(snakemake.config['slice_count'])
+    slice_count = int(snakemake.config["slice_count"])
     original_file = snakemake.input[0]
     out_file = snakemake.output[0]
-    filter_slug = snakemake.params['filter_slug']
+    filter_slug = snakemake.params["filter_slug"]
 except NameError:
     if len(sys.argv) != 3:
         raise RuntimeError(
@@ -58,7 +58,7 @@ except NameError:
 
 n = math.sqrt(slice_count)
 if n % 1 > 0 and n != 1:
-    raise ValueError('Total slice count must be a square number or 1.')
+    raise ValueError("Total slice count must be a square number or 1.")
 elif slice_count == 1:
     n = slice_count
 else:

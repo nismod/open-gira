@@ -16,6 +16,7 @@ The process is as follows:
 """
 
 import logging
+import sys
 from collections import Counter
 
 import geopandas
@@ -29,6 +30,7 @@ class WayParser(osmium.SimpleHandler):
     """
     Generate a list of node references for identifying non-unique nodes
     """
+
     def __init__(self):
         osmium.SimpleHandler.__init__(self)
         self.node_list = []
@@ -55,6 +57,7 @@ class WaySlicer(osmium.SimpleHandler):
     @param List<int> shared_nodes - list of nodes that are shared with other ways in the network
     @param List<string> tags_to_preserve - list of osmium tags to keep in the output
     """
+
     def __init__(self, shared_nodes, tags_to_preserve):
         osmium.SimpleHandler.__init__(self)
         self.output_data = []
@@ -73,7 +76,9 @@ class WaySlicer(osmium.SimpleHandler):
         for n in w.nodes:
             locations.append((n.lon, n.lat))
             if n.ref in self.shared_nodes.keys():
-                shared_nodes_used.append({'node': n, 'point': shape.Point((n.lon, n.lat))})
+                shared_nodes_used.append(
+                    {"node": n, "point": shape.Point((n.lon, n.lat))}
+                )
                 if n.lon in node_index.keys():
                     node_index[n.lon][n.lat] = n
                 else:
@@ -85,7 +90,7 @@ class WaySlicer(osmium.SimpleHandler):
         lines = bbox.intersection(linestring)  # MULTILINESTRING | LINESTRING
         # split by shared nodes
         # GEOMETRYCOLLECTION of LINESTRINGs
-        shared_points = shape.MultiPoint([n['point'] for n in shared_nodes_used])
+        shared_points = shape.MultiPoint([n["point"] for n in shared_nodes_used])
         if lines.intersects(shared_points):
             segments = shape_ops.split(lines, shared_points)
         else:
@@ -96,7 +101,7 @@ class WaySlicer(osmium.SimpleHandler):
         s_id = 0
         for line in segments.geoms:
             # Determine start and end nodes from shared nodes or invent if bbox clipping
-            prefixes = ['start_node_', 'end_node_']
+            prefixes = ["start_node_", "end_node_"]
             nodes = []
             for i in range(2):
                 n = line.coords[i]
@@ -105,21 +110,23 @@ class WaySlicer(osmium.SimpleHandler):
                 except KeyError:
                     # Not found, must be a node we created by clipping to bbox
                     node = {
-                        f'{prefixes[i]}reference': pandas.NA,
-                        f'{prefixes[i]}longitude': n[0],
-                        f'{prefixes[i]}latitude': n[1],
-                        f'{prefixes[i]}degree': 1
+                        f"{prefixes[i]}reference": pandas.NA,
+                        f"{prefixes[i]}longitude": n[0],
+                        f"{prefixes[i]}latitude": n[1],
+                        f"{prefixes[i]}degree": 1,
                     }
                 nodes.append(node)
 
-            self.output_data.append({
-                'geometry': line,
-                'way_id': w.id,
-                'segment_id': s_id,
-                **base_input,
-                **nodes[0],
-                **nodes[1]
-            })
+            self.output_data.append(
+                {
+                    "geometry": line,
+                    "way_id": w.id,
+                    "segment_id": s_id,
+                    **base_input,
+                    **nodes[0],
+                    **nodes[1],
+                }
+            )
             s_id += 1
 
     def get_node_by_coords(self, coords, prefix, node_list):
@@ -136,22 +143,24 @@ class WaySlicer(osmium.SimpleHandler):
         dictionary of node reference, longitude, latitude, and degree
         """
         node = node_list[coords[0]][coords[1]]  # KeyError is caught by parent function
-        if node.ref not in self.shared_nodes.keys():  # The shared_nodes should all have degree > 1
+        if (
+            node.ref not in self.shared_nodes.keys()
+        ):  # The shared_nodes should all have degree > 1
             raise RuntimeError(f"Node {node.ref} not found in shared_nodes keys.")
         degree = self.shared_nodes[node.ref]
         return {
-            f'{prefix}reference': node.ref,
-            f'{prefix}longitude': node.lon,
-            f'{prefix}latitude': node.lat,
-            f'{prefix}degree': degree
+            f"{prefix}reference": node.ref,
+            f"{prefix}longitude": node.lon,
+            f"{prefix}latitude": node.lat,
+            f"{prefix}degree": degree,
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         pbf_path = snakemake.input[0]
         output_path = snakemake.output[0]
-        keep_tags = snakemake.config['keep_tags']
+        keep_tags = snakemake.config["keep_tags"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -160,23 +169,26 @@ if __name__ == '__main__':
         # output_path = '../../results/test.geoparquet'
         # keep_tags = 'highway'
 
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     logging.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
     import warnings
-    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
+
+    warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     box = osmium.io.Reader(pbf_path).header().box()
-    bbox = shape.box(box.bottom_left.lon, box.bottom_left.lat, box.top_right.lon, box.top_right.lat)
+    bbox = shape.box(
+        box.bottom_left.lon, box.bottom_left.lat, box.top_right.lon, box.top_right.lat
+    )
 
     p = WayParser()
     shared_nodes = p.find_shared_nodes(pbf_path)
 
     h = WaySlicer(
         shared_nodes=shared_nodes,
-        tags_to_preserve=keep_tags.replace(' ', '').split(',')
+        tags_to_preserve=keep_tags.replace(" ", "").split(","),
     )
     h.apply_file(pbf_path, locations=True)
     logging.info(

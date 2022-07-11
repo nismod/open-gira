@@ -10,49 +10,87 @@ hazard_datasets:
 infrastructure_datasets:
   tanzania-mini: 'external_files/tanzania-mini.osm.pbf'
 
-# Number of slices to cut dataset into -- must be a square number
-slice_count: 1
-# Edge attributes list for network/hazard intersection.
-keep_tags: 'highway'
+# Osmium tags to retain in the geoparquet files
+# these must be specified as a single string, with each tag comma seperated e.g. 'highway, surface'
+keep_tags: 'highway, surface, bridge, maxspeed, lanes'
 # Filters definition
 osmium_tags_filters_file: "config/highway-core.txt"
+# CRS OSM uses
+osm_epsg: 4326
 
-exposure_threshold: 0.5
+# Number of slices to cut dataset into -- must be a square number
+slice_count: 1
 
-#
-# STORM Power Network Analysis
-#
+# road, rail, etc.
+transport_type: 'road'
 
-# width and height of dataset-splitting box (must be factor of 180)
+
+exposure_tifs:
+  # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
+  exposure_threshold: 0.5
+  # Used when scaling raster files, values < 1 will downsample
+  scaling_factor: 0.1
+  # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
+  resampling_mode: 'bilinear'
+  plot:
+    raster:
+      cmap: 'Reds'
+
+## STORM Power Network Analysis ##
+# Storm model type. Options: constant (no climate effects), CMCC-CM2-VHR4, CNRM-CM6-1-HR, EC-Earth3P-HR, HadGEM3-GC31-HM.
+storm_model_type: 'constant'
+
+# Failure threshold central value m/s. This value is the threshold at which the network assets are expected to fail based on available literature. The recommended setting is 40 m/s
+central_threshold: 25
+
+# Minimum failure threshold value m/s. This is the lowest expected value for failure to account for uncertainty in central_threshold
+minimum_threshold: 20
+
+# Maxmimum failure threshold value m/s. This is the highest expected value for failure to account for uncertainty in central_threshold
+maximum_threshold: 30
+
+# Width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5
 
-# List of boxes to analyse (only). Put None to evaluate all
-specific_boxes: [1102, 1103, 1104]
+# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957]. Note that this must be known for the box_width_height value entered above. Put None to evaluate globally.
+specific_boxes: [1029, 1028, 1030, 957]
 
-# Regions in which to analyse. List of strings. 
-# Any of: ["EP", "NA", "NI", "SI", "SP", "WP"]
-# Include all for global analysis. 
-# If specific_boxes is not None, they must be coherent with these regions.
+# REGIONS #
+# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
 regions: ["NA"]
 
-# Synthetic data sample upper value (inclusive).
-# Value from 0 to 9 to analyse for all years and regions.
+# SAMPLES #
+# Synthetic data sample upper value (inclusive).Value from 0 to 9 to analyse for all years and regions.
 sample_upper: 0
 
-# Individual samples to investigate. Will override sample_upper. 
-# Write None to use sample_upper. List of floats or strings
-samples_indiv: None
+# Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
+samples_indiv: [0, 1, 2]
 
-# Storms will be analysed in batches of this value. 
-# Higher value: quicker process. Lower value: better memory. 
-# It is recommended to tweak this value dependent on the machine's available 
-# memory and/or user requirements (500 is often a good starting value). 
-# Note that at below 25, attempts are made to record which files store which 
-# data as to only load the relevant wind csv files. This may explain changes
-# in performance.
-storm_batches: 30
+# Direct damage cost per km (USD) for high voltage lines. 400 000USD suggestion for upper limit
+reconstruction_cost_high: 400000
 
-# If set to True then wind_extracter will overwrite existing wind files. 
-# It is recommended to keep this as False unless changes are made in the wind 
-# configuration files/scripts.
+# Direct damage cost per km (USD) for low and medium voltage lines. XXX 000USD suggestion for upper limit
+reconstruction_cost_lowmedium: 200000
+
+# Further Configuration #
+# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
+storm_batches: 40000
+
+# If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
 wind_rerun: False
+
+# Analysis #
+# Percentage of storms to select for geospatial analysis and visualisation. Set to 100 for all
+top_select: 100
+
+# Set increasing severity for top_select. True means top_select is the first top_select% of storms in increasing severity (i.e. first one is the least damaging storm). False means the top top_select% worst storms are analysed (i.e. first on is the most damaging storm)
+increased_severity_sort: True
+
+# Percentile select
+percentile: 99
+
+# Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
+aggregate_level: 1
+
+# Specific storms to analyse in analyse_all workflow. In form of list of strings [#_#_#, #_#_#,... ]. Write None to include all
+specific_storm_analysis: 'None' #['0_2005_97']
