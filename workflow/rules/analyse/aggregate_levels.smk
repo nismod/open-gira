@@ -18,7 +18,7 @@ rule analyse_aggregate_levels:
             f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent.gpkg",
         ),
         os.path.join(
-            config["output_dir"], "input", "adminboundaries", f"gadm36_levels.gpkg"
+            config["output_dir"], "input", "admin-boundaries", f"gadm36_levels.gpkg"
         ),
     params:
         output_dir=config["output_dir"],

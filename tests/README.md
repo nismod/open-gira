@@ -59,7 +59,7 @@ file.
 Input data and expected outputs are copied into a specific
 directory under `.tests/units`. 
 This means that, before generating the
-tests, the pipeline must have been successfully run at leat once, in
+tests, the pipeline must have been successfully run at least once, in
 order for the expected outputs to be there.
 
 ## Changes from auto-generated tests

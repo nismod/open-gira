@@ -35,7 +35,7 @@ all_box_geoms = expand(
 rule world_splitter:
     input:
         os.path.join(
-            config["output_dir"], "input", "adminboundaries", "gadm36_levels.gpkg"
+            config["output_dir"], "input", "admin-boundaries", "gadm36_levels.gpkg"
         ),
     output:
         all_box_geoms,
