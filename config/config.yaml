@@ -95,7 +95,7 @@ reconstruction_cost_lowmedium: 200000
 
 # Further Configuration #
 # Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
-storm_batches: 40000
+storm_batches: 900
 
 # If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
 wind_rerun: False

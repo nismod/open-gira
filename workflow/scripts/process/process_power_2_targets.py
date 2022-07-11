@@ -35,9 +35,7 @@ def combine(lsts):
             fix[j] = avgval
             count_overlap += 1
 
-    assert (
-        count_overlap / llen < 0.4
-    )  # assert less than 40% is overlap (catch possible errors. None found in testing)
+    assert (count_overlap / llen < 0.4)  # assert less than 40% is overlap (catch possible errors. None found in testing)
 
     all = [numpy.ma.masked] * llen
     for i in range(llen):
