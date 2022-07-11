@@ -817,11 +817,15 @@ if not isNone(windfile):
             direct_damage_cost = 0
             if len(edges_affected_thrval) != 0:  # to prevent writing empty dataframe
                 # calculate direct damage cost
-                direct_damages = direct_damage(edges_affected)  # TODO change me to dd(edges_affected) and propagate, filter >0 and to gpkg, then the plot only one line each
+                direct_damages = direct_damage(
+                    edges_affected
+                )  # TODO change me to dd(edges_affected) and propagate, filter >0 and to gpkg, then the plot only one line each
                 direct_damage_cost = sum(direct_damages)
                 edges_affected_frag = edges_affected.copy()
                 edges_affected_frag["reconstruction_cost"] = direct_damages
-                edges_affected_frag = edges_affected_frag[edges_affected_frag.reconstruction_cost>0]
+                edges_affected_frag = edges_affected_frag[
+                    edges_affected_frag.reconstruction_cost > 0
+                ]
 
                 edges_affected_frag.to_file(
                     os.path.join(

@@ -38,9 +38,7 @@ def append_data(base, slice_files):
     except ValueError as error:
         # if the input parquet file does not contain a geometry column, geopandas
         # will raise a ValueError rather than try to procede
-        logging.info(
-            f"{error}\n"
-        )
+        logging.info(f"{error}\n")
 
         # snakemake requires that output files exist though, so write empty ones
         gdf = gpd.GeoDataFrame([])
@@ -60,7 +58,7 @@ if __name__ == "__main__":
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
 
-    warnings.filterwarnings('ignore', message='.*initial implementation of Parquet.*')
+    warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     # When getting the input files from snakemake, there is no
     # garantee that they will always in the same order. Sort them for

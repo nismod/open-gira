@@ -31,7 +31,7 @@ if not os.path.exists(plot_path):
 
 metric = "EAD"
 unit = "USD"
-if EACA==True:
+if EACA == True:
     metric = "EACA"
     unit = "people"
 
@@ -74,7 +74,7 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
     c1 = (0, 1 - 1 / (ii + 1), 1 / (ii + 1))
 
     cen_name = f"{df_name}"
-    if EACA==True:
+    if EACA == True:
         plt.fill_between(x, y_min, y_max, color=c1, alpha=0.2)
         plt.plot(
             x,
@@ -91,7 +91,6 @@ for ii, (df_name, df) in enumerate(data_dict.items()):
             label=f"{df_name} - Maximum wind threshold ({maximum_threshold}m/s)",
         )  # plot interpolated line
         cen_name = f"{df_name} - Central wind threshold ({central_threshold}m/s)"
-
 
     plt.plot(
         x,

@@ -8,8 +8,8 @@ import sys
 import geopandas as gpd
 
 
-GPKG_EXT = '.gpkg'
-PARQUET_EXT = '.geoparquet'
+GPKG_EXT = ".gpkg"
+PARQUET_EXT = ".geoparquet"
 
 
 def geoparquet_to_geopackage(parquet_path) -> str:
@@ -21,7 +21,7 @@ def geoparquet_to_geopackage(parquet_path) -> str:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     if len(sys.argv) < 2:
         sys.exit(

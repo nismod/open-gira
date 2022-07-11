@@ -45,7 +45,7 @@ def stat_file(thrval):
 
 
 def y_vals(df, metric):
-    """Returns an array of sorted points of the metric column in the df. """
+    """Returns an array of sorted points of the metric column in the df."""
     stats_sorted = df.sort_values(metric)  # sort for damages
     stats_sorted = stats_sorted[stats_sorted[metric] != 0]  # remove zeros
     y = np.array(stats_sorted[metric])

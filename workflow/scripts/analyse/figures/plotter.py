@@ -43,7 +43,7 @@ miny = 16
 
 
 def eval_dist_lst(linestring_df):
-    """"Evaluate the coordinate dataframe and returns distance list in km"""
+    """Evaluate the coordinate dataframe and returns distance list in km"""
 
     lst = []
     for ii in range(len(linestring_df)):
