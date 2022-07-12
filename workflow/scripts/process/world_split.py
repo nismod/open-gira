@@ -1,7 +1,14 @@
 """Splits the world into boxes of length and height boxlen (input parameter)"""
 
 
+# N.B. this is evil
+# TODO: remove importing_modules and have script specific imports
 from importing_modules import *
+
+from collections import defaultdict
+
+from shapely.strtree import STRtree
+
 
 try:
     boxlen = snakemake.params["boxlen_value"]
@@ -28,11 +35,11 @@ if __name__ == "__main__":
             points.append(Point(lon, lat))
 
     points_gdf = gpd.GeoDataFrame({"geometry": points})
-    gdf_area = points_gdf.buffer(boxlen / 2, cap_style=3)
-    gdf_area = gpd.GeoDataFrame(
+    grid = points_gdf.buffer(boxlen / 2, cap_style=3)
+    grid = gpd.GeoDataFrame(
         {
-            "geometry": gdf_area,
-            "box_id": [f"box_{idx_}" for idx_ in range(len(gdf_area))],
+            "geometry": grid,
+            "box_id": [f"box_{idx_}" for idx_ in range(len(grid))],
         },
         crs="EPSG:4326",
     )
@@ -49,29 +56,42 @@ if __name__ == "__main__":
             code_geoms.append(shape(feature["geometry"]))
             code_GIDs.append(feature["properties"]["GID_0"])
         print("create dataframe")
-        code_geoms_gpd = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs})
+        countries = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs})
 
-    print(f"country length: {len(code_geoms_gpd)}")
-    print("Country for each box...")
-    box_country_dict = {}
-    for jj, box in tqdm(
-        enumerate(gdf_area["geometry"]),
-        desc="intersecting countries",
-        total=len(gdf_area),
-    ):  # find countries that are in the boxes
-        countries_overlap = []
-        for ii, country in enumerate(code_geoms_gpd["geometry"]):
-            if box.intersects(country) == True:
-                countries_overlap.append(code_geoms_gpd["code"].iloc[ii])
-        if len(countries_overlap) == 0:
-            countries_overlap = None
-        box_country_dict[gdf_area["box_id"].iloc[jj]] = countries_overlap
+    print(f"country length: {len(countries)}")
+    print("Find countries intersecting with each grid cell...")
+    # build a spatial index from the grid polygons
+    tree = STRtree(grid.geometry)
+
+    # when querying the STRtree, we are returned intersecting grid cell polygons
+    # we really want their ids, so we need a mapping to recover those
+    # shapely polygons are not hashable (at least not until shapely 2.0)
+    # so use something that is hashable, their WKT representation (a string)
+    box_wkt_to_id: dict[str, str] = {box.geometry.wkt: box.box_id for box in grid.itertuples()}
+
+    # "box_n" -> ['GBR', 'FRA']
+    countries_by_box: dict[str, list[str]] = defaultdict(list)
+
+    for country in countries.itertuples():
+        # query the tree for boxes which overlap the country
+        intersecting_box_ids: list[str] = [box_wkt_to_id[box.wkt] for box in tree.query(country.geometry)]
+
+        # add the country code to every boxes's list
+        [countries_by_box[box_id].append(country.code) for box_id in intersecting_box_ids]
+
+    # post-processing to match Max's previous output
+    # 1) assign None to empty boxes
+    for box in grid.itertuples():
+        if box.box_id not in countries_by_box:
+            countries_by_box[box.box_id] = None
+    # 2) sort the elements by their box index
+    countries_by_box = dict(sorted(countries_by_box.items(), key=lambda item: int(item[0].split("_")[-1])))
 
     print("writing metadata...")
     with open(
         os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "w"
     ) as filejson:
-        lon_min, lat_min, lon_max, lat_max = gdf_area.bounds.values[0]
+        lon_min, lat_min, lon_max, lat_max = grid.bounds.values[0]
         info = {
             "boxlen": boxlen,
             "lon_min": lon_min,
@@ -81,22 +101,24 @@ if __name__ == "__main__":
             "num_cols": len(lon_centroids),
             "num_rows": len(lat_centroids),
             "tot_boxes": int(len(lon_centroids) * len(lat_centroids)),
-            "box_country_dict": box_country_dict,
+            "box_country_dict": countries_by_box,
         }
         json.dump(info, filejson)
 
     print("creating box folders")
-    for box_id in gdf_area["box_id"]:
+    for box_id in grid["box_id"]:
         all_boxes_path = os.path.join(
             output_dir, "power_processed", "all_boxes", f"{box_id}"
         )
         if not os.path.exists(all_boxes_path):
             os.makedirs(all_boxes_path)
 
-    for box_id, gdf_box in tqdm(
-        gdf_area.groupby("box_id"), desc="saving each box", total=len(gdf_area)
+    # for 5 degree boxes, this means writing ~2600 geopackage files
+    # TODO: investigate if we really need to write these like this
+    for box_id, box in tqdm(
+        grid.groupby("box_id"), desc="saving each box", total=len(grid)
     ):  # separately so that world_boxes.gpkg can be opened on QGIS without having to rerun snakemake
-        gdf_box.to_file(
+        box.to_file(
             os.path.join(
                 output_dir,
                 "power_processed",
@@ -108,6 +130,6 @@ if __name__ == "__main__":
         )
 
     print("writing full to gpkg")
-    gdf_area.to_file(
+    grid.to_file(
         os.path.join(output_dir, "power_processed", "world_boxes.gpkg"), driver="GPKG"
     )
