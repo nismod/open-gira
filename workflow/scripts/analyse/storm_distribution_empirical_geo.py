@@ -42,14 +42,10 @@ except:  # for testing only
     top_select = 100
     increased_severity_sort = True
     region_eval = (
-        None
-    )  # ["NA"]  # list of regions to analyse (write None if none specified)
-    sample_eval = (
-        None
-    )  # [0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
-    nh_eval = (
-        None
-    )  # ['0_2005_97']  # list of storms to analyse (write None if none specified)
+        None  # ["NA"]  # list of regions to analyse (write None if none specified)
+    )
+    sample_eval = None  # [0]  # list of samples of ALL regions in region_eval to analyse (write None if none specified)
+    nh_eval = None  # ['0_2005_97']  # list of storms to analyse (write None if none specified)
     thrval = 43
     raise RuntimeError("Please use snakemake to define inputs")
 

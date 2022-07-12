@@ -39,7 +39,7 @@ except:
 
 
 def eval_dist(linestring_df):
-    """"Evaluate the coordinate dataframe and returns distance in km"""
+    """ "Evaluate the coordinate dataframe and returns distance in km"""
 
     dist_tot = 0
     for ii in range(len(linestring_df)):
@@ -62,7 +62,7 @@ def eval_dist(linestring_df):
 
 
 def eval_dist_lst(linestring_df):
-    """"Evaluate the coordinate dataframe and returns distance list in km"""
+    """ "Evaluate the coordinate dataframe and returns distance list in km"""
 
     lst = []
     for ii in range(len(linestring_df)):
@@ -257,7 +257,7 @@ else:
     # Then aggregate
     print("Aggregating reconstruction costs")
     with fiona.open(
-        os.path.join(output_dir, "input", "adminboundaries", f"gadm36_levels.gpkg"),
+        os.path.join(output_dir, "input", "admin-boundaries", f"gadm36_levels.gpkg"),
         "r",
         layer=layer_num,
     ) as src_code:
@@ -290,9 +290,12 @@ else:
         )
 
     transmission_bounds = [t.bounds for t in transmission_master.geometry]
-    transmission_master["lon_min"], transmission_master["lat_min"], transmission_master[
-        "lon_max"
-    ], transmission_master["lat_max"] = zip(*transmission_bounds)
+    (
+        transmission_master["lon_min"],
+        transmission_master["lat_min"],
+        transmission_master["lon_max"],
+        transmission_master["lat_max"],
+    ) = zip(*transmission_bounds)
 
     map_dict = {}
     map_dict_ae = {}  # annual expected

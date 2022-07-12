@@ -78,15 +78,15 @@ def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
     distance = distance * 1000
     r = r * 1000
     rho = 1.10
-    f = np.abs(1.45842300 * 10 ** -4 * np.sin(lat))
+    f = np.abs(1.45842300 * 10**-4 * np.sin(lat))
     e = 2.71828182846
     # p_drop = 2*wind**2
     p_drop = (pressure_env - pressure) * 100
-    B = rho * e * wind ** 2 / p_drop
+    B = rho * e * wind**2 / p_drop
     Vg = (
         np.sqrt(
-            ((r / distance) ** B) * (wind ** 2) * np.exp(1 - (r / distance) ** B)
-            + (r ** 2) * (f ** 2) / 4
+            ((r / distance) ** B) * (wind**2) * np.exp(1 - (r / distance) ** B)
+            + (r**2) * (f**2) / 4
         )
         - (r * f) / 2
     )

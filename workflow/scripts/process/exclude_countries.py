@@ -13,7 +13,7 @@ except:
 
 
 with fiona.open(
-    os.path.join(output_dir, "input", "adminboundaries", "gadm36_levels.gpkg"),
+    os.path.join(output_dir, "input", "admin-boundaries", "gadm36_levels.gpkg"),
     "r",
     layer=0,
 ) as src_code:

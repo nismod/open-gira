@@ -28,7 +28,7 @@ rule process_target_box:
         os.path.join(config['output_dir'], "input", "gridfinder", "targets.tif"),
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),
         os.path.join(config['output_dir'], "input", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc"),
-        os.path.join(config['output_dir'], "input", "adminboundaries", "exclude_countries.txt"),
+        os.path.join(config['output_dir'], "power_processed", "exclude_countries.txt"),
     output:
         os.path.join(
             config["output_dir"],

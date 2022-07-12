@@ -59,9 +59,7 @@ assert (
 
 rp_percentile = 1 / ((100 - percentile) / 100)  # calculate the return period value
 
-metrics_none = (
-    True
-)  # set to False when a metric is covering a damage storm with the specified percentile
+metrics_none = True  # set to False when a metric is covering a damage storm with the specified percentile
 for metric in metrics_target:
     x_count = np.arange(1, storm_tot + 1, 1)
     x_ = years_tot / x_count

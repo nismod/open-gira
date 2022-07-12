@@ -22,8 +22,8 @@ def run_test(target_name, command):
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copytree('tests/config', f"{workdir}/config")
-        shutil.copytree('tests/external_files', f"{workdir}/external_files")
+        shutil.copytree("tests/config", f"{workdir}/config")
+        shutil.copytree("tests/external_files", f"{workdir}/external_files")
 
         # dbg
         print(target_name, file=sys.stderr)
@@ -32,17 +32,18 @@ def run_test(target_name, command):
             command = command.split(" ")
 
         # Run the test job.
-        sp.check_output([
-            "python",
-            "-m",
-            *command,
-
-            "-r",  # show reasons, helps with debugging
-            "--configfile",
-            "tests/config/config.yaml",
-            "--directory",
-            workdir,
-        ])
+        sp.check_output(
+            [
+                "python",
+                "-m",
+                *command,
+                "-r",  # show reasons, helps with debugging
+                "--configfile",
+                "tests/config/config.yaml",
+                "--directory",
+                workdir,
+            ]
+        )
 
         # Check the output byte by byte using cmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
@@ -115,15 +116,19 @@ class OutputChecker:
                 return
             else:
                 if len(generated) != len(expected):
-                    raise ValueError(f"tables not of same length, {len(generated)=} & {len(expected)=}")
+                    raise ValueError(
+                        f"tables not of same length, {len(generated)=} & {len(expected)=}"
+                    )
 
                 # horribly slow but gives useful information on failures
                 for r in range(len(generated)):
                     try:
-                        assert str(generated[r:r+1]) == str(expected[r:r+1])
+                        assert str(generated[r : r + 1]) == str(expected[r : r + 1])
                     except AssertionError as e:
                         print(f">>> FAILURE at row {r}.")
-                        print(f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}")
+                        print(
+                            f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}"
+                        )
                         raise e
                 else:
                     raise RuntimeError("couldn't find mismatch between dataframes...")

@@ -11,9 +11,9 @@ def test_join_data():
     # this is necessary because the join_data rule is parameterised by
     # slice_count
     common.run_test(
-        'join_data',
+        "join_data",
         (
-            'snakemake results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet '
-            '-j1 --keep-target-files --config slice_count=4'
-        )
+            "snakemake results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet "
+            "-j1 --keep-target-files --config slice_count=4"
+        ),
     )

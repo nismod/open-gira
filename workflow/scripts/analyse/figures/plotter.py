@@ -33,7 +33,7 @@ except:
 max_dist = 0.5
 
 
-world_file = os.path.join(output_dir, "input", "adminboundaries", "gadm36_levels.gpkg")
+world_file = os.path.join(output_dir, "input", "admin-boundaries", "gadm36_levels.gpkg")
 world = gpd.read_file(world_file, layer=0)
 
 minx = -87
@@ -43,7 +43,7 @@ miny = 16
 
 
 def eval_dist_lst(linestring_df):
-    """"Evaluate the coordinate dataframe and returns distance list in km"""
+    """Evaluate the coordinate dataframe and returns distance list in km"""
 
     lst = []
     for ii in range(len(linestring_df)):

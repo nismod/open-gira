@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     print("loading country layer=0")
     with fiona.open(
-        os.path.join(output_dir, "input", "adminboundaries", f"gadm36_levels.gpkg"),
+        os.path.join(output_dir, "input", "admin-boundaries", f"gadm36_levels.gpkg"),
         "r",
         layer=0,
     ) as src_code:
