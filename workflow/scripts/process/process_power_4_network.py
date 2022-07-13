@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     # Combine to nodes
     # print("combining sources and sinks")
-    nodes = plants.append(targets).reset_index(drop=True)  # sources and targets located
+    nodes = gpd.GeoDataFrame(pd.concat([plants, targets], ignore_index=True), crs=plants.crs)
     # timer(start)
 
     # Edges
