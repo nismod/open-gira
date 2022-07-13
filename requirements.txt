@@ -10,7 +10,7 @@ geopy               # geocoding client
 
 # OPSIS
 nismod-snail==0.2.1
-snkit
+-e git+https://github.com/tomalrussell/snkit.git@master#egg=snkit
 
 # workflow
 snakemake==6.15.1
