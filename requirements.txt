@@ -7,7 +7,6 @@ rasterstats
 osmium==3.2.0
 pyrosm
 geopy               # geocoding client
-rtree==0.9.7        # spatial indexing
 
 # OPSIS
 nismod-snail==0.2.1
