@@ -1,5 +1,5 @@
 # geospatial
-geopandas==0.10.2
+geopandas==0.11.0
 shapely>=1.8.2
 pyproj>=3.3.1
 rasterio
