@@ -41,18 +41,9 @@ if __name__ == "__main__":
     )
 
     print("loading country layer=0")
-    with fiona.open(
-        os.path.join(output_dir, "input", "admin-boundaries", f"gadm36_levels.gpkg"),
-        "r",
-        layer=0,
-    ) as src_code:
-        code_geoms = []
-        code_GIDs = []
-        for feature in src_code:
-            code_geoms.append(shape(feature["geometry"]))
-            code_GIDs.append(feature["properties"]["GID_0"])
-        print("create dataframe")
-        countries = gpd.GeoDataFrame({"geometry": code_geoms, "code": code_GIDs})
+    admin_data_path = os.path.join(output_dir, "input", "admin-boundaries", "gadm36_levels.gpkg")
+    countries = gpd.read_file(admin_data_path, layer=0).drop(["NAME_0"], axis="columns")
+    countries = countries.rename({"GID_0": "code"}, axis="columns")
 
     print(f"country length: {len(countries)}")
     print("Find countries intersecting with each grid cell...")
