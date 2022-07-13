@@ -5,10 +5,6 @@
 # TODO: remove importing_modules and have script specific imports
 from importing_modules import *
 
-from collections import defaultdict
-
-from shapely.strtree import STRtree
-
 
 try:
     boxlen = snakemake.params["boxlen_value"]
@@ -60,24 +56,11 @@ if __name__ == "__main__":
 
     print(f"country length: {len(countries)}")
     print("Find countries intersecting with each grid cell...")
-    # build a spatial index from the grid polygons
-    tree = STRtree(grid.geometry)
 
-    # when querying the STRtree, we are returned intersecting grid cell polygons
-    # we really want their ids, so we need a mapping to recover those
-    # shapely polygons are not hashable (at least not until shapely 2.0)
-    # so use something that is hashable, their WKT representation (a string)
-    box_wkt_to_id: dict[str, str] = {box.geometry.wkt: box.box_id for box in grid.itertuples()}
-
-    # "box_n" -> ['GBR', 'FRA']
-    countries_by_box: dict[str, list[str]] = defaultdict(list)
-
-    for country in countries.itertuples():
-        # query the tree for boxes which overlap the country
-        intersecting_box_ids: list[str] = [box_wkt_to_id[box.wkt] for box in tree.query(country.geometry)]
-
-        # add the country code to every boxes's list
-        [countries_by_box[box_id].append(country.code) for box_id in intersecting_box_ids]
+    # e.g. "box_284" -> ['GBR', 'FRA']
+    countries_by_box: dict[str, list[str]] = {}
+    for box_id, box_countries in gpd.sjoin(countries, grid).groupby('box_id'):
+        countries_by_box[box_id] = list(box_countries.code)
 
     # post-processing to match Max's previous output
     # 1) assign None to empty boxes
