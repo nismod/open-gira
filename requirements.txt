@@ -1,5 +1,5 @@
 # geospatial
-geopandas==0.10.2
+geopandas==0.11.0
 shapely>=1.8.2
 pyproj>=3.3.1
 rasterio
@@ -10,7 +10,7 @@ geopy               # geocoding client
 
 # OPSIS
 nismod-snail==0.2.1
-snkit
+-e git+https://github.com/tomalrussell/snkit.git@master#egg=snkit
 
 # workflow
 snakemake==6.15.1
