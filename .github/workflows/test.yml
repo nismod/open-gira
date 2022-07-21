@@ -1,0 +1,53 @@
+name: Run tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get osmium-tool dependencies
+      run: |
+        sudo apt install build-essential cmake libboost-program-options-dev \
+                    libexpat1-dev zlib1g-dev libbz2-dev
+        git clone https://github.com/mapbox/protozero
+        git clone --branch v2.17.1 --depth 1 https://github.com/osmcode/libosmium
+        git clone --branch v1.13.2 --depth 1 https://github.com/osmcode/osmium-tool
+
+    - name: Cache osmium-tool
+      id: cache-osmium-tool
+      uses: actions/cache@v2
+      with:
+        path: osmium-tool/build
+        key: osmium-v1.13.2-libosmium-v2.17.1-cache_bust-v2
+
+    - name: Build osmium-tool
+      if: steps.cache-osmium-tool.outputs.cache-hit != 'true'
+      run: |
+        cd osmium-tool
+        mkdir build
+        cd build
+        cmake ..
+        make
+        cd ../..
+
+    - name: Set up Python (Miniconda)
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: '3.9'
+        environment-file: workflow/envs/environment.yml
+
+    - name: Test with pytest
+      # Bash shells do not use ~/.profile or ~/.bashrc so these shells
+      # need to be explicitely declared as shell: bash -l {0} on steps
+      # that need to be properly activated. See
+      # https://github.com/marketplace/actions/setup-miniconda#IMPORTANT
+      shell: bash -l {0}
+      run: |
+        export PATH="$PATH:$(pwd)/osmium-tool/build"
+        osmium --version
+        python -m pytest tests

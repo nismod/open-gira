@@ -1,0 +1,890 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title></title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Quick-start README</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="user-guide/installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/installation/open-gira.html"><strong aria-hidden="true">2.1.</strong> open-gira</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/installation/open-gira/docker.html"><strong aria-hidden="true">2.1.1.</strong> via Docker</a></li><li class="chapter-item expanded "><a href="user-guide/installation/open-gira/linux.html"><strong aria-hidden="true">2.1.2.</strong> Linux</a></li><li class="chapter-item expanded "><a href="user-guide/installation/open-gira/mac.html"><strong aria-hidden="true">2.1.3.</strong> Mac</a></li><li class="chapter-item expanded "><a href="user-guide/installation/open-gira/win.html"><strong aria-hidden="true">2.1.4.</strong> Windows</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/installation/QGIS.html"><strong aria-hidden="true">2.2.</strong> QGIS</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/configuration.html"><strong aria-hidden="true">3.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="user-guide/running.html"><strong aria-hidden="true">4.</strong> Running</a></li><li class="chapter-item expanded "><a href="user-guide/workflow.html"><strong aria-hidden="true">5.</strong> Workflow</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/outputs/download-osm.html"><strong aria-hidden="true">5.1.</strong> Download OSM data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/filter.html"><strong aria-hidden="true">5.2.</strong> Filter OSM data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/bbox.html"><strong aria-hidden="true">5.3.</strong> Determine bounding box</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/download-hazard.html"><strong aria-hidden="true">5.4.</strong> Download hazard data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/trim-hazard.html"><strong aria-hidden="true">5.5.</strong> Trim hazard data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/extracts.html"><strong aria-hidden="true">5.6.</strong> Calculate slice coordinates</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/slice.html"><strong aria-hidden="true">5.7.</strong> Slice OSM data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/geoparquet.html"><strong aria-hidden="true">5.8.</strong> Convert to GeoParquet</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/intersect.html"><strong aria-hidden="true">5.9.</strong> Intersect infrastructure and hazard data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/join.html"><strong aria-hidden="true">5.10.</strong> Join slices</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/exposure.html"><strong aria-hidden="true">5.11.</strong> Generate exposure rasters</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/coastline.html"><strong aria-hidden="true">5.12.</strong> Download coastline data</a></li><li class="chapter-item expanded "><a href="user-guide/boundaries.html"><strong aria-hidden="true">5.13.</strong> Download administrative boundary data</a></li><li class="chapter-item expanded "><a href="user-guide/outputs/image.html"><strong aria-hidden="true">5.14.</strong> Generate exposure images</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/workflow_power.html"><strong aria-hidden="true">6.</strong> Workflow - Power Analysis</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download.html"><strong aria-hidden="true">6.1.</strong> Download Power Data</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_adminboundaries.html"><strong aria-hidden="true">6.1.1.</strong> Download administrative boundaries</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_GDP.html"><strong aria-hidden="true">6.1.2.</strong> Download GDP data</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_gridfinder.html"><strong aria-hidden="true">6.1.3.</strong> Download gridfinder data</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_population.html"><strong aria-hidden="true">6.1.4.</strong> Download population data</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_powerplants.html"><strong aria-hidden="true">6.1.5.</strong> Download powerplant data</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/download/power_download_stormtracks.html"><strong aria-hidden="true">6.1.6.</strong> Download STORM data</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process.html"><strong aria-hidden="true">6.2.</strong> Process Power Data</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_worldsplit.html"><strong aria-hidden="true">6.2.1.</strong> Split World</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_excludecountries.html"><strong aria-hidden="true">6.2.2.</strong> Document missing country data</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_powerplants.html"><strong aria-hidden="true">6.2.3.</strong> Process powerplants</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_targets.html"><strong aria-hidden="true">6.2.4.</strong> Process targets</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_gridfinder.html"><strong aria-hidden="true">6.2.5.</strong> Process gridfinder</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_network.html"><strong aria-hidden="true">6.2.6.</strong> Process network</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/process/power_process_network.html"><strong aria-hidden="true">6.2.7.</strong> Process network connections</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect.html"><strong aria-hidden="true">6.3.</strong> Intersect With Storms</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect_boxes.html"><strong aria-hidden="true">6.3.1.</strong> Region boxes</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect_grid.html"><strong aria-hidden="true">6.3.2.</strong> Generate region units</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html"><strong aria-hidden="true">6.3.3.</strong> Analyse storm winds</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect_gdploss.html"><strong aria-hidden="true">6.3.4.</strong> Intersect with infrastructure</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/intersect/power_intersect_overview.html"><strong aria-hidden="true">6.3.5.</strong> Overview</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/analysis/power_analysis.html"><strong aria-hidden="true">6.4.</strong> Analyse Intersection</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/workflow_power/analysis/power_analysis_empirical_distribution.html"><strong aria-hidden="true">6.4.1.</strong> Empirical distribution generation</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/analysis/power_analysis_empirical_matrix.html"><strong aria-hidden="true">6.4.2.</strong> Empirical affected country pair matrix</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/analysis/power_analysis_target_specific.html"><strong aria-hidden="true">6.4.3.</strong> Target statistic gathering</a></li><li class="chapter-item expanded "><a href="user-guide/workflow_power/analysis/power_analysis_aggregate_levels.html"><strong aria-hidden="true">6.4.4.</strong> Statistic aggregation</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="user-guide/further-analysis.html"><strong aria-hidden="true">7.</strong> Further analysis</a></li><li class="chapter-item expanded "><a href="user-guide/clean.html"><strong aria-hidden="true">8.</strong> Cleaning output</a></li><li class="chapter-item expanded "><a href="user-guide/workflow-advanced.html"><strong aria-hidden="true">9.</strong> Workflow (advanced)</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h2 id="open-gira"><a class="header" href="#open-gira">open-gira</a></h2>
+<p>open-gira is designed to combine infrastructure information with hazard information to
+produce an estimate of the threat those hazards represent to that infrastructure.
+In this user guide we will be using a map of roads in Tanzania, and exploring their
+vulnerability to flooding (from both coasts and rivers). </p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>This guide will help you to install open-gira on your computer.</p>
+<p>We also include a guide for installing QGIS. 
+QGIS is a program for working with geographic data, and is useful
+for examining some of the files open-gira works with.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="open-gira-1"><a class="header" href="#open-gira-1">open-gira</a></h1>
+<p>open-gira relies on many tools, some of which are complex to install. 
+The installation process may take a while. 
+Users familiar with Docker may wish to use the Docker install options to 
+simplify the process.</p>
+<h2 id="notes"><a class="header" href="#notes">Notes:</a></h2>
+<ul>
+<li>If you are trying to install on <strong>Windows</strong>, use Windows Subsystems for Linux (WSL).</li>
+<li>Linux users may find the version of osmium-tool provided by their package repository
+is out of date.
+The instructions for building osmium-tool from source on Linux should work, however.</li>
+</ul>
+<h2 id="tests"><a class="header" href="#tests">Tests</a></h2>
+<p>Once everything is installed, run the tests to ensure everything is linked up properly:</p>
+<pre><code>python -m pytest tests
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation-via-docker"><a class="header" href="#installation-via-docker">Installation via Docker</a></h1>
+<p>The simplest approach to getting open-gira working is to build it within a container using Docker.
+You must have <a href="https://docs.docker.com/engine/install/">Docker installed</a>.</p>
+<ol>
+<li>Clone this repository</li>
+</ol>
+<pre><code class="language-shell">git clone https://github.com/nismod/open-gira.git
+</code></pre>
+<ol start="2">
+<li>Build container image</li>
+</ol>
+<pre><code class="language-shell">docker build -t open-gira .
+</code></pre>
+<ol start="3">
+<li>Run container</li>
+</ol>
+<p>We use the <code>-it</code> options to make the container interactive and give it a terminal,
+and the <code>-d</code> option to keep it running in the background (daemon mode).
+We give it a nice name we can refer to later, and make sure it is created using the
+image we just built.
+We tell it to run <code>bash</code> so that it has something to do and doesn't close immediately.</p>
+<pre><code class="language-shell">docker run -itd --name og open-gira bash
+</code></pre>
+<ol start="4">
+<li>Enter container</li>
+</ol>
+<p>We can now lauch a bash shell in our new container:</p>
+<pre><code class="language-shell">docker exec -it og /bin/bash
+</code></pre>
+<p>And once inside we can navigate to the open-gira folder.</p>
+<pre><code class="language-shell">cd open-gira
+</code></pre>
+<p>We're now ready to run snakemake, launch a python prompt, or do whatever else we like.
+Note that the Dockerfile has created the <code>./tanzania-latest.json</code> file we would otherwise need to
+write ourselves (see <a href="user-guide/installation/open-gira/../../configuration.html">configuration</a>), and has also downloaded the
+<a href="user-guide/installation/open-gira/../osm-data.html">OpenStreetMap data</a> and <a href="user-guide/installation/open-gira/../hazad-data.html">flood hazard data</a>.
+This means the only installation step left is to (optionally) install QGIS outside of the container.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="linux-installation"><a class="header" href="#linux-installation">Linux installation</a></h1>
+<p>If you have <a href="https://docs.conda.io/en/latest/">conda</a> installed, it is probably
+simplest to follow the <a href="user-guide/installation/open-gira/mac.html#conda">conda install instructions</a> in the MacOS section.</p>
+<p>The workflow for installing on Debian/Ubuntu is the one used in the Dockerfile.
+For installations on different brands of Linux, please follow the steps for
+<a href="user-guide/installation/open-gira/mac.html#pip">MacOS installation with pip</a>, and note that the osmium-tool
+distributions are frequently out of date, and you will likely have to
+build the osmium-tool from its source.</p>
+<h2 id="debianubuntu"><a class="header" href="#debianubuntu">Debian/Ubuntu</a></h2>
+<h3 id="dependencies"><a class="header" href="#dependencies">Dependencies</a></h3>
+<p>The first step is to get hold of the packages we'll need to run the software:</p>
+<pre><code class="language-shell">sudo apt update &amp;&amp; sudo apt install \
+  build-essential \
+  cmake \
+  git \
+  libboost-program-options-dev \
+  libexpat1-dev \
+  libbz2-dev \
+  python3 \
+  python3-pip \
+  zlib1g-dev
+</code></pre>
+<p>Enter 'yes' to install when prompted, and address any other questions in the install process if they arise.</p>
+<h3 id="osmium-tool"><a class="header" href="#osmium-tool">osmium-tool</a></h3>
+<p>The next step is to install the osmium-tool and its library.
+This needs to be built from source, because the version distributed by <code>apt</code> is out of date.</p>
+<pre><code class="language-shell">git clone https://github.com/mapbox/protozero &amp;&amp; \
+    git clone --branch v2.17.1 --depth 1 https://github.com/osmcode/libosmium &amp;&amp; \
+    git clone --branch v1.13.2 --depth 1 https://github.com/osmcode/osmium-tool
+</code></pre>
+<p>Now we've downloaded the source files we need to build them:</p>
+<pre><code class="language-shell">cd osmium-tool &amp;&amp; \
+    mkdir build &amp;&amp; \
+    cd build &amp;&amp; \
+    cmake .. &amp;&amp; \
+    make &amp;&amp; \
+    cd ../..
+</code></pre>
+<p>The last step to installing osmium is to create a symlink so we can access it from anywhere on the command line:</p>
+<pre><code class="language-shell">cp -s osmium-tool/build/osmium /usr/bin/osmium
+</code></pre>
+<h2 id="open-gira-2"><a class="header" href="#open-gira-2">open-gira</a></h2>
+<p>We install open-gira by cloning the repository:</p>
+<pre><code class="language-shell">git clone https://github.com/nismod/open-gira.git
+</code></pre>
+<h2 id="install-python-requirements-with-pip"><a class="header" href="#install-python-requirements-with-pip">Install Python requirements with pip</a></h2>
+<p>The final step is to make sure we have the Python libraries we need to run open-gira. 
+We use pip to do this:</p>
+<pre><code class="language-shell">pip install -r open-gira/requirements.txt
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="macos-installation"><a class="header" href="#macos-installation">MacOS installation</a></h1>
+<p>The most efficient way to install open-gira on MacOS is to use <a href="https://docs.conda.io/en/latest/">conda</a>.
+Conda will take care of installing the tools on which open-gira relies.
+If you do not wish to install via conda, you can install via pip instead and install the
+osmium-tool libraries separately.</p>
+<h2 id="conda"><a class="header" href="#conda">conda</a></h2>
+<p>This repository comes with a <code>environment.yml</code> file describing the conda and pip packages required to run <code>open-gira</code>.</p>
+<p>Create the <code>open-gira</code> conda environment:</p>
+<pre><code>conda env create -f workflow/envs/environment.yml
+</code></pre>
+<p>and activate it</p>
+<pre><code>conda activate open-gira
+</code></pre>
+<h2 id="pip"><a class="header" href="#pip">pip</a></h2>
+<p>Pip installation requires installing the python requirements from <code>requirements.txt</code>,
+as well as the osmium-tool software.</p>
+<h3 id="installing-python-libraries"><a class="header" href="#installing-python-libraries">Installing Python libraries</a></h3>
+<p>Install python requirements as listed in <code>requirements.txt</code> - for
+example using a venv:</p>
+<pre><code>python3 -m venv ./venv
+. venv/bin/activate
+pip install -r requirements.txt
+</code></pre>
+<h3 id="installing-osmium-tool"><a class="header" href="#installing-osmium-tool">Installing osmium-tool</a></h3>
+<p>Install <a href="https://osmcode.org/osmium-tool/manual.html"><code>osmium-tool</code></a> according to the
+instructions there. Tests run with versions:</p>
+<ul>
+<li>osmium-tool v1.13.2</li>
+<li>libosmium v2.17.1</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="windows-installation"><a class="header" href="#windows-installation">Windows installation</a></h1>
+<p>Native installation on Windows is extremely difficult because of the difficulty
+building the tools that open-gira relies on (binaries are not available for
+Windows).
+To avoid this issue, we recommend Windows users install via Windows Subsystems for Linux (WSL).
+To install WSL, follow the <a href="https://docs.microsoft.com/en-us/windows/wsl/install">install instructions</a>.</p>
+<p>Once WSL is installed, open-gira can be installed inside the Linux subsystem by following the
+<a href="user-guide/installation/open-gira/linux.html">Linux install instructions</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="qgis"><a class="header" href="#qgis">QGIS</a></h1>
+<p><a href="https://qgis.org/">QGIS</a> is a program for viewing and creating geographic data files.
+The program is well-maintained and available for Windows, Mac, and Linux.
+Installing the program and all its components may take several hours.
+[TODO: Provide a list of required components to shorten install time?]</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<p>The configuration file for the run is found in <code>./config/config.yaml</code>.</p>
+<p>Your configuration file should look like the below:</p>
+<pre><code class="language-yaml"># Output directory
+output_dir: 'results'
+
+# Named list of OpenStreetMap datasets
+infrastructure_datasets:
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+
+# Named list of .txt files that specify hazard raster file locations
+hazard_datasets:
+  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
+  aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
+
+# Number of slices to cut dataset into -- must be a square number
+slice_count: 36
+# Edge attributes to preserve during network/hazard intersection.
+keep_tags: 'highway'
+# Filters definition -- base filename is used as the filter name
+osmium_tags_filters_file: &quot;config/highway-core.txt&quot;
+
+# Options for exposure tif file generation
+exposure_tifs:
+  # When generating exposure summaries, filter by cells with at &gt;= exposure_threshold m of flooding
+  exposure_threshold: 0.5
+  # Used when scaling raster files, values &lt; 1 will downsample
+  scaling_factor: 0.1
+  # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
+  resampling_mode: 'bilinear'
+  # Options for plotting
+  plot:
+    # Keyword arguments for raster plotting
+    raster:
+      # Colour mapping to use for raster data
+      cmap: 'Reds'
+</code></pre>
+<p>You should also have a <code>./config/highway-core.txt</code> file that looks like:</p>
+<pre><code class="language-text">motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link
+</code></pre>
+<p>This configuration file holds everything we need to run the workflow.
+The directory <code>&lt;output_dir&gt;</code> (hereafter <code>./results/</code>) will be created when the workflow runs.
+The infrastructure datasets will be downloaded, along with all the hazard raster 
+files listed in the hazard datasets.
+The infrastructure datasets will be filtered and sliced, and then combined with
+the hazard data to produce four output files, one for each of the 
+infrastructure-hazard dataset combinations.</p>
+<p>The infrastructure datasets listed in this config are real, but the hazard datasets
+only contain a tiny fraction of the raster files available. 
+This means the workflow is relatively quick to run compared to 
+when we have gigabytes of hazard raster files.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="running"><a class="header" href="#running">Running</a></h1>
+<p>When we run snakemake we have to tell it how many CPU cores it can use to do its processing.
+If you have fewer than 4 cores, or wish to use more, substitute an appropriate number for the 4 below:</p>
+<pre><code class="language-shell">snakemake --cores 4
+</code></pre>
+<p>You should see a lot of text flashing by, and some loading bars.
+Eventually, everything should finish with a report along the lines of:</p>
+<pre><code class="language-text">Finished job 0.
+111 of 111 steps (100%) done
+Complete log: /mnt/f/OxRSE/open-gira/.snakemake/log/2022-01-24T154611.005270.snakemake.log
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="exploring-output"><a class="header" href="#exploring-output">Exploring output</a></h1>
+<p>The program will have created a great many files in subdirectories of <code>./results</code>.
+Each of these will be the result of one of the steps in the workflow process:</p>
+<ol>
+<li>Download OpenStreetMap data</li>
+<li>Filter OpenStreetMap data to focus on major infrastructure components</li>
+<li>Determine the bounding box from the OpenStreetMap data</li>
+<li>Download hazard raster files</li>
+<li>Clip hazard raster files to bounding boxes determined in step 3</li>
+<li>Calculate a grid of bounding boxes for slicing the OpenStreetMap data</li>
+<li>Slice the OpenStreetMap data into smaller sections</li>
+<li>Convert OpenStreetMap data to .geoparquet format</li>
+<li>Add hazard information to infrastructure geoparquet</li>
+<li>Join slices together to produce overall geoparquet file</li>
+</ol>
+<p>These steps, along with the output produced at each stage, 
+are described in the subsections of this chapter.</p>
+<p>These steps are summarised in the digital acyclic graph for <code>slice_count: 1</code>,
+for just the <code>tanzania-latest</code> infrastructure and <code>aqueduct-coast</code> hazard data:
+<a href="user-guide/../img/DAG-simple.png"><img src="user-guide/../img/DAG-simple.png" alt="DAG of the workflow for the Tanzania dataset and coast flooding data" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="download-osm-data"><a class="header" href="#download-osm-data">Download OSM data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="filter-osm-data"><a class="header" href="#filter-osm-data">Filter OSM data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="determine-bounding-box"><a class="header" href="#determine-bounding-box">Determine bounding box</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="download-hazard-data"><a class="header" href="#download-hazard-data">Download hazard data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="trim-hazard-data"><a class="header" href="#trim-hazard-data">Trim hazard data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="calculate-slice-coordinates"><a class="header" href="#calculate-slice-coordinates">Calculate slice coordinates</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="slice-osm-data"><a class="header" href="#slice-osm-data">Slice OSM data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="convert-to-geoparquet"><a class="header" href="#convert-to-geoparquet">Convert to GeoParquet</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="intersect-infrastructure-and-hazard-data"><a class="header" href="#intersect-infrastructure-and-hazard-data">Intersect infrastructure and hazard data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="join-slices"><a class="header" href="#join-slices">Join slices</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generate-exposure-rasters"><a class="header" href="#generate-exposure-rasters">Generate exposure rasters</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="download-coastline-data"><a class="header" href="#download-coastline-data">Download coastline data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="download-administrative-boundary-data"><a class="header" href="#download-administrative-boundary-data">Download administrative boundary data</a></h1>
+<p>Administrative boundary datasets are downloaded from NaturalEarthData.com in (zipped) .shp format.
+You will find the downloaded files in <code>./results/input/admin-boundaries/ne_50m/</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generate-exposure-images"><a class="header" href="#generate-exposure-images">Generate exposure images</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="workflow-for-power-analysis"><a class="header" href="#workflow-for-power-analysis">Workflow for Power Analysis</a></h1>
+<p>The power analysis workflow runs from the downloading of the data to the analysis of the intersection. First the
+parameters need to be set in the config.yaml file (<code>open-gira/config/config.yaml</code>). Each parameter is explained
+in this file and further explanations are found in the relevant workflow documentation. All documentation files for the power
+analysis will assume that <code>output_dir = results</code> when specifying paths.</p>
+<p>The workflow for the power analysis consists of 4 main steps</p>
+<ol>
+<li><a href="user-guide/workflow_power/download/power_download.html">Download the data</a></li>
+<li><a href="user-guide/workflow_power/process/power_process.html">Process the downloaded data</a></li>
+<li><a href="user-guide/workflow_power/intersect/power_intersect.html">Intersect the downloaded storms with the processed power infrastructure</a></li>
+<li><a href="user-guide/workflow_power/analysis/power_analysis.html">Analyse the intersection</a></li>
+</ol>
+<p>Each of these steps is explained in further detail in their respective links. They can be called through
+the linux command line when in the <code>open-gira</code> directory:</p>
+<pre><code class="language-shell">snakemake -s workflow/Snakefile {rule command} -{core numbers}
+</code></pre>
+<p>The <code>{rule command}</code> options are as follows</p>
+<ol>
+<li>Download: <code>download_all</code></li>
+<li>Process: <code>process_all</code></li>
+<li>Intersect: <code>intersect_all</code></li>
+<li>Analyse: <code>analyse_all</code></li>
+</ol>
+<p>Note that the <code>figures_all</code> command to generate the figures (c.f. <a href="user-guide/workflow_power/analysis/power_analysis_figures.html">here</a>) can only be used once the main 4 steps (see above) have been completed.</p>
+<p>By running any command, the previous ones will be included (e.g. if <code>intersect_all</code> is called, then <code>download_all</code> and <code>process_all</code> are also performed).
+The <code>{core_numbers}</code> represents the maximum number of cores that snakemake will be allocated.
+Furthermore, adding <code>-n</code> at the end will allow for a 'dry-run' in which the workflow processes are shown but not
+executed. This allows for the user to check expected workflow outputs. Lastly, should the workflow be interruped
+(not recommended), then <code>--rerun-incomplete</code> should be added on the end of the command.</p>
+<p>If issues occur, it is recommended to do each of the four commands separately. Each workflow process has a further detailed
+explanation and possible issue workarounds. An overview of these files can be found <a href="user-guide/workflow_power/../../SUMMARY.html">here</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="download-data-for-power-analysis"><a class="header" href="#download-data-for-power-analysis">Download data for power analysis</a></h1>
+<p>The power analysis requires the following data</p>
+<ul>
+<li><a href="user-guide/workflow_power/download/power_download_adminboundaries.html">Administrative boundaries</a></li>
+<li><a href="user-guide/workflow_power/download/power_download_GDP.html">GDP data</a></li>
+<li><a href="user-guide/workflow_power/download/power_download_gridfinder.html">Gridfinder data</a></li>
+<li><a href="user-guide/workflow_power/download/power_download_population.html">Population data</a></li>
+<li><a href="user-guide/workflow_power/download/power_download_powerplants.html">Powerplant data</a></li>
+<li><a href="user-guide/workflow_power/download/power_download_stormtracks.html">STORM data</a></li>
+</ul>
+<p>This data is not interlinked (order irrelevant) and forms the following simple workflow diagram for the <code>download_all</code> rule.</p>
+<p><img src="user-guide/workflow_power/download/../power_img/dag_download_all.png" alt="download_all rule workflow." /></p>
+<p>This data can be downloaded in one by entering <code>snakemake -s workflow/Snakefile download_all -c{core_numbers}</code> in the linux command line when in the root open-gira folder. Note that each individual bullet link explains how to download individual data selections, however, it is recommended to use the aforementioned command as snakemake will automatically detect already downloaded files in one go.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="administrative-boundaries"><a class="header" href="#administrative-boundaries">Administrative boundaries</a></h1>
+<p>The administrative boundaries are downloaded from https://gadm.org/data.html. This data is needed to determine the appropriate GDP value for a location of interest, cross-checking country data and also for statistical purposes. There are three rules which may be executed.</p>
+<p>The <code>download_gadm</code> rule will download the 'gadm36_gpkg.zip' file which contains the administrative regions globally.</p>
+<p>The <code>download_gadm_by_country</code> rule will download the individually selected country data of 'gadm36_gpkg.zip' file (see above).</p>
+<p>Lastly, the <code>download_gadm_levels</code> rule will download the equivalent of 'gadm36_gpkg.zip' but as five separate layers, where each is a level of subdivision/aggregation (ranging from smallest administrative region to country). See https://gadm.org/download_world.html for further details.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="gdp-data"><a class="header" href="#gdp-data">GDP data</a></h1>
+<p>The GDP data is obtained from https://datadryad.org/stash/dataset/doi:10.5061/dryad.dk1j0 and is used to allocate each target of interest a GDP value. The <code>download_GDP</code> rule will perform this download tast.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="gridfinder-data"><a class="header" href="#gridfinder-data">Gridfinder data</a></h1>
+<p>The gridfinder data is obtained from https://gridfinder.org/ and is a map of predicted global power networks. The prediction is generated through applications of state-of-the-art algorithms on night satellite imagery. Due to lack of consistent global data, this is a rather suitable alternative with a high accuracy. Further details on the methods, algorithms and accuracy can be found in the paper 'Predictive mapping of the global power system using open data' by C. Arderne, C. Zorn, C. Nicolas &amp; E. E. Koks from 2020 (https://www.nature.com/articles/s41597-019-0347-4).</p>
+<p>The <code>download_gridfinder</code> rule will download this data.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="population-data"><a class="header" href="#population-data">Population data</a></h1>
+<p>Population data is obtained from https://www.worldpop.org/geodata/listing?id=79 and is used to allocate the appropriate GDP for target locations of interest as well as for statistical purposes.</p>
+<p>Each country has a <code>{country}_ppp_2020_UNadj_constrained.tif</code> raster file which contains the geospatial population density. The <code>{country}</code> iso3 wildcard is retrieved from https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m. Internet connection is therefore required. The <code>download_population_all</code> will download the data for each country.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="power-plant-data"><a class="header" href="#power-plant-data">Power plant data</a></h1>
+<p>The power plant data is retrieved from https://www.wri.org/research/global-database-power-plants and used in the network generation (specifically for the network sources). This data can be downloaded by the <code>download_powerplants</code> rule.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="storm-ibtracs-data"><a class="header" href="#storm-ibtracs-data">STORM IBTrACS data</a></h1>
+<p>The constant-climate synthetic cyclone storm data is retrieved from https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085 and is used to simulate storms on the power network. The corresponding return periods are obtained from https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164 which are currently only used to generate the grid resolution of the intersection analysis. More details on the generated data can be found in the paper &quot;Generation of a global synthetic tropical cyclone hazard dataset using STORM&quot; by N. Bloemendaal, I. D. Haigh, H. de Moel, S. Muis, R. J. Haarsma &amp; C. J. H. Jeroen from 2020 (https://www.nature.com/articles/s41597-020-0381-2).</p>
+<p>The climate-changing synthetic cyclone storm data is retrieved from https://data.4tu.nl/articles/dataset/STORM_Climate_Change_synthetic_tropical_cyclone_tracks/14237678 and is used to simulate storms on the power network where climate changes are taken into account in the storm generation over the span of years. There are four model choices:</p>
+<ul>
+<li>CMCC-CM2-VHR4</li>
+<li>CNRM-CM6-1-HR</li>
+<li>EC-Earth3P-HR</li>
+<li>HAdGEM3-GC31-HM</li>
+</ul>
+<p>For more details on these models see &quot;Impact of Model Resolution on Tropical Cyclone Simulation Using the HighResMIP–PRIMAVERA Multimodel Ensemble, Journal of Climate&quot; by M. J., Camp et al. from 2020.</p>
+<p>The model choice is specified in the config file.</p>
+<p>The data is split into 6 basins:</p>
+<ul>
+<li>EP: East Pacific</li>
+<li>NA: North Atlantic</li>
+<li>NI: North Indian</li>
+<li>SI: South Indian</li>
+<li>SP: South Pacific</li>
+<li>WP: West Pacific</li>
+</ul>
+<p>The two letter abbreviation(s) is/are selected in the <code>config.yaml</code> file for analysis. The aforementioned paper also visually presents the storm basis.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-data-for-power-analysis"><a class="header" href="#process-data-for-power-analysis">Process data for power analysis</a></h1>
+<p>The processing of the <a href="user-guide/workflow_power/process/../download/power_download.html">input data</a> is split into the following steps</p>
+<ol>
+<li><a href="user-guide/workflow_power/process/power_process_worldsplit.html">Split world (world_splitter)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_excludecountries.html">Document missing country data (process_exclude_countries)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_powerplants.html">Process powerplants (process_powerplants)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_targets.html">Process targets (process_target_box)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_gridfinder.html">Process gridfinder (process_gridfinder)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_network.html">Process network (process_network)</a></li>
+<li><a href="user-guide/workflow_power/process/power_process_connector.html">Process network connections (process_connector)</a></li>
+</ol>
+<p>Here, the order is important to the processing and the snakemake workflow can be visualised as follows.</p>
+<p><img src="user-guide/workflow_power/process/../power_img/dag_process_all.png" alt="process_all rule workflow with one box_id example" /></p>
+<p>Note that this includes the <a href="user-guide/workflow_power/process/../download/power_download.html">download workflow</a> process too. We also note that for this
+visualisation only one box_id wildcard has been specified (box_1103) to prevent visual cluttering. Whilst this is
+possible, the input usually consists of many more box_id wildcards which will be processed in parallel. This of course
+depends on the config.yaml inputs (see more details <a href="user-guide/workflow_power/process/../../workflow_power/workflow_power.html">here</a>)</p>
+<p>These steps can be executed in one by entering <code>snakemake -s workflow/Snakefile process_all -c{core_numbers}</code>. Note
+that if the <code>download_all</code> rule has not already run, then it will be run through this command automatically.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="split-world"><a class="header" href="#split-world">Split world</a></h1>
+<p>The <a href="user-guide/workflow_power/process/../download/power_download.html">input data</a> consists of large files which is not possible to process as one for the purposes of this analysis. The solution is to therefore split the world into boxes (each with their own unique box_id) and, where possible, process each box individually. This has advantages of parallel processing with the snakemake workflow too.</p>
+<h3 id="specifying-the-box-dimensions"><a class="header" href="#specifying-the-box-dimensions">Specifying the box dimensions</a></h3>
+<p>Each box is a square with width and height equal to the <code>box_width_height</code> value (units in degrees) specified in the config.yaml file. The result of this is depicted by the following image (<code>box_width_height=5</code>).
+<img src="user-guide/workflow_power/process/../power_img/world_splitter.png" alt="Example world split box_width_height=5" /></p>
+<h3 id="specifying-individual-boxes"><a class="header" href="#specifying-individual-boxes">Specifying individual boxes</a></h3>
+<p>Futhermore, the option to process and intersect within a set of boxes is possible. In the config.yaml file, a list of boxes may be specified for the <code>specific_boxes</code> parameter. This means the analysis is now not global and there may be storms which do not intersect with these boxes. Additionally, it must be known which box box_id values are required in advance which can be done through geometrical equations or, more simply, by running split world first and then visualising <code>results/power_process/world_boxes.gpkg</code> and <code>results/input/admin-boundaries/gadm36_levels.gpkg</code> (level 0 recommended) in QGIS (for example). </p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="missing-country-data"><a class="header" href="#missing-country-data">Missing country data</a></h1>
+<p>Some .tif <a href="user-guide/workflow_power/process/../download/power_download_population.html">population data</a> files are not available or do not exist for 
+certain countries or, often, overseas territories. This is documented through this script and output as 
+<code>results/power_process/exclude_countries.txt</code>. Examples often include South Georgia and the South Sandwich Islands, 
+Svalbard and Jan Mayen and the Cocos Islands. This data is then used in the <a href="user-guide/workflow_power/process/power_process_targets.html">target processing workflow</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-power-plants"><a class="header" href="#process-power-plants">Process power plants</a></h1>
+<p>In this file, the <a href="user-guide/workflow_power/process/../download/power_download_powerplants.html">power plant input data</a> is process to contain the columns
+&quot;source_id&quot;, &quot;name&quot;, &quot;type&quot;, &quot;capacity_mw&quot;, &quot;estimated_generation_gwh_2017&quot;, &quot;primary_fuel&quot;, &quot;box_id&quot;, &quot;geometry&quot; and
+then split into a .csv file for each box_id. Note that if no power plants exist in the box_id, then an empty .csv file is
+produced. This is to allow for consistent snakemake workflows as it can not be known in advance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-targets"><a class="header" href="#process-targets">Process targets</a></h1>
+<p>The idea behind this script is to take the <a href="user-guide/workflow_power/process/../download/power_download_gridfinder.html">gridfinder input data</a> and assign
+populated locations a GDP value based on its location (country) and population. We refer to the populated locations
+(e.g. villages, cities, etc) as targets. These will be the sinks of the power network. Below is an example figure in
+which the grey regions represent the target locations.
+<img src="user-guide/workflow_power/process/../power_img/targets.png" alt="Target location example" /></p>
+<h4 id="target-gdp"><a class="header" href="#target-gdp">Target GDP</a></h4>
+<p>The GDP value for each target is assigned based on the multiplication of the GDP value per capita of the country in
+which the target is located and the population of the target.</p>
+<h3 id="workflow"><a class="header" href="#workflow">Workflow</a></h3>
+<p>The individual target processing workflow is visualised as follows.</p>
+<p><img src="user-guide/workflow_power/process/../power_img/dag_targets.png" alt="Target workflow for box_1103" /></p>
+<p>However, as previously mentioned, there are likely to be many more boxes. To illustrate this, four boxes can be seen in the workflow below.</p>
+<p><img src="user-guide/workflow_power/process/../power_img/dag_targets_4.png" alt="Target workflow for multiple boxes" /></p>
+<p>With a <code>box_width_height</code> value of 5 (deg), there would be 2592 boxes. Note that if no targets exist in the box_id, then an empty .gpkg file is
+produced. This is to allow for consistent snakemake workflows as it can not be known in advance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-gridfinder"><a class="header" href="#process-gridfinder">Process gridfinder</a></h1>
+<p>This file takes the <a href="user-guide/workflow_power/process/../download/power_download_gridfinder.html">gridfinder input data</a> and assigns each component
+(network edge) a box_id, based on its location. Here, the <code>idxbox()</code> function from
+<code>workflow/scripts/process/process_power_functions.py</code> is used to index the components. Through knowledge of the box
+parameters from the <a href="user-guide/workflow_power/process/power_process_worldsplit.html">world split</a>, it is possible to calculate the box_id:</p>
+<pre><code>box_id = (-np.round(lat / box_width_height + 1 / 2) + lat_max / box_width_height) * num_cols + np.round(lon / box_width_height - 1 / 2) - lon_min / box_width_height
+</code></pre>
+<ul>
+<li>lat - latitude of component centroid</li>
+<li>lon - longitude of component centroid</li>
+<li>box_width_height - height and width of box</li>
+<li>lat_max - maximum latitutde value</li>
+<li>num_cols - number of cols (i.e. number of boxes across the equator)</li>
+<li>lon_min - minimum longitude value (lon_min can be negative)</li>
+<li>tot_boxes - total number of boxes</li>
+</ul>
+<p>The box numbering starts at the top left (north-west), continues left to right (west to east) and
+ends at the bottom right (south-east) for longitude and latitude sign convention consistency. The edge cases are
+treated separately. Numpy allows for array inputs for lat and lon which improves computational efficiency. Note that if
+no components exist in the box_id, then an empty .gpkg file is produced. This is to allow for consistent snakemake
+workflows as it can not be known in advance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-network"><a class="header" href="#process-network">Process network</a></h1>
+<p>Now that the <a href="user-guide/workflow_power/process/power_process_targets.html">targets</a>, <a href="user-guide/workflow_power/process/power_process_powerplants.html">powerplants</a> and
+<a href="user-guide/workflow_power/process/power_process_gridfinder.html">network components</a> have been processed, we can combine them into a network for each box.
+This is achieved through the combination of the target, power plant and network node data into one node data frame where the
+respective type is noted in the 'type' column. The snkit module (https://snkit.readthedocs.io/en/latest/index.html)
+is then used to combine these nodes with the network component edges. The snkit module further tidies the spatial
+network data.</p>
+<h3 id="workflow-1"><a class="header" href="#workflow-1">Workflow</a></h3>
+<p>The workflow is visualised as follows (including previous dependencies)</p>
+<p><img src="user-guide/workflow_power/process/../power_img/dag_network.png" alt="Process network workflow" /></p>
+<p>Again, only one box is selected for visual clarity, however, many boxes are typically processed in parallel for the
+<code>process_target_box</code> rule.  Note that if there is no network in the box_id, then an empty .gpkg file is produced. This
+is to allow for consistent snakemake workflows as it can not be known in advance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="process-network-1"><a class="header" href="#process-network-1">Process network</a></h1>
+<p>Now that the <a href="user-guide/workflow_power/process/power_process_targets.html">targets</a>, <a href="user-guide/workflow_power/process/power_process_powerplants.html">powerplants</a> and
+<a href="user-guide/workflow_power/process/power_process_gridfinder.html">network components</a> have been processed, we can combine them into a network for each box.
+This is achieved through the combination of the target, power plant and network node data into one node data frame where the
+respective type is noted in the 'type' column. The snkit module (https://snkit.readthedocs.io/en/latest/index.html)
+is then used to combine these nodes with the network component edges. The snkit module further tidies the spatial
+network data.</p>
+<h3 id="workflow-2"><a class="header" href="#workflow-2">Workflow</a></h3>
+<p>The workflow is visualised as follows (including previous dependencies)</p>
+<p><img src="user-guide/workflow_power/process/../power_img/dag_network.png" alt="Process network workflow" /></p>
+<p>Again, only one box is selected for visual clarity, however, many boxes are typically processed in parallel for the
+<code>process_target_box</code> rule.  Note that if there is no network in the box_id, then an empty .gpkg file is produced. This
+is to allow for consistent snakemake workflows as it can not be known in advance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="intersect-infrastructure-with-storms"><a class="header" href="#intersect-infrastructure-with-storms">Intersect infrastructure with storms</a></h1>
+<p>The intersection of the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">storm data</a> with the
+<a href="user-guide/workflow_power/intersect/../process/power_process.html">processed infrastructure</a> is ordered into the following steps </p>
+<ol>
+<li><a href="user-guide/workflow_power/intersect/power_intersect_boxes.html">Region boxes (intersect_region_boxes)</a></li>
+<li><a href="user-guide/workflow_power/intersect/power_intersect_grid.html">Generate region units (intersect_unit_generator)</a></li>
+<li><a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">Analyse storm winds (intersect_winds_indiv)</a></li>
+<li><a href="user-guide/workflow_power/intersect/power_intersect_gdploss.html">Intersect with infrastructure (intersect_damages)</a></li>
+<li><a href="user-guide/workflow_power/intersect/power_intersect_overview.html">Overview (merge_overview_indiv_stats and merge_overview_all_stats)</a></li>
+</ol>
+<p>Here, the order is relevant. First the boxes are assigned their respective region (EP, NA, NI, SI, SP, WP) in the
+<a href="user-guide/workflow_power/intersect/power_intersect_boxes.html">region boxing workflow</a>. The next step (<a href="user-guide/workflow_power/intersect/power_intersect_grid.html">unit generation</a>) generates 'units' in which the wind speeds are assumed
+to be the same throughout. This is suitable for small units. Units containing no power network infrastructure (i.e. no <a href="user-guide/workflow_power/intersect/../process/power_process_network.html">network</a>) are discarded. A wind
+model is then applied to the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">storm data</a> to calculate the wind speed
+parameters at each unit (<a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">wind analysis</a>). Given a failure criteria, infrastructure
+components are documented to fail in the <a href="user-guide/workflow_power/intersect/power_intersect_gdploss.html">infrastructure intersection workflow</a>. The
+<a href="user-guide/workflow_power/intersect/power_intersect_overview.html">overview</a> brings together the storm intersections for a very preliminary overview.</p>
+<p>The intersection (including previous workflow dependencies) can be visualised as follows.</p>
+<p><img src="user-guide/workflow_power/intersect/../power_img/dag_intersect_all.png" alt="intersect_all rule workflow with one box_id, region and sample example" /></p>
+<p>We use one box_id (box_1103), one region (NA) and one sample (0) for the wildcard parameters, however, in practice,
+there are frequently many more. This is dependent on the config.yaml inputs.
+The <code>intersect_all</code> rule has arrow dependencies other than <code>merge_overview_all_stats</code> due to the implementation of
+snakemake checkpoints. This allows the correct scripts to be rerun in the event of incomplete previous runs (see
+<a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">wind analysis</a> for further details).</p>
+<p>These steps can be executed in one by entering <code>snakemake -s workflow/Snakefile intersect_all -c{core_numbers}</code>. Note
+that if the <code>process_all</code> and/or <code>download_all</code> rules have not already run, then they will be run through this command
+automatically.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="region-boxes"><a class="header" href="#region-boxes">Region boxes</a></h1>
+<p>This scripts checks which boxes (unique box_id) are located in which regions (EP, NA, NI, SI, SP, WP). This is then
+used in the <a href="user-guide/workflow_power/intersect/power_intersect_grid.html">unit generation</a> to only process the selected storm regions in the config.yaml file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-generation"><a class="header" href="#unit-generation">Unit generation</a></h1>
+<p>A unit is defined as a rectangular-shaped geometric area in which the wind speed parameters during a storm are assumed to be
+the same throughout the area. Units not containing power network infrastructure are discarded as they will never contain any storm damages.
+The size of the unit is currently set to be equal to the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">return period map data</a>.
+This is deemed to be a suitable granularity and also could allow for future comparisons (not currently implemented). The
+figure below shows an example of units around the southern USA/Caribbean which belongs to the North American (NA) region basin.</p>
+<p><img src="user-guide/workflow_power/intersect/../power_img/units_NA.png" alt="Example of units in the NA region basin" /></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="storm-analysis"><a class="header" href="#storm-analysis">Storm analysis</a></h1>
+<p>This file takes the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">storm data</a> and calculates the wind speed parameters for
+each unit (see <a href="user-guide/workflow_power/intersect/power_intersect_grid.html">unit generation</a>) for each storm.</p>
+<p>The parameters investigated are</p>
+<ul>
+<li><code>wind_location</code> Wind speed at the unit at the storm time step</li>
+<li><code>wind</code> Wind at cyclone track at the storm time step</li>
+<li><code>wind_max</code> Maximum wind speed over entire storm at the cyclone track</li>
+<li><code>duration_15ms</code> Number of occurrences of wind speed above 15m/s at the unit</li>
+<li><code>duration_20ms</code> Number of occurrences of wind speed above 20m/s at the unit</li>
+</ul>
+<p>Each time step is 3 hours. The following steps are applied:</p>
+<ol>
+<li>load the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">storm data</a></li>
+<li>For each <a href="user-guide/workflow_power/intersect/power_intersect_grid.html">unit</a> save the affected storms and their wind parameters to a parquet file</li>
+<li>For each storm load the relevant units (see above), calculate the wind parameters at all (relevant) units and save to a .csv file</li>
+</ol>
+<p>After this, each storm will have a .csv file containing all wind speed parameters at all relevant units. In addition, in step 2., only
+storms with a storm centre is within <code>hurr_buffer_dist = 1300 km</code> (of the unit) will be saved. This can be visualised as only saving 
+data within a 'buffer' of the storm track. A unit that is too far from the storm centre will be unaffected by the storm. The
+<code>hurr_buffer_dist</code> parameter is designed to capture this. Furthermore, in step 3., only storm parameters which have a
+<code>wind_location</code> value above <code>min_windlocmax</code> and <code>wind_max</code> value above <code>min_windmax</code> are considered.
+Values below this can be considered negligible and will not cause infrastructure damage.</p>
+<p>Each storm has a unique identifier in the form #1_#2_#3 where #1 is the sample number from the <a href="user-guide/workflow_power/intersect/../download/power_download_stormtracks.html">storm data</a>, #2 is
+the year in that sample and #3 is the #3-th storm of that year. This is often referred to by <code>nh</code> (number hurricane) within the workflow.</p>
+<p>The processing time, memory and storage costs were heavily considered during the script development.As such measures have
+been implemented to reduce these parameters. Rather than save the intermediate data to memory, each unit is saved to a 
+parquet file (step 2.) which can be later retrieved (step 3.). Furthermore, if unit parquet files already exist, it will
+be skipped in step 2. and a dictionary is formed of which units contain which storm data in attempts to improve the
+computational time. </p>
+<p>Snakemake checkpoints (https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html) are used here as the number of
+storms and their unique identifier is not known here. It is highly recommended not to interrupt this process as, in certain
+cases, the checkpoint function will not know whether it has evaluated all storms and may not rerun in a following snakemake
+command. Should this process be interrupted and you wish to rerun all wind evaluations, you must delete 
+<code>results/power_intersection/storm_data/all_winds/{region}/{sample}/{region}_{sample}_completed.txt</code> for the corresponding region(s) and sample(s).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="damage-calculations"><a class="header" href="#damage-calculations">Damage calculations</a></h1>
+<p>This script uses the <a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">wind parameter data</a> to determine the damage parameters
+for an individual storm.</p>
+<p>The process consists of the following:</p>
+<ol>
+<li>Load the <a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">wind parameter data</a> from the storm</li>
+<li>For each unit, determine if the damage criteria is met (for the lower, central and upper damage thresholds)</li>
+<li>For these damaged units, mark any infrastructure within these units as damaged</li>
+<li>Calculate the damage parameters when infrastructure fails</li>
+<li>Save the damaged units and associated infrastructure components and targets to gpkg files </li>
+<li>Add basic statistics for each storm </li>
+<li>Write the storm track to the gpkg file</li>
+</ol>
+<p>A few notes should be made on this process.</p>
+<h4 id="step-2"><a class="header" href="#step-2">Step 2</a></h4>
+<p>The (central) damage criteria is assumed to be a minimum wind speed of a category 2 hurricane. This corresponds to
+43 m/s. The lower threshold is set to 39 m/s and upper to 47 m/s.</p>
+<h4 id="step-4"><a class="header" href="#step-4">Step 4</a></h4>
+<p>In order to assign each target a GDP loss value, we first create power network components. See an example below in which
+red circles are power plants and blue squares are the targets.</p>
+<p><img src="user-guide/workflow_power/intersect/../power_img/base.png" alt="Base set up for one example power network component" /></p>
+<p>Each component can be treated as its own
+entity and does not interact with other components. That means that the power plants in a selected component provide power to the
+targets in this selected component. To achieve this, we assume that the total power in a component is given by the sum of the
+power from all power plants in that component. We assume the power is distributed proportionally to the GDP of the target
+(see <a href="user-guide/workflow_power/intersect/../process/power_process_targets.html">here</a> for details on target GDP allocation):</p>
+<pre><code class="language-shell">(nominal target power) = (total component power) * (target GDP) / (total component target GDP) 
+</code></pre>
+<p>Say now that a storm hits and it is found (using the damage criteria) that one network component fails. This marked by
+target symbol. The component may not be split into subcomponents:</p>
+<p><img src="user-guide/workflow_power/intersect/../power_img/noloop1.png" alt="One damaged component example" /></p>
+<p>Each subcomponent can now be examined where now</p>
+<pre><code class="language-shell">(post storm target power) = (total subcomponent power) * (target GDP) / (total component target GDP) 
+</code></pre>
+<p>The fraction <code>(target GDP) / (total component target GDP) </code> remains unchanged as it is assumed that the ratio does
+not change. Each target then has a GDP loss described by the following (using the proportionality):</p>
+<pre><code class="language-shell">target GDP loss = [((nominal target power) - (post storm target power))/ (nominal target power)] * (target GDP)
+</code></pre>
+<p>(n.b. the term inside the brackets corresponds to 1-f for the explanation in step 6)</p>
+<p>Further examples include two damaged components:
+<img src="user-guide/workflow_power/intersect/../power_img/noloop2.png" alt="Two damaged components example" /></p>
+<p>Three damaged components:
+<img src="user-guide/workflow_power/intersect/../power_img/noloop3.png" alt="Three damaged components example" />
+Here, there is a subcomponent which is ignored as it does not contain power plants or targets.</p>
+<p>Network loops with one damaged component:
+<img src="user-guide/workflow_power/intersect/../power_img/loop1.png" alt="One damaged component example (looped)" />
+Note that the very inner loop is ignored as it is a 'network' with one node.</p>
+<p>Two damaged components:
+<img src="user-guide/workflow_power/intersect/../power_img/loop2.png" alt="Two damaged components example (looped)" /></p>
+<p>One can see that the above analysis can be performed regardless.</p>
+<h4 id="step-6"><a class="header" href="#step-6">Step 6</a></h4>
+<p>For this step and further steps, we must first define the 'f value' for each target:</p>
+<pre><code class="language-text">f = (nominal power)/(power after storm)
+</code></pre>
+<p>When <code>f=0</code> the target has no power after the storm and <code>f=1</code> means the target is unaffected by the storm. 
+When <code>0&lt;=f&lt;1</code> then the target is listed as affected by the storm. The effective population affected is the fraction of
+the population which has an effective power of 0 i.e. <code>pop_eff = (1-f)*pop</code> summed for each target. This means that if
+a target has a population of 100 people and <code>f=0.2</code>, <code>pop_eff = 80</code>. We can now define the damage parameter statistics that are considered:</p>
+<ul>
+<li>GDP losses: indirect economic losses</li>
+<li>targets affected: number of targets which have the property <code>0&lt;=f&lt;1</code></li>
+<li>targets <code>1&gt;f&gt;0_75</code></li>
+<li>targets <code>0_75&gt;=f&gt;0_5</code></li>
+<li>targets <code>0_5&gt;=f&gt;0_25</code></li>
+<li>targets <code>0_25&gt;=f&gt;0</code></li>
+<li>targets with no power (<code>f=0</code>)</li>
+<li>population affected: The population which is contained in affected targets (<code>0&lt;=f&lt;1</code>)</li>
+<li>population with no power (<code>f=0</code>): The population which is contained in targets with no power after the storm (<code>f=0</code>)</li>
+<li>effective population affected: The population affected which is proportional to the f value of their respective targets</li>
+<li>affected countries: All countries which have at least one target that is affected (<code>0&lt;=f&lt;1</code>)</li>
+</ul>
+<h3 id="storm-data"><a class="header" href="#storm-data">Storm Data</a></h3>
+<p>The data for each storm (including damage parameters) is then found in <code>results/power_intersection/storm_data/individual_storms/{region}/{sample}/{storm_identifier</code> should this be wished to be examined.</p>
+<h3 id="rerunning-damage-calculations"><a class="header" href="#rerunning-damage-calculations">Rerunning damage calculations</a></h3>
+<p>Should the damage calculations need to be rerun (due to e.g. damage tolerance adjustment) then you must delete (or rename) <code>results/power_output/statistics/{region}/{sample}/combined_storm_statistics_{region}_{sample}.csv</code> for the corresponding region(s) and sample(s)
+AND delete (or rename) <code>results/power_intersection/storm_data/individual_storms</code>. Use <code>-n</code> at the end of the snakemake command to check this has worked with a dry run first before running the snakemake workflow.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="intersect-overview"><a class="header" href="#intersect-overview">Intersect Overview</a></h1>
+<p>This process is used to bring some parameters of the storm intersection data together. It's main
+purpose is actually such that snakemake is able to correctly use the checkpoint rule (as explained
+in the <a href="user-guide/workflow_power/intersect/power_intersect_windextracter.html">storm wind analysis</a>). For each region and each sample, the
+parameters described in the <a href="user-guide/workflow_power/intersect/power_intersect_gdploss.html">damage calculation workflow</a> are collected in
+a region-sample csv file. Then each region-sample csv file is collected into a combined csv file <code>open-gira\results\power_output\statistics\combined_storm_statistics.csv</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="analysis-of-results"><a class="header" href="#analysis-of-results">Analysis of Results</a></h1>
+<p>Now that the downloading, processing and intersection workflow steps have been completed we can proceed with the analysis.
+The following options are available</p>
+<ul>
+<li><a href="user-guide/workflow_power/analysis/power_analysis_empirical_distribution.html">Empirical distribution generation</a></li>
+<li><a href="user-guide/workflow_power/analysis/power_analysis_empirical_matrix.html">Empirical affected country pair matrix</a></li>
+<li><a href="user-guide/workflow_power/analysis/power_analysis_target_specific.html">Target statistic gathering</a> followed by <a href="user-guide/workflow_power/analysis/power_analysis_aggregate_levels.html">statistic aggregation</a></li>
+</ul>
+<p>These steps can be executed in one by entering <code>snakemake -s workflow/Snakefile analyse_all -c{core_numbers}</code>. Note
+that if the <code>intersect_all</code>, <code>process_all</code> and/or <code>download_all</code> rules have not already run, then they will be run through this command
+automatically.</p>
+<p>See XXX for figure generation</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="empirical-distribution-generation"><a class="header" href="#empirical-distribution-generation">Empirical distribution generation</a></h1>
+<p>The empirical distribution generation takes
+the storm data and plots (according to the metric) the empirical distribution. The metrics which are analysed are </p>
+<ul>
+<li>GDP losses</li>
+<li>targets with no power (f=0)</li>
+<li>population affected</li>
+<li>population with no power (f=0)</li>
+<li>effective population affected (EACA see paper)</li>
+<li>Reconstruction costs (EAD see paper)</li>
+</ul>
+<p>An example for EACA and EAD are seen (sequentially) below.
+<img src="user-guide/workflow_power/analysis/../power_img/EACA.png" alt="EACA example" />
+<img src="user-guide/workflow_power/analysis/../power_img/EAD.png" alt="EAD example" /></p>
+<p>Each metric is saved to an image plot in <code>results/power_output/statistics/empirical</code>.</p>
+<p>These files can be generated (in one go) through the <code>analyse_empirical_distribution</code> rule.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="empirical-affected-country-pair-matrix"><a class="header" href="#empirical-affected-country-pair-matrix">Empirical affected country pair matrix</a></h1>
+<p>The empirical affected country pair matrix generation
+provides two plots:</p>
+<ul>
+<li>Empirical fraction of a storm hitting both countries given it hits one of them</li>
+<li>Given country A is hit, what is the likelihood also B is hit</li>
+</ul>
+<p>Examples for both are given respectively:
+<img src="user-guide/workflow_power/analysis/../power_img/Empirical%20fraction%20of%20a%20storm%20hitting%20both%20countries%20given%20it%20hits%20one%20of%20them.png" alt="Empirical fraction of a storm hitting both countries given it hits one of them" />
+<img src="user-guide/workflow_power/analysis/../power_img/Given%20country%20A%20is%20hit,%20what%20is%20the%20likelihood%20also%20B%20is%20hit.png" alt="Given country A is hit, what is the likelihood also B is hit" /></p>
+<p>These files are found in <code>results/power_output/statistics/empirical</code>.</p>
+<p>These two files can be generated (simultaneously) through the <code>analyse_country_matrix</code> rule.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="target-statistic-gathering"><a class="header" href="#target-statistic-gathering">Target statistic gathering</a></h1>
+<p>The target statistic gathering process iterates
+through all targets and gathers (for each target) the sum and mean of each metric. In the config.yaml file, the
+parameter <code>top_percentile_select</code> defines the percentile to analyse (in percent) for geospatial analysis and visualisation. Note
+that <code>top_percentile_select = 100</code> will include all results. Also note that this percentile includes all storms even if they
+have not met the threshold to be documented in the <a href="user-guide/workflow_power/analysis/../intersect/power_intersect_windextracter.html">wind analysis</a>. It is recommended to
+leave <code>increased_severity_sort = True</code>, however, should a top fraction of storms wish to be investigated and analysed only
+then <code>increased_severity_sort = False</code> will reverse the percentile selection.</p>
+<p>A new gpkg file is generated with the targets and their summed and average parameters as a target feature. This file is found
+as <code>results/power_output/statistics/aggregate/targets_geo_top{top_percentile_select}{T or F}percent.gpkg</code> where <code>T</code> is selected
+if <code>increased_severity_sort = True</code> and <code>F</code> if <code>increased_severity_sort = False</code> to ensure no data is overwritten.</p>
+<p>One option now to visualise this data is to use the aggregate function in QGIS (or equivalent), however, this is a very time intensive process
+which is not found to be very flexible. Rather, it is recommended to use the <a href="user-guide/workflow_power/analysis/power_analysis_aggregate_levels.html">statistic aggregation</a>
+script. Click <a href="user-guide/workflow_power/analysis/power_analysis_aggregate_levels.html">here</a> to be directed onwards including
+details on the rule to call the workflow.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="statistic-aggregation"><a class="header" href="#statistic-aggregation">Statistic aggregation</a></h1>
+<p>For context, see the <a href="user-guide/workflow_power/analysis/power_analysis_target_specific.html">target statistic gathering</a> workflow first.
+Based on the <code>results/power_output/statistics/aggregate/targets_geo_top{top_percentile_select}{T or F}percent.gpkg</code> file, this script now generates a new gpkg file: <code>results/power_output/statistics/aggregate/targets_geo_top{top_percentile_select}{T or F}percent_aggregated_region.gpkg</code>
+which has level geometries with the aggregated statistics as features. The level must be specified in the config.yaml file
+as the <code>aggregate_level</code> parameter. See details on the level selection in the <a href="user-guide/workflow_power/analysis/../download/power_download_adminboundaries.html">download levels file</a> and/or https://gadm.org/download_world.html. 
+The parameter selection <code>aggregate_level = 0</code> equates to countries and so should a finder region be requested, then  <code>aggregate_level = 1</code> is recommended.
+<code>aggregate_level = 2</code> and above is feasible but comes at the cost of a longer computational time. An example for <code>aggregate_level = 1</code> is seen below (note that the legend must be generated through QGIS or elsewise).</p>
+<p><img src="user-guide/workflow_power/analysis/../power_img/aggregate2.png" alt="Aggregate statistics with aggregate_level = 1 example" /></p>
+<p>Here we investigate the average population affected, however, the full list of selectable parameters is</p>
+<ul>
+<li>Population without power</li>
+<li>Effective population affected</li>
+<li>Population without power</li>
+<li>Power loss</li>
+<li>f_value</li>
+<li>GDP losses</li>
+</ul>
+<p>Both the anually expected and cumulative values for the above are calculated with the exception of the f_value which does not investigate the cumulative value as this would not
+make sense as a metric.</p>
+<p>The entire gathering and aggregation workflow can be called through the <code>analyse_aggregate_levels</code> rule.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="further-analysis"><a class="header" href="#further-analysis">Further analysis</a></h1>
+<p>Now you've worked through an example of the open-gira workflow, 
+and you have an understanding of the relevant file formats, how the process works, 
+and how to inspect things as you go along, you're ready to use open-gira
+for your own work.
+Find an OSM datafile to work with, slice it up, and intersect some hazard data.
+The resulting .geopandas data can be manipulated to answer particular questions, 
+or further combined with different spatial information or other open-gira outputs.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cleaning-the-output"><a class="header" href="#cleaning-the-output">Cleaning the output</a></h1>
+<p>The output directory <code>./results/</code> is orderly but large.
+You can remove all the directories except <code>./results/input/</code> using the command:</p>
+<pre><code class="language-shell">snakemake -R clean
+</code></pre>
+<p>All directories <em>including</em> <code>./results/input/</code> can be removed using the command:</p>
+<pre><code class="language-shell">snakemake -R clean_all
+</code></pre>
+<p>Neither of these commands will remove the output, the final
+<code>./results/&lt;dataset&gt;_filter-highway-core_hazard-&lt;hazard&gt;.geoparquet</code> files.
+To remove everything, simply delete the <code>./results/</code> directory:</p>
+<pre><code class="language-shell">rm -rf results
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="advanced-view-of-the-workflow"><a class="header" href="#advanced-view-of-the-workflow">Advanced view of the workflow</a></h1>
+<p>The simple view of the workflow covered in the <a href="user-guide/workflow.html">main workflow section</a>
+is relatively easy to understand, but does a poor job of explaining where Snakemake
+excels.
+Below, you will find steadily more complex views of the workflow, becoming increasingly
+realistic with each iteration.
+Click on any image to view the full-size version.</p>
+<h2 id="simple-view"><a class="header" href="#simple-view">Simple view</a></h2>
+<p>As a reminder, here's our simple workflow view again:
+<a href="user-guide/../img/DAG-simple.png"><img src="user-guide/img/DAG-simple.png" alt="Simplistic view of the workflow" /></a></p>
+<h2 id="multiple-slices"><a class="header" href="#multiple-slices">Multiple slices</a></h2>
+<p>Here is a more realistic (but slightly harder to follow) version of the previous
+DAG with <code>slice_count: 4</code>.
+In actual practice we'll often be using much higher <code>slice_count</code> values.
+In this tutorial, for instance, we use <code>slice_count: 36</code>.
+<a href="user-guide/img/DAG-simple-slices.png"><img src="user-guide/img/DAG-simple-slices.png" alt="DAG of the workflow for 4 slices of the Tanzania database" /></a></p>
+<h2 id="multiple-hazard-and-infrastructure-datasets"><a class="header" href="#multiple-hazard-and-infrastructure-datasets">Multiple hazard and infrastructure datasets</a></h2>
+<p>Another complexity is that we can specify multiple datasets to use --
+we can feed in different infrastructure maps, and different hazard information.
+Each infrastructure map is combined with each hazard dataset to produce a final output.
+The <code>config.yaml</code> file for this diagram includes:</p>
+<pre><code class="language-yaml">hazard_datasets:
+  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
+  aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
+  
+infrastructure_datasets:
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+
+slice_count: 1
+</code></pre>
+<p><a href="user-guide/img/DAG-multiple.png"><img src="user-guide/img/DAG-multiple.png" alt="DAG of the workflow with multiple infrastructure and hazard datasets" /></a></p>
+<h2 id="full-workflow"><a class="header" href="#full-workflow">Full workflow</a></h2>
+<p>Finally, we'll set the <code>slice_count</code> from the above config to <code>4</code> again, and glimpse the
+full workflow. Remember, though, we could have many more datasets and use many more slices.
+<a href="user-guide/img/DAG-multiple-slices.png"><img src="user-guide/img/DAG-multiple-slices.png" alt="DAG of the full workflow" /></a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>
