@@ -65,6 +65,10 @@ class WaySlicer(osmium.SimpleHandler):
         self.tags_to_preserve = tags_to_preserve
 
     def way(self, w):
+        if len(w.nodes) < 2:
+            # not enough points in this way to create a linestring, short circuit
+            return
+
         # Prepare information for all segments
         base_input = {}
         for k in self.tags_to_preserve:
