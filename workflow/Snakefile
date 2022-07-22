@@ -22,6 +22,8 @@ configfile: "config/config.yaml"
 # Check configfile
 if any(["/" in h for h in config['hazard_datasets'].keys()]):
     raise ValueError("""Error in config: Hazard dataset names cannot contain / or _""")
+if any(["/" in h for h in config['network_filters'].keys()]):
+    raise ValueError("""Error in config: Network filter names cannot contain / or _""")
 if any(["/" in h for h in config['infrastructure_datasets'].keys()]):
     raise ValueError("""Error in config: Infrastructure dataset names cannot contain / or _""")
 
@@ -30,13 +32,12 @@ if not isinstance(config['slice_count'], int) or \
         (math.sqrt(config['slice_count']) % 1 > 0 and config['slice_count'] != 1):
     raise ValueError("""Error in config: slice_count must be an integer, either a square number or 1""")
 
-if not os.path.exists(config['osmium_tags_filters_file']):
-    raise FileNotFoundError((
-        f"Error in config: could not locate osmium_tags_filters_file at "
-        f"{os.path.join(os.getcwd(), config['osmium_tags_filters_file'])}"
-    ))
-
-filter_slug = os.path.basename(config["osmium_tags_filters_file"]).replace(".txt", "").replace("_", "-")
+for network, file_path in config['network_filters'].items():
+    if not os.path.exists(file_path):
+        raise FileNotFoundError((
+            "Error in config: could not locate network_filter at "
+            f"{os.path.join(os.getcwd(), file_path)}"
+        ))
 
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
@@ -105,7 +106,7 @@ include: "rules/make_exposure_tif.smk"
 include: "rules/make_exposure_img.smk"
 
 include: "rules/create_transport_network.smk"
-include: "rules/annotate_road_network.smk"
+include: "rules/annotate_transport_network.smk"
 include: "rules/join_network.smk"
 
 ##### target rules #####
@@ -117,11 +118,12 @@ rule all:
             os.path.join(
                 f"{config['output_dir']}",
                 "exposure",
-                f"{{dataset}}_filter-{filter_slug}",
+                f"{{dataset}}_filter-{{network_filter}}",
                 f"hazard-{{hazard}}",
                 "img"
             ),
             dataset=config['infrastructure_datasets'].keys(),
+            network_filter=config['network_filters'].keys(),
             hazard=config['hazard_datasets'].keys()
         )
 
