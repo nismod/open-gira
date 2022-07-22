@@ -5,7 +5,7 @@ from glob import glob
 
 rule intersection:
     input:
-        network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.geoparquet",
+        network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_edges_annotated.geoparquet",
         # We read in the entire directory here to avoid splitting the job for each *.tif file
         tifs=lambda wildcards: checkpoints.trim_hazard_data.get(**wildcards).output[0],
     output:
@@ -17,5 +17,5 @@ rule intersection:
 
 """
 Test with:
-snakemake --cores all results/splits/tanzania-mini_filter-highway-core/hazard-aqueduct-river/slice-0.geoparquet
+snakemake --cores all results/splits/tanzania-mini_filter-highway-core/hazard-aqueduct-river/slice-0_edges_annotated.geoparquet
 """

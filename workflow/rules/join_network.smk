@@ -4,18 +4,18 @@
 rule join_network_nodes:
     input:
         lambda wildcards: expand(
-            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "slice-{i}_road_nodes_annotated.geoparquet"),
+            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "processed", "slice-{i}_nodes_annotated.geoparquet"),
             **wildcards,
             i=range(config['slice_count'])
         ),
     output:
-        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
     script:
         "../scripts/join_data.py"
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/road_nodes.geoparquet
+snakemake --cores all results/tanzania-mini_filter-highway-core/nodes.geoparquet
 """
 
 
@@ -24,33 +24,33 @@ rule join_network_edges:
         # without a slice count in the output (we're aggregating), snakemake can't determine the slice in the input
         # therefore, use expand to generate the inputs from a list of slice numbers
         lambda wildcards: expand(
-            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "slice-{i}_road_edges_annotated.geoparquet"),
+            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "processed", "slice-{i}_edges_annotated.geoparquet"),
             **wildcards,
             i=range(config['slice_count'])
         ),
     output:
-        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet"
+        "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet"
     script:
         "../scripts/join_edges.py"
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/road_edges.geoparquet
+snakemake --cores all results/tanzania-mini_filter-highway-core/edges.geoparquet
 """
 
 
 rule assess_network_connectedness:
     input:
-        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_nodes.geoparquet",
-        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_edges.geoparquet",
+        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
+        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet",
     output:
-        component_population="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_component_population.pdf",
-        component_map="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_network_map_by_component.png",
-        component_data="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/road_components.parquet"
+        component_population="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/component_population.pdf",
+        component_map="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/network_map_by_component.png",
+        component_data="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/components.parquet"
     script:
         "../scripts/assess_network_connectedness.py"
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/road_component_population.pdf
+snakemake --cores all results/tanzania-mini_filter-highway-core/component_population.pdf
 """

@@ -2,16 +2,19 @@
 
 rule create_transport_network:
     input:
-        "{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.geoparquet"
+        nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",
+        edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_edges.geoparquet"
     output:
-        # can we parameterise the network type (i.e. road) in the output filename?
-        # config["transport_type"] is presumably available
-        nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_nodes.geoparquet",
-        edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}_road_edges.geoparquet"
+        nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/network/{SLICE_SLUG}_nodes.geoparquet",
+        edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/network/{SLICE_SLUG}_edges.geoparquet"
+    params:
+        # determine the network type from the filter, e.g. road, rail
+        network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', '')
     script:
-        "../scripts/create_transport_network.py"
+        # template the path string with a value from params (can't execute .replace in `script` context)
+        "../scripts/create_{params.network_type}_network.py"
 
 """
 Test with:
-snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core/slice-0_road_edges.geoparquet
+snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core/slice-0_edges.geoparquet
 """
