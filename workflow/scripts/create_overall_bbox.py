@@ -9,7 +9,7 @@ try:
     results_dir = snakemake.config["output_dir"]
     out_file = snakemake.output[0]
 except NameError:
-    if len(sys.argv) != 1:
+    if len(sys.argv) != 4:
         raise RuntimeError(
             "Incorrect number of input args, 3 required. Args: .osm.pbf file, results directory, new .json file"
         )
@@ -23,7 +23,6 @@ bboxes = subprocess.check_output(["osmium", "fileinfo", osm_file, "-g", "header.
 box = re.match("^\\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)", bboxes.decode())
 if box:
     content = {
-        "directory": f"./{results_dir}/slices",
         "extracts": [
             {
                 "bbox": [float(x) for x in list(box.groups())],

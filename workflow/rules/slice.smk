@@ -9,9 +9,12 @@ checkpoint slice:
     output:
         directory("{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}"),
     shell:
+        # Need to run osmium from different output folders depending on the
+        # FILTER_SLUG, and the extracts_config specifies only the filename.
         """
         mkdir {output} &&
-        osmium extract --set-bounds --overwrite --no-progress --config {input.extracts_config} {input.data}
+        cd {output} &&
+        osmium extract --set-bounds --overwrite --no-progress --config ../../../{input.extracts_config} ../../../{input.data}
         """
 
 

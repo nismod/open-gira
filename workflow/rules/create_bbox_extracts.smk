@@ -2,8 +2,6 @@
 rule create_bbox_extracts:
     input:
         "{OUTPUT_DIR}/json/{DATASET}.json",
-    params:
-        filter_slug=f"filter-{filter_slug}",
     output:
         "{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     script:

@@ -45,16 +45,14 @@ try:
     slice_count = int(snakemake.config["slice_count"])
     original_file = snakemake.input[0]
     out_file = snakemake.output[0]
-    filter_slug = snakemake.params["filter_slug"]
 except NameError:
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         raise RuntimeError(
-            "Incorrect number of input args, 4 required. Args: .json file, slice count, filter slug, output directory"
+            "Incorrect number of input args, 3 required. Args: .json file, slice count, output directory"
         )
     original_file = sys.argv[1]
     slice_count = int(sys.argv[2])
-    filter_slug = sys.argv[3]
-    out_file = sys.argv[4]
+    out_file = sys.argv[3]
 
 n = math.sqrt(slice_count)
 if n % 1 > 0 and n != 1:
@@ -67,13 +65,12 @@ else:
 with open(original_file, "r") as fp:
     originaljsonfile = json.load(fp)
 
-output_dir = originaljsonfile["directory"]
-subextractsjson = {"directory": output_dir, "extracts": []}
+subextractsjson = {"directory": ".", "extracts": []}
 for extract in originaljsonfile["extracts"]:
     dataset, ext = splitext(extract["output"])
     for n, bbox in enumerate(slice_subextracts(extract["bbox"], n)):
         subextractsjson["extracts"].append(
-            {"bbox": bbox, "output": f"{dataset}_{filter_slug}/slice-{n}{ext}"}
+            {"bbox": bbox, "output": f"slice-{n}{ext}"}
         )
     with open(out_file, "w") as fp:
         json.dump(subextractsjson, fp, indent=4)
