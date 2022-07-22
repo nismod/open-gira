@@ -4,7 +4,7 @@
 
 import logging
 import sys
-from typing import Tuple
+from typing import Tuple, Any, Callable
 import warnings
 
 import geopandas as gpd
@@ -12,6 +12,122 @@ import pandas as pd
 from pyproj import Geod
 
 import snkit
+
+
+def strip_prefix(s: str, prefix: str = "tag_") -> str:
+    """Remove a string prefix if the prefix is present."""
+
+    if s.startswith(prefix):
+        return s[len(prefix):]
+    else:
+        return s
+
+
+def strip_suffix(s: str, suffix: str = "_link") -> str:
+    """Remove a string suffix if the suffix is present."""
+    if not isinstance(s, str):
+        raise ValueError
+
+    if s.endswith(suffix):
+        return s[: len(s) - len(suffix)]
+    else:
+        return s
+
+
+def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
+    """
+    Attempt to recast value with provided function. If not possible and
+    nullable is true, return None. Else, raise casting error.
+
+    N.B. Empty string is not considered a nullable value.
+
+    Args:
+        x (Any): Value to cast
+        casting_function (Callable): Function to cast with
+        nullable (bool): Whether cast value can be None
+
+    Returns:
+        Any: Recast value
+    """
+
+    try:
+        new_value = casting_function(x)
+
+        if new_value is None and not nullable:
+            raise TypeError(f"{new_value=} with {casting_function=} and {nullable=}")
+        else:
+            return new_value
+
+    except (ValueError, TypeError) as casting_error:
+        # ValueError in case of e.g. x="50 mph"
+        # TypeError in case of e.g. x=None
+
+        if nullable:
+            return None
+        else:
+            raise ValueError("Couldn't recast to non-nullable value") from casting_error
+
+
+def str_to_bool(s: str) -> bool:
+    """
+    If a string is in the set below, return False, otherwise, return True.
+    """
+
+    if not isinstance(s, str):
+        raise ValueError(f"{s=} has {type(s)=}, but should be str")
+
+    return s.lower() not in {'n', 'no', 'false', 'f', ''}
+
+
+def drop_tag_prefix(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop the 'tag_' prefix added to columns during osm.pbf processing
+    """
+
+    # first check there won't be a collision with new column names
+    df_renamed = df.rename(strip_prefix, axis="columns")
+
+    n_cols_renamed: int = len(set(df_renamed.columns.values))
+    if n_cols_renamed == len(set(df.columns.values)):
+        df = df_renamed
+    else:
+        raise ValueError(f"Removing prefix would result in collision: {edges.columns=}")
+
+    return df
+
+
+def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Check and clean OpenStreetMap input data
+
+    Args:
+        edges (gpd.GeoDataFrame): Table of edges created by osmium and osm_to_pq.py
+
+    Returns:
+        gpd.GeoDataFrame: Cleaned table
+    """
+
+    # recast data where appropriate
+    # be careful applying this to string fields, your no-data values may change
+    type_conversion_data = (
+        ("tag_maxspeed", float, True),
+        ("tag_lanes", int, True),
+    )
+    for column_name, dtype, nullable in type_conversion_data:
+        if column_name in edges.columns:
+            edges[column_name] = edges[column_name].apply(
+                cast, casting_function=dtype, nullable=nullable
+            )
+
+    if "tag_highway" in edges.columns:
+        # None -> empty string
+        edges.loc[edges['tag_highway'].isnull(), 'tag_highway'] = ''
+        # turn the <highway_type>_link entries into <highway_type>
+        edges.tag_highway = edges.tag_highway.apply(strip_suffix)
+
+    edges = drop_tag_prefix(edges)
+
+    return edges
 
 
 def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
@@ -230,12 +346,6 @@ def annotate_condition(
     network: snkit.network.Network, lane_width_m: float, shoulder_width_m: float
 ) -> snkit.network.Network:
 
-    # calculate road segment lengths
-    geod = Geod(ellps="WGS84")
-    network.edges["length_m"] = network.edges.apply(
-        lambda x: float(geod.geometry_length(x.geometry)), axis=1
-    )
-
     # infer paved status and material type from 'surface' column
     network.edges["paved_material"] = network.edges.apply(
         lambda x: get_road_condition(x), axis=1
@@ -398,7 +508,6 @@ def annotate_rehabilitation_costs(
 def annotate_tariff_flow_costs(
     network: snkit.network.Network,
     transport_tariffs: pd.DataFrame,
-    transport_type: str,
     flow_cost_time_factor: float,
 ) -> snkit.network.Network:
     """
@@ -408,10 +517,8 @@ def annotate_tariff_flow_costs(
         network (snkit.network.Network): Network to annotate. The network.edges
             must have a 'from_iso' column to merge on.
         transport_tariffs (pd.DataFrame): Table of transport tariffs by country and
-            by mode of transport, with 'from_iso3', 'transport', 'cost_km', 'cost_unit'
-            and 'cost_scaling' columns
-        transport_type (str): Transport category, one of 'road', 'rail' or 'IWW'
-            (internal waterways).
+            by mode of transport, with 'from_iso3', 'cost_km', 'cost_unit' and
+            'cost_scaling' columns
         flow_cost_time_factor (float): A fudge factor that varies (by country?)
             This may well need consuming as location specific data in future.
     Returns:
@@ -421,22 +528,17 @@ def annotate_tariff_flow_costs(
     # input checking
     expected_columns = {
         "from_iso3",
-        "transport",
         "cost_km",
         "cost_unit",
         "cost_scaling",
     }
     if not set(transport_tariffs.columns).issuperset(expected_columns):
         raise ValueError(f"{expected_columns=} for transport_tariffs")
-    expected_transport_types = {"road", "rail", "IWW"}
-    if transport_type not in expected_transport_types:
-        raise ValueError(f"{transport_type=} not in {expected_transport_types=}")
 
     # rename and subset table
     transport_tariffs.rename(
         columns={"cost_km": "tariff_cost", "cost_unit": "tariff_unit"}, inplace=True
     )
-    transport_tariffs = transport_tariffs.loc[transport_tariffs["transport"] == "road"]
 
     # merge datasets
     network.edges = pd.merge(
@@ -453,6 +555,12 @@ def annotate_tariff_flow_costs(
         lambda x: float(x.tariff_cost) + (float(x.tariff_cost) * 0.2), axis=1
     )
     network.edges.drop(["tariff_cost", "from_iso3"], axis=1, inplace=True)
+
+    # calculate road segment lengths
+    geod = Geod(ellps="WGS84")
+    network.edges["length_m"] = network.edges.apply(
+        lambda x: float(geod.geometry_length(x.geometry)), axis=1
+    )
 
     # assign flow costs
     metres_per_km = 1_000
@@ -474,22 +582,41 @@ def annotate_tariff_flow_costs(
     return network
 
 
+def annotate_asset_category(
+    network: snkit.network.Network,
+    categories: set[str],
+) -> snkit.network.Network:
+    """
+    Classify each row with a category for later use in direct damage estimation
+    """
+
+    def categoriser(row: pd.Series) -> str:
+        # TODO: proper logic based on other columns
+        return "dummy"
+
+    network.edges["asset_category"] = network.edges.apply(categoriser)
+
+    return network
+
+
 if __name__ == "__main__":
     try:
         nodes_path = snakemake.input["nodes"]
         edges_path = snakemake.input["edges"]
         administrative_data_path = snakemake.input["admin"]
+
         output_nodes_path = snakemake.output["nodes"]
         output_edges_path = snakemake.output["edges"]
-        road_speeds_path = snakemake.config["road_speeds_path"]
-        rehabilitation_costs_path = snakemake.config["road_rehabilitation_costs_path"]
-        transport_costs_path = snakemake.config["transport_costs_path"]
-        default_shoulder_width_metres = snakemake.config[
-            "road_default_shoulder_width_metres"
-        ]
-        default_lane_width_metres = snakemake.config["road_default_lane_width_metres"]
-        flow_cost_time_factor = snakemake.config["road_flow_cost_time_factor"]
+
+        road_speeds_path = snakemake.config["transport"]["speeds_path"]
+        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
+        transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]
+        default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]
+        default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]
+        flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]
         osm_epsg = snakemake.config["osm_epsg"]
+        asset_categories = snakemake.config["direct_damage"]["asset_categories"]
+
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -506,6 +633,7 @@ if __name__ == "__main__":
             default_lane_width_metres,
             flow_cost_time_factor,
             osm_epsg,
+            asset_categories,
         ) = sys.argv[1:]
         # nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
@@ -516,15 +644,20 @@ if __name__ == "__main__":
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation_costs.xlsx
         # transport_costs_path = ../../bundled_data/transport_costs.csv
         # default_shoulder_width_metres = 1.5
-        # default_lane_width_metres = 6.5
+        # default_lane_width_metres = 3.25
         # flow_cost_time_factor = 0.49
         # osm_epsg = 4326
+        # asset_categories = 'road_paved, road_unpaved, road_bridge'
 
-    # cast script arguments to numeric types where necessary
+        # in case of CLI asset_categories argument, remove whitespace and then split on comma
+        asset_categories: list[str] = "".join(asset_categories.split()).split(',')
+
+    # cast script arguments to relevant types where necessary
     default_shoulder_width_metres = float(default_shoulder_width_metres)
     default_lane_width_metres = float(default_lane_width_metres)
     flow_cost_time_factor = float(flow_cost_time_factor)
     osm_epsg = int(osm_epsg)
+    asset_categories = set(asset_categories)
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
@@ -545,7 +678,7 @@ if __name__ == "__main__":
         sys.exit(0)  # exit gracefully so snakemake will continue
 
     annotated_network = snkit.network.Network(
-        edges=gpd.read_parquet(edges_path),
+        edges=clean_edges(gpd.read_parquet(edges_path)),
         nodes=gpd.read_parquet(nodes_path),
     )
     logging.info(
@@ -560,7 +693,7 @@ if __name__ == "__main__":
     )
 
     logging.info(
-        "Annotating network with road type and condition data, calculated segment lengths"
+        "Annotating network with road type and condition data"
     )
     annotated_network = annotate_condition(
         annotated_network, default_lane_width_metres, default_shoulder_width_metres
@@ -568,22 +701,26 @@ if __name__ == "__main__":
 
     logging.info("Annotating network with road speed data")
     annotated_network = annotate_speeds(
-        annotated_network, pd.read_excel(road_speeds_path, sheet_name="global speeds")
+        annotated_network, pd.read_excel(road_speeds_path, sheet_name="road")
     )
 
     logging.info("Annotating network with rehabilitation costs")
     annotated_network = annotate_rehabilitation_costs(
         annotated_network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="road_costs"),
+        pd.read_excel(rehabilitation_costs_path, sheet_name="road"),
     )
 
     logging.info("Annotating network with tariff and flow costs")
     annotated_network = annotate_tariff_flow_costs(
         annotated_network,
-        pd.read_csv(transport_costs_path),
-        "road",
+        pd.read_excel(transport_costs_path, sheet_name="road"),
         flow_cost_time_factor,
     )
+
+    logging.info("Annotating network with asset category")
+    annotated_network = annotate_asset_category(annotated_network, asset_categories)
+
+    # TODO: drop superfluous columns? (e.g. OSM tags)
 
     logging.info("Writing network to disk")
     annotated_network.edges.to_parquet(output_edges_path)

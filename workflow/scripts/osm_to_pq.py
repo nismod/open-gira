@@ -51,6 +51,37 @@ class WayParser(osmium.SimpleHandler):
         return self.shared_nodes
 
 
+class NodeParser(osmium.SimpleHandler):
+    """
+    Extract nodes from OSM data
+    """
+
+    def __init__(self, tags_to_preserve):
+        osmium.SimpleHandler.__init__(self)
+        self.output_data = []
+        self.tags_to_preserve = tags_to_preserve
+
+    def node(self, n):
+        """
+        Process an individual node and add it to the output list
+        """
+
+        base_input = {}
+        for k in self.tags_to_preserve:
+            base_input[f"tag_{k}"] = n.tags[k] if k in n.tags else None
+
+        # create shapely geometry from osm object
+        point = shape.point.Point(n.location.x, n.location.y)
+
+        self.output_data.append(
+            {
+                "geometry": point,
+                "osm_node_id": n.id,
+                **base_input,
+            }
+        )
+
+
 class WaySlicer(osmium.SimpleHandler):
     """
     Slice up ways into segments by shared nodes
@@ -124,7 +155,7 @@ class WaySlicer(osmium.SimpleHandler):
             self.output_data.append(
                 {
                     "geometry": line,
-                    "way_id": w.id,
+                    "osm_way_id": w.id,
                     "segment_id": s_id,
                     **base_input,
                     **nodes[0],
@@ -162,16 +193,20 @@ class WaySlicer(osmium.SimpleHandler):
 
 if __name__ == "__main__":
     try:
-        pbf_path = snakemake.input[0]
-        output_path = snakemake.output[0]
-        keep_tags = snakemake.config["keep_tags"]
+        pbf_path = snakemake.input["pbf"]
+        edges_path = snakemake.output["edges"]
+        nodes_path = snakemake.output["nodes"]
+        keep_tags = snakemake.params["keep_tags"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        pbf_path, output_path, keep_tags = sys.argv[1:]
+        pbf_path, edges_path, nodes_path, keep_tags = sys.argv[1:]
         # pbf_path = '../../results/slices/tanzania-mini_filter-highway-core/slice-2.osm.pbf'
-        # output_path = '../../results/test.geoparquet'
-        # keep_tags = 'highway'
+        # edges_path = '../../results/slice-2.geoparquet'
+        # keep_tags = 'highway, railway'
+
+        # process comma separated string into list of strings
+        keep_tags: list = keep_tags.replace(" ", "").split(",")
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     logging.info(f"Converting {pbf_path} to .geoparquet.")
@@ -192,11 +227,19 @@ if __name__ == "__main__":
 
     h = WaySlicer(
         shared_nodes=shared_nodes,
-        tags_to_preserve=keep_tags.replace(" ", "").split(","),
+        tags_to_preserve=keep_tags,
     )
     h.apply_file(pbf_path, locations=True)
     logging.info(
-        f"Complete: {len(h.output_data)} segments from {len(Counter(w['way_id'] for w in h.output_data))} ways."
+        f"Complete: {len(h.output_data)} segments from {len(Counter(w['osm_way_id'] for w in h.output_data))} ways."
     )
 
-    geopandas.GeoDataFrame(h.output_data).to_parquet(output_path)
+    n = NodeParser(
+        tags_to_preserve=keep_tags,
+    )
+    n.apply_file(pbf_path, locations=True)
+    logging.info(f"Complete: {len(n.output_data)} nodes.")
+
+    # write out data as geoparquet
+    geopandas.GeoDataFrame(h.output_data).to_parquet(edges_path)
+    geopandas.GeoDataFrame(n.output_data).to_parquet(nodes_path)
