@@ -71,7 +71,8 @@ class NodeParser(osmium.SimpleHandler):
             base_input[f"tag_{k}"] = n.tags[k] if k in n.tags else None
 
         # create shapely geometry from osm object
-        point = shape.point.Point(n.location.x, n.location.y)
+        # https://docs.osmcode.org/pyosmium/latest/ref_osm.html#osmium.osm.Location
+        point = shape.point.Point(n.location.lon, n.location.lat)
 
         self.output_data.append(
             {
@@ -197,13 +198,16 @@ if __name__ == "__main__":
         edges_path = snakemake.output["edges"]
         nodes_path = snakemake.output["nodes"]
         keep_tags = snakemake.params["keep_tags"]
+        osm_epsg = snakemake.config["osm_epsg"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        pbf_path, edges_path, nodes_path, keep_tags = sys.argv[1:]
-        # pbf_path = '../../results/slices/tanzania-mini_filter-highway-core/slice-2.osm.pbf'
-        # edges_path = '../../results/slice-2.geoparquet'
+        pbf_path, edges_path, nodes_path, keep_tags, osm_epsg = sys.argv[1:]
+        # pbf_path = 'results/slices/tanzania-mini_filter-highway-core/slice-2.osm.pbf'
+        # edges_path = 'results/slice-2.geoparquet'
+        # nodes_path = 'results/slice-2.geoparquet'
         # keep_tags = 'highway, railway'
+        # osm_epsg = 4326
 
         # process comma separated string into list of strings
         keep_tags: list = keep_tags.replace(" ", "").split(",")
@@ -230,6 +234,7 @@ if __name__ == "__main__":
         tags_to_preserve=keep_tags,
     )
     h.apply_file(pbf_path, locations=True)
+    edges = geopandas.GeoDataFrame(h.output_data)
     logging.info(
         f"Complete: {len(h.output_data)} segments from {len(Counter(w['osm_way_id'] for w in h.output_data))} ways."
     )
@@ -238,8 +243,15 @@ if __name__ == "__main__":
         tags_to_preserve=keep_tags,
     )
     n.apply_file(pbf_path, locations=True)
+    nodes = geopandas.GeoDataFrame(n.output_data)
     logging.info(f"Complete: {len(n.output_data)} nodes.")
 
-    # write out data as geoparquet
-    geopandas.GeoDataFrame(h.output_data).to_parquet(edges_path)
-    geopandas.GeoDataFrame(n.output_data).to_parquet(nodes_path)
+    # can't set a CRS on an empty dataframe, will AttributeError
+    if not edges.empty:
+        edges.set_crs(epsg=osm_epsg, inplace=True)
+    if not nodes.empty:
+        nodes.set_crs(epsg=osm_epsg, inplace=True)
+
+    # write to disk -- even if empty
+    edges.to_parquet(edges_path)
+    nodes.to_parquet(nodes_path)
