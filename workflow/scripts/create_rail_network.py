@@ -61,9 +61,7 @@ def create_network(
         network.nodes = snkit.network.drop_duplicate_geometries(network.nodes)
 
         logging.info("Snapping nodes to edges")
-        print(network.nodes)
         network = snkit.network.snap_nodes(network)
-        print(network.nodes)
 
     logging.info("Adding endpoints")
     network = snkit.network.add_endpoints(network)
