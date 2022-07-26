@@ -14,6 +14,7 @@ from pyproj import Geod
 import snkit
 
 import utils
+from create_network import create_network
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -81,19 +82,19 @@ def get_road_condition(row: pd.Series) -> Tuple[str, str]:
         Tuple[str, str]: Categorical condition and surface strings
     """
 
-    if not row.surface:
-        if row.highway in {"motorway", "trunk", "primary"}:
+    if not row.tag_surface:
+        if row.tag_highway in {"motorway", "trunk", "primary"}:
             return True, "asphalt"
         else:
             return False, "gravel"
-    elif row.surface == "paved":
+    elif row.tag_surface == "paved":
         return True, "asphalt"
-    elif row.surface == "unpaved":
+    elif row.tag_surface == "unpaved":
         return False, "gravel"
-    elif row.surface in {"asphalt", "concrete"}:
-        return True, row.surface
+    elif row.tag_surface in {"asphalt", "concrete"}:
+        return True, row.tag_surface
     else:
-        return True, row.surface
+        return True, row.tag_surface
 
 
 def get_road_lanes(row: pd.Series) -> int:
@@ -109,7 +110,7 @@ def get_road_lanes(row: pd.Series) -> int:
     """
 
     try:
-        lanes = int(row.lanes)
+        lanes = int(row.tag_lanes)
         if lanes < 1:
             return 1
         else:
@@ -117,10 +118,50 @@ def get_road_lanes(row: pd.Series) -> int:
     except (ValueError, TypeError):
         # couldn't cast row.lanes into an integer
         # instead guess at lanes from highway classification
-        if row.highway in ("motorway", "trunk", "primary"):
+        if row.tag_highway in ("motorway", "trunk", "primary"):
             return 2
         else:
             return 1
+
+
+def get_rehab_costs(
+    row: pd.Series, rehab_costs: pd.DataFrame
+) -> Tuple[float, float, str]:
+    """
+    Determine the cost of rehabilitation for a given road segment (row).
+
+    Args:
+        row (pd.Series): Road segment
+        rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various road types
+
+    Returns:
+        Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
+    """
+
+    # bridge should be boolean after data cleaning step
+    if row.bridge:
+        highway_type = "bridge"
+    else:
+        highway_type = row.tag_highway
+
+    if row.paved:
+        condition = "paved"
+    else:
+        condition = "unpaved"
+
+    minimum = rehab_costs.cost_min.loc[
+        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
+    ].squeeze()
+
+    maximum = rehab_costs.cost_max.loc[
+        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
+    ].squeeze()
+
+    unit = rehab_costs.cost_unit.loc[
+        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
+    ].squeeze()
+
+    return float(minimum), float(maximum), str(unit)
 
 
 def annotate_condition(
@@ -137,7 +178,7 @@ def annotate_condition(
     )
 
     # drop the now redundant columns
-    network.edges.drop(["paved_material", "surface"], axis=1, inplace=True)
+    network.edges.drop(["paved_material"], axis=1, inplace=True)
 
     # add number of lanes
     network.edges["lanes"] = network.edges.apply(lambda x: get_road_lanes(x), axis=1)
@@ -163,7 +204,7 @@ def assign_road_speeds(row: pd.Series) -> Tuple[float, float]:
         Tuple[float, float]: Likely minimum and maximum speeds
     """
 
-    if row.highway in {"motorway", "trunk", "primary"}:
+    if row.tag_highway in {"motorway", "trunk", "primary"}:
         min_speed = float(row["Highway_min"])
         max_speed = float(row["Highway_max"])
     elif row.paved:
@@ -175,8 +216,8 @@ def assign_road_speeds(row: pd.Series) -> Tuple[float, float]:
 
     # if we've got data from OSM, use that instead of the per-country data
     # use isnull because it works for numpy NaNs and Nones; a numpy NaN is truthy!
-    if not pd.isnull(row.maxspeed):
-        max_speed = row.maxspeed
+    if not pd.isnull(row.tag_maxspeed):
+        max_speed = row.tag_maxspeed
 
     return min_speed, max_speed
 
@@ -218,52 +259,12 @@ def annotate_speeds(network: snkit.network.Network, speeds_by_country) -> snkit.
 
     # drop the intermediate columns
     network.edges.drop(
-        ["min_max_speed", "maxspeed"] + speeds_by_country.columns.values.tolist(),
+        ["min_max_speed"] + speeds_by_country.columns.values.tolist(),
         axis=1,
         inplace=True,
     )
 
     return network
-
-
-def get_rehab_costs(
-    row: pd.Series, rehab_costs: pd.DataFrame
-) -> Tuple[float, float, str]:
-    """
-    Determine the cost of rehabilitation for a given road segment (row).
-
-    Args:
-        row (pd.Series): Road segment
-        rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various road types
-
-    Returns:
-        Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
-    """
-
-    # bridge should be a boolean type after data cleaning step
-    if row.bridge:
-        highway_type = "bridge"
-    else:
-        highway_type = row.highway
-
-    if row.paved:
-        condition = "paved"
-    else:
-        condition = "unpaved"
-
-    minimum = rehab_costs.cost_min.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    maximum = rehab_costs.cost_max.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    unit = rehab_costs.cost_unit.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    return float(minimum), float(maximum), str(unit)
 
 
 def annotate_tariff_flow_costs(
@@ -412,7 +413,7 @@ if __name__ == "__main__":
 
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
-    network = utils.create_network(edges=clean_edges(edges), nodes=None)
+    network = create_network(edges=clean_edges(edges), nodes=None)
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )

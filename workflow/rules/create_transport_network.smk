@@ -13,7 +13,7 @@ rule create_transport_network:
         network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', '')
     script:
         # template the path string with a value from params (can't execute .replace in `script` context)
-        "../scripts/create_{params.network_type}_network.py"
+        "../scripts/transport/create_{params.network_type}_network.py"
 
 
 """

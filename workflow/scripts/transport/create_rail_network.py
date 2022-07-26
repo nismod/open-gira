@@ -11,6 +11,7 @@ import geopandas as gpd
 import pandas as pd
 
 import utils
+from create_network import create_network
 
 
 def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     if nodes is not None and not nodes.empty:
         nodes = nodes.loc[nodes.tag_railway == 'station', :]
 
-    network = utils.create_network(edges=edges, nodes=nodes)
+    network = create_network(edges=edges, nodes=nodes)
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
