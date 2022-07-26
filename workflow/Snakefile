@@ -106,7 +106,6 @@ include: "rules/make_exposure_tif.smk"
 include: "rules/make_exposure_img.smk"
 
 include: "rules/create_transport_network.smk"
-include: "rules/annotate_transport_network.smk"
 include: "rules/join_network.smk"
 
 ##### target rules #####

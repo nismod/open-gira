@@ -4,107 +4,69 @@
 
 import logging
 import sys
-from typing import Any, Callable
+from typing import Tuple
 import warnings
 
 import geopandas as gpd
+import pandas as pd
 
-import snkit
+import utils
 
 
-def create_network(
-    edges: gpd.GeoDataFrame, nodes: gpd.GeoDataFrame = None
-) -> snkit.network.Network:
+def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
-    Create snkit network from edges and (optional) nodes and clean the result.
+    Check and clean OpenStreetMap input rail data
 
-    Arguments:
-        edges (gpd.GeoDataFrame): Expected to contain geometry column of linestrings
-        nodes (gpd.GeoDataFrame): Optional nodes to include. snkit will try to snap to edges
+    Args:
+        edges (gpd.GeoDataFrame): Table of edges created by osmium and osm_to_pq.py
 
     Returns:
-        snkit.network.Network: Built network
+        gpd.GeoDataFrame: Cleaned table
     """
 
-    logging.info("Starting network creation")
+    # make the bridge tag boolean
+    if "tag_bridge" in edges.columns:
+        # coerce our None values into empty strings
+        edges.loc[edges['tag_bridge'].isnull(), 'tag_bridge'] = ''
+        # these values are mostly a type of bridge construction, 'yes', 'no', or empty string
+        edges.tag_bridge = edges.tag_bridge.apply(utils.str_to_bool)
 
-    # drop edges with no geometry
-    empty_idx = edges.geometry.apply(lambda e: e is None or e.is_empty)
-    if empty_idx.sum():
-        empty_edges = edges[empty_idx]
-        logging.info(f"Found {len(empty_edges)} empty edges.")
-        logging.info(empty_edges)
-        edges = edges[~empty_idx].copy()
+    edges = utils.drop_tag_prefix(edges)
 
-    logging.info("Creating network")
-    network = snkit.Network(nodes, edges)
-
-    logging.info("Splitting multilines")
-    network = snkit.network.split_multilinestrings(network)
-
-    if nodes is not None and not nodes.empty:
-        # check we have only point nodes
-        assert set(network.nodes.geometry.type.values) == {"Point"}
-
-        logging.info("Dropping duplicate geometries")
-        # silence shapely.ops.split ShapelyDeprecationWarning regarding:
-        # shapley.ops.split failure on split by empty geometry collection
-        # this is currently caught by snkit.network.split_edge_at_points,
-        # but won't be for shapely==2.0
-        warnings.filterwarnings(
-            "ignore",
-            message=(
-                ".*GeometryTypeError will derive from ShapelyError "
-                "and not TypeError or ValueError in Shapely 2.0*"
-            )
-        )
-        network.nodes = snkit.network.drop_duplicate_geometries(network.nodes)
-
-        logging.info("Snapping nodes to edges")
-        network = snkit.network.snap_nodes(network)
-
-    logging.info("Adding endpoints")
-    network = snkit.network.add_endpoints(network)
-
-    logging.info("Splitting edges at nodes")
-    network = snkit.network.split_edges_at_nodes(network)
-
-    # check we have only linestrings
-    assert set(network.edges.geometry.type.values) == {"LineString"}
-
-    logging.info("Renaming nodes and edges")
-    network = snkit.network.add_ids(network)
-
-    logging.info("Creating network topology")
-    network = snkit.network.add_topology(network, id_col="id")
-
-    network.edges.rename(
-        columns={"from_id": "from_node_id", "to_id": "to_node_id", "id": "edge_id"},
-        inplace=True,
-    )
-    network.nodes.rename(columns={"id": "node_id"}, inplace=True)
-
-    return network
+    return edges
 
 
-def write_empty(edges_path: str, nodes_path: str) -> None:
+def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
     """
-    If we don't have sufficient / good enough input data, write out empty output.
+    Determine the cost of rehabilitation for a given rail segment (row).
 
-    N.B. The output files must exist for snakemake's sake.
+    Args:
+        row (pd.Series): Road segment
+        rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various rail types
+
+    Returns:
+        Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
     """
-    empty_gdf = gpd.GeoDataFrame([])
-    empty_gdf.to_parquet(edges_path)
-    empty_gdf.to_parquet(nodes_path)
-    return
+
+    # bridge should be a boolean type after data cleaning step
+    if row.bridge:
+        asset_type = "bridge"
+    else:
+        asset_type = "rail"
+
+    data: pd.Series = rehab_costs[rehab_costs["asset_type"] == asset_type].squeeze()
+
+    return data.cost_min, data.cost_max, data.cost_unit
 
 
 if __name__ == "__main__":
     try:
         osm_edges_path = snakemake.input["edges"]
         osm_nodes_path = snakemake.input["nodes"]
+        administrative_data_path = snakemake.input["admin"]
         nodes_output_path = snakemake.output["nodes"]
         edges_output_path = snakemake.output["edges"]
+        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
         osm_epsg = snakemake.config["osm_epsg"]
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
@@ -112,14 +74,20 @@ if __name__ == "__main__":
         (
             osm_edges_path,
             osm_nodes_path,
+            administrative_data_path,
             nodes_output_path,
             edges_output_path,
+            rehabilitation_costs_path,
+            transport_costs_path,
+            flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
         # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
         # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
+        # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
         # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # rehabilitation_costs_path = ../../bundled_data/rehabilitation.xlsx
         # osm_epsg = 4326
 
     osm_epsg = int(osm_epsg)
@@ -130,15 +98,18 @@ if __name__ == "__main__":
     # NB though that .geoparquet is not the format to use for archiving.
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
+    # read edges
     try:
         edges = gpd.read_parquet(osm_edges_path)
     except ValueError as error:
         # if the input parquet file does not contain a geometry column, geopandas
         # will raise a ValueError rather than try to procede
         logging.info(f"{error}\n" "writing empty files and skipping processing...")
-        write_empty(edges_output_path, nodes_output_path)
+        utils.write_empty_frames(edges_output_path, nodes_output_path)
         sys.exit(0)  # exit gracefully so snakemake will continue
+    edges = clean_edges(edges)
 
+    # read nodes
     try:
         nodes = gpd.read_parquet(osm_nodes_path)
     except ValueError as error:
@@ -147,16 +118,39 @@ if __name__ == "__main__":
         logging.info(f"{error}\n" "no nodes from OSM to process...")
         nodes = None
 
+    # if present, filter nodes to stations
     if nodes is not None and not nodes.empty:
-        # we only want the station nodes
         nodes = nodes.loc[nodes.tag_railway == 'station', :]
 
-    network = create_network(edges=edges, nodes=nodes)
+    network = utils.create_network(edges=edges, nodes=nodes)
+    logging.info(
+        f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
+    )
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
     network.edges.set_crs(epsg=osm_epsg, inplace=True)
     network.nodes.set_crs(epsg=osm_epsg, inplace=True)
+
+    logging.info("Annotating network with administrative data")
+    network = utils.annotate_country(
+        network,
+        utils.get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
+        osm_epsg,
+    )
+
+    logging.info("Annotating network with rehabilitation costs")
+    network = utils.annotate_rehabilitation_costs(
+        network,
+        pd.read_excel(rehabilitation_costs_path, sheet_name="rail"),
+        get_rehab_costs
+    )
+
+    # TODO: add tariffs to edges for flow routing
+
+    # TODO: drop superfluous columns (e.g. OSM tags)
+
+    # TODO: add asset_categories for direct damage estimation
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)
