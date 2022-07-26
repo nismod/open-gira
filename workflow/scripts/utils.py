@@ -81,34 +81,6 @@ def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
             raise ValueError("Couldn't recast to non-nullable value") from casting_error
 
 
-def str_to_bool(s: str) -> bool:
-    """
-    If a string is in the set below, return False, otherwise, return True.
-    """
-
-    if not isinstance(s, str):
-        raise ValueError(f"{s=} has {type(s)=}, but should be str")
-
-    return s.lower() not in {'n', 'no', 'false', 'f', ''}
-
-
-def drop_tag_prefix(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Drop the 'tag_' prefix added to columns during osm.pbf processing
-    """
-
-    # first check there won't be a collision with new column names
-    df_renamed = df.rename(strip_prefix, axis="columns")
-
-    n_cols_renamed: int = len(set(df_renamed.columns.values))
-    if n_cols_renamed == len(set(df.columns.values)):
-        df = df_renamed
-    else:
-        raise ValueError(f"Removing prefix would result in collision: {df.columns=}")
-
-    return df
-
-
 def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
     """
     Read administrative data (country ISO, country geometry) from disk
@@ -256,6 +228,36 @@ def annotate_rehabilitation_costs(
     network.edges.drop(["rehab_costs"], axis=1, inplace=True)
 
     return network
+
+
+def str_to_bool(series: pd.Series) -> pd.Series:
+    """
+    Make a stab at turning a series of strings into a boolean series.
+
+    Args:
+        series (pd.Series): Input series
+
+    Returns:
+        pd.Series: Boolean series of whether or not strings are truthy (by our logic).
+    """
+
+    FALSE_VALUES = {'n', 'no', 'false', 'f', ''}
+
+    def str_parser(s: str) -> bool:
+        """
+        If a string is in the set below, return False, otherwise, return True.
+        """
+
+        if not isinstance(s, str):
+            raise ValueError(f"{s=} has {type(s)=}, but should be str")
+
+        return s.lower() not in FALSE_VALUES
+
+    # set our null values to the empty string
+    new_series = series.copy(deep=True)
+    new_series.loc[series.isnull()] = ''
+
+    return new_series.apply(str_parser)
 
 
 def create_network(edges: gpd.GeoDataFrame, nodes: gpd.GeoDataFrame = None) -> snkit.network.Network:

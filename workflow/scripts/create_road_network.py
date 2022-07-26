@@ -45,7 +45,9 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         # turn the <highway_type>_link entries into <highway_type>
         edges.tag_highway = edges.tag_highway.apply(utils.strip_suffix)
 
-    edges = utils.drop_tag_prefix(edges)
+    # boolean bridge field from tag_bridges
+    if "tag_bridge" in edges.columns:
+        edges['bridge'] = utils.str_to_bool(edges['tag_bridge'])
 
     return edges
 

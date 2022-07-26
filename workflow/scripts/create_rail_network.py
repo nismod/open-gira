@@ -13,29 +13,6 @@ import pandas as pd
 import utils
 
 
-def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """
-    Check and clean OpenStreetMap input rail data
-
-    Args:
-        edges (gpd.GeoDataFrame): Table of edges created by osmium and osm_to_pq.py
-
-    Returns:
-        gpd.GeoDataFrame: Cleaned table
-    """
-
-    # make the bridge tag boolean
-    if "tag_bridge" in edges.columns:
-        # coerce our None values into empty strings
-        edges.loc[edges['tag_bridge'].isnull(), 'tag_bridge'] = ''
-        # these values are mostly a type of bridge construction, 'yes', 'no', or empty string
-        edges.tag_bridge = edges.tag_bridge.apply(utils.str_to_bool)
-
-    edges = utils.drop_tag_prefix(edges)
-
-    return edges
-
-
 def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
     """
     Determine the cost of rehabilitation for a given rail segment (row).
@@ -107,7 +84,6 @@ if __name__ == "__main__":
         logging.info(f"{error}\n" "writing empty files and skipping processing...")
         utils.write_empty_frames(edges_output_path, nodes_output_path)
         sys.exit(0)  # exit gracefully so snakemake will continue
-    edges = clean_edges(edges)
 
     # read nodes
     try:
@@ -126,6 +102,12 @@ if __name__ == "__main__":
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
+
+    # boolean station field
+    network.nodes['station'] = network.nodes.tag_railway == 'station'
+
+    # boolean bridge field
+    network.edges['bridge'] = utils.str_to_bool(network.edges['tag_bridge'])
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
