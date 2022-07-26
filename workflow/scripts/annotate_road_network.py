@@ -185,25 +185,23 @@ def annotate_country(
     edges = network.edges
     nodes = network.nodes
 
+    starting_node_columns = list(nodes.columns.values)
+
     # CRS strings
     input_crs = f"EPSG:{crs_epsg}"
     projection_epsg = edges.estimate_utm_crs().to_epsg()
     projected_crs = f"EPSG:{projection_epsg}"
     logging.info(f"Inferred a suitable projection CRS of: {projected_crs}")
 
-    # often we only want these columns
-    core_node_columns = ["node_id", "iso_code", "geometry"]
-
     # spatial join nodes geometries to their containing country, retain only node geometries
     interior_nodes = gpd.sjoin(
         # subset nodes to only id
-        nodes[["node_id", "geometry"]].to_crs(input_crs),
+        nodes.to_crs(input_crs),
         countries.to_crs(input_crs),
         how="left",
         predicate="within",
     ).reset_index()
     interior_nodes = interior_nodes[~interior_nodes["iso_code"].isna()]
-    interior_nodes = interior_nodes[core_node_columns]
     interior_nodes = interior_nodes.drop_duplicates(subset=["node_id"], keep="first")
     logging.info(
         f"Found {len(interior_nodes)} nodes that are within a country geometry"
@@ -216,11 +214,10 @@ def annotate_country(
         ~nodes["node_id"].isin(interior_nodes["node_id"].values.tolist())
     ]
     exterior_nodes = gpd.sjoin_nearest(
-        exterior_nodes[["node_id", "geometry"]].to_crs(projected_crs),
+        exterior_nodes.to_crs(projected_crs),
         countries.to_crs(projected_crs),
         how="left",
     ).reset_index()
-    exterior_nodes = exterior_nodes[core_node_columns]
     exterior_nodes = exterior_nodes.drop_duplicates(subset=["node_id"], keep="first")
     logging.info(
         f"Found {len(exterior_nodes)} nodes external to all country geometries, labelled "
@@ -230,7 +227,10 @@ def annotate_country(
     # join the outputs of the two joining processes together
     nodes = pd.concat([interior_nodes, exterior_nodes], axis=0, ignore_index=True)
     nodes = gpd.GeoDataFrame(
-        nodes[core_node_columns], geometry="geometry", crs=input_crs
+        # use the columns we were passed, plus the country code of each node
+        nodes[starting_node_columns + ['iso_code']],
+        geometry="geometry",
+        crs=input_crs
     )
 
     # set edge.from_node_id from node.node_id and use iso_code of from node as edge start
@@ -254,16 +254,6 @@ def annotate_country(
     )
     edges.rename(columns={"iso_code": "to_iso"}, inplace=True)
     edges.drop("node_id", axis=1, inplace=True)
-
-    # encode country in id strings
-    nodes["node_id"] = nodes.apply(lambda x: f"{x.iso_code}_{x.node_id}", axis=1)
-    edges["from_node_id"] = edges.apply(
-        lambda x: f"{x.from_iso}_{x.from_node_id}", axis=1
-    )
-    edges["to_node_id"] = edges.apply(lambda x: f"{x.to_iso}_{x.to_node_id}", axis=1)
-    edges["edge_id"] = edges.apply(
-        lambda x: f"{x.from_iso}_{x.to_iso}_{x.edge_id}", axis=1
-    )
 
     network.nodes = nodes
     network.edges = edges
@@ -582,23 +572,6 @@ def annotate_tariff_flow_costs(
     return network
 
 
-def annotate_asset_category(
-    network: snkit.network.Network,
-    categories: set[str],
-) -> snkit.network.Network:
-    """
-    Classify each row with a category for later use in direct damage estimation
-    """
-
-    def categoriser(row: pd.Series) -> str:
-        # TODO: proper logic based on other columns
-        return "dummy"
-
-    network.edges["asset_category"] = network.edges.apply(categoriser)
-
-    return network
-
-
 if __name__ == "__main__":
     try:
         nodes_path = snakemake.input["nodes"]
@@ -615,7 +588,6 @@ if __name__ == "__main__":
         default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]
         flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]
         osm_epsg = snakemake.config["osm_epsg"]
-        asset_categories = snakemake.config["direct_damage"]["asset_categories"]
 
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
@@ -633,7 +605,6 @@ if __name__ == "__main__":
             default_lane_width_metres,
             flow_cost_time_factor,
             osm_epsg,
-            asset_categories,
         ) = sys.argv[1:]
         # nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
@@ -647,17 +618,12 @@ if __name__ == "__main__":
         # default_lane_width_metres = 3.25
         # flow_cost_time_factor = 0.49
         # osm_epsg = 4326
-        # asset_categories = 'road_paved, road_unpaved, road_bridge'
-
-        # in case of CLI asset_categories argument, remove whitespace and then split on comma
-        asset_categories: list[str] = "".join(asset_categories.split()).split(',')
 
     # cast script arguments to relevant types where necessary
     default_shoulder_width_metres = float(default_shoulder_width_metres)
     default_lane_width_metres = float(default_lane_width_metres)
     flow_cost_time_factor = float(flow_cost_time_factor)
     osm_epsg = int(osm_epsg)
-    asset_categories = set(asset_categories)
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
@@ -717,10 +683,9 @@ if __name__ == "__main__":
         flow_cost_time_factor,
     )
 
-    logging.info("Annotating network with asset category")
-    annotated_network = annotate_asset_category(annotated_network, asset_categories)
-
     # TODO: drop superfluous columns? (e.g. OSM tags)
+
+    # TODO: annotate with asset categories for direct damage estimation
 
     logging.info("Writing network to disk")
     annotated_network.edges.to_parquet(output_edges_path)

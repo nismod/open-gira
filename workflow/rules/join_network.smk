@@ -4,7 +4,7 @@
 rule join_network_nodes:
     input:
         lambda wildcards: expand(
-            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "processed", "slice-{i}_nodes_annotated.geoparquet"),
+            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "network", "slice-{i}_nodes_annotated.geoparquet"),
             **wildcards,
             i=range(config['slice_count'])
         ),
@@ -24,7 +24,7 @@ rule join_network_edges:
         # without a slice count in the output (we're aggregating), snakemake can't determine the slice in the input
         # therefore, use expand to generate the inputs from a list of slice numbers
         lambda wildcards: expand(
-            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "processed", "slice-{i}_edges_annotated.geoparquet"),
+            os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "network", "slice-{i}_edges_annotated.geoparquet"),
             **wildcards,
             i=range(config['slice_count'])
         ),
