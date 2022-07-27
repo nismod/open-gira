@@ -9,7 +9,7 @@ def test_make_exposure_tif():
     common.run_test(
         "make_exposure_tif",
         (
-            "snakemake results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/raster/ "
+            "snakemake results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/raster/ "
             "-j1"
         ),
     )

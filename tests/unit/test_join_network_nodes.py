@@ -10,7 +10,7 @@ def test_join_network_nodes():
     common.run_test(
         "join_network_nodes",
         (
-            "snakemake results/tanzania-latest_filter-highway-core/road_nodes.geoparquet "
+            "snakemake results/tanzania-latest_filter-road/road_nodes.geoparquet "
             "-j1 --keep-target-files"
         ),
     )

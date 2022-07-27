@@ -17,7 +17,7 @@ def test_make_exposure_img():
     common.run_test(
         "make_exposure_img",
         (
-            "snakemake results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/img/ "
+            "snakemake results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img/ "
             "-j1"
         ),
     )
