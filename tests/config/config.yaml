@@ -1,30 +1,61 @@
 # Input data and output locations
 output_dir: 'results'
 
+
+#####################################
+### FLOODING / TRANSPORT WORKFLOW ###
+#####################################
+
+
+## Aqueduct Analysis ##
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
 hazard_datasets:
   aqueduct-river: 'external_files/hazard_sources.txt'
 
-# OSM dataset
+# OSM datasets, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
   tanzania-mini: 'external_files/tanzania-mini.osm.pbf'
 
-# Osmium tags to retain in the geoparquet files
-# these must be specified as a single string, with each tag comma seperated e.g. 'highway, surface'
-keep_tags: 'highway, surface, bridge, maxspeed, lanes'
-# Filters definition
-osmium_tags_filters_file: "config/highway-core.txt"
-# CRS OSM uses
-osm_epsg: 4326
+# these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
+# the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
+network_filters:
+  road: 'config/road-tertiary.txt'
+  rail: 'config/rail.txt'
+
+# OSM tag data to retain on selected features, typically for usage in network annotation/analysis
+# N.B. feature SELECTION is done with the expressions pointed to from network_filters
+keep_tags:
+  road: ['highway', 'surface', 'bridge', 'maxspeed', 'lanes']
+  rail: ['railway', 'bridge', 'name']
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 1
 
-# road, rail, etc.
-transport_type: 'road'
+# CRS OSM uses
+osm_epsg: 4326
+
+transport:
+  # if the following data can be sourced/hosted online, remove these config entries and download instead
+  rehabilitation_costs_path: 'bundled_data/transport/rehabilitation.xlsx'
+  tariff_costs_path: 'bundled_data/transport/tariffs.xlsx'
+  speeds_path: 'bundled_data/transport/speeds.xlsx'
+  road:
+    # road network specific configuration
+    default_shoulder_width_metres: 1.5
+    default_lane_width_metres: 3.25
+    # fudge factor to tune flow allocation
+    flow_cost_time_factor: 0.49
+  rail:
+    flow_cost_time_factor: 0.49
 
 
+###############################
+### STORM / ENERGY WORKFLOW ###
+###############################
+
+
+# Options for exposure tif file generation
 exposure_tifs:
   # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
   exposure_threshold: 0.5
@@ -32,8 +63,11 @@ exposure_tifs:
   scaling_factor: 0.1
   # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
   resampling_mode: 'bilinear'
+  # Options for plotting
   plot:
+    # Keyword arguments for raster plotting
     raster:
+      # Colour mapping to use for raster data
       cmap: 'Reds'
 
 ## STORM Power Network Analysis ##
@@ -74,7 +108,7 @@ reconstruction_cost_lowmedium: 200000
 
 # Further Configuration #
 # Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
-storm_batches: 40000
+storm_batches: 900
 
 # If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
 wind_rerun: False
