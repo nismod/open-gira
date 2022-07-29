@@ -43,20 +43,24 @@ if __name__ == "__main__":
         nodes_output_file = snakemake.output["nodes"]
         edges_output_file = snakemake.output["edges"]
     except NameError:
-        sys.exit("please invoke with snakemake")
+        # not sure of an elegant way to handle the two lists of input filenames
+        sys.exit("please invoke via snakemake")
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    logging.info("Joining nodes")
+    logging.info("Joining network slices")
     nodes = append_slices(node_slice_files)
-
-    logging.info("Joining edges")
     edges = append_slices(edge_slice_files)
+
+    # drop the ids we used on a per-slice basis
+    nodes = nodes.drop(["node_id"], axis="columns")
+    edges = edges.drop(["edge_id", "from_node_id", "to_node_id"], axis="columns")
 
     network = snkit.network.Network(edges=edges, nodes=nodes)
     logging.info("Labelling edges and nodes with ids")
+    # relabel with network-wide ids prior to adding topology
     network = snkit.network.add_ids(network)
 
     logging.info("Labelling edge ends with node ids")
