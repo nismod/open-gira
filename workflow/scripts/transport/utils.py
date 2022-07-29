@@ -14,6 +14,9 @@ import geopandas as gpd
 import snkit
 
 
+WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
+
+
 def write_empty_frames(edges_path: str, nodes_path: str) -> None:
     """
     If we don't have sufficient / good enough input data, write out empty output.
@@ -115,102 +118,93 @@ def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataF
     Read administrative data (country ISO, country geometry) from disk
 
     Arguments:
-        file_path (str): Location of file with country data
+        file_path (str): Location of file with country data:
+            containing an iso_code as 'GID_0' and a geometry as 'geometry'
         to_epsg (int): EPSG code to project data to
 
     Returns:
-        gpd.GeoDataFrame: Table of country and geometry data
+        gpd.GeoDataFrame: Table of country and geometry data with:
+            'iso_code' and 'geometry' columns
     """
 
     # read file
     gdf = gpd.read_file(file_path)
 
     # check schema is as expected
-    expected_columns = {"GID_0", "NAME_0", "geometry"}
-    assert expected_columns == set(gdf.columns.values)
+    expected_columns = {"GID_0", "geometry"}
+    assert expected_columns.issubset(set(gdf.columns.values))
 
     # reproject if desired
     if to_epsg is not None:
         gdf = gdf.to_crs(epsg=to_epsg)
 
-    # explode the ~250 country rows with multipolygon geometries into many thousands of rows with polygon geometries
-    # ignore_index will forget the starting index and reindex the table
-    gdf = gdf.explode(ignore_index=True)
-
     # rename these columns first so we don't have to do this twice (to nodes and edges) later
     gdf.rename(columns={"GID_0": "iso_code"}, inplace=True)
 
-    # sort by and return
-    return gdf.sort_values(by=["iso_code"], ascending=True)
+    # subset, sort by iso_code and return
+    return gdf[["iso_code", "geometry"]].sort_values(by=["iso_code"], ascending=True)
 
 
-def annotate_country(
-    network: snkit.network.Network, countries: gpd.GeoDataFrame, crs_epsg: int
-) -> snkit.network.Network:
+def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame) -> snkit.network.Network:
     """
     Label network edges and nodes with their country ISO code
 
     Arguments:
         network (snkit.network.Network): Network to label with geographic information
-            network.edges should have 'edge_id', 'from_node_id', 'to_node_id', 'geometry'
-            network.nodes should have 'node_id', 'geometry'
-        countries (gpd.GeoDataFrame): Table expected to contain the following columns:
-            'iso_code', 'NAME_0', 'geometry'
-        crs_epsg (int): EPSG code for a standard CRS to use to compare geometries
+            network.edges must have 'from_node_id', 'to_node_id'
+            network.nodes must have 'node_id', 'geometry'
+        countries (gpd.GeoDataFrame): Table required to contain the following columns:
+            'iso_code', 'geometry'
 
     Returns
-        snkit.network.Network: Labelled network
+        snkit.network.Network: Labelled network with edges.from_iso_code, edges.to_iso_code
+            and nodes.iso_code
     """
     # unpack network for brevity in the following lines
     edges = network.edges
     nodes = network.nodes
 
-    starting_node_columns = list(nodes.columns.values)
+    # check we have required inputs
+    assert set(edges.columns.values).issuperset({"from_node_id", "to_node_id"})
+    assert set(nodes.columns.values).issuperset({"node_id", "geometry"})
+    assert set(countries.columns.values).issuperset({"iso_code", "geometry"})
 
-    # CRS strings
-    input_crs = f"EPSG:{crs_epsg}"
-    projection_epsg = edges.estimate_utm_crs().to_epsg()
-    projected_crs = f"EPSG:{projection_epsg}"
-    logging.info(f"Inferred a suitable projection CRS of: {projected_crs}")
+    # check our inputs have a registered CRS
+    assert nodes.crs
+    # we don't do any geometry operations on edges
+    assert countries.crs
+
+    input_node_crs = nodes.crs
+
+    # shorthand for selecting certain column sets
+    starting_node_columns = list(nodes.columns.values)
+    desired_node_columns = starting_node_columns + ['iso_code']
 
     # spatial join nodes geometries to their containing country, retain only node geometries
-    interior_nodes = gpd.sjoin(
-        # subset nodes to only id
-        nodes.to_crs(input_crs),
-        countries.to_crs(input_crs),
-        how="left",
-        predicate="within",
-    ).reset_index()
-    interior_nodes = interior_nodes[~interior_nodes["iso_code"].isna()]
-    interior_nodes = interior_nodes.drop_duplicates(subset=["node_id"], keep="first")
-    logging.info(
-        f"Found {len(interior_nodes)} nodes that are within a country geometry"
-    )
+    nodes_with_iso_code = nodes.sjoin(countries, how="left", predicate="within")
+    # drop cruft from merge (i.e. "index_right")
+    nodes_with_iso_code = nodes_with_iso_code[desired_node_columns]
+    interior_nodes = nodes_with_iso_code[~nodes_with_iso_code["iso_code"].isna()]
+    logging.info(f"Found {len(interior_nodes)} nodes that are within a country geometry")
 
-    # for those nodes which weren't within a country geometry, label them with the nearest country
-    # use a projected CRS so sjoin_nearest can more accurately compute distances
-    # N.B. these projected UTM CRS are given for 6 degrees longitude sectors
-    exterior_nodes = nodes[
-        ~nodes["node_id"].isin(interior_nodes["node_id"].values.tolist())
-    ]
-    exterior_nodes = gpd.sjoin_nearest(
-        exterior_nodes.to_crs(projected_crs),
-        countries.to_crs(projected_crs),
-        how="left",
-    ).reset_index()
-    exterior_nodes = exterior_nodes.drop_duplicates(subset=["node_id"], keep="first")
-    logging.info(
-        f"Found {len(exterior_nodes)} nodes external to all country geometries, labelled "
-        "these with their nearest country"
-    )
+    # for any nodes where sjoin didn't work, drop the iso_code and try again with sjoin_nearest
+    # reproject to web mercator CRS for this operation
+    exterior_nodes = nodes_with_iso_code[nodes_with_iso_code["iso_code"].isna()].drop(["iso_code"], axis="columns")
+    exterior_nodes = exterior_nodes.to_crs(WEB_MERC_EPSG).sjoin_nearest(countries.to_crs(WEB_MERC_EPSG))
+    exterior_nodes = exterior_nodes.to_crs(input_node_crs)
+    if not exterior_nodes.empty:
+        logging.info(
+            f"Found {len(exterior_nodes)} nodes external to all country geometries, labelled "
+            "these with their nearest country"
+        )
 
     # join the outputs of the two joining processes together
     nodes = pd.concat([interior_nodes, exterior_nodes], axis=0, ignore_index=True)
     nodes = gpd.GeoDataFrame(
         # use the columns we were passed, plus the country code of each node
-        nodes[starting_node_columns + ['iso_code']],
+        nodes[desired_node_columns],
         geometry="geometry",
-        crs=input_crs
+        crs=input_node_crs
     )
 
     # set edge.from_node_id from node.node_id and use iso_code of from node as edge start
@@ -221,7 +215,7 @@ def annotate_country(
         left_on=["from_node_id"],
         right_on=["node_id"],
     )
-    edges.rename(columns={"iso_code": "from_iso"}, inplace=True)
+    edges.rename(columns={"iso_code": "from_iso_code"}, inplace=True)
     edges.drop("node_id", axis=1, inplace=True)
 
     # set edge.to_node_id from node.node_id and use iso_code of from node as edge end
@@ -232,7 +226,7 @@ def annotate_country(
         left_on=["to_node_id"],
         right_on=["node_id"],
     )
-    edges.rename(columns={"iso_code": "to_iso"}, inplace=True)
+    edges.rename(columns={"iso_code": "to_iso_code"}, inplace=True)
     edges.drop("node_id", axis=1, inplace=True)
 
     network.nodes = nodes
