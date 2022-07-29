@@ -8,7 +8,11 @@ import geopandas as gpd
 import snkit
 
 
-def create_network(edges: gpd.GeoDataFrame, nodes: gpd.GeoDataFrame = None) -> snkit.network.Network:
+def create_network(
+    edges: gpd.GeoDataFrame,
+    nodes: gpd.GeoDataFrame = None,
+    id_prefix: str = ""
+) -> snkit.network.Network:
     """
     Create snkit network from edges and (optional) nodes and clean the result.
 
@@ -67,7 +71,7 @@ def create_network(edges: gpd.GeoDataFrame, nodes: gpd.GeoDataFrame = None) -> s
     assert set(network.edges.geometry.type.values) == {"LineString"}
 
     logging.info("Renaming nodes and edges")
-    network = snkit.network.add_ids(network)
+    network = snkit.network.add_ids(network, edge_prefix=id_prefix, node_prefix=id_prefix)
 
     logging.info("Creating network topology")
     network = snkit.network.add_topology(network, id_col="id")

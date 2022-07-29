@@ -351,6 +351,7 @@ if __name__ == "__main__":
         administrative_data_path = snakemake.input["admin"]
         nodes_output_path = snakemake.output["nodes"]
         edges_output_path = snakemake.output["edges"]
+        slice_number = snakemake.params["slice_number"]
         road_speeds_path = snakemake.config["transport"]["speeds_path"]
         rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
         transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]
@@ -367,6 +368,7 @@ if __name__ == "__main__":
             administrative_data_path,
             nodes_output_path,
             edges_output_path,
+            slice_number,
             road_speeds_path,
             rehabilitation_costs_path,
             transport_costs_path,
@@ -380,6 +382,7 @@ if __name__ == "__main__":
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
         # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
         # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # slice_number = 0
         # road_speeds_path = ../../bundled_data/global_road_speeds.xlsx
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation_costs.xlsx
         # transport_costs_path = ../../bundled_data/transport_costs.csv
@@ -392,6 +395,7 @@ if __name__ == "__main__":
     default_shoulder_width_metres = float(default_shoulder_width_metres)
     default_lane_width_metres = float(default_lane_width_metres)
     flow_cost_time_factor = float(flow_cost_time_factor)
+    slice_number = int(slice_number)
     osm_epsg = int(osm_epsg)
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
@@ -413,7 +417,7 @@ if __name__ == "__main__":
 
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
-    network = create_network(edges=clean_edges(edges), nodes=None)
+    network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{slice_number}")
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
@@ -427,7 +431,6 @@ if __name__ == "__main__":
     network = utils.annotate_country(
         network,
         utils.get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
-        osm_epsg,
     )
 
     logging.info("Annotating network with road type and condition data")

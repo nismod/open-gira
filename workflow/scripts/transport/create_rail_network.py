@@ -44,6 +44,7 @@ if __name__ == "__main__":
         administrative_data_path = snakemake.input["admin"]
         nodes_output_path = snakemake.output["nodes"]
         edges_output_path = snakemake.output["edges"]
+        slice_number = snakemake.params["slice_number"]
         rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
         osm_epsg = snakemake.config["osm_epsg"]
     except NameError:
@@ -55,19 +56,22 @@ if __name__ == "__main__":
             administrative_data_path,
             nodes_output_path,
             edges_output_path,
+            slice_number,
             rehabilitation_costs_path,
             transport_costs_path,
             flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
-        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
-        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
+        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
+        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_nodes.geoparquet
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
-        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
-        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_nodes.geoparquet
+        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
+        # slice_number = 0
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation.xlsx
         # osm_epsg = 4326
 
+    slice_number = int(slice_number)
     osm_epsg = int(osm_epsg)
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
@@ -99,7 +103,9 @@ if __name__ == "__main__":
     if nodes is not None and not nodes.empty:
         nodes = nodes.loc[nodes.tag_railway == 'station', :]
 
-    network = create_network(edges=edges, nodes=nodes)
+    # pass an id_prefix containing the slice number to ensure edges and nodes
+    # are uniquely identified across all slices in the network
+    network = create_network(edges=edges, nodes=nodes, id_prefix=f"{slice_number}")
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
@@ -119,7 +125,6 @@ if __name__ == "__main__":
     network = utils.annotate_country(
         network,
         utils.get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
-        osm_epsg,
     )
 
     logging.info("Annotating network with rehabilitation costs")
