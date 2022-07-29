@@ -110,17 +110,9 @@ if __name__ == "__main__":
 
     # build a network from files on disk
     network = snkit.network.Network(
-        # rename to use snkit naming conventions
-        # this is necessary as snkit.network.add_component_ids assumes certain column names
-        edges=gpd.read_parquet(edges_path).rename(
-            {"edge_id": "id", "from_node_id": "from_id", "to_node_id": "to_id"},
-            axis="columns",
-        ),
-        nodes=gpd.read_parquet(nodes_path).rename({"node_id": "id"}, axis="columns"),
+        edges=gpd.read_parquet(edges_path),
+        nodes=gpd.read_parquet(nodes_path)
     )
-
-    # annotate it with component ids
-    network = snkit.network.add_component_ids(network)
 
     # extract the component data
     # 'edge_ids' or 'node_ids' -> component_id -> set of element ids
