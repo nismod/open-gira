@@ -229,7 +229,7 @@ def annotate_speeds(network: snkit.network.Network, speeds_by_country) -> snkit.
 
     Args:
         network (snkit.network.Network): Network to annotate. The network.edges
-            must have a 'from_iso' column
+            must have a 'from_iso_a3' column
         speeds_by_country (pd.DataFrame): Speed limit information by country
             N.B. speeds_by_country is expected to have the following columns:
             'ISO_A3', 'CONTINENT', 'NAME', 'REGION', 'SUBREGION', 'Highway_min',
@@ -243,7 +243,7 @@ def annotate_speeds(network: snkit.network.Network, speeds_by_country) -> snkit.
         network.edges,
         speeds_by_country,
         how="left",
-        left_on=["from_iso"],
+        left_on=["from_iso_a3"],
         right_on=["ISO_A3"],
     )
 
@@ -277,7 +277,7 @@ def annotate_tariff_flow_costs(
 
     Args:
         network (snkit.network.Network): Network to annotate. The network.edges
-            must have a 'from_iso' column to merge on.
+            must have a 'from_iso_a3' column to merge on.
         transport_tariffs (pd.DataFrame): Table of transport tariffs by country and
             by mode of transport, with 'from_iso3', 'cost_km', 'cost_unit' and
             'cost_scaling' columns
@@ -307,7 +307,7 @@ def annotate_tariff_flow_costs(
         network.edges,
         transport_tariffs[["from_iso3", "tariff_cost", "tariff_unit"]],
         how="left",
-        left_on=["from_iso"],
+        left_on=["from_iso_a3"],
         right_on=["from_iso3"],
     )
     network.edges["min_tariff"] = network.edges.apply(
