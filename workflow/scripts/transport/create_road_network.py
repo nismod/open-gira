@@ -415,6 +415,12 @@ if __name__ == "__main__":
         utils.write_empty_frames(edges_output_path, nodes_output_path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
+    # osm_to_pq.py creates these columns but we're not using them, so discard
+    edges = edges.drop(
+        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
+        axis="columns"
+    )
+
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
     network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{slice_number}")

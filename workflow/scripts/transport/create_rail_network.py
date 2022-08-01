@@ -99,6 +99,12 @@ if __name__ == "__main__":
         logging.info(f"{error}\n" "no nodes from OSM to process...")
         nodes = None
 
+    # osm_to_pq.py creates these columns but we're not using them, so discard
+    edges = edges.drop(
+        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
+        axis="columns"
+    )
+
     # if present, filter nodes to stations
     if nodes is not None and not nodes.empty:
         nodes = nodes.loc[nodes.tag_railway == 'station', :]
