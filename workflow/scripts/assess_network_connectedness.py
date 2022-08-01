@@ -50,9 +50,13 @@ def plot_components_map(network: snkit.network.Network) -> ds.transfer_functions
     agg = cvs.line(edges, geometry="geometry", agg=ds.mean("component_id"))
 
     # color the map according to a random colormap (should show each island in the network)
-    image = ds.transfer_functions.shade(agg, how="log", cmap=random_cmap(len(edges)))
+    cmap = random_cmap(len(edges))
+    # if we ony have one component, colour the edges white
+    # N.B. datashader will fail to shade with a conventional colourmap in this situation
+    if len(set(edges.component_id.values)) == 1:
+        cmap = ["white"]
 
-    return image
+    return ds.transfer_functions.shade(agg, how="log", cmap=cmap)
 
 
 def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt.axis]:
