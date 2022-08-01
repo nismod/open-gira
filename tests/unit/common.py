@@ -2,12 +2,13 @@
 Common code for unit testing of rules generated with Snakemake 6.15.1.
 """
 
+import json
+import os
 import re
 import shutil
 import sys
-from pathlib import Path, PurePosixPath
 import subprocess as sp
-import os
+from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 
 import geopandas
@@ -94,20 +95,23 @@ class OutputChecker:
     def compare_files(self, generated_file, expected_file):
 
         print(f">>> Compare {generated_file} vs {expected_file}", file=sys.stderr)
-        if re.search("\\.geoparquet$", str(generated_file), re.IGNORECASE):
-            """
-            NOTE: This test will **fail** if the geoparquet file does not contain geography data columns.
-            This can happen where the convert_to_geoparquet job does not find any roads to write.
-            We leave this failure in because it is usually unintentional that you're testing with a
-            dataset where _none_ of the slices have road data, and these tests should be targeted at
-            slices that _do_ have road data.
-            """
-            print(f">>> Method=geopandas.GeoDataFrame.compare", file=sys.stderr)
-            read = geopandas.read_parquet
-        elif re.search("\\.parquet$", str(generated_file), re.IGNORECASE):
-            print(f">>> Method=pandas.GeoDataFrame.compare", file=sys.stderr)
-            read = pandas.read_parquet
-        if re.search("\\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
+
+        # PARQUET
+        if re.search(r"\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
+            if re.search(r"\.geoparquet$", str(generated_file), re.IGNORECASE):
+                """
+                NOTE: This test will **fail** if the geoparquet file does not contain geography data columns.
+                This can happen where the convert_to_geoparquet job does not find any roads to write.
+                We leave this failure in because it is usually unintentional that you're testing with a
+                dataset where _none_ of the slices have road data, and these tests should be targeted at
+                slices that _do_ have road data.
+                """
+                read = geopandas.read_parquet
+            elif re.search(r"\.parquet$", str(generated_file), re.IGNORECASE):
+                read = pandas.read_parquet
+            else:
+                raise RuntimeError(f"couldn't identify read function for {generated_file}")
+
             generated = read(generated_file)
             expected = read(expected_file)
 
@@ -133,6 +137,19 @@ class OutputChecker:
                 else:
                     raise RuntimeError("couldn't find mismatch between dataframes...")
 
+        # JSON
+        elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
+            with open(generated_file, 'r') as fp:
+                generated = json.load(fp)
+            with open(expected_file, 'r') as fp:
+                expected = json.load(fp)
+
+            if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
+                print(f">>> {generated=}", file=sys.stderr)
+                print(f">>> {expected=}", file=sys.stderr)
+                raise AssertionError("JSON files do not match")
+
+        # any other file type
         else:
             print(f">>> Method=cmp", file=sys.stderr)
             try:
