@@ -1,5 +1,5 @@
 {
-    "directory": "./results/slices",
+    "directory": ".",
     "extracts": [
         {
             "bbox": [
@@ -8,7 +8,7 @@
                 31.1524367,
                 -0.974988
             ],
-            "output": "tanzania-mini_filter-highway-core/slice-0.osm.pbf"
+            "output": "slice-0.osm.pbf"
         }
     ]
 }
