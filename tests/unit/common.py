@@ -8,6 +8,7 @@ import re
 import shutil
 import sys
 import subprocess as sp
+from pprint import pformat
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 
@@ -167,8 +168,8 @@ class OutputChecker:
 
             if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
                 print(f">>> Method: compare sorted JSON strings", file=sys.stderr)
-                print(f">>> {generated=}", file=sys.stderr)
-                print(f">>> {expected=}", file=sys.stderr)
+                print(f">>> generated:\n{pformat(generated)}", file=sys.stderr)
+                print(f">>> expected:\n{pformat(expected)}", file=sys.stderr)
                 raise AssertionError("JSON files do not match")
 
         # JPG, PDF, PNG & SVG images
