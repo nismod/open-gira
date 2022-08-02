@@ -9,7 +9,7 @@ def test_intersection():
     common.run_test(
         "intersection",
         (
-            "snakemake results/splits/tanzania-mini_filter-road/hazard-aqueduct-river/slice-2.geoparquet "
+            "snakemake results/splits/djibouti-latest_filter-road/hazard-aqueduct-river/slice-0.geoparquet "
             "-j1 --keep-target-files"
         ),
     )
