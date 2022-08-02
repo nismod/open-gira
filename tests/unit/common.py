@@ -116,9 +116,8 @@ class OutputChecker:
             expected = read(expected_file)
 
             # use dataframe.equals to quickly check for complete table equality
-            if generated.equals(expected):
-                return
-            else:
+            if not generated.equals(expected):
+                print(f">>> Method: compare (geo)pandas dataframes", file=sys.stderr)
                 if len(generated) != len(expected):
                     raise ValueError(
                         f"tables not of same length, {len(generated)=} & {len(expected)=}"
@@ -145,16 +144,26 @@ class OutputChecker:
                 expected = json.load(fp)
 
             if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
+                print(f">>> Method: compare sorted JSON strings", file=sys.stderr)
                 print(f">>> {generated=}", file=sys.stderr)
                 print(f">>> {expected=}", file=sys.stderr)
                 raise AssertionError("JSON files do not match")
 
+        # JPG, PDF, PNG & SVG images
+        elif re.search(r"\.(jpg|jpeg|pdf|png|svg)$", str(generated_file), re.IGNORECASE):
+            try:
+                sp.check_output(["tests/unit/visual_compare.sh", generated_file, expected_file])
+            except sp.CalledProcessError as e:
+                print(f">>> Method: visual hash comparison (imagemagick's identify)", file=sys.stderr)
+                print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
+                raise e
+
         # any other file type
         else:
-            print(f">>> Method=cmp", file=sys.stderr)
             try:
                 sp.check_output(["cmp", generated_file, expected_file])
             except sp.CalledProcessError as e:
+                print(f">>> Method: binary comparison (cmp)", file=sys.stderr)
                 print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
                 raise e
 
