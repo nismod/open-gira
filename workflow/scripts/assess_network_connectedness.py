@@ -4,6 +4,7 @@ Plotting tools for analysing network connectedness
 
 from collections import defaultdict
 import os
+import re
 import sys
 from typing import Iterable
 
@@ -17,6 +18,20 @@ import pandas as pd
 import spatialpandas
 
 import snkit
+
+
+def natural_sort(to_sort: Iterable) -> list:
+    """
+    Natural sort iterables of strings by splitting on digits and sorting by the
+    resulting list.
+    """
+    return sorted(
+        to_sort,
+        key=lambda entry: [
+            int(fragment) if fragment.isdigit() else fragment.lower()
+            for fragment in re.split('(\d+)', entry)
+        ]
+    )
 
 
 def random_cmap(n) -> colors.LinearSegmentedColormap:
@@ -120,15 +135,17 @@ if __name__ == "__main__":
 
     # extract the component data
     # 'edge_ids' or 'node_ids' -> component_id -> set of element ids
-    component_map: dict[int, dict[str, set[str]]] = defaultdict(
-        lambda: defaultdict(set)
-    )
-    for edge in network.edges.itertuples():
-        component_map["edge_ids"][edge.component_id].add(edge.id)
-    for node in network.nodes.itertuples():
-        component_map["node_ids"][node.component_id].add(node.id)
+    component_map: dict[int, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+
+    # N.B. sort the entries to make testing easier
+    for component_id in sorted(set(network.edges.component_id)):
+        component_mask = network.edges.component_id == component_id
+        component_map["edge_ids"][component_id] = natural_sort(network.edges.id[component_mask])
+        node_ids = set(network.edges.from_id[component_mask]) | set(network.edges.to_id[component_mask])
+        component_map["node_ids"][component_id] = natural_sort(node_ids)
+
     # build a pandas dataframe from the components
-    df = pd.DataFrame(component_map).sort_index()
+    df = pd.DataFrame(component_map)
     df.index = df.index.rename("component_id")
 
     # write out nodes and edges of each component
