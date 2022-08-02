@@ -25,6 +25,7 @@ def run_test(target_name, command):
         shutil.copytree(data_path, workdir)
         shutil.copytree("tests/config", f"{workdir}/config")
         shutil.copytree("tests/external_files", f"{workdir}/external_files")
+        shutil.copytree("tests/bundled_data", f"{workdir}/bundled_data")
 
         # dbg
         print(target_name, file=sys.stderr)
@@ -72,7 +73,7 @@ class OutputChecker:
         )
         unexpected_files = set()
         for path, subdirs, files in os.walk(self.workdir):
-            if "config" in path or "external_files" in path:
+            if "config" in path or "external_files" in path or "bundled_data" in path:
                 continue
             for f in files:
                 f = (Path(path) / f).relative_to(self.workdir)
@@ -123,18 +124,39 @@ class OutputChecker:
                         f"tables not of same length, {len(generated)=} & {len(expected)=}"
                     )
 
-                # horribly slow but gives useful information on failures
+                if difference := set(generated.columns) ^ set(expected.columns):
+                    raise ValueError(
+                        f"tables do not have same schema: {difference=} cols are in one but not both"
+                    )
+
+                # there is a case where df.equals(identical_df) can return False despite all elements being equal
+                # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
+                mismatch_cols = set()
+                for col in generated.columns:
+                    if any(generated[col] != expected[col]):
+                        mismatch_cols.add(col)
+
+                # check if it's Nones that are responsible for the mismatch
+                for col in mismatch_cols:
+
+                    # are the None and nan values all in the same place?
+                    if not all(expected[col].isna() == generated[col].isna()):
+                        ValueError(f"mismatch in location of null values for {col}")
+
+                # one last check, let's try and find the failing row by converting to str
                 for r in range(len(generated)):
                     try:
-                        assert str(generated[r : r + 1]) == str(expected[r : r + 1])
+                        assert str(generated[r: r + 1]) == str(expected[r: r + 1])
                     except AssertionError as e:
                         print(f">>> FAILURE at row {r}.")
                         print(
                             f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}"
                         )
                         raise e
+
                 else:
-                    raise RuntimeError("couldn't find mismatch between dataframes...")
+                    # fairly sure the tables are equal
+                    return
 
         # JSON
         elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
