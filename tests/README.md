@@ -48,7 +48,7 @@ that does not have these data (slices 0 and 1).
 
 The tests have their own configuration, located in `tests/config/config.yaml`.
 This config file points identifies the files in `tests/external_files` as 
-remote targets for download rules, and the `tests/config/highway-core.txt` file
+remote targets for download rules, and the `tests/config/highway-secondary.txt` file
 as the filter rules file.
 
 ## Auto-generating the tests

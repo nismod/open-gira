@@ -1,3 +1,10 @@
+# this is a config file used when testing open-gira with: `pytest tests`
+# is it based on the primary config file, with changes to make jobs run faster
+# e.g. fewer datasets, smaller extracts
+
+# ideally it would the primary config file where there are no need for changes,
+# but to my knowledge YAML files are not composable, modular, referenceable etc.
+
 # Input data and output locations
 output_dir: 'results'
 
@@ -11,11 +18,14 @@ output_dir: 'results'
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
 hazard_datasets:
+  # long return period to show up well when testing exposure maps
   aqueduct-river: 'external_files/hazard_sources.txt'
 
-# OSM datasets, principally from: https://download.geofabrik.de/ #
+# testing data (from geofabrik)
 infrastructure_datasets:
-  tanzania-mini: 'external_files/tanzania-mini.osm.pbf'
+  # djibouti is small (fast to run), coastal (coastal flooding, checks exposure img drawing)
+  # it has both a road and rail network
+  djibouti-latest: 'external_files/djibouti-latest.osm.pbf'
 
 # these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
 # the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
@@ -29,8 +39,8 @@ keep_tags:
   road: ['highway', 'surface', 'bridge', 'maxspeed', 'lanes']
   rail: ['railway', 'bridge', 'name']
 
-# Number of slices to cut dataset into -- must be a square number
-slice_count: 1
+# smallest non-unity square number -- test our splitting and aggregating across slices
+slice_count: 4
 
 # CRS OSM uses
 osm_epsg: 4326
@@ -58,7 +68,8 @@ transport:
 # Options for exposure tif file generation
 exposure_tifs:
   # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
-  exposure_threshold: 0.5
+  # this is reduced from the production config to make the maps prettier
+  exposure_threshold: 0.1
   # Used when scaling raster files, values < 1 will downsample
   scaling_factor: 0.1
   # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.

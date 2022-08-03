@@ -1,9 +1,6 @@
 """
 These tests include downloads of the entire ne_50m admin boundary and ne_10m ocean maps.
-It would be better if those maps were sliced down to just the bounding box covered by tanzania-mini.osm.pbf.
-
-The image that is made does not contain coastline or admin boundary data, making it a poor test.
-It would be better if the tests were overhauled to use a segment that _does_ have this information.
+It would be better if those maps were sliced down to just the bounding box covered by djibouti-latest.osm.pbf.
 """
 
 import os
@@ -17,7 +14,7 @@ def test_make_exposure_img():
     common.run_test(
         "make_exposure_img",
         (
-            "snakemake results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img/ "
+            "snakemake results/exposure/djibouti-latest_filter-road/hazard-aqueduct-river/img/ "
             "-j1"
         ),
     )
