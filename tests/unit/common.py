@@ -1,5 +1,5 @@
 """
-Common code for unit testing of rules generated with Snakemake 6.15.1.
+Test runner and file comparison code for snakemake unit tests.
 """
 
 import json
