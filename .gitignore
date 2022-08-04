@@ -9,9 +9,6 @@ src/
 data/*
 results/*
 
-# Slice files
-*-latest.json
-
 # snakemake
 .snakemake/
 *.snakemake_timestamp
