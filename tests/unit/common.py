@@ -29,7 +29,7 @@ def run_test(target_name, command):
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        auxilliary_dirs= ["config", "external_files", "bundled_data"]
+        auxilliary_dirs = ["config", "external_files", "bundled_data"]
         for folder in auxilliary_dirs:
             shutil.copytree(f"tests/{folder}", f"{workdir}/{folder}")
 
@@ -104,7 +104,7 @@ class OutputChecker:
         Methods vary by filetype.
         """
 
-        printerr(f">>> Compare:\n{generated_file}\n{expected_file}")
+        printerr(f">>> Compare files:\n{generated_file}\n{expected_file}")
 
         # PARQUET
         if re.search(r"\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
@@ -135,7 +135,7 @@ class OutputChecker:
                 expected = json.load(fp)
 
             if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
-                printerr(f">>> Method: compare sorted JSON strings")
+                printerr(">>> Method: compare sorted JSON strings")
                 printerr(f">>> generated:\n{pformat(generated)}")
                 printerr(f">>> expected:\n{pformat(expected)}")
                 raise AssertionError("JSON files do not match")
@@ -145,7 +145,7 @@ class OutputChecker:
             try:
                 sp.check_output(["tests/unit/visual_compare.sh", generated_file, expected_file])
             except sp.CalledProcessError as e:
-                printerr(f">>> Method: visual hash comparison (imagemagick's identify)")
+                printerr(">>> Method: visual hash comparison (imagemagick's identify)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
                 raise e
 
@@ -154,11 +154,11 @@ class OutputChecker:
             try:
                 sp.check_output(["cmp", generated_file, expected_file])
             except sp.CalledProcessError as e:
-                printerr(f">>> Method: binary comparison (cmp)")
+                printerr(">>> Method: binary comparison (cmp)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
                 raise e
 
-        printerr(f">>> Files are a match")
+        printerr(">>> Files are a match")
 
     @staticmethod
     def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
@@ -168,7 +168,7 @@ class OutputChecker:
         # use dataframe.equals to quickly check for complete table equality
         # unfortunately there is an edge case this doesn't catch...
         if not generated.equals(expected):
-            printerr(f">>> Method: compare (geo)pandas dataframes")
+            printerr(">>> Method: compare (geo)pandas dataframes")
 
             # do some basic shape and schema checks
             if len(generated) != len(expected):
@@ -206,9 +206,10 @@ class OutputChecker:
                                 continue
                             else:
                                 printerr(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}")
+
                     if failures > 0:
-                        # catch case where we have 0 < failures < MAX_FAILURES_TO_PRINT
                         raise ValueError(f"{failures} row mismatch(es) between tables")
+
                 else:
                     # None != None according to pandas, and this is responsible for the apparent mismatch
                     # we can safely say that this column is equal
