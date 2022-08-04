@@ -101,7 +101,7 @@ include: "rules/create_bbox_extracts.smk"
 include: "rules/slice.smk"
 include: "rules/convert_to_geoparquet.smk"
 include: "rules/intersection.smk"
-include: "rules/join_network.smk"
+include: "rules/join_data.smk"
 include: "rules/make_exposure_tif.smk"
 include: "rules/make_exposure_img.smk"
 
