@@ -16,6 +16,11 @@ import geopandas as gpd
 import pandas as pd
 
 
+def printerr(s: str):
+    """Print to stderr for visibility when invoked via pytest."""
+    print(s, file=sys.stderr)
+
+
 def run_test(target_name, command):
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
@@ -24,12 +29,12 @@ def run_test(target_name, command):
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        shutil.copytree("tests/config", f"{workdir}/config")
-        shutil.copytree("tests/external_files", f"{workdir}/external_files")
-        shutil.copytree("tests/bundled_data", f"{workdir}/bundled_data")
+        auxilliary_dirs= ["config", "external_files", "bundled_data"]
+        for folder in auxilliary_dirs:
+            shutil.copytree(f"tests/{folder}", f"{workdir}/{folder}")
 
         # dbg
-        print(target_name, file=sys.stderr)
+        printerr(target_name)
 
         if isinstance(command, str):
             command = command.split(" ")
@@ -48,18 +53,15 @@ def run_test(target_name, command):
             ]
         )
 
-        # Check the output byte by byte using cmp.
-        # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file),
-        # also see common.py.
-        OutputChecker(data_path, expected_path, workdir).check()
+        OutputChecker(data_path, expected_path, workdir, auxilliary_dirs).check()
 
 
 class OutputChecker:
-    def __init__(self, data_path, expected_path, workdir):
+    def __init__(self, data_path, expected_path, workdir, ignore_folders):
         self.data_path = data_path
         self.expected_path = expected_path
         self.workdir = workdir
+        self.ignore_folders = ignore_folders
 
     def check(self):
         input_files = set(
@@ -74,7 +76,8 @@ class OutputChecker:
         )
         unexpected_files = set()
         for path, subdirs, files in os.walk(self.workdir):
-            if "config" in path or "external_files" in path or "bundled_data" in path:
+            if any([folder for folder in self.ignore_folders if folder in path]):
+                # skip comparison for these folders
                 continue
             for f in files:
                 f = (Path(path) / f).relative_to(self.workdir)
@@ -101,7 +104,7 @@ class OutputChecker:
         Methods vary by filetype.
         """
 
-        print(f">>> Compare:\n{generated_file}\n{expected_file}", file=sys.stderr)
+        printerr(f">>> Compare:\n{generated_file}\n{expected_file}")
 
         # PARQUET
         if re.search(r"\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
@@ -132,9 +135,9 @@ class OutputChecker:
                 expected = json.load(fp)
 
             if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
-                print(f">>> Method: compare sorted JSON strings", file=sys.stderr)
-                print(f">>> generated:\n{pformat(generated)}", file=sys.stderr)
-                print(f">>> expected:\n{pformat(expected)}", file=sys.stderr)
+                printerr(f">>> Method: compare sorted JSON strings")
+                printerr(f">>> generated:\n{pformat(generated)}")
+                printerr(f">>> expected:\n{pformat(expected)}")
                 raise AssertionError("JSON files do not match")
 
         # JPG, PDF, PNG & SVG images
@@ -142,8 +145,8 @@ class OutputChecker:
             try:
                 sp.check_output(["tests/unit/visual_compare.sh", generated_file, expected_file])
             except sp.CalledProcessError as e:
-                print(f">>> Method: visual hash comparison (imagemagick's identify)", file=sys.stderr)
-                print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
+                printerr(f">>> Method: visual hash comparison (imagemagick's identify)")
+                printerr(f">>> ERROR:\n>>> {e.stdout}")
                 raise e
 
         # any other file type
@@ -151,11 +154,11 @@ class OutputChecker:
             try:
                 sp.check_output(["cmp", generated_file, expected_file])
             except sp.CalledProcessError as e:
-                print(f">>> Method: binary comparison (cmp)", file=sys.stderr)
-                print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
+                printerr(f">>> Method: binary comparison (cmp)")
+                printerr(f">>> ERROR:\n>>> {e.stdout}")
                 raise e
 
-        print(f">>> Files are a match", file=sys.stderr)
+        printerr(f">>> Files are a match")
 
     @staticmethod
     def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
@@ -165,7 +168,7 @@ class OutputChecker:
         # use dataframe.equals to quickly check for complete table equality
         # unfortunately there is an edge case this doesn't catch...
         if not generated.equals(expected):
-            print(f">>> Method: compare (geo)pandas dataframes", file=sys.stderr)
+            printerr(f">>> Method: compare (geo)pandas dataframes")
 
             # do some basic shape and schema checks
             if len(generated) != len(expected):
@@ -189,7 +192,7 @@ class OutputChecker:
                 # do the discrepancies occur only where there are null values (NaN & None)?
                 unequal_only_where_null = all(expected[col].isna() == (expected[col] != generated[col]))
                 if not unequal_only_where_null:
-                    print(f"{col=} {unequal_only_where_null=}", file=sys.stderr)
+                    printerr(f"{col=} {unequal_only_where_null=}")
 
                     # let's try and find failing rows by converting to str
                     MAX_FAILURES_TO_PRINT = 5
@@ -202,7 +205,7 @@ class OutputChecker:
                             if failures > MAX_FAILURES_TO_PRINT:
                                 continue
                             else:
-                                print(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}", file=sys.stderr)
+                                printerr(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}")
                     if failures > 0:
                         # catch case where we have 0 < failures < MAX_FAILURES_TO_PRINT
                         raise ValueError(f"{failures} row mismatch(es) between tables")
