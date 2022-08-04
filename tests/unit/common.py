@@ -12,8 +12,8 @@ from pprint import pformat
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 
-import geopandas
-import pandas
+import geopandas as gpd
+import pandas as pd
 
 
 def run_test(target_name, command):
@@ -94,9 +94,14 @@ class OutputChecker:
                 )
             )
 
-    def compare_files(self, generated_file, expected_file):
+    def compare_files(self, generated_file: Path, expected_file: Path) -> None:
+        """
+        Compare two files to check if they are equal by some definition.
 
-        print(f">>> Compare {generated_file} vs {expected_file}", file=sys.stderr)
+        Methods vary by filetype.
+        """
+
+        print(f">>> Compare:\n{generated_file}\n{expected_file}", file=sys.stderr)
 
         # PARQUET
         if re.search(r"\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
@@ -108,56 +113,16 @@ class OutputChecker:
                 dataset where _none_ of the slices have road data, and these tests should be targeted at
                 slices that _do_ have road data.
                 """
-                read = geopandas.read_parquet
+                read = gpd.read_parquet
             elif re.search(r"\.parquet$", str(generated_file), re.IGNORECASE):
-                read = pandas.read_parquet
+                read = pd.read_parquet
             else:
                 raise RuntimeError(f"couldn't identify read function for {generated_file}")
 
             generated = read(generated_file)
             expected = read(expected_file)
 
-            # use dataframe.equals to quickly check for complete table equality
-            if not generated.equals(expected):
-                print(f">>> Method: compare (geo)pandas dataframes", file=sys.stderr)
-                if len(generated) != len(expected):
-                    raise ValueError(
-                        f"tables not of same length, {len(generated)=} & {len(expected)=}"
-                    )
-
-                if difference := set(generated.columns) ^ set(expected.columns):
-                    raise ValueError(
-                        f"tables do not have same schema: {difference=} cols are in one but not both"
-                    )
-
-                # there is a case where df.equals(identical_df) can return False despite all elements being equal
-                # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
-                mismatch_cols = set()
-                for col in generated.columns:
-                    if any(generated[col] != expected[col]):
-                        mismatch_cols.add(col)
-
-                # check if it's Nones that are responsible for the mismatch
-                for col in mismatch_cols:
-
-                    # are the None and nan values all in the same place?
-                    if not all(expected[col].isna() == generated[col].isna()):
-                        ValueError(f"mismatch in location of null values for {col}")
-
-                # one last check, let's try and find the failing row by converting to str
-                for r in range(len(generated)):
-                    try:
-                        assert str(generated[r: r + 1]) == str(expected[r: r + 1])
-                    except AssertionError as e:
-                        print(f">>> FAILURE at row {r}.")
-                        print(
-                            f"{str(generated[r:r+1])} not equal to {str(expected[r:r+1])}"
-                        )
-                        raise e
-
-                else:
-                    # fairly sure the tables are equal
-                    return
+            self.compare_dataframes(generated, expected)
 
         # JSON
         elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
@@ -190,4 +155,58 @@ class OutputChecker:
                 print(f">>> ERROR:\n>>> {e.stdout}", file=sys.stderr)
                 raise e
 
-        print(f">>> OK", file=sys.stderr)
+        print(f">>> Files are a match", file=sys.stderr)
+
+    @staticmethod
+    def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
+        """
+        Compare two dataframes, raise ValueError if they aren't the same.
+        """
+        # use dataframe.equals to quickly check for complete table equality
+        # unfortunately there is an edge case this doesn't catch...
+        if not generated.equals(expected):
+            print(f">>> Method: compare (geo)pandas dataframes", file=sys.stderr)
+
+            # do some basic shape and schema checks
+            if len(generated) != len(expected):
+                raise ValueError(
+                    f"tables not of same length, {len(generated)=} & {len(expected)=}"
+                )
+            if difference := set(generated.columns) ^ set(expected.columns):
+                raise ValueError(
+                    f"tables do not have same schema: {difference=} cols are in one but not both"
+                )
+
+            # there is a case where df.equals(identical_df) can return False despite all elements being equal
+            # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
+            mismatch_cols = set()
+            for col in generated.columns:
+                if any(generated[col] != expected[col]):
+                    mismatch_cols.add(col)
+
+            for col in mismatch_cols:
+
+                # do the discrepancies occur only where there are null values (NaN & None)?
+                unequal_only_where_null = all(expected[col].isna() == (expected[col] != generated[col]))
+                if not unequal_only_where_null:
+                    print(f"{col=} {unequal_only_where_null=}", file=sys.stderr)
+
+                    # let's try and find failing rows by converting to str
+                    MAX_FAILURES_TO_PRINT = 5
+                    failures = 0
+                    for row in range(len(generated)):
+                        gen_str = str(generated[col][row: row + 1].values)
+                        exp_str = str(expected[col][row: row + 1].values)
+                        if gen_str != exp_str:
+                            failures += 1
+                            if failures > MAX_FAILURES_TO_PRINT:
+                                continue
+                            else:
+                                print(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}", file=sys.stderr)
+                    if failures > 0:
+                        # catch case where we have 0 < failures < MAX_FAILURES_TO_PRINT
+                        raise ValueError(f"{failures} row mismatch(es) between tables")
+                else:
+                    # None != None according to pandas, and this is responsible for the apparent mismatch
+                    # we can safely say that this column is equal
+                    continue
