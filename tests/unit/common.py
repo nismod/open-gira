@@ -185,13 +185,13 @@ class OutputChecker:
             # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
             mismatch_cols = set()
             for col in generated.columns:
-                if (generated[col] != expected[col]).any():
+                if any(generated[col].values != expected[col].values):
                     mismatch_cols.add(col)
 
             for col in mismatch_cols:
 
                 # do the discrepancies occur only where there are null values (NaN & None)?
-                unequal_only_where_null = all(expected[col].isna() == (expected[col] != generated[col]))
+                unequal_only_where_null = all(expected[col].isna() == (expected[col].values != generated[col].values))
                 if not unequal_only_where_null:
                     printerr(f"{col=} {unequal_only_where_null=}")
 
