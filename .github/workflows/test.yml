@@ -12,7 +12,7 @@ jobs:
     - name: Get osmium-tool dependencies
       run: |
         sudo apt install build-essential cmake libboost-program-options-dev \
-                    libexpat1-dev zlib1g-dev libbz2-dev gdal-bin=3.5.0
+                    libexpat1-dev zlib1g-dev libbz2-dev gdal-bin
         git clone https://github.com/mapbox/protozero
         git clone --branch v2.18.0 --depth 1 https://github.com/osmcode/libosmium
         git clone --branch v1.14.0 --depth 1 https://github.com/osmcode/osmium-tool
