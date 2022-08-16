@@ -26,6 +26,7 @@ checkpoint download_hazard_datasets:
             remote_files = []
             with open(input_file, "r") as f:
                 for line in f:
+                    line = line.strip()
                     if re.match("^https?://", line):
                         remote_files.append(line)
                     else:
