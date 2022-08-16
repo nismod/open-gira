@@ -142,7 +142,7 @@ class OutputChecker:
                 raise AssertionError("JSON files do not match")
 
         # JPG, PDF, PNG & SVG images
-        elif re.search(r"\.(jpg|jpeg|pdf|png|svg)$", str(generated_file), re.IGNORECASE):
+        elif re.search(r"\.(jpg|jpeg|pdf|png|svg|tif|tiff)$", str(generated_file), re.IGNORECASE):
             try:
                 sp.check_output(["tests/unit/visual_compare.sh", generated_file, expected_file])
             except sp.CalledProcessError as e:
