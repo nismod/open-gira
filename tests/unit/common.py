@@ -185,7 +185,7 @@ class OutputChecker:
             # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
             mismatch_cols = set()
             for col in generated.columns:
-                if any(generated[col] != expected[col]):
+                if (generated[col] != expected[col]).any():
                     mismatch_cols.add(col)
 
             for col in mismatch_cols:
