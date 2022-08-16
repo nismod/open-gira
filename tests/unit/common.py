@@ -81,7 +81,8 @@ class OutputChecker:
                 continue
             for f in files:
                 f = (Path(path) / f).relative_to(self.workdir)
-                if str(f).startswith(".snakemake"):
+                if ".snakemake" in str(f):
+                    # ignore .snakemake/, foo/bar/.snakemake_timestamp, etc.
                     continue
                 if f in expected_files:
                     self.compare_files(self.workdir / f, self.expected_path / f)
