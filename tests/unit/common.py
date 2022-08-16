@@ -183,14 +183,17 @@ class OutputChecker:
 
             # there is a case where df.equals(identical_df) can return False despite all elements being equal
             # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
-            for col in expected.columns:
+            mismatch_cols = set()
+            for col in generated.columns:
+                if (generated[col] != expected[col]).any():
+                    mismatch_cols.add(col)
+
+            for col in mismatch_cols:
 
                 # do the discrepancies occur only where there are null values (NaN & None)?
                 unequal_only_where_null = all(expected[col].isna() == (expected[col] != generated[col]))
                 if not unequal_only_where_null:
                     printerr(f"{col=} {unequal_only_where_null=}")
-
-                    # looks like we actually have a problem
 
                     # let's try and find failing rows by converting to str
                     MAX_FAILURES_TO_PRINT = 5
