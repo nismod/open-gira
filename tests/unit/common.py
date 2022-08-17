@@ -166,9 +166,10 @@ class OutputChecker:
         """
         Compare two dataframes, raise ValueError if they aren't the same.
         """
+        # after sorting the columns so they're in the same order,
         # use dataframe.equals to quickly check for complete table equality
-        # unfortunately there is an edge case this doesn't catch...
-        if not generated.equals(expected):
+        # unfortunately there is an edge case this method doesn't catch...
+        if not generated.sort_index(axis="columns").equals(expected.sort_index(axis="columns")):
             printerr(">>> Method: compare (geo)pandas dataframes")
 
             # do some basic shape and schema checks
@@ -185,7 +186,7 @@ class OutputChecker:
             # this is when comparing Nones in the same position: https://github.com/pandas-dev/pandas/issues/20442
             mismatch_cols = set()
             for col in generated.columns:
-                if any(generated[col].values != expected[col].values):
+                if any(generated[col] != expected[col]):
                     mismatch_cols.add(col)
 
             for col in mismatch_cols:
