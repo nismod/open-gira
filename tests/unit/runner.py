@@ -9,7 +9,7 @@ import shutil
 import sys
 import subprocess as sp
 from pprint import pformat
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import geopandas as gpd
@@ -21,11 +21,29 @@ def printerr(s: str):
     print(s, file=sys.stderr)
 
 
-def run_test(target_name, command):
+def run_snakemake_test(target_name: str, output: tuple[str]):
+    """
+    Create a temporary working directory, copy input files to it, run a
+    snakemake rule and compare the outputs of that rule with some expected
+    output.
+
+    Args:
+        target_name (str): Directory name holding reference test IO
+        output (tuple[str]): Desired output files and directories for
+            snakemake to generate
+    """
+
+    if not isinstance(output, tuple):
+        raise TypeError(f"Expect desired outputs as tuple, got {type(output)=}")
+
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = PurePosixPath(f"tests/unit/{target_name}/data")
-        expected_path = PurePosixPath(f"tests/unit/{target_name}/expected")
+        data_path = Path(f"tests/unit/{target_name}/data")
+        expected_path = Path(f"tests/unit/{target_name}/expected")
+
+        # check necessary testing data is present
+        assert data_path.exists()
+        assert expected_path.exists()
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
@@ -36,18 +54,18 @@ def run_test(target_name, command):
         # dbg
         printerr(target_name)
 
-        if isinstance(command, str):
-            command = command.split(" ")
-
         # Run the test job.
         sp.check_output(
             [
                 "python",
                 "-m",
-                *command,
+                "snakemake",
+                *output,
                 "-r",  # show reasons, helps with debugging
                 "--configfile",
                 "tests/config/config.yaml",
+                "-j1",  # single core
+                "--keep-target-files",
                 "--directory",
                 workdir,
             ]

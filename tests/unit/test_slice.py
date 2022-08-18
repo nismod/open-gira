@@ -5,7 +5,9 @@ from . import runner
 
 
 def test_slice():
-    runner.run_test(
+    runner.run_snakemake_test(
         "slice",
-        "snakemake results/slices/djibouti-latest_filter-road -j1 --keep-target-files",
+        (
+            "results/slices/djibouti-latest_filter-road",
+        )
     )

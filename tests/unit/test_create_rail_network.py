@@ -11,11 +11,10 @@ def test_create_rail_network():
     manually subsetted from the global file to Djibouti and the three
     neighbouring countries: Eritrea, Somalia and Ethiopia.
     """
-    runner.run_test(
+    runner.run_snakemake_test(
         "create_rail_network",
         (
-            "snakemake results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_nodes.geoparquet "
-            "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_edges.geoparquet "
-            "-j1 --keep-target-files"
-        ),
+            "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_nodes.geoparquet",
+            "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_edges.geoparquet",
+        )
     )

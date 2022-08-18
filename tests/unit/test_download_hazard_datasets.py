@@ -5,7 +5,9 @@ from . import runner
 
 
 def test_download_hazard_datasets():
-    runner.run_test(
+    runner.run_snakemake_test(
         "download_hazard_datasets",
-        "snakemake results/input/hazard-aqueduct-river/raw -j1 --keep-target-files",
+        (
+            "results/input/hazard-aqueduct-river/raw",
+        )
     )

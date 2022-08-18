@@ -33,4 +33,4 @@ class TestStrToBool:
     def test_incorrect_type(self):
         for data in [True, 1, 1.414]:
             with pytest.raises(ValueError):
-                str_to_bool(pd.Series([data])) 
+                str_to_bool(pd.Series([data]))
