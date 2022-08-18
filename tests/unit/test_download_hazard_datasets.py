@@ -1,12 +1,11 @@
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_download_hazard_datasets():
-    common.run_test(
+    runner.run_test(
         "download_hazard_datasets",
         "snakemake results/input/hazard-aqueduct-river/raw -j1 --keep-target-files",
     )

@@ -1,12 +1,11 @@
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_assess_network_connectedness():
-    common.run_test(
+    runner.run_test(
         "assess_network_connectedness",
         (
             "snakemake results/djibouti-latest_filter-road/component_population.svg "

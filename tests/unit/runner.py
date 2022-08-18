@@ -93,9 +93,7 @@ class OutputChecker:
                     unexpected_files.add(f)
         if unexpected_files:
             raise ValueError(
-                "Unexpected files:\n{}".format(
-                    "\n".join(sorted(map(str, unexpected_files)))
-                )
+                "Unexpected files: {}".format(sorted(map(str, unexpected_files)))
             )
 
     def compare_files(self, generated_file: Path, expected_file: Path) -> None:

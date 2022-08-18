@@ -1,12 +1,11 @@
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_join_network():
-    common.run_test(
+    runner.run_test(
         "join_network",
         (
             "snakemake results/djibouti-latest_filter-road/nodes.geoparquet "

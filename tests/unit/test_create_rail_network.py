@@ -1,8 +1,7 @@
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_create_rail_network():
@@ -12,7 +11,7 @@ def test_create_rail_network():
     manually subsetted from the global file to Djibouti and the three
     neighbouring countries: Eritrea, Somalia and Ethiopia.
     """
-    common.run_test(
+    runner.run_test(
         "create_rail_network",
         (
             "snakemake results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_nodes.geoparquet "

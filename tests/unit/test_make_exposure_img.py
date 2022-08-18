@@ -5,13 +5,12 @@ It would be better if those maps were sliced down to just the bounding box cover
 
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_make_exposure_img():
-    common.run_test(
+    runner.run_test(
         "make_exposure_img",
         (
             "snakemake results/exposure/djibouti-latest_filter-road/hazard-aqueduct-river/img/ "

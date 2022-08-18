@@ -1,12 +1,11 @@
 import os
 import sys
-import common
 
-sys.path.insert(0, os.path.dirname(__file__))
+from . import runner
 
 
 def test_create_bbox_extracts():
-    common.run_test(
+    runner.run_test(
         "create_bbox_extracts",
         "snakemake results/json/djibouti-latest_extracts.geojson -j1 --keep-target-files",
     )
