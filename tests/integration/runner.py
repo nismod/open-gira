@@ -35,7 +35,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
     """
 
     if not isinstance(targets, tuple):
-        raise TypeError(f"Expect desired outputs as tuple, got {type(output)=}")
+        raise TypeError(f"Expect desired outputs as tuple, got {type(targets)=}")
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
