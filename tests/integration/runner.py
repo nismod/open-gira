@@ -1,5 +1,5 @@
 """
-Test runner and file comparison code for snakemake unit tests.
+Test runner and file comparison code for snakemake integration tests.
 """
 
 import json
@@ -11,6 +11,7 @@ import subprocess as sp
 from pprint import pformat
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
@@ -21,25 +22,25 @@ def printerr(s: str):
     print(s, file=sys.stderr)
 
 
-def run_snakemake_test(target_name: str, output: tuple[str]):
+def run_snakemake_test(rule_name: str, targets: Tuple[str]):
     """
     Create a temporary working directory, copy input files to it, run a
     snakemake rule and compare the outputs of that rule with some expected
     output.
 
     Args:
-        target_name (str): Directory name holding reference test IO
-        output (tuple[str]): Desired output files and directories for
+        rule_name (str): Directory name holding reference test IO
+        targets (tuple[str]): Desired output files and directories for
             snakemake to generate
     """
 
-    if not isinstance(output, tuple):
+    if not isinstance(targets, tuple):
         raise TypeError(f"Expect desired outputs as tuple, got {type(output)=}")
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        data_path = Path(f"tests/unit/{target_name}/data")
-        expected_path = Path(f"tests/unit/{target_name}/expected")
+        data_path = Path(f"tests/integration/{rule_name}/data")
+        expected_path = Path(f"tests/integration/{rule_name}/expected")
 
         # check necessary testing data is present
         assert data_path.exists()
@@ -52,7 +53,7 @@ def run_snakemake_test(target_name: str, output: tuple[str]):
             shutil.copytree(f"tests/{folder}", f"{workdir}/{folder}")
 
         # dbg
-        printerr(target_name)
+        printerr(rule_name)
 
         # Run the test job.
         sp.check_output(
@@ -60,7 +61,7 @@ def run_snakemake_test(target_name: str, output: tuple[str]):
                 "python",
                 "-m",
                 "snakemake",
-                *output,
+                *targets,
                 "-r",  # show reasons, helps with debugging
                 "--configfile",
                 "tests/config/config.yaml",
@@ -160,7 +161,7 @@ class OutputChecker:
         # JPG, PDF, PNG & SVG images
         elif re.search(r"\.(jpg|jpeg|pdf|png|svg|tif|tiff)$", str(generated_file), re.IGNORECASE):
             try:
-                sp.check_output(["tests/unit/visual_compare.sh", generated_file, expected_file])
+                sp.check_output(["tests/visual_compare.sh", generated_file, expected_file])
             except sp.CalledProcessError as e:
                 printerr(">>> Method: visual hash comparison (imagemagick's identify)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")

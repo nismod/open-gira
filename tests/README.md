@@ -70,15 +70,10 @@ the name of your new rule (without angle brackets).
    2. `expected` containing any outputs your rule produces
 6. Copy the contents of one of the other test files into your
 `tests/unit/test_<rule_name>.py` file.
-   1. Change the function name on line 8 to `test_<rule_name>`.
-   2. Change the first argument of the `run_test` call to `<rule_name>`.
-   3. Change the second argument of the `run_test` call to be the command you
-   wrote to execute _only_ your snakemake job in step 2.
-* If your command includes spaces within quotes, the `run_test` will
-not parse it correctly, and you should instead put each piece of the command as
-a separate entry in a list. Specifying your command as a single string is just
-a shorthand provided by `run_test`; you can see within that function that it is
-expanded to a list anyway (`tests/unit/common.py:30-40`).
+   1. Change the function name to `test_<rule_name>`.
+   2. Change the first argument of the `run_snakemake_test` call to `<rule_name>`.
+   3. Change the second argument of the `run_snakemake_test` call to be a tuple
+   of the desired output paths i.e. the target files or directories.
 
 ### Automatically (sort of)
 
@@ -96,10 +91,10 @@ structure, see [above](#manually).
 ## Test runner
 
 The tests rely on a runner and common output checking mechanism, located in the
-automatically generated `tests/unit/common.py`.  This has been adapted to
-reduce repetition in the test files, by adding in a `run_test` function that
-takes the test target name and command and runs the three-stage test procedure
-for each.
+automatically generated `tests/unit/runner.py`.  This has been adapted to
+reduce repetition in the test files, by adding in a `run_snakemake_test`
+function that takes the test target name and targets and runs the three-stage
+test procedure for each.
 
 The test procedure stages are:
 1. Setup temporary test environment and copy required files
