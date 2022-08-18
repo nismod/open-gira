@@ -1,10 +1,10 @@
 # Testing
 
-For each rule used in `workflow/Snakefile` there is a unit test ensuring that
-the expected outputs are generated, given inputs based on the test dataset.
+For each rule used in `workflow/Snakefile` there is a test ensuring that the
+expected outputs are generated, given inputs based on the test dataset.
 
-Unit tests are adapted from those automatically generated using `snakemake
---generate-unit-tests`, see [automatically generating unit
+Tests were originally adapted from those automatically generated using
+`snakemake --generate-unit-tests`, see [automatically generating unit
 tests](https://snakemake.readthedocs.io/en/stable/snakefiles/testing.html) in
 the Snakemake docs.
 
@@ -90,11 +90,8 @@ structure, see [above](#manually).
 
 ## Test runner
 
-The tests rely on a runner and common output checking mechanism, located in the
-automatically generated `tests/unit/runner.py`.  This has been adapted to
-reduce repetition in the test files, by adding in a `run_snakemake_test`
-function that takes the test target name and targets and runs the three-stage
-test procedure for each.
+The tests rely on a runner and common output checking mechanism, located in
+`tests/unit/runner.py`.
 
 The test procedure stages are:
 1. Setup temporary test environment and copy required files
