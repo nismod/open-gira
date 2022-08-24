@@ -19,8 +19,8 @@ tqdm==4.62.3
 
 # data handling
 # AttributeError with numpy<1.19 and pandas
-# numba requires 1.18 <= numpy <= 1.21
-numpy~=1.21.0
+# numba requires 1.18 <= numpy <= 1.22
+numpy~=1.22.0
 pandas
 pyarrow==6.0.0
 cython==0.29.28
