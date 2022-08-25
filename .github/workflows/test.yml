@@ -14,15 +14,15 @@ jobs:
         sudo apt install build-essential cmake libboost-program-options-dev \
                     libexpat1-dev zlib1g-dev libbz2-dev gdal-bin
         git clone https://github.com/mapbox/protozero
-        git clone --branch v2.17.1 --depth 1 https://github.com/osmcode/libosmium
-        git clone --branch v1.13.2 --depth 1 https://github.com/osmcode/osmium-tool
+        git clone --branch v2.18.0 --depth 1 https://github.com/osmcode/libosmium
+        git clone --branch v1.14.0 --depth 1 https://github.com/osmcode/osmium-tool
 
     - name: Cache osmium-tool
       id: cache-osmium-tool
       uses: actions/cache@v2
       with:
         path: osmium-tool/build
-        key: osmium-v1.13.2-libosmium-v2.17.1-cache_bust-v2
+        key: osmium-v1.14.0-libosmium-v2.18.0-cache_bust-v2
 
     - name: Build osmium-tool
       if: steps.cache-osmium-tool.outputs.cache-hit != 'true'

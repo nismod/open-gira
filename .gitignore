@@ -1,18 +1,17 @@
 # Python
-.ipynb_checkpoints/*
+*.ipynb_checkpoints/*
 *.pyc
 __pycache__/*
 venv/*
+src/
 
 # Data
 data/*
 results/*
 
-# Slice files
-*-latest.json
-
 # snakemake
 .snakemake/
+*.snakemake_timestamp
 
 # Logs
 *.out
@@ -22,6 +21,7 @@ tester/*
 
 # IDE
 .idea
+*.swp
 
 # Rendered documentation
 docs/book/

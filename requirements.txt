@@ -22,7 +22,7 @@ tqdm==4.62.3
 # numba requires 1.18 <= numpy <= 1.22
 numpy~=1.22.0
 numba==0.56.0
-pandas
+pandas==1.4.3
 pyarrow==6.0.0
 cython==0.29.28
 netCDF4

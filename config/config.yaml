@@ -1,45 +1,65 @@
 # Input data and output locations
 output_dir: 'results'
 
+
+#####################################
+### FLOODING / TRANSPORT WORKFLOW ###
+#####################################
+
+
 ## Aqueduct Analysis ##
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
 hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
-  aqueduct-river: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/rivers.txt'
+  aqueduct-river: 'config/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
 
-# OSM dataset #
+# OSM datasets, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
+  europe-latest: 'https://download.geofabrik.de/europe-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   africa-latest: 'http://download.geofabrik.de/africa-latest.osm.pbf'
   egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
   tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
-  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+
+# these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
+# the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
+network_filters:
+  road: 'config/road-tertiary.txt'
+  rail: 'config/rail.txt'
+
+# OSM tag data to retain on selected features, typically for usage in network annotation/analysis
+# N.B. feature SELECTION is done with the expressions pointed to from network_filters
+keep_tags:
+  road: ['highway', 'surface', 'bridge', 'maxspeed', 'lanes']
+  rail: ['railway', 'bridge', 'name']
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 9
 
-# road, rail, etc.
-transport_type: 'road'
-
-# Osmium tags to retain in the geoparquet files
-# these must be specified as a single string, with each tag comma seperated e.g. 'highway, surface'
-keep_tags: 'highway, surface, bridge, maxspeed, lanes'
-# Filters definition: only keep objects with highway tags from the following set
-osmium_tags_filters_file: "config/highway-secondary.txt"
 # CRS OSM uses
 osm_epsg: 4326
 
-# road network specific configuration
-# location of input data for annotating road networks
-road_default_shoulder_width_metres: 1.5
-road_default_lane_width_metres: 6.5
-road_flow_cost_time_factor: 0.49
-# if the following data can be sourced/hosted online, remove these config entries and download instead
-road_speeds_path: 'bundled_data/global_road_speeds.xlsx'
-road_rehabilitation_costs_path: 'bundled_data/rehabilitation_costs.xlsx'
-transport_costs_path: 'bundled_data/transport_costs.csv'
+transport:
+  # if the following data can be sourced/hosted online, remove these config entries and download instead
+  rehabilitation_costs_path: 'bundled_data/transport/rehabilitation.xlsx'
+  tariff_costs_path: 'bundled_data/transport/tariffs.xlsx'
+  speeds_path: 'bundled_data/transport/speeds.xlsx'
+  road:
+    # road network specific configuration
+    default_shoulder_width_metres: 1.5
+    default_lane_width_metres: 3.25
+    # fudge factor to tune flow allocation
+    flow_cost_time_factor: 0.49
+  rail:
+    flow_cost_time_factor: 0.49
+
+
+###############################
+### STORM / ENERGY WORKFLOW ###
+###############################
 
 
 # Options for exposure tif file generation
