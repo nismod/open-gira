@@ -8,14 +8,28 @@ checkpoint slice:
         extracts_config="{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     output:
         directory("{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}"),
-    shell:
-        # Need to run osmium from different output folders depending on the
-        # FILTER_SLUG, and the extracts_config specifies only the filename.
-        """
-        mkdir {output} &&
-        cd {output} &&
-        osmium extract --set-bounds --overwrite --no-progress --config ../../../{input.extracts_config} ../../../{input.data}
-        """
+    run:
+        import json
+        import os
+        from subprocess import run
+
+        with open(input.extracts_config, "r") as fp:
+            conf = json.load(fp)
+
+        run(["mkdir", "-p", output[0]])
+        for extract in conf["extracts"]:
+            run([
+                "osmium",
+                "extract",
+                "--set-bounds",
+                "-b",
+                ",".join([str(coord) for coord in extract["bbox"]]),
+                input.data,
+                "-o",
+                os.path.join(output[0], extract["output"])
+            ])
+
+
 
 
 """
