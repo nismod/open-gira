@@ -6,6 +6,7 @@ Shared functions for creating, cleaning, manipulating and analysing networks.
 
 
 import logging
+import re
 from typing import Any, Callable
 
 import pandas as pd
@@ -31,22 +32,12 @@ def write_empty_frames(edges_path: str, nodes_path: str) -> None:
 
 def strip_prefix(s: str, prefix: str = "tag_") -> str:
     """Remove a string prefix if the prefix is present."""
-
-    if s.startswith(prefix):
-        return s[len(prefix):]
-    else:
-        return s
+    return re.sub(f"^{prefix}", "", s)
 
 
 def strip_suffix(s: str, suffix: str = "_link") -> str:
     """Remove a string suffix if the suffix is present."""
-    if not isinstance(s, str):
-        raise ValueError
-
-    if s.endswith(suffix):
-        return s[: len(s) - len(suffix)]
-    else:
-        return s
+    return re.sub(f"{suffix}$", "", s)
 
 
 def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
