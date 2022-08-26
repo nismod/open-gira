@@ -16,7 +16,7 @@ rule make_exposure_img:
         coastline="ne_10m_ocean.shp",
         boundaries="ne_50m_admin_0_countries.shp",
     script:
-        "../scripts/make_exposure_img.py"
+        "../../../scripts/make_exposure_img.py"
 
 
 """

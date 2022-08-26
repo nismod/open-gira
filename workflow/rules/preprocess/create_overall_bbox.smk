@@ -7,7 +7,7 @@ rule create_overall_bbox:
         "{OUTPUT_DIR}/json/{DATASET}.json",
         # os.path.join(f"{config['output_dir']}", "json", f"{dataset_slug}.json"),
     script:
-        "../scripts/create_overall_bbox.py"
+        "../../scripts/create_overall_bbox.py"
 
 
 """

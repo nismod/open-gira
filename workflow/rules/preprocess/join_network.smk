@@ -19,26 +19,9 @@ rule join_network:
         nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
         edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet"
     script:
-        "../scripts/join_network.py"
+        "../../scripts/join_network.py"
 
 """
 Test with:
 snakemake --cores all results/tanzania-mini_filter-highway-core/nodes.geoparquet
-"""
-
-
-rule assess_network_connectedness:
-    input:
-        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
-        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet",
-    output:
-        component_population="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/component_population.svg",
-        component_map="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/network_map_by_component.png",
-        component_data="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/components.parquet"
-    script:
-        "../scripts/assess_network_connectedness.py"
-
-"""
-Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/component_population.pdf
 """

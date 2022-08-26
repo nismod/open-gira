@@ -3,7 +3,7 @@ import os
 import re
 
 
-rule download_dataset:
+rule download_osm:
     output:
         "{OUTPUT_DIR}/input/{DATASET}.osm.pbf",
     run:

@@ -3,7 +3,7 @@
 from glob import glob
 
 
-rule intersection:
+rule network_raster:
     input:
         network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/processed/{SLICE_SLUG}_edges.geoparquet",
         # We read in the entire directory here to avoid splitting the job for each *.tif file
@@ -12,7 +12,7 @@ rule intersection:
         geoparquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.geoparquet",
         parquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.parquet",
     script:
-        "../scripts/intersection.py"
+        "../../scripts/intersection.py"
 
 
 """

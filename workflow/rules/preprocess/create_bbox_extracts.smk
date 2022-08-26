@@ -5,7 +5,7 @@ rule create_bbox_extracts:
     output:
         "{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     script:
-        "../scripts/prepare-extracts.py"
+        "../../scripts/prepare-extracts.py"
 
 
 """

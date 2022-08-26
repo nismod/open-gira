@@ -18,7 +18,7 @@ rule make_exposure_tif:
     output:
         directory("{OUTPUT_DIR}/exposure/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/raster/"),
     script:
-        "../scripts/make_exposure_tif.py"
+        "../../../scripts/make_exposure_tif.py"
 
 
 """

@@ -17,7 +17,7 @@ rule convert_to_geoparquet:
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_edges.geoparquet",
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",
     script:
-        "../scripts/osm_to_pq.py"
+        "../../scripts/osm_to_pq.py"
 
 
 """

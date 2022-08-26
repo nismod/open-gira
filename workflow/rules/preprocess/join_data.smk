@@ -18,7 +18,7 @@ rule join_data:
     output:
         "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}_{HAZARD_SLUG}.geoparquet",
     script:
-        "../scripts/join_data.py"
+        "../../scripts/join_data.py"
 
 
 """
