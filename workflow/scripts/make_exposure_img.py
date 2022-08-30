@@ -100,4 +100,11 @@ if __name__ == "__main__":
                 output_dir, re.sub("\\.tiff?$", ".png", os.path.basename(hazard_tif))
             )
             logging.info(f"Saving {output_path}")
+
+            # debugging an image file comparison failure in test_make_exposure_img.py
+            # TODO: remove this block
+            import matplotlib
+            import sys
+            print(f"{matplotlib.get_backend()=}", file=sys.stderr)
+
             plt.savefig(output_path)
