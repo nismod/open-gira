@@ -55,7 +55,7 @@ out_events = expand(
         "events",
         wind_file_start + "{region}_1000_YEARS_{num}" + wind_file_end + ".txt",
     ),
-    region=CYCLONE_REGIONS,
+    region=REGIONS,
     num=list(range(0, 10)),
 )
 

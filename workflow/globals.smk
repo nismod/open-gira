@@ -93,3 +93,27 @@ WIND_SPEED_THRESHOLDS_MS = [
     config["minimum_threshold"],
     config["maximum_threshold"],
 ]
+
+STORM_STATS_BY_THRESHOLD = expand(
+    os.path.join(
+        config["output_dir"],
+        "power_output",
+        "statistics",
+        "combined_storm_statistics_{thrval}.csv",
+    ),
+    thrval=WIND_SPEED_THRESHOLDS_MS,
+)
+
+STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
+    os.path.join(
+        config["output_dir"],
+        "power_output",
+        "statistics",
+        "{region}",
+        "{sample}",
+        "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+    ),
+    region=REGIONS,
+    sample=SAMPLES,
+    thrval=WIND_SPEED_THRESHOLDS_MS,
+)

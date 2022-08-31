@@ -6,7 +6,7 @@ empirical_distribution_out = [os.path.join(stat_path, 'empirical', f'empirical_{
 
 rule analyse_empirical_distribution:
     input:
-        stat_csv
+        STORM_STATS_BY_THRESHOLD
     params:
         output_dir = config['output_dir'],
         metrics = metrics,

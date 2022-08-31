@@ -7,31 +7,6 @@ Provides an overview for all storms. This is useful for further analysis decisio
 import os
 
 
-stat_csv = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "combined_storm_statistics_{thrval}.csv",
-    ),
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-all_indiv_stat_csv = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "{region}",
-        "{sample}",
-        "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
-    ),
-    region=REGIONS,
-    sample=SAMPLES,
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-
 def aggregate_input(wildcards):
     checkpoint_output = checkpoints.intersect_winds_indiv.get(**wildcards).output[
         0
@@ -87,9 +62,9 @@ rule merge_overview_indiv_stats:
 rule merge_overview_all_stats:
     """Use this rule for the combined stats file (all)"""
     input:
-        all_indiv_stat_csv,
+        STORM_STATS_BY_REGION_SAMPLE_THRESHOLD,
     output:
-        stat_csv,
+        STORM_STATS_BY_THRESHOLD,
     params:
         thresholds=WIND_SPEED_THRESHOLDS_MS,
     script:

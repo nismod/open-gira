@@ -10,7 +10,7 @@ percentile_out = directory(
 
 rule analyse_percentile:
     input:
-        stat_csv,
+        STORM_STATS_BY_THRESHOLD,
     params:
         output_dir=config["output_dir"],
         region_eval=REGIONS,

@@ -21,6 +21,6 @@ completed_files = expand(
 
 rule intersect_all:
     input:
-        stat_csv,
-        all_indiv_stat_csv,  # to ensure all stat files up to date and present (not just the final csv (above))
+        STORM_STATS_BY_THRESHOLD,
+        STORM_STATS_BY_REGION_SAMPLE_THRESHOLD,  # to ensure all stat files up to date and present (not just the final csv (above))
         completed_files,  # to ensure all storm files up to date and present
