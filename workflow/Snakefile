@@ -12,8 +12,10 @@ The Snakemake workflow is covered in detail in the documentation.
 
 import math
 import os.path
-import requests
 from glob import glob
+
+import requests
+
 
 configfile: "config/config.yaml"
 
@@ -45,7 +47,7 @@ wildcard_constraints:
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
 
-# generate global variables used across rules
+# generate values for global variables used across rules
 include: "globals.smk"
 
 ##### load rules #####
@@ -103,7 +105,7 @@ include: "rules/exposure/region-boxes.smk"
 include: "rules/exposure/region-grid.smk"
 
 include: "rules/power_download_all.smk"
-include: "rules/power_process_all.smk"
+include: "rules/power_preprocess_all.smk"
 include: "rules/power_intersect_all.smk"
 include: "rules/power_analyse_all.smk"
 

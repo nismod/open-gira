@@ -1,8 +1,9 @@
-"""Rule to document countries to be excluded (no .tif file)
-
+"""
+Rule to document countries to be excluded (no .tif file)
 """
 
 
+# TODO: can we infer which countries to exclude from our other inputs?
 rule process_exclude_countries:
     input:
         ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,

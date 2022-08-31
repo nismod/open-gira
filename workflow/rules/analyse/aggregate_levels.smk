@@ -1,6 +1,7 @@
-"""Takes a gpkg file and aggregates to chosen level
-
 """
+Takes a gpkg file and aggregates to chosen level
+"""
+
 import os
 
 aggregate_levels_out = os.path.join(

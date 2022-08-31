@@ -1,5 +1,5 @@
-"""Aggregates EACA and finds difference to future. Plots current and difference
-
+"""
+Aggregates EACA and finds difference to future. Plots current and difference
 """
 import os
 
