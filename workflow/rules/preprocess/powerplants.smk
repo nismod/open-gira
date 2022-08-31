@@ -1,19 +1,6 @@
-"""Process powerplants for each box
-
 """
-
-out_powerplants = (
-    expand(
-        os.path.join(
-            config["output_dir"],
-            "power_processed",
-            "all_boxes",
-            "{box_id}",
-            "powerplants_{box_id}.csv",
-        ),
-        box_id=ALL_BOXES,
-    ),
-)
+Process powerplants for each box
+"""
 
 
 rule process_powerplants:
@@ -30,6 +17,15 @@ rule process_powerplants:
     params:
         output_dir=config["output_dir"],
     output:
-        out_powerplants,
+        expand(
+            os.path.join(
+                config["output_dir"],
+                "power_processed",
+                "all_boxes",
+                "{box_id}",
+                "powerplants_{box_id}.csv",
+            ),
+            box_id=ALL_BOXES,
+        )
     script:
         os.path.join("..", "..", "scripts", "process", "process_power_1_powerplants.py")

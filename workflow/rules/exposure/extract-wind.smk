@@ -32,7 +32,7 @@ checkpoint intersect_winds_indiv:
             "fixed",
             "STORM_FIXED_RETURN_PERIODS_{region}.nc",
         ),
-        out_events,
+        STORMS_EVENTS,
     params:
         region="{region}",
         sample="{sample}",

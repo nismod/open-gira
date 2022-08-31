@@ -1,14 +1,8 @@
-"""Finds the units that contain infrastructure
-
 """
-import os
+Finds the units that contain infrastructure
+"""
 
-region_grid = expand(
-    os.path.join(
-        config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
-    ),
-    region=REGIONS,
-)
+import os
 
 
 rule intersect_unit_generator:
@@ -46,4 +40,9 @@ rule intersect_unit_generator:
 
 rule intersect_grid:
     input:
-        region_grid,
+        expand(
+            os.path.join(
+                config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
+            ),
+            region=REGIONS,
+        )

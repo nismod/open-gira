@@ -1,29 +1,26 @@
-"""Process targets for each country box
-
 """
-
-
-out_targets = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_processed",
-        "all_boxes",
-        "{box_id}",
-        "targets_{box_id}.csv",
-    ),
-    box_id=ALL_BOXES,
-)
+Process targets for each country box
+"""
 
 
 rule process_targets:
     input:
-        out_targets,
+        expand(
+            os.path.join(
+                config["output_dir"],
+                "power_processed",
+                "all_boxes",
+                "{box_id}",
+                "targets_{box_id}.csv",
+            ),
+            box_id=ALL_BOXES,
+        )
 
 
 rule process_target_box:
     input:  # note also require countries which intersect each box
         os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
-        out_population,
+        POPULATION_RASTER_BY_COUNTRY,
         os.path.join(config['output_dir'], "power_processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
         os.path.join(config['output_dir'], "input", "gridfinder", "targets.tif"),
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.txt"),

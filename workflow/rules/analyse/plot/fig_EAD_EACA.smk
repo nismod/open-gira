@@ -1,6 +1,7 @@
-"""Writes EAD and EACA metrics to file in power_figures
-
 """
+Writes EAD and EACA metrics to file in power_figures
+"""
+
 import os
 
 out_EAD_EACA = [

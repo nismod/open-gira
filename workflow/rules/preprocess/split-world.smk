@@ -1,18 +1,6 @@
-"""Split the world into boxes
-
 """
-
-
-all_box_geoms = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_processed",
-        "all_boxes",
-        "{box_id}",
-        "geom_{box_id}.gpkg",
-    ),
-    box_id=ALL_BOXES,
-)
+Split the world into boxes
+"""
 
 
 rule world_splitter:
@@ -21,7 +9,16 @@ rule world_splitter:
             config["output_dir"], "input", "admin-boundaries", "gadm36_levels.gpkg"
         ),
     output:
-        all_box_geoms,
+        expand(
+            os.path.join(
+                config["output_dir"],
+                "power_processed",
+                "all_boxes",
+                "{box_id}",
+                "geom_{box_id}.gpkg",
+            ),
+            box_id=ALL_BOXES,
+        ),
         os.path.join(
             config["output_dir"], "power_processed", "world_boxes_metadata.txt"
         ),

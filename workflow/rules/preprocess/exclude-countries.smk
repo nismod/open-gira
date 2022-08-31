@@ -7,7 +7,7 @@ Rule to document countries to be excluded (no .tif file)
 rule process_exclude_countries:
     input:
         ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,
-        out_population,
+        POPULATION_RASTER_BY_COUNTRY,
     params:
         output_dir=config["output_dir"],
     output:

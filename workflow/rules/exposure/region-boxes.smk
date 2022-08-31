@@ -1,13 +1,8 @@
-"""Extracts the box_ids within the selected region
-
 """
+Extracts the box_ids within the selected region
+"""
+
 import os
-
-
-region_box = expand(
-    os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
-    region=REGIONS,
-)
 
 
 rule intersect_region_boxes:
@@ -45,5 +40,11 @@ rule intersect_region_boxes:
 
 
 rule intersect_regions:
+    # TODO: is this rule valid? the path on disk looks unfamiliar
     input:
-        region_box,
+        expand(
+            os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
+            region=REGIONS,
+        )
+
+

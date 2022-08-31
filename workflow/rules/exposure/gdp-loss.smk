@@ -26,7 +26,7 @@ rule intersect_damages:
             )
             for box_id in ALL_BOXES
         ],
-        out_connector,
+        CONNECTOR_OUT,
         os.path.join(
             config["output_dir"],
             "power_intersection",

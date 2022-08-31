@@ -3,8 +3,8 @@ Aggregates EACA and finds difference to future. Plots current and difference
 """
 import os
 
-increased_severity_sort_bool = str(config["increased_severity_sort"])[0]
-assert increased_severity_sort_bool in ["T", "F"]
+SORT_BY_INCREASING_SEVERITY = str(config["increased_severity_sort"])[0]
+assert SORT_BY_INCREASING_SEVERITY in ["T", "F"]
 
 metric_EACA = "effective_population_anually-expected"
 metric_EACA_perc = "perc_effective_population_anually-expected"
@@ -39,7 +39,7 @@ rule fig_aggregate_EACA:
                 f"power_output-{model}",
                 "statistics",
                 "aggregate",
-                f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent_aggregated_region.gpkg",
+                f"targets_geo_top{config['top_select']}{SORT_BY_INCREASING_SEVERITY}percent_aggregated_region.gpkg",
             )
             for model in models_future
         ],
@@ -62,7 +62,7 @@ rule fig_diff_EACA:
                 f"power_output-constant",
                 "statistics",
                 "aggregate",
-                f"targets_geo_top{config['top_select']}{increased_severity_sort_bool}percent_aggregated_region.gpkg",
+                f"targets_geo_top{config['top_select']}{SORT_BY_INCREASING_SEVERITY}percent_aggregated_region.gpkg",
             ),
         ],  # first file is future
     params:

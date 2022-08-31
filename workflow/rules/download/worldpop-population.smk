@@ -6,7 +6,7 @@ Reference
 https://www.worldpop.org/geodata/listing?id=79
 """
 
-out_population = expand(
+POPULATION_RASTER_BY_COUNTRY = expand(
     os.path.join(
         config["output_dir"],
         "input",
@@ -33,4 +33,4 @@ rule download_population:
 
 rule download_population_all:
     input:
-        out_population,
+        POPULATION_RASTER_BY_COUNTRY,

@@ -1,8 +1,8 @@
-"""Process gridfinder elements for each box
-
+"""
+Process gridfinder elements for each box
 """
 
-out_network = (
+GENERATORS_LINES_CONSUMERS_ALL_BOXES = (
     expand(
         [
             os.path.join(

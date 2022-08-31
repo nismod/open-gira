@@ -1,29 +1,26 @@
-"""Plots the empirical storm relationship matrix between (two) countries and conditional probability relationship
-
 """
+Plots the empirical storm relationship matrix between (two) countries and conditional probability relationship
+"""
+
 import os
 
-title_unint = (
-    "Empirical fraction of a storm hitting both countries given it hits one of them"
-)
-title_condprob = "Given country A is hit, what is the likelihood also B is hit"
 
-country_matrix_output = [
-    os.path.join(stat_path, "empirical", title_unint + ".png"),
-    os.path.join(stat_path, "empirical", title_condprob + ".png"),
+COUNTRY_MATRIX_OUTPUT = [
+    os.path.join(STORM_IMPACT_STATISTICS_DIR, "empirical", "storms_hitting_A_and_B_given_either_hit" + ".png"),
+    os.path.join(STORM_IMPACT_STATISTICS_DIR, "empirical", "likelihood_B_hit_given_A_hit" + ".png"),
 ]
 
 
 rule analyse_country_matrix:
     input:
         os.path.join(
-            stat_path, f"combined_storm_statistics_{config['central_threshold']}.csv"
+            STORM_IMPACT_STATISTICS_DIR, f"combined_storm_statistics_{config['central_threshold']}.csv"
         ),
     params:
         output_dir=config["output_dir"],
         central_threshold=config["central_threshold"],
     output:
-        country_matrix_output,
+        COUNTRY_MATRIX_OUTPUT,
     script:
         os.path.join(
             "..",

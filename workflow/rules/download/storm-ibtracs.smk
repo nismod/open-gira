@@ -7,7 +7,7 @@ https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tro
 https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164
 """
 
-out_fixed = expand(
+STORMS_RETURN_PERIOD = expand(
     os.path.join(
         config["output_dir"],
         "input",
@@ -47,7 +47,7 @@ else:
         f"The selected storm type model ({storm_model_type}) is not a valid option"
     )
 
-out_events = expand(
+STORMS_EVENTS = expand(
     os.path.join(
         config["output_dir"],
         "input",
@@ -62,7 +62,7 @@ out_events = expand(
 
 rule download_stormtracks_fixed:
     output:
-        out_fixed,
+        STORMS_RETURN_PERIOD,
     shell:
         f"""
         wget \
@@ -75,7 +75,7 @@ rule download_stormtracks_fixed:
 
 rule download_stormtracks_events:
     output:
-        out_events,
+        STORMS_EVENTS,
     shell:
         f"""
         wget \

@@ -1,5 +1,5 @@
 """
-The return values of these functions are reused throughout the rules.
+The variables in this file are used throughout the power analysis rules.
 
 If we can eventually do without them entirely, that would be great, but this is
 better than what came before.
@@ -67,6 +67,19 @@ ADMIN_BOUNDS_FILE_PER_COUNTRY = expand(
     code=COUNTRY_CODES,
 )
 
+CONNECTOR_OUT = (
+    expand(
+        os.path.join(
+            config["output_dir"],
+            "power_processed",
+            "all_boxes",
+            "{box_id}",
+            "connector_{box_id}.txt",
+        ),
+        box_id=ALL_BOXES,
+    ),
+)
+
 # east pacific, north atlantic, north indian, south india, south pacific, west pacific
 STORM_BASINS = ("EP", "NA", "NI", "SI", "SP", "WP")
 REGIONS = config["regions"]
@@ -94,6 +107,22 @@ WIND_SPEED_THRESHOLDS_MS = [
     config["maximum_threshold"],
 ]
 
+# these files are written by the storm intersection script on finishing
+# they are essentially a flag indicating successful completion
+COMPLETION_FLAG_FILES = expand(
+    os.path.join(
+        config["output_dir"],
+        "power_intersection",
+        "storm_data",
+        "all_winds",
+        "{region}",
+        "{sample}",
+        "{region}_{sample}_completed.txt",
+    ),
+    sample=SAMPLES,
+    region=REGIONS,
+)
+
 STORM_STATS_BY_THRESHOLD = expand(
     os.path.join(
         config["output_dir"],
@@ -117,3 +146,28 @@ STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
     sample=SAMPLES,
     thrval=WIND_SPEED_THRESHOLDS_MS,
 )
+
+STORM_IMPACT_STATISTICS_DIR = os.path.join(config["output_dir"], "power_output", "statistics")
+
+# variables to analyse for each storm
+STORM_ANALYSIS_METRICS = [
+    "GDP losses",
+    "targets with no power (f=0)",
+    "population affected",
+    "population with no power (f=0)",
+    "effective population affected",
+    "reconstruction cost",
+]
+
+# variables to analyse for targets (electricity consumers)
+TARGET_ANALYSIS_METRICS = [
+    "population_without_power",
+    "effective_population",
+    "affected_population",
+    "mw_loss_storm",
+    "f_value",
+    "gdp_damage",
+]
+
+# bastardised string version of boolean: 'T' or 'F'
+SORT_BY_INCREASING_SEVERITY = 'T' if (config["increased_severity_sort"] == True) else 'F'

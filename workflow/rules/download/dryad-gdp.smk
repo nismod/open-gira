@@ -5,7 +5,7 @@ Reference
 https://doi.org/10.5061/dryad.dk1j0
 """
 
-out_GDP = expand(
+GDP_DATASETS = expand(
     os.path.join(config["output_dir"], "input", "GDP", "{filename}"),
     filename=[
         "admin_areas_GDP_HDI.nc",
@@ -21,7 +21,7 @@ out_GDP = expand(
 
 rule download_GDP:
     output:
-        out_GDP,
+        GDP_DATASETS,
     shell:
         f"""
         mkdir -p {config['output_dir']}/input/GDP
