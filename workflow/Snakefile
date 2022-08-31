@@ -48,7 +48,7 @@ wildcard_constraints:
     FILENAME="[^/]+",
 
 # generate values for global variables used across rules
-include: "globals.smk"
+include: "rules/storm_workflow_global_variables.smk"
 
 ##### load rules #####
 include: "rules/download/coastlines.smk"
