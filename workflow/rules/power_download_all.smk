@@ -12,7 +12,7 @@ rule download_all:
         out_population,
         out_GDP,
         out_powerplant,
-        out_gridfinder,
+        out_gridfinder_global,
         ADMIN_BOUNDS_FILE_PER_COUNTRY,
         ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER,
         ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,
