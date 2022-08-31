@@ -1,5 +1,5 @@
-"""Finds connector points for all boxes
-
+"""
+Finds connector points for all boxes
 """
 
 rule process_connector:

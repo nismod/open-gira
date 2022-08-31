@@ -1,16 +1,17 @@
-"""Extracts winds data for specified region sample and year.
-
 """
+Extracts winds data for specified region sample and year.
+"""
+
 import os
 
 try:
-    storm_batch_value = float(config["storm_batches"])
-    assert 1 <= storm_batch_value
+    STORM_BATCH_SIZE = int(config["storm_batches"])
+    assert STORM_BATCH_SIZE > 0
 except:
     raise RuntimeError("storm_batches incorrectly specified in config.yaml file")
 
-wind_rerun_bool = config["wind_rerun"]
-assert wind_rerun_bool in [True, False]
+WIND_RERUN_BOOL = config["wind_rerun"]
+assert WIND_RERUN_BOOL in [True, False]
 
 
 checkpoint intersect_winds_indiv:
@@ -37,12 +38,12 @@ checkpoint intersect_winds_indiv:
         region="{region}",
         sample="{sample}",
         all_boxes_compute=ALL_BOXES,
-        memory_storm_split=storm_batch_value,
-        wind_rerun=wind_rerun_bool,
+        memory_storm_split=STORM_BATCH_SIZE,
+        wind_rerun=WIND_RERUN_BOOL,
         output_dir=config["output_dir"],
         storm_model_type=config["storm_model_type"],
-        wind_file_start=wind_file_start,
-        wind_file_end=wind_file_end,
+        wind_file_start=WIND_FILE_START,
+        wind_file_end=WIND_FILE_END,
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],

@@ -37,14 +37,3 @@ rule intersect_region_boxes:
         output_dir=config["output_dir"],
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py")
-
-
-rule intersect_regions:
-    # TODO: is this rule valid? the path on disk looks unfamiliar
-    input:
-        expand(
-            os.path.join("data", "intersection", "regions", "{region}_boxes.txt"),
-            region=REGIONS,
-        )
-
-

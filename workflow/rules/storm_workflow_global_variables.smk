@@ -98,6 +98,57 @@ STORMS = config["specific_storm_analysis"]
 if STORMS == "None":
     STORMS = None
 
+STORMS_RETURN_PERIOD = expand(
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "stormtracks",
+        "fixed",
+        "STORM_FIXED_{param}_{region}.nc",
+    ),
+    region=config["regions"],
+    param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
+)
+
+STORM_MODEL = config["storm_model_type"]
+
+if STORM_MODEL == "constant":
+    WIND_FILE_START = "STORM_DATA_IBTRACS_"
+    WIND_FILE_END = ""
+    UNZIP_FILE = "STORM_DATA3.zip"
+elif STORM_MODEL == "CMCC-CM2-VHR4":
+    WIND_FILE_START = "STORM_DATA_CMCC-CM2-VHR4_"
+    WIND_FILE_END = "_IBTRACSDELTA"
+    UNZIP_FILE = "CMCC"
+elif STORM_MODEL == "CNRM-CM6-1-HR":
+    WIND_FILE_START = "STORM_DATA_CNRM-CM6-1-HR_"
+    WIND_FILE_END = "_IBTRACSDELTA"
+    UNZIP_FILE = "CNRM"
+elif STORM_MODEL == "EC-Earth3P-HR":
+    WIND_FILE_START = "STORM_DATA_EC-Earth3P-HR_"
+    WIND_FILE_END = "_IBTRACSDELTA"
+    UNZIP_FILE = "ECEARTH"
+elif STORM_MODEL == "HadGEM3-GC31-HM":
+    WIND_FILE_START = "STORM_DATA_HadGEM3-GC31-HM_"
+    WIND_FILE_END = "_IBTRACSDELTA"
+    UNZIP_FILE = "HADGEM"
+else:
+    raise RuntimeError(
+        f"The selected storm type model ({STORM_MODEL}) is not a valid option"
+    )
+
+STORMS_EVENTS = expand(
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "stormtracks",
+        "events",
+        WIND_FILE_START + "{region}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
+    ),
+    region=REGIONS,
+    num=list(range(0, 10)),
+)
+
 # check wind speed thresholds for damage are correctly ordered
 assert config["central_threshold"] >= config["minimum_threshold"]
 assert config["central_threshold"] <= config["maximum_threshold"]

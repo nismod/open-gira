@@ -7,6 +7,7 @@ import os
 
 EMPIRICAL_DISTRIBUTION_OUT = [os.path.join(STORM_IMPACT_STATISTICS_DIR, 'empirical', f'empirical_{metric}.png') for metric in STORM_ANALYSIS_METRICS]
 
+
 rule analyse_empirical_distribution:
     input:
         STORM_STATS_BY_THRESHOLD

@@ -4,6 +4,7 @@ Based on percentile from config file, will copy to percentile folder in statisti
 
 import os
 
+
 PERCENTILE_OUT = directory(
     os.path.join(config["output_dir"], "power_output", "statistics", "percentile")
 )

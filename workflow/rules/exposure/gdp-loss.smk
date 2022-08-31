@@ -1,5 +1,5 @@
-"""Calculates the gdp losses through the storm damage.
-
+"""
+Calculates the gdp losses through the storm damage.
 """
 
 rule intersect_damages:
@@ -61,8 +61,8 @@ rule intersect_damages:
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],
-        wind_file_start=wind_file_start,
-        wind_file_end=wind_file_end,
+        wind_file_start=WIND_FILE_START,
+        wind_file_end=WIND_FILE_END,
         all_boxes=ALL_BOXES,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

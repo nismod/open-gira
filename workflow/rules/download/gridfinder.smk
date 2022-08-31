@@ -5,6 +5,7 @@ Reference
 https://gridfinder.org/
 """
 
+
 ELECTRICITY_GRID_GLOBAL = os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg")
 
 
