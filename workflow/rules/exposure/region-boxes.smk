@@ -50,7 +50,7 @@ rule intersect_region_boxes:
                 "{box_id}",
                 "gridfinder_{box_id}.gpkg",
             ),
-            box_id=all_boxes,
+            box_id=ALL_BOXES,
         ),
     output:
         os.path.join(

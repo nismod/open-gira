@@ -12,10 +12,8 @@ The Snakemake workflow is covered in detail in the documentation.
 
 import math
 import os.path
-from glob import glob
 import requests
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('localhost', port=9991, stdoutToServer=True, stderrToServer=True)
+from glob import glob
 
 configfile: "config/config.yaml"
 
@@ -47,6 +45,8 @@ wildcard_constraints:
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
 
+# generate global variables used across rules
+include: "globals.smk"
 
 ##### load rules #####
 include: "rules/download/coastlines.smk"

@@ -27,7 +27,7 @@ out_network = (
                 "targets_{box_id}.gpkg",
             ),
         ],
-        box_id=all_boxes,
+        box_id=ALL_BOXES,
     ),
 )
 

@@ -2,15 +2,6 @@
 
 """
 
-assert config["central_threshold"] >= config["minimum_threshold"]
-assert config["central_threshold"] <= config["maximum_threshold"]
-THRESHOLDS = [
-    config["central_threshold"],
-    config["minimum_threshold"],
-    config["maximum_threshold"],
-]
-
-
 rule intersect_damages:
     input:
         os.path.join(
@@ -33,7 +24,7 @@ rule intersect_damages:
                 f"{box_id}",
                 f"targets_{box_id}.gpkg",
             )
-            for box_id in all_boxes
+            for box_id in ALL_BOXES
         ],
         out_connector,
         os.path.join(
@@ -58,7 +49,7 @@ rule intersect_damages:
                 f"{thrval}",
                 "storm_r{region}_s{sample}_n{nh}.txt",
             )
-            for thrval in THRESHOLDS
+            for thrval in WIND_SPEED_THRESHOLDS_MS
         ],
     params:
         region="{region}",
@@ -72,6 +63,6 @@ rule intersect_damages:
         maximum_threshold=config["maximum_threshold"],
         wind_file_start=wind_file_start,
         wind_file_end=wind_file_end,
-        all_boxes=all_boxes,
+        all_boxes=ALL_BOXES,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

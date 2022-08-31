@@ -3,23 +3,6 @@
 """
 
 
-## Process Config Inputs ##
-# Preliminary Snakemake Calculations
-all_boxes = [
-    f"box_{int(idx)}"
-    for idx in range(
-        0, int((180 - -180) * (90 - -90) / config["box_width_height"] ** 2)
-    )
-]  # all boxes with width and height boxlen
-
-
-if config["specific_boxes"] != "None":
-    print("Using specified boxes")
-    all_boxes = [f"box_{num}" for num in config["specific_boxes"]]
-if len(all_boxes) == 0:
-    print("Specific boxes incorrectly specified")
-
-
 all_box_geoms = expand(
     os.path.join(
         config["output_dir"],
@@ -28,7 +11,7 @@ all_box_geoms = expand(
         "{box_id}",
         "geom_{box_id}.gpkg",
     ),
-    box_id=all_boxes,
+    box_id=ALL_BOXES,
 )
 
 

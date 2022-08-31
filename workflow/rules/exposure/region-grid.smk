@@ -21,7 +21,7 @@ rule intersect_unit_generator:
                 "{box_id}",
                 "geom_{box_id}.gpkg",
             ),
-            box_id=all_boxes,
+            box_id=ALL_BOXES,
         ),
         os.path.join(
             config["output_dir"],

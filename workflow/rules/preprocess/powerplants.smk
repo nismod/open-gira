@@ -11,7 +11,7 @@ out_powerplants = (
             "{box_id}",
             "powerplants_{box_id}.csv",
         ),
-        box_id=all_boxes,
+        box_id=ALL_BOXES,
     ),
 )
 

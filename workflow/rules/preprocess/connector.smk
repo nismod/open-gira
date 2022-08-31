@@ -11,7 +11,7 @@ out_connector = (
             "{box_id}",
             "connector_{box_id}.txt",
         ),
-        box_id=all_boxes,
+        box_id=ALL_BOXES,
     ),
 )
 
@@ -26,7 +26,7 @@ rule process_connector:
                 "{box_id}",
                 "network_{box_id}.gpkg",
             ),
-            box_id=all_boxes,
+            box_id=ALL_BOXES,
         ),
         os.path.join(
             config["output_dir"], "power_processed", "world_boxes_metadata.txt"

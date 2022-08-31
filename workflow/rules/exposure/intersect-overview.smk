@@ -12,7 +12,7 @@ stat_csv = expand(
         "statistics",
         "combined_storm_statistics_{thrval}.csv",
     ),
-    thrval=THRESHOLDS,
+    thrval=WIND_SPEED_THRESHOLDS_MS,
 )
 
 all_indiv_stat_csv = expand(
@@ -26,7 +26,7 @@ all_indiv_stat_csv = expand(
     ),
     region=REGIONS,
     sample=SAMPLES,
-    thrval=THRESHOLDS,
+    thrval=WIND_SPEED_THRESHOLDS_MS,
 )
 
 
@@ -89,6 +89,6 @@ rule merge_overview_all_stats:
     output:
         stat_csv,
     params:
-        thresholds=THRESHOLDS,
+        thresholds=WIND_SPEED_THRESHOLDS_MS,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_overview.py")

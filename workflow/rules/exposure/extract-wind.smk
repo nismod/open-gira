@@ -36,7 +36,7 @@ checkpoint intersect_winds_indiv:
     params:
         region="{region}",
         sample="{sample}",
-        all_boxes_compute=all_boxes,
+        all_boxes_compute=ALL_BOXES,
         memory_storm_split=storm_batch_value,
         wind_rerun=wind_rerun_bool,
         output_dir=config["output_dir"],

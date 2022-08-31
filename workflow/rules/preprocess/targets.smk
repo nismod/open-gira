@@ -11,7 +11,7 @@ out_targets = expand(
         "{box_id}",
         "targets_{box_id}.csv",
     ),
-    box_id=all_boxes,
+    box_id=ALL_BOXES,
 )
 
 
