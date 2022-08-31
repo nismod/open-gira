@@ -7,7 +7,7 @@ better than what came before.
 
 
 import requests
-from typing import List
+from typing import List, Tuple
 
 
 def country_codes() -> List[str]:
@@ -46,6 +46,41 @@ def all_boxes() -> List[str]:
                 0, int((180 - -180) * (90 - -90) / float(config["box_width_height"]) ** 2)
             )
         ]
+
+
+def storm_model() -> Tuple[str, str, str, str]:
+    """
+    Return the naming scheme for a given IBTRACS storm dataset.
+    """
+
+    storm_model = config["storm_model_type"]
+
+    if storm_model == "constant":
+        wind_file_start = "STORM_DATA_IBTRACS_"
+        wind_file_end = ""
+        unzip_file = "STORM_DATA3.zip"
+    elif storm_model == "CMCC-CM2-VHR4":
+        wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
+        wind_file_end = "_IBTRACSDELTA"
+        unzip_file = "CMCC"
+    elif storm_model == "CNRM-CM6-1-HR":
+        wind_file_start = "STORM_DATA_CNRM-CM6-1-HR_"
+        wind_file_end = "_IBTRACSDELTA"
+        unzip_file = "CNRM"
+    elif storm_model == "EC-Earth3P-HR":
+        wind_file_start = "STORM_DATA_EC-Earth3P-HR_"
+        wind_file_end = "_IBTRACSDELTA"
+        unzip_file = "ECEARTH"
+    elif storm_model == "HadGEM3-GC31-HM":
+        wind_file_start = "STORM_DATA_HadGEM3-GC31-HM_"
+        wind_file_end = "_IBTRACSDELTA"
+        unzip_file = "HADGEM"
+    else:
+        raise RuntimeError(
+            f"The selected storm type model ({storm_model}) is not a valid option"
+        )
+
+    return storm_model, wind_file_start, wind_file_end, unzip_file
 
 
 #### POWER/STORMS WORKFLOW ####
@@ -110,32 +145,7 @@ STORMS_RETURN_PERIOD = expand(
     param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
 )
 
-STORM_MODEL = config["storm_model_type"]
-
-if STORM_MODEL == "constant":
-    WIND_FILE_START = "STORM_DATA_IBTRACS_"
-    WIND_FILE_END = ""
-    UNZIP_FILE = "STORM_DATA3.zip"
-elif STORM_MODEL == "CMCC-CM2-VHR4":
-    WIND_FILE_START = "STORM_DATA_CMCC-CM2-VHR4_"
-    WIND_FILE_END = "_IBTRACSDELTA"
-    UNZIP_FILE = "CMCC"
-elif STORM_MODEL == "CNRM-CM6-1-HR":
-    WIND_FILE_START = "STORM_DATA_CNRM-CM6-1-HR_"
-    WIND_FILE_END = "_IBTRACSDELTA"
-    UNZIP_FILE = "CNRM"
-elif STORM_MODEL == "EC-Earth3P-HR":
-    WIND_FILE_START = "STORM_DATA_EC-Earth3P-HR_"
-    WIND_FILE_END = "_IBTRACSDELTA"
-    UNZIP_FILE = "ECEARTH"
-elif STORM_MODEL == "HadGEM3-GC31-HM":
-    WIND_FILE_START = "STORM_DATA_HadGEM3-GC31-HM_"
-    WIND_FILE_END = "_IBTRACSDELTA"
-    UNZIP_FILE = "HADGEM"
-else:
-    raise RuntimeError(
-        f"The selected storm type model ({STORM_MODEL}) is not a valid option"
-    )
+STORM_MODEL, WIND_FILE_START, WIND_FILE_END, UNZIP_FILE = storm_model()
 
 STORMS_EVENTS = expand(
     os.path.join(
