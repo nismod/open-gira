@@ -1,7 +1,9 @@
-"""Merges the gdp loss statistics.
+"""
+Merges the gdp loss statistics.
 
 Provides an overview for all storms. This is useful for further analysis decisions and required to bring together the snakemake wildcards.
 """
+
 import os
 
 

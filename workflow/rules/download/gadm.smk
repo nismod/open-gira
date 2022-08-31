@@ -8,21 +8,9 @@ https://gadm.org/data.html
 import os
 
 
-out_adminboundaries = os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36.gpkg")
-out_adminboundaries_levels = os.path.join(
-    config['output_dir'], "input", "admin-boundaries", "gadm36_levels.gpkg"
-)
-out_adminboundaries_codes = expand(
-    os.path.join(
-        config["output_dir"], "input", "admin-boundaries", "gadm36_{code}.gpkg"
-    ),
-    code=COUNTRY_CODES,
-)
-
-
 rule download_gadm:
     output:
-        out_adminboundaries,
+        ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER,
     shell:
         f"""
         wget https://geodata.ucdavis.edu/gadm/gadm3.6/gadm36_gpkg.zip \
@@ -39,7 +27,7 @@ snakemake --cores 1 results/input/admin-boundaries/gadm36.gpkg
 
 rule download_gadm_levels:
     output:
-        out_adminboundaries_levels,
+        ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,
     shell:
         f"""
         wget https://geodata.ucdavis.edu/gadm/gadm3.6/gadm36_levels_gpkg.zip \

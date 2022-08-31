@@ -98,11 +98,13 @@ box_width_height: 5
 specific_boxes: [1029, 1028, 1030, 957]
 
 # REGIONS #
-# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
+# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Empty list for global analysis.
+# If `specific_boxes` are selected, this must be coherent with `regions`
 regions: ["NA"]
 
 # SAMPLES #
-# Synthetic data sample upper value (inclusive).Value from 0 to 9 to analyse for all years and regions.
+# TODO: clarify what `sample_upper` and `samples_indiv` mean, why both exist and document that here
+# Synthetic data sample upper value (inclusive). Value from 0 to 9 to analyse for all years and regions.
 sample_upper: 0
 
 # Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings

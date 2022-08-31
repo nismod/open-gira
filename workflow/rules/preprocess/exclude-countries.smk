@@ -5,7 +5,7 @@
 
 rule process_exclude_countries:
     input:
-        out_adminboundaries_levels,
+        ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,
         out_population,
     params:
         output_dir=config["output_dir"],

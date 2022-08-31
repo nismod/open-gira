@@ -7,8 +7,6 @@ https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tro
 https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164
 """
 
-CYCLONE_REGIONS = ["EP", "NA", "NI", "SI", "SP", "WP"]
-
 out_fixed = expand(
     os.path.join(
         config["output_dir"],
@@ -17,10 +15,9 @@ out_fixed = expand(
         "fixed",
         "STORM_FIXED_{param}_{region}.nc",
     ),
-    region=CYCLONE_REGIONS,
+    region=config["regions"],
     param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
 )
-
 
 storm_model_type = config["storm_model_type"]
 

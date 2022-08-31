@@ -56,6 +56,35 @@ COUNTRY_CODES = country_codes()
 # list of IDs of form "box_<int>"
 ALL_BOXES = all_boxes()
 
+ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER = os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36.gpkg")
+ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL = os.path.join(
+    config['output_dir'], "input", "admin-boundaries", "gadm36_levels.gpkg"
+)
+ADMIN_BOUNDS_FILE_PER_COUNTRY = expand(
+    os.path.join(
+        config["output_dir"], "input", "admin-boundaries", "gadm36_{code}.gpkg"
+    ),
+    code=COUNTRY_CODES,
+)
+
+# east pacific, north atlantic, north indian, south india, south pacific, west pacific
+STORM_BASINS = ("EP", "NA", "NI", "SI", "SP", "WP")
+REGIONS = config["regions"]
+if len(REGIONS) == 0:
+    print("Inputting all regions")
+    REGIONS = STORM_BASINS
+
+SAMPLES = list(range(config["sample_upper"] + 1))
+if config["samples_indiv"] != "None":
+    print("Using specified samples")
+    SAMPLES = config["samples_indiv"]
+if len(SAMPLES) == 0:
+    raise ValueError("Samples incorrectly specified")
+
+STORMS = config["specific_storm_analysis"]
+if STORMS == "None":
+    STORMS = None
+
 # check wind speed thresholds for damage are correctly ordered
 assert config["central_threshold"] >= config["minimum_threshold"]
 assert config["central_threshold"] <= config["maximum_threshold"]
