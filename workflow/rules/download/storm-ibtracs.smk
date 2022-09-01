@@ -10,6 +10,9 @@ https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_pe
 
 
 rule download_stormtracks_fixed:
+    """
+    Download storm return period maps
+    """
     output:
         STORMS_RETURN_PERIOD,
     shell:
@@ -24,7 +27,7 @@ rule download_stormtracks_fixed:
 
 rule download_stormtracks_events:
     """
-    Download an archive of all storm tracks for a given model (and some
+    Download an archive of all storm event tracks for a given model (and some
     metadata, readmes, etc.)
     """
     output:
@@ -38,6 +41,7 @@ rule download_stormtracks_events:
             --no-check-certificate \
             --content-disposition
         """
+
 
 rule extract_stormtracks_events:
     """

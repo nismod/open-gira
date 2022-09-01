@@ -1,8 +1,7 @@
 """
 The variables in this file are used throughout the power analysis rules.
 
-If we can eventually do without them entirely, that would be great, but this is
-better than what came before.
+If we can eventually do without them entirely, that would be great.
 """
 
 
