@@ -61,19 +61,19 @@ def storm_model() -> Tuple[str, str, str, str]:
     elif storm_model == "CMCC-CM2-VHR4":
         wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
         wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "CMCC"
+        unzip_file = "CMCC.zip"
     elif storm_model == "CNRM-CM6-1-HR":
         wind_file_start = "STORM_DATA_CNRM-CM6-1-HR_"
         wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "CNRM"
+        unzip_file = "CNRM.zip"
     elif storm_model == "EC-Earth3P-HR":
         wind_file_start = "STORM_DATA_EC-Earth3P-HR_"
         wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "ECEARTH"
+        unzip_file = "ECEARTH.zip"
     elif storm_model == "HadGEM3-GC31-HM":
         wind_file_start = "STORM_DATA_HadGEM3-GC31-HM_"
         wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "HADGEM"
+        unzip_file = "HADGEM.zip"
     else:
         raise RuntimeError(
             f"The selected storm type model ({storm_model}) is not a valid option"
@@ -140,7 +140,7 @@ STORMS_RETURN_PERIOD = expand(
         "fixed",
         "STORM_FIXED_{param}_{region}.nc",
     ),
-    region=config["regions"],
+    region=REGIONS,
     param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
 )
 

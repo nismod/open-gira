@@ -4,22 +4,27 @@ tropical cyclone wind speed return periods
 
 Reference
 ---------
-https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085
 https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164
+https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085
 """
 
 
 rule download_stormtracks_fixed:
     """
-    Download storm return period maps
+    Download storm return period and wind speed maps
     """
     output:
-        STORMS_RETURN_PERIOD,
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_TC_WIND_SPEEDS_{STORM_BASIN}.nc",
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}.nc"
+    params:
+        wind_speeds = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_TC_WIND_SPEEDS_{STORM_BASIN}.nc",
+        return_periods = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}.nc"
     shell:
-        f"""
+        """
         wget \
-            --input-file=config/hazard_resource_locations/storm_fixed_return.txt \
-            --directory-prefix={config['output_dir']}/input/stormtracks/fixed \
+            {params.wind_speeds} \
+            {params.return_periods} \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/fixed \
             --timestamping \
             --no-check-certificate
         """
@@ -29,30 +34,39 @@ rule download_stormtracks_events:
     """
     Download an archive of all storm event tracks for a given model (and some
     metadata, readmes, etc.)
+
+    N.B. We rename the downloaded ZIP file from it's original name to
+    archive.zip. This makes it easier to match on this file later. The mv
+    command should fail if there's more than one zipfile as input (from the
+    glob).
     """
     output:
-        zip_file = os.path.join(f"{config['output_dir']}/input/stormtracks/events/", STORM_UNZIP_FILE)
+        zip_file = "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/archive.zip"
     shell:
-        f"""
+        """
         wget \
-            --input-file=config/hazard_resource_locations/storm_tracks_{STORM_MODEL}.txt \
-            --directory-prefix={config['output_dir']}/input/stormtracks/events \
+            --input-file=config/hazard_resource_locations/storm_tracks_{wildcards.STORM_MODEL}.txt \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/ \
             --timestamping \
             --no-check-certificate \
             --content-disposition
+
+        mv \
+            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/*.zip \
+            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/archive.zip
         """
 
 
 rule extract_stormtracks_events:
     """
-    Unzip the storm files for basins we are interested in (config['regions'])
+    Unzip the storm files for basin we are interested in
     """
     input:
         rules.download_stormtracks_events.output.zip_file
     output:
-        STORMS_EVENTS
-    run:
-        # extract only the files in STORMS_EVENTS
-        # STORMS_EVENTS is a list of full paths relative to repo root, use filenames instead
-        CONCATENATED_FILE_STR = ' '.join(map(os.path.basename, STORMS_EVENTS))
-        os.system(f"unzip -o {input} {CONCATENATED_FILE_STR} -d {config['output_dir']}/input/stormtracks/events")
+        directory("{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{STORM_BASIN}")
+    shell:
+        """
+        TARGETS=$(zipinfo -1 {input} | grep _{wildcards.STORM_BASIN}_1000_YEARS_)
+        unzip -o {input} $TARGETS -d {output}
+        """
