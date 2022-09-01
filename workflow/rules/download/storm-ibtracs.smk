@@ -54,5 +54,5 @@ rule extract_stormtracks_events:
     run:
         # extract only the files in STORMS_EVENTS
         # STORMS_EVENTS is a list of full paths relative to repo root, use filenames instead
-        concatenated_file_str = ' '.join(map(os.path.basename, STORMS_EVENTS))
-        os.system(f"unzip -o {input} {concatenated_file_str} -d {config['output_dir']}/input/stormtracks/events")
+        CONCATENATED_FILE_STR = ' '.join(map(os.path.basename, STORMS_EVENTS))
+        os.system(f"unzip -o {input} {CONCATENATED_FILE_STR} -d {config['output_dir']}/input/stormtracks/events")
