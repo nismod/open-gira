@@ -12,7 +12,7 @@ output_dir: 'results'
 # to retrieve using wget -i
 hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
-  aqueduct-river: 'config/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
+  aqueduct-river: 'config/hazard_resource_locations/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
 
 # OSM datasets, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
