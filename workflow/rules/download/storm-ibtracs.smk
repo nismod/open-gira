@@ -9,6 +9,20 @@ https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tro
 """
 
 
+rule download_storm_basin_geometry:
+    """
+    Get a geometry file delineating the various storm basins
+    """
+    output:
+        geometry = "{OUTPUT_DIR}/input/stormtracks/basins.kml"
+    shell:
+        """
+        wget \
+            https://data.4tu.nl/ndownloader/files/24060005 \
+            -o {wildcards.OUTPUT_DIR}/input/stormtracks/basins.kml
+        """
+
+
 rule download_stormtracks_fixed:
     """
     Download storm return period and wind speed maps
