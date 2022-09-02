@@ -7,7 +7,7 @@ rule process_gridfinder:
     input:
         os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg"),
         os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+            config["output_dir"], "power_processed", "world_boxes_metadata.json"
         ),
     params:
         output_dir=config["output_dir"],

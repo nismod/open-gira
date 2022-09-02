@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # preliminary function variables
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
     boxlen = world_boxes_metadata["boxlen"]
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         gdf_box.to_file(p, driver="GPKG")
 
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         tot_boxes = json.load(filejson)["tot_boxes"]
 

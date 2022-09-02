@@ -190,7 +190,7 @@ snkit.network.nearest_edge = patch_nearest_edge
 # start = time.time()
 #
 # with open(
-#     os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
+#     os.path.join("data", "processed", "world_boxes_metadata.json"), "r"
 # ) as filejson:
 #     world_boxes_metadata = json.load(filejson)
 # boxlen = world_boxes_metadata["boxlen"]

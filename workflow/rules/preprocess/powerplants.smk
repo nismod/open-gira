@@ -12,7 +12,7 @@ rule process_powerplants:
             "global_power_plant_database.csv",
         ),
         os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+            config["output_dir"], "power_processed", "world_boxes_metadata.json"
         ),
     params:
         output_dir=config["output_dir"],

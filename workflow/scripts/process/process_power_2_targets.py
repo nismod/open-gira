@@ -95,7 +95,7 @@ def get_population(box_id, targets, exclude_countries_lst):
     # below: population of target areas (targets.geometry), populations is list corresponding to areas (CHECK, I think)
 
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
     box_country_list_id = world_boxes_metadata["box_country_dict"][box_id]

@@ -20,7 +20,7 @@ rule world_splitter:
             box_id=ALL_BOXES,
         ),
         os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+            config["output_dir"], "power_processed", "world_boxes_metadata.json"
         ),
         os.path.join(config["output_dir"], "power_processed", "world_boxes.gpkg"),
     params:

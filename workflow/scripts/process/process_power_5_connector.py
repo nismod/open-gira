@@ -17,7 +17,7 @@ network_paths = glob.glob(
 
 
 with open(
-    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+    os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
 ) as filejson:
     world_boxes_metadata = json.load(filejson)
 num_cols = world_boxes_metadata["num_cols"]

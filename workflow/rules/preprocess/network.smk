@@ -56,7 +56,7 @@ rule process_network:
             "gridfinder_{box_id}.gpkg",
         ),
         os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+            config["output_dir"], "power_processed", "world_boxes_metadata.json"
         ),
     output:
         os.path.join(

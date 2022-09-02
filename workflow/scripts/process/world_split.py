@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     print("writing metadata...")
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "w"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "w"
     ) as filejson:
         lon_min, lat_min, lon_max, lat_max = grid.bounds.values[0]
         info = {
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             "tot_boxes": int(len(lon_centroids) * len(lat_centroids)),
             "box_country_dict": countries_by_box,
         }
-        json.dump(info, filejson)
+        json.dump(info, filejson, indent=2, sort_keys=True)
 
     print("creating box folders")
     for box_id in grid["box_id"]:
