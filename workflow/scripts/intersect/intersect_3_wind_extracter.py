@@ -124,7 +124,7 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
-    # "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    "{region}",
     f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)
