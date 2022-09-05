@@ -24,7 +24,7 @@ with fiona.open(
 
 print("finding tif codes")
 files = glob.glob(os.path.join(output_dir, "input", "population", "*.tif"))
-pop_countries = [file[file.find("_ppp") - 3 : file.find("_ppp")] for file in files]
+pop_countries = [f[f.find("_ppp") - 3 : f.find("_ppp")] for f in files]
 
 exclude_country_list = []
 
@@ -38,6 +38,6 @@ folder_path = os.path.join(output_dir, "power_processed")
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
 
-with open(os.path.join(folder_path, "exclude_countries.txt"), "w") as file:
-    json.dump(exclude_country_list, file)
+with open(os.path.join(folder_path, "exclude_countries.json"), "w") as fp:
+    json.dump(exclude_country_list, fp)
 print("Exported excluded countries")

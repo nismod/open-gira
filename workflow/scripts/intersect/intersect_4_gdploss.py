@@ -148,7 +148,7 @@ def box_connectors(box_id):
             "power_processed",
             "all_boxes",
             f"{box_id}",
-            f"connector_{box_id}.txt",
+            f"connector_{box_id}.json",
         ),
         "r",
     ) as file_ex:

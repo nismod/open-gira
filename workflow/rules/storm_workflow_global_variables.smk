@@ -108,7 +108,7 @@ CONNECTOR_OUT = (
             "power_processed",
             "all_boxes",
             "{box_id}",
-            "connector_{box_id}.txt",
+            "connector_{box_id}.json",
         ),
         box_id=ALL_BOXES,
     ),

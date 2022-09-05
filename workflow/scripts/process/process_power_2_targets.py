@@ -226,9 +226,9 @@ if __name__ == "__main__":
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
     with open(
-        os.path.join(output_dir, "power_processed", "exclude_countries.txt"), "r"
-    ) as file:
-        exclude_countries_lst = json.load(file)
+        os.path.join(output_dir, "power_processed", "exclude_countries.json"), "r"
+    ) as fp:
+        exclude_countries_lst = json.load(fp)
 
     if len(targets_box) != 0:
         # print("getting target population")
