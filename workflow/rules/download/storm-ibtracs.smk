@@ -19,7 +19,7 @@ rule download_storm_basin_geometry:
         """
         wget \
             https://data.4tu.nl/ndownloader/files/24060005 \
-            -o {wildcards.OUTPUT_DIR}/input/stormtracks/basins.kml
+            --output-document {wildcards.OUTPUT_DIR}/input/stormtracks/basins.kml
         """
 
 
