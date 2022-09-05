@@ -11,7 +11,7 @@ import os
 
 rule download_gadm:
     output:
-        ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER,
+        admin_bounds_global_single_layer = os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36.gpkg")
     shell:
         f"""
         wget https://geodata.ucdavis.edu/gadm/gadm3.6/gadm36_gpkg.zip \
@@ -28,7 +28,9 @@ snakemake --cores 1 results/input/admin-boundaries/gadm36.gpkg
 
 rule download_gadm_levels:
     output:
-        ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL,
+        admin_bounds_global_layer_per_level = os.path.join(
+            config['output_dir'], "input", "admin-boundaries", "gadm36_levels.gpkg"
+        )
     shell:
         f"""
         wget https://geodata.ucdavis.edu/gadm/gadm3.6/gadm36_levels_gpkg.zip \
@@ -40,10 +42,12 @@ rule download_gadm_levels:
 # download admin boundaries per country
 rule download_gadm_by_country:
     output:
-        os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36_{code}.gpkg"),
+        "{OUTPUT_DIR}/input/admin-boundaries/gadm36_{CODE}.gpkg"
     shell:
         f"""
-        wget https://geodata.ucdavis.edu/gadm/gadm3.6/gpkg/gadm36_{{wildcards.code}}_gpkg.zip \
-            --output-document={config['output_dir']}/input/admin-boundaries/gadm36_{{wildcards.code}}_gpkg.zip
-        unzip -o {config['output_dir']}/input/admin-boundaries/gadm36_{{wildcards.code}}_gpkg.zip -d {config['output_dir']}/input/admin-boundaries
+        wget https://geodata.ucdavis.edu/gadm/gadm3.6/gpkg/gadm36_{{wildcards.CODE}}_gpkg.zip \
+            --output-document={{wildcards.OUTPUT_DIR}}/input/admin-boundaries/gadm36_{{wildcards.CODE}}_gpkg.zip
+        unzip -o {{wildcards.OUTPUT_DIR}}/input/admin-boundaries/gadm36_{{wildcards.CODE}}_gpkg.zip \
+            -d {{wildcards.OUTPUT_DIR}}/input/admin-boundaries
+        rm {{wildcards.OUTPUT_DIR}}/input/admin-boundaries/gadm36_{{wildcards.CODE}}_gpkg.zip
         """

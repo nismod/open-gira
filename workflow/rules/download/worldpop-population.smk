@@ -6,16 +6,6 @@ Reference
 https://www.worldpop.org/geodata/listing?id=79
 """
 
-POPULATION_RASTER_BY_COUNTRY = expand(
-    os.path.join(
-        config["output_dir"],
-        "input",
-        "population",
-        "{country}_ppp_2020_UNadj_constrained.tif",
-    ),
-    country=COUNTRY_CODES,
-)
-
 rule download_population:
     params:
         output_dir=config["output_dir"],
@@ -33,4 +23,12 @@ rule download_population:
 
 rule download_population_all:
     input:
-        POPULATION_RASTER_BY_COUNTRY,
+        population_raster_by_country = expand(
+            os.path.join(
+                config["output_dir"],
+                "input",
+                "population",
+                "{country}_ppp_2020_UNadj_constrained.tif",
+            ),
+            country=COUNTRY_CODES,
+        )

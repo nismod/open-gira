@@ -91,10 +91,7 @@ COUNTRY_CODES = country_codes()
 # list of IDs of form "box_<int>"
 ALL_BOXES = all_boxes()
 
-ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER = os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36.gpkg")
-ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL = os.path.join(
-    config['output_dir'], "input", "admin-boundaries", "gadm36_levels.gpkg"
-)
+# cannot sit inside a rule, needs to expand
 ADMIN_BOUNDS_FILE_PER_COUNTRY = expand(
     os.path.join(
         config["output_dir"], "input", "admin-boundaries", "gadm36_{code}.gpkg"
@@ -112,7 +109,7 @@ CONNECTOR_OUT = (
             "connector_{box_id}.txt",
         ),
         box_id=ALL_BOXES,
-    ),
+    )
 )
 
 # east pacific, north atlantic, north indian, south india, south pacific, west pacific
