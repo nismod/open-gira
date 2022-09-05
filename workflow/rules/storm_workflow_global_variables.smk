@@ -152,6 +152,8 @@ STORMS_EVENTS = expand(
         "input",
         "stormtracks",
         "events",
+        STORM_MODEL,
+        "{region}",
         WIND_FILE_START + "{region}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
     ),
     region=REGIONS,
