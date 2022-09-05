@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
     with open(
         os.path.join(
-            output_dir, "power_intersection", "regions", f"{region}_boxes.txt"
+            output_dir, "power_intersection", "regions", f"{region}_boxes.json"
         ),
         "r",
     ) as src:
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         unit_contains.update(dict_indiv)
     with open(
         os.path.join(
-            output_dir, "power_intersection", "regions", f"{region}_unit_contains.txt"
+            output_dir, "power_intersection", "regions", f"{region}_unit_contains.json"
         ),
         "w",
     ) as writefile:

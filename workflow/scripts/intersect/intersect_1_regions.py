@@ -1,5 +1,5 @@
 """
-Takes a region and finds the box box_ids within it, exports as a list.
+Takes a region and finds the box_ids within it, exports as a list.
 """
 
 import json
@@ -47,14 +47,14 @@ if __name__ == "__main__":
     # select a region
     region_polygon = regions[regions.Name==region_str].geometry.squeeze()
     if not isinstance(region_polygon, shapely.geometry.polygon.Polygon):
-        raise ValueError(f"could not extract suitable region geometry: {region_polygon=}")
+        raise ValueError(f"could not extract suitable region geometry: {region_polygon=} {regions=} {region_str=}")
 
     # read in the global grid
     global_grid: gpd.GeoDataFrame = gpd.read_file(global_boxes_path)
     # check the grid uses -180 < longitude <= 180
     assert max(global_grid.geometry.bounds.maxx) <= 180
 
-    # find intersection
+    # find box_ids of boxes intersecting region polygon
     boxes_in_region: list[str] = global_grid[global_grid.intersects(region_polygon)].box_id.to_list()
 
     # write out all boxes within this region
@@ -79,19 +79,21 @@ if __name__ == "__main__":
         # be closer to only processing boxes we're interested in
         # for now, leave as-is to simplify creating the "boxes in the region
         # with infrastructure" list
-        gridfinder_box = gpd.read_file(
-            os.path.join(
-                output_dir,
-                "power_processed",
-                "all_boxes",
-                box_id,
-                f"gridfinder_{box_id}.gpkg",
-            )
+        gridfinder_box_path = os.path.join(
+            output_dir,
+            "power_processed",
+            "all_boxes",
+            box_id,
+            f"gridfinder_{box_id}.gpkg",
         )
+        if os.path.exists(gridfinder_box_path):
+            gridfinder_box = gpd.read_file(gridfinder_box_path)
 
-        if (
-            len(gridfinder_box) == 1 and gridfinder_box["geometry"].iloc[0] == None
-        ):  # no infrastructure in box
+            if len(gridfinder_box) == 1 and gridfinder_box["geometry"].iloc[0] == None:
+                # no infrastructure in box
+                boxes_in_region_with_assets.remove(box_id)
+        else:
+            # gridfinder file for this box doesn't exist (we haven't produced it)
             boxes_in_region_with_assets.remove(box_id)
 
     with open(box_ids_with_assets_path, "w") as fp:

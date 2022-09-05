@@ -7,7 +7,8 @@ rule intersect_region_with_boxes:
         global_boxes = "{OUTPUT_DIR}/power_processed/world_boxes.gpkg",
         basin_geometry = rules.download_storm_basin_geometry.output.geometry
     params:
-        region_name = "{wildcards.STORM_BASIN}",
+        # to use wildcards in params, pass function which can be later evaluated
+        region_name = lambda wildcards: wildcards.STORM_BASIN,
         output_dir = config["output_dir"]
     output:
         boxes_in_region = "{OUTPUT_DIR}/power_intersection/regions/{STORM_BASIN}_boxes.json",
