@@ -3,6 +3,8 @@ Takes a region and finds the box box_ids within it, exports as a list.
 """
 
 import json
+import os
+import sys
 
 import fiona
 import geopandas as gpd
@@ -16,11 +18,17 @@ if __name__ == "__main__":
         global_boxes_path = snakemake.input["global_boxes"]
         basin_geometry_path = snakemake.input["basin_geometry"]
         region_str = snakemake.params["region_name"]
+        output_dir = snakemake.params["output_dir"]
         box_ids_path = snakemake.output["boxes_in_region"]
         box_ids_with_assets_path = snakemake.output["boxes_in_region_with_assets"]
     except NameError:
-        # TODO: permit usage as simple python script, reading args from CLI
-        raise RuntimeError("must be run via snakemake")
+        global_boxes_metadata_path = sys.argv[1]
+        global_boxes_path = sys.argv[2]
+        basin_geometry_path = sys.argv[3]
+        region_str = sys.argv[4]
+        output_dir = sys.argv[5]
+        box_ids_path = sys.argv[6]
+        box_ids_with_assets_path = sys.argv[7]
 
     # get a region polygon
     try:
@@ -47,10 +55,10 @@ if __name__ == "__main__":
     assert max(global_grid.geometry.bounds.maxx) <= 180
 
     # find intersection
-    boxes_in_region: list = global_grid.intersection(region_polygon).box_id.to_list()
+    boxes_in_region: list[str] = global_grid[global_grid.intersects(region_polygon)].box_id.to_list()
 
     # write out all boxes within this region
-    with open(region_box_ids_path, "w") as fp:
+    with open(box_ids_path, "w") as fp:
         json.dump(boxes_in_region, fp)
 
     # create a second list of box ids -- those containing part of a country,
