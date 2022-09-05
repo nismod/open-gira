@@ -91,14 +91,6 @@ COUNTRY_CODES = country_codes()
 # list of IDs of form "box_<int>"
 ALL_BOXES = all_boxes()
 
-# cannot sit inside a rule, needs to expand
-ADMIN_BOUNDS_FILE_PER_COUNTRY = expand(
-    os.path.join(
-        config["output_dir"], "input", "admin-boundaries", "gadm36_{code}.gpkg"
-    ),
-    code=COUNTRY_CODES,
-)
-
 CONNECTOR_OUT = (
     expand(
         os.path.join(

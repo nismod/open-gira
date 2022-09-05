@@ -15,4 +15,4 @@ rule download_all:
         rules.download_gridfinder.output.electricity_grid_global,
         rules.download_gadm.output.admin_bounds_global_single_layer,
         rules.download_gadm_levels.output.admin_bounds_global_layer_per_level,
-        ADMIN_BOUNDS_FILE_PER_COUNTRY,
+        rules.download_gadm_all_countries.input.admin_bounds_file_per_country,
