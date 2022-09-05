@@ -5,14 +5,12 @@ Reference
 https://www.wri.org/research/global-database-power-plants
 """
 
-POWERPLANTS_GLOBAL = os.path.join(
-    config["output_dir"], "input", "powerplants", "global_power_plant_database.csv"
-)
-
 
 rule download_powerplants:
     output:
-        POWERPLANTS_GLOBAL,
+        powerplants_global = os.path.join(
+            config["output_dir"], "input", "powerplants", "global_power_plant_database.csv"
+        )
     shell:
         f"""
         mkdir -p {config['output_dir']}/input/powerplants

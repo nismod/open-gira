@@ -90,17 +90,6 @@ COUNTRY_CODES = country_codes()
 # list of IDs of form "box_<int>"
 ALL_BOXES = all_boxes()
 
-ADMIN_BOUNDS_GLOBAL_SINGLE_LAYER = os.path.join(config['output_dir'], "input", "admin-boundaries", "gadm36.gpkg")
-ADMIN_BOUNDS_GLOBAL_LAYER_PER_LEVEL = os.path.join(
-    config['output_dir'], "input", "admin-boundaries", "gadm36_levels.gpkg"
-)
-ADMIN_BOUNDS_FILE_PER_COUNTRY = expand(
-    os.path.join(
-        config["output_dir"], "input", "admin-boundaries", "gadm36_{code}.gpkg"
-    ),
-    code=COUNTRY_CODES,
-)
-
 CONNECTOR_OUT = (
     expand(
         os.path.join(
@@ -111,7 +100,7 @@ CONNECTOR_OUT = (
             "connector_{box_id}.json",
         ),
         box_id=ALL_BOXES,
-    ),
+    )
 )
 
 # east pacific, north atlantic, north indian, south india, south pacific, west pacific
@@ -121,12 +110,10 @@ if len(REGIONS) == 0:
     print("Inputting all regions")
     REGIONS = STORM_BASINS
 
-SAMPLES = list(range(config["sample_upper"] + 1))
-if config["samples_indiv"] != "None":
-    print("Using specified samples")
-    SAMPLES = config["samples_indiv"]
-if len(SAMPLES) == 0:
-    raise ValueError("Samples incorrectly specified")
+SAMPLES = config["storm_files_sample_set"]
+if not SAMPLES:
+    # empty list interpreted as 'run with all available samples'
+    SAMPLES = list(range(0, 10))
 
 STORMS = config["specific_storm_analysis"]
 if STORMS == "None":
@@ -157,7 +144,7 @@ STORMS_EVENTS = expand(
         WIND_FILE_START + "{region}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
     ),
     region=REGIONS,
-    num=list(range(0, 10)),
+    num=SAMPLES,
 )
 
 # check wind speed thresholds for damage are correctly ordered

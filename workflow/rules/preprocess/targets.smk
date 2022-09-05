@@ -21,7 +21,7 @@ rule process_target_box:
     input:  # note also require countries which intersect each box
         # TODO: modify script to use these inputs -- atm, paths are hardcoded in script
         os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
-        POPULATION_RASTER_BY_COUNTRY,
+        rules.download_population_all.input.population_raster_by_country,
         os.path.join(config['output_dir'], "power_processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
         os.path.join(config['output_dir'], "input", "gridfinder", "targets.tif"),
         os.path.join(config['output_dir'], "power_processed", "world_boxes_metadata.json"),
