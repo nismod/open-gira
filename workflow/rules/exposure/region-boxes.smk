@@ -3,8 +3,8 @@ rule intersect_region_with_boxes:
     Determine the boxes within a given region
     """
     input:
-        global_boxes_metadata = "{OUTPUT_DIR}/power_processed/world_boxes_metadata.json",
-        global_boxes = "{OUTPUT_DIR}/power_processed/world_boxes.gpkg",
+        global_boxes_metadata = rules.world_splitter.output.global_metadata,
+        global_boxes = rules.world_splitter.output.global_boxes,
         basin_geometry = rules.download_storm_basin_geometry.output.geometry
     params:
         # to use wildcards in params, pass function which can be later evaluated

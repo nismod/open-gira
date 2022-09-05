@@ -15,14 +15,11 @@ assert WIND_RERUN_BOOL in [True, False]
 
 
 checkpoint intersect_winds_indiv:
-    """Find the .csv files for the wind speed details at each unit.
-    IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
-               still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
-    it clears all existing files matching the output."""
+    """
+    Find windspeeds for every storm for each grid cell.
+    """
     input:
-        os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.json"
-        ),
+        rules.world_splitter.output.global_metadata,
         os.path.join(
             config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
         ),
