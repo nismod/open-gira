@@ -64,7 +64,6 @@ rule download_stormtracks_events:
             --timestamping \
             --no-check-certificate \
             --content-disposition
-
         mv \
             {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/*.zip \
             {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/archive.zip
@@ -73,14 +72,14 @@ rule download_stormtracks_events:
 
 rule extract_stormtracks_events:
     """
-    Unzip the storm files for basin we are interested in
+    Unzip a storm file for a basin we are interested in
     """
     input:
         rules.download_stormtracks_events.output.zip_file
     output:
-        directory("{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{STORM_BASIN}")
+        "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{STORM_BASIN}/{STORM_SAMPLE_BASENAME}.txt"
     shell:
         """
-        TARGETS=$(zipinfo -1 {input} | grep _{wildcards.STORM_BASIN}_1000_YEARS_)
-        unzip -o {input} $TARGETS -d {output}
+        unzip -o {input} {wildcards.STORM_SAMPLE_BASENAME}.txt \
+            -d {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/
         """
