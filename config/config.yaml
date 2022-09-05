@@ -93,19 +93,22 @@ maximum_threshold: 30
 # Width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5
 
-# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957]. Note that this must be known for the box_width_height value entered above. Put None to evaluate globally.
+# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957]. Note that this must be known for the box_width_height value entered above.
+# use an empty list to evaluate globally
 specific_boxes: [1029, 1028, 1030, 957]
 
 # REGIONS #
-# Regions in which to analyse. List of strings. Options: "EP", "NA", "NI", "SI", "SP", "WP". Include all for global analysis. If specific boxes are selected, this must be coherent with REGIONS
+# Regions in which to analyse. List of strings.
+# Empty list for global analysis.
+# Options: "EP", "NA", "NI", "SI", "SP", "WP".
+# If `specific_boxes` are selected, this must be coherent with `regions`
 regions: ["NA"]
 
 # SAMPLES #
-# Synthetic data sample upper value (inclusive).Value from 0 to 9 to analyse for all years and regions.
-sample_upper: 0
-
-# Individual samples to investigate. Will override sample_upper. Write None to use sample_upper. List of floats or strings
-samples_indiv: [0, 1, 2]
+# storm datasets are split into 'samples', each comprising 1,000 years of storm data
+# typically there are 10 samples available for each model
+# to use all available samples, specify an empty list
+storm_files_sample_set: [0, 1]
 
 # Direct damage cost per km (USD) for high voltage lines. 400 000USD suggestion for upper limit
 reconstruction_cost_high: 400000

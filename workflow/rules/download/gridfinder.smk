@@ -5,12 +5,10 @@ Reference
 https://gridfinder.org/
 """
 
-out_gridfinder = os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg")
-
 
 rule download_gridfinder:
     output:
-        out_gridfinder,
+        electricity_grid_global = os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg")
     shell:
         f"""
         mkdir -p {config['output_dir']}/input/gridfinder
