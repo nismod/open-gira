@@ -27,6 +27,7 @@ try:
     central_threshold = snakemake.params["central_threshold"]
     minimum_threshold = snakemake.params["minimum_threshold"]
     maximum_threshold = snakemake.params["maximum_threshold"]
+    storm_model = snakemake.params["storm_model"]
     wind_file_start = snakemake.params["wind_file_start"]
     wind_file_end = snakemake.params["wind_file_end"]
     all_boxes = snakemake.params["all_boxes"]
@@ -545,6 +546,8 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
+    f"{storm_model}",
+    f"{region}",
     f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)

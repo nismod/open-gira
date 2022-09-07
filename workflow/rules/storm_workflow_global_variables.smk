@@ -166,7 +166,7 @@ COMPLETION_FLAG_FILES = expand(
         "all_winds",
         "{region}",
         "{sample}",
-        "{region}_{sample}_completed.txt",
+        "completed.txt",
     ),
     sample=SAMPLES,
     region=REGIONS,
