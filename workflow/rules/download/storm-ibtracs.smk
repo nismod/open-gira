@@ -28,11 +28,11 @@ rule download_stormtracks_fixed:
     Download storm return period and wind speed maps
     """
     output:
-        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_TC_WIND_SPEEDS_{STORM_BASIN}.nc",
-        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}.nc"
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
     params:
-        wind_speeds = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_TC_WIND_SPEEDS_{STORM_BASIN}.nc",
-        return_periods = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}.nc"
+        wind_speeds = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
+        return_periods = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
     shell:
         """
         wget \
@@ -77,9 +77,9 @@ rule extract_stormtracks_events:
     input:
         rules.download_stormtracks_events.output.zip_file
     output:
-        "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{STORM_BASIN}/{STORM_SAMPLE_BASENAME}.txt"
+        "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{REGION}/{STORM_SAMPLE_BASENAME}.txt"
     shell:
         """
         unzip -o {input} {wildcards.STORM_SAMPLE_BASENAME}.txt \
-            -d {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/
+            -d {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/{wildcards.REGION}/
         """

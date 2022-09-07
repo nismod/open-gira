@@ -8,10 +8,10 @@ rule intersect_region_with_boxes:
         basin_geometry = rules.download_storm_basin_geometry.output.geometry
     params:
         # to use wildcards in params, pass function which can be later evaluated
-        region_name = lambda wildcards: wildcards.STORM_BASIN,
+        region_name = lambda wildcards: wildcards.REGION,
         output_dir = config["output_dir"]
     output:
-        boxes_in_region = "{OUTPUT_DIR}/power_intersection/regions/{STORM_BASIN}_boxes.json",
-        boxes_in_region_with_assets = "{OUTPUT_DIR}/power_intersection/regions/{STORM_BASIN}_boxes_with_assets.json"
+        boxes_in_region = "{OUTPUT_DIR}/power_intersection/regions/{REGION}_boxes.json",
+        boxes_in_region_with_assets = "{OUTPUT_DIR}/power_intersection/regions/{REGION}_boxes_with_assets.json"
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_1_regions.py")

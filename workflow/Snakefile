@@ -46,7 +46,7 @@ wildcard_constraints:
     FILTER_SLUG="filter-[^_/]+",
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
-    STORM_BASIN="EP|NA|NI|SI|SP|WP",
+    REGION="EP|NA|NI|SI|SP|WP",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
 
 # generate values for global variables used across rules
