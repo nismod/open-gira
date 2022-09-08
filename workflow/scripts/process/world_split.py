@@ -14,8 +14,8 @@ if __name__ == "__main__":
         admin_data_path = snakemake.input["admin_data"]
         boxlen = snakemake.params["boxlen_value"]
         output_dir = snakemake.params["output_dir"]
-        global_metadata_path = snakemake.output["global_metadata_path"]
-        global_boxes_path = snakemake.output["global_boxes_path"]
+        global_metadata_path = snakemake.output["global_metadata"]
+        global_boxes_path = snakemake.output["global_boxes"]
     except:
         admin_data_path = sys.argv[1]
         output_dir = sys.argv[2]
