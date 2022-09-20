@@ -42,7 +42,7 @@ checkpoint download_hazard_datasets:
 
             if len(remote_files):
                 with open(f"{tmpdir}/input.txt", "w") as sources:
-                    sources.writelines(remote_files)
+                    sources.writelines("\n".join(remote_files))
                 os.system(f"cd {target_dir} && wget --no-clobber -i {tmpdir}/input.txt")
 
         """
