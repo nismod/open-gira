@@ -2,7 +2,7 @@
 # for each dataset-hazard combination
 
 
-rule join_data:
+rule join_exposure_data:
     input:
         lambda wildcards: expand(
             os.path.join(
