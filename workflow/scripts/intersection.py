@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Split network edges along grid cells, join hazard values.
 """
+Split network edges along grid cells, join hazard values.
+"""
+
 import logging
 import os
 import re
@@ -170,8 +172,8 @@ if __name__ == "__main__":
             )
         )
 
-    # print(f"hazard_dir={hazard_dir}")
-    # print(f"tifs={tifs}")
     main(
-        network_edges_path=network_edges_path, hazard_tifs=tifs, output_path=output_path
+        network_edges_path=network_edges_path,
+        hazard_tifs=tifs,
+        output_path=output_path,
     )
