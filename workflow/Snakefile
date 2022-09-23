@@ -16,6 +16,8 @@ from glob import glob
 
 import requests
 
+from scripts.transport.assets import Assets
+
 
 configfile: "config/config.yaml"
 
@@ -38,6 +40,17 @@ for network, file_path in config['network_filters'].items():
             "Error in config: could not locate network_filter at "
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
+
+# check requested direct damage asset types
+requested_asset_damage_types = set(config['direct_damages']['asset_types'])
+if len(requested_asset_damage_types) == 0:
+    # if we were passed an empty list, mutate the config to use all available
+    # asset types for direct damage calculation
+    config['direct_damages']['asset_types'] = Assets.implemented_assets()
+else:
+    # if we have a non-empty list, check the request against what's implemented
+    # will raise ValueError in case of mismatch
+    Assets.valid_selection(requested_asset_damage_types)
 
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
