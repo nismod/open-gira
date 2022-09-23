@@ -7,7 +7,7 @@ Shared functions for creating, cleaning, manipulating and analysing networks.
 
 import logging
 import re
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import pandas as pd
 import geopandas as gpd
@@ -18,7 +18,7 @@ import snkit
 WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
 
 
-def write_empty_frames(edges_path: str, nodes_path: str) -> None:
+def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> None:
     """
     If we don't have sufficient / good enough input data, write out empty output.
 
@@ -26,7 +26,12 @@ def write_empty_frames(edges_path: str, nodes_path: str) -> None:
     """
     empty_gdf = gpd.GeoDataFrame([])
     empty_gdf.to_parquet(edges_path)
-    empty_gdf.to_parquet(nodes_path)
+
+    # some parts of the workflow only consider edges, not nodes
+    # when not passed a nodes_path, do not attempt to write
+    if nodes_path:
+        empty_gdf.to_parquet(nodes_path)
+
     return
 
 
