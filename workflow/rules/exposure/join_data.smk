@@ -2,7 +2,7 @@
 # for each dataset-hazard combination
 
 
-rule join_exposure_data:
+rule join_exposure:
     input:
         lambda wildcards: expand(
             os.path.join(
@@ -24,4 +24,38 @@ rule join_exposure_data:
 """
 Test with:
 snakemake --cores all results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet
+"""
+
+
+rule join_direct_damages:
+    input:
+        slices = lambda wildcards: expand(
+            os.path.join(
+                "{OUTPUT_DIR}",
+                "direct_damages",
+                "{DATASET}_{FILTER_SLUG}",
+                "{HAZARD_SLUG}",
+                "slice-{i}.parquet",
+            ),
+            **wildcards,
+            i=range(config["slice_count"])
+        ),
+    output:
+        joined = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage-fraction.parquet",
+    run:
+        import os
+
+        import pandas as pd
+
+        parent_dir = os.path.dirname(input.slices[0])
+        if not os.path.exists(parent_dir):
+            os.makedirs(parent_dir)
+
+        unified = pd.concat([pd.read_parquet(path) for path in input.slices])
+        unified.to_parquet(output.joined)
+
+
+"""
+Test with:
+snakemake --cores all results/egypt-latest_filter-road_hazard-aqueduct-river_damage-fraction.parquet
 """

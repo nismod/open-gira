@@ -132,7 +132,7 @@ def main(network_edges_path, hazard_tifs, output_path):
 def associate_raster(df, key, fname, band_number=1):
     with rasterio.open(fname) as dataset:
         band_data = dataset.read(band_number)
-        df[key] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
+        df[f"hazard-{key}"] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
 
 
 def write_empty_files(columns, outputs_path):

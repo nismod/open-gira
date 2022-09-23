@@ -101,6 +101,7 @@ include: "rules/exposure/extract-wind.smk"
 include: "rules/exposure/region-boxes.smk"
 include: "rules/exposure/region-grid.smk"
 include: "rules/exposure/power_intersect_all.smk"
+include: "rules/exposure/direct_damages.smk"
 
 include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"

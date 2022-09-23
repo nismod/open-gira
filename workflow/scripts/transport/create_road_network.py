@@ -15,6 +15,7 @@ import snkit
 
 import utils
 from create_network import create_network
+from assets import RoadAssets
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -443,6 +444,12 @@ if __name__ == "__main__":
     network = annotate_condition(
         network, default_lane_width_metres, default_shoulder_width_metres
     )
+
+    # select and label assets with their type
+    # the asset_type is used to later select a damage curve
+    network.edges.loc[network.edges.paved == False, 'asset_type'] = RoadAssets.UNPAVED
+    network.edges.loc[network.edges.paved == True, 'asset_type'] = RoadAssets.PAVED
+    network.edges.loc[network.edges.bridge == True, 'asset_type'] = RoadAssets.BRIDGE
 
     logging.info("Annotating network with road speed data")
     network = annotate_speeds(

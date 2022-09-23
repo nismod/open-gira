@@ -12,6 +12,7 @@ import pandas as pd
 
 import utils
 from create_network import create_network
+from assets import RailAssets
 
 
 def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
@@ -115,6 +116,11 @@ if __name__ == "__main__":
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
+
+    # select and label assets with their type
+    network.nodes.loc[network.nodes.tag_railway == 'station', 'asset_type'] = RailAssets.STATION
+    network.edges.loc[utils.str_to_bool(network.edges['tag_bridge']), 'asset_type'] = RailAssets.BRIDGE
+    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
 
     # boolean station field
     network.nodes['station'] = network.nodes.tag_railway == 'station'
