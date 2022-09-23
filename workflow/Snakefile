@@ -147,6 +147,7 @@ rule clean:
         rm -rf {config[output_dir]}/geoparquet &&
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
+        rm -rf {config[output_dir]}/direct_damages &&
         rm -rf {config[output_dir]}/power_processed &&
         rm -rf {config[output_dir]}/power_intersection
         """
@@ -160,6 +161,7 @@ rule clean_all:
         rm -rf {config[output_dir]}/geoparquet &&
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
+        rm -rf {config[output_dir]}/direct_damages &&
         rm -rf {config[output_dir]}/power_processed &&
         rm -rf {config[output_dir]}/power_intersection
         """
