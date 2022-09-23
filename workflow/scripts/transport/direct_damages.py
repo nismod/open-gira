@@ -1,6 +1,6 @@
 """
-Given an exposure estimate and some damage curves, calculate the damage ratio
-for exposed assets.
+Given an exposure estimate and some damage curves, calculate the damage
+fraction for exposed assets.
 """
 
 import logging
@@ -15,7 +15,7 @@ import utils
 if __name__ == "__main__":
     try:
         exposure_path: str = snakemake.input["exposure"]
-        damage_fraction_path: str = snakemake.output["damage_fraction"]
+        damage_fraction_path: str = snakemake.output["damages"]
         damage_curves_path: str = snakemake.config["direct_damages"]["curves_path"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
@@ -96,12 +96,11 @@ if __name__ == "__main__":
         asset_exposure = exposure.loc[asset_type_mask, hazard_columns]
 
         # apply damage_curve function element-wise
-        # TODO: Vectorise this (take a series of intensities and return a
-        # series of damage fractions.
+        # TODO: vectorise this?
         direct_damages = asset_exposure.applymap(damage_curve)
 
         # store the computed direct damages and any columns we started with
-        # other than exposure
+        # (other than exposure)
         direct_damages_by_asset_type.append(
             direct_damages.join(exposure.loc[asset_type_mask, non_hazard_columns])
         )
