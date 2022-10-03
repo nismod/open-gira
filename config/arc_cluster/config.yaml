@@ -1,0 +1,30 @@
+cluster:
+  mkdir -p logs/{rule} &&
+  sbatch
+    --partition={resources.partition}
+    --qos={resources.qos}
+    --cpus-per-task={threads}
+    --mem={resources.mem_mb}
+    --job-name=smk-{rule}-{wildcards}
+    --output=logs/{rule}/{rule}-{wildcards}-%j.out
+    --export=ALL
+    --parsable
+default-resources:
+  - qos=standard  # {basic, standard, priority} only have credits for standard
+  - partition=short  # {short, medium, long, devel, interactive}
+  - mem_mb=16000
+  - time="01:00:00"
+restart-times: 2  # if a job fails, retry it twice
+max-jobs-per-second: 10
+max-status-checks-per-second: 1
+local-cores: 1
+latency-wait: 10
+jobs: 50  # max simultaneous jobs
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
+scheduler: greedy
+cluster-status: status-sacct.sh  # script to poll for job status
+use-conda: True  # activate conda env prior to running any given rule
+conda-prefix: /data/ouce-gri-jba/envs/open-gira_no_smk  # use our own env
+conda-frontend: conda  # use `conda` to manage envs, rather than e.g. mamba :(

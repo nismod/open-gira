@@ -10,6 +10,12 @@ look for a rule that will produce them -- and so on.
 The Snakemake workflow is covered in detail in the documentation.
 """
 
+# on a cluster we want to be able to load certain modules prior to executing commands
+# e.g. `module load Miniconda3` so snakemake can activate an environment to run in
+# any such commands can be placed in a .bashrc to source
+shell.executable("/bin/bash")
+shell.prefix("source ~/.bashrc; ")
+
 import math
 import os.path
 from glob import glob
