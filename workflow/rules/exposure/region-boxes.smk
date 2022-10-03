@@ -5,7 +5,7 @@ rule intersect_region_with_boxes:
     input:
         global_boxes_metadata = rules.world_splitter.output.global_metadata,
         global_boxes = rules.world_splitter.output.global_boxes,
-        basin_geometry = rules.download_storm_basin_geometry.output.geometry
+        basin_geometry = "bundled_data/storm_basins.geojson",
     params:
         # to use wildcards in params, pass function which can be later evaluated
         region_name = lambda wildcards: wildcards.REGION,

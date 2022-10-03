@@ -8,7 +8,8 @@ import sys
 
 import fiona
 import geopandas as gpd
-import shapely
+from shapely.geometry.polygon import Polygon
+from shapely.geometry.multipolygon import MultiPolygon
 
 
 if __name__ == "__main__":
@@ -30,23 +31,14 @@ if __name__ == "__main__":
         box_ids_path = sys.argv[6]
         box_ids_with_assets_path = sys.argv[7]
 
-    # get a region polygon
-    try:
-        regions: gpd.GeoDataFrame = gpd.read_file(basin_geometry_path)
-    except fiona.errors.DriverError:
-        # enable KML support and try again
-        # N.B. this needs to fail once before succeeding (on my machine) hence
-        # catching error and then trying again rather than just enabling KML
-        # support in advance
-        gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-        regions: gpd.GeoDataFrame = gpd.read_file(basin_geometry_path, driver='KML')
+    regions: gpd.GeoDataFrame = gpd.read_file(basin_geometry_path)
 
     # check the regions use -180 < longitude <= 180
     assert max(regions.geometry.bounds.maxx) <= 180
 
     # select a region
-    region_polygon = regions[regions.Name==region_str].geometry.squeeze()
-    if not isinstance(region_polygon, shapely.geometry.polygon.Polygon):
+    region_polygon = regions[regions.name==region_str].geometry.squeeze()
+    if not isinstance(region_polygon, (Polygon, MultiPolygon)):
         raise ValueError(f"could not extract suitable region geometry: {region_polygon=} {regions=} {region_str=}")
 
     # read in the global grid
