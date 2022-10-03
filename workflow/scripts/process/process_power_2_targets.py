@@ -204,7 +204,7 @@ def get_gdp(targets):
     ]  # set masked to 0 (later removed)
 
     targets["gdp_pc"] = gdp_pc_lst
-    targets["gdp"] = targets.gdp_pc * targets.population
+    targets["gdp"] = targets.gdp_pc.fillna(0) * targets.population.fillna(0)
     return targets
 
 
