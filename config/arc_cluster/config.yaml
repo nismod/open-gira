@@ -26,5 +26,7 @@ printshellcmds: True
 scheduler: greedy
 cluster-status: status-sacct.sh  # script to poll for job status
 use-conda: True  # activate conda env prior to running any given rule
-conda-prefix: /data/ouce-gri-jba/envs/open-gira_no_smk  # use our own env
-conda-frontend: conda  # use `conda` to manage envs, rather than e.g. mamba :(
+conda-prefix: /data/ouce-gri-jba/anaconda/envs
+# use `mamba` to manage envs
+# as of Oct 2022, snakemake does not support micromamba
+conda-frontend: mamba
