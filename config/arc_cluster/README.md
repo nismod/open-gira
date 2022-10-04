@@ -19,7 +19,7 @@ the module load system, but their version is quite old (6.10.0). N.B. Versions
 https://github.com/snakemake/snakemake/issues/1392
 
 Instead use a conda environment we have created which contains snakemake:
-`source activate /data/ouce-gri-jba/envs/snakemake-7.12.1`
+`conda activate snakemake-7.12.1`
 
 ## Osmium
 
