@@ -18,12 +18,12 @@ from geopy import distance
 
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    layer_num = snakemake.params["aggregate_level"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    thrval = snakemake.params["central_threshold"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    layer_num = snakemake.params["aggregate_level"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    thrval = snakemake.params["central_threshold"]  # type: ignore
 except:
     output_dir = "results"  # sys.argv[1]
     layer_num = 1

@@ -18,10 +18,10 @@ if __name__ == "__main__":
     # move to settings later
     epsg = 3857
     try:
-        db_file = snakemake.input["geoparquet"]
-        hazard = snakemake.input["hazard"][0]
-        output_path = snakemake.output[0]
-        opts_dict = snakemake.config["exposure_tifs"]
+        db_file = snakemake.input["geoparquet"]  # type: ignore
+        hazard = snakemake.input["hazard"][0]  # type: ignore
+        output_path = snakemake.output[0]  # type: ignore
+        opts_dict = snakemake.config["exposure_tifs"]  # type: ignore
     except NameError:
         print(sys.argv)
         (db_file, hazard, output_path, opts_dict) = sys.argv[1:]

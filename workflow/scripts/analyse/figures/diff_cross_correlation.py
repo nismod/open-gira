@@ -6,11 +6,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    inputs = snakemake.input
-    remove = snakemake.params["remove_countries"]
-    name_cc_future_perc_diff = snakemake.params["name_cc_future_perc_diff"]
-    name_cc_future_diff = snakemake.params["name_cc_future_diff"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    remove = snakemake.params["remove_countries"]  # type: ignore
+    name_cc_future_perc_diff = snakemake.params["name_cc_future_perc_diff"]  # type: ignore
+    name_cc_future_diff = snakemake.params["name_cc_future_diff"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

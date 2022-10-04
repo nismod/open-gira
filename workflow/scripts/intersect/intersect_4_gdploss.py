@@ -1,36 +1,36 @@
 """Calculates the gdp losses for a given storm
 """
-
+import json
 import os
-import pandas as pd
-import geopandas as gpd
 import time
 from datetime import date
-from shapely.geometry import LineString, Point
-import json
-import sys
-from damage_calculator import applythreshold
+
+import geopandas as gpd
 import networkx as nx
 import numpy as np
+import pandas as pd
 import shapely.wkt as sw
-from tqdm import tqdm
 from geopy import distance
+from shapely.geometry import LineString, Point
+from tqdm import tqdm
+
+from damage_calculator import applythreshold
 
 
 try:
-    region = snakemake.params["region"]
-    sample = snakemake.params["sample"]
-    nh = snakemake.params["nh"]
-    output_dir = snakemake.params["output_dir"]
-    reconstruction_cost_lowmedium = snakemake.params["reconstruction_cost_lowmedium"]
-    reconstruction_cost_high = snakemake.params["reconstruction_cost_high"]
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
-    storm_model = snakemake.params["storm_model"]
-    wind_file_start = snakemake.params["wind_file_start"]
-    wind_file_end = snakemake.params["wind_file_end"]
-    all_boxes = snakemake.params["all_boxes"]
+    region = snakemake.params["region"]  # type: ignore
+    sample = snakemake.params["sample"]  # type: ignore
+    nh = snakemake.params["nh"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    reconstruction_cost_lowmedium = snakemake.params["reconstruction_cost_lowmedium"]  # type: ignore
+    reconstruction_cost_high = snakemake.params["reconstruction_cost_high"]  # type: ignore
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
+    storm_model = snakemake.params["storm_model"]  # type: ignore
+    wind_file_start = snakemake.params["wind_file_start"]  # type: ignore
+    wind_file_end = snakemake.params["wind_file_end"]  # type: ignore
+    all_boxes = snakemake.params["all_boxes"]  # type: ignore
 except:
     raise RuntimeError("Snakemake parameters not found")
     region = "NA"

@@ -16,8 +16,8 @@ from pathos.multiprocessing import ProcessPool, cpu_count
 from tqdm import tqdm
 
 try:
-    region = snakemake.params["region"]
-    output_dir = snakemake.params["output_dir"]
+    region = snakemake.params["region"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
     region = sys.argv[2]

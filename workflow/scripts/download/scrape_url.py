@@ -3,8 +3,8 @@ import requests
 import sys
 
 try:
-    country_ident = snakemake.params["code_country"]
-    output_dir = snakemake.params["output_dir"]
+    country_ident = snakemake.params["code_country"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     country_ident = sys.argv[1]
     output_dir = sys.argv[2]

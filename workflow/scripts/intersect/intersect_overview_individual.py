@@ -8,11 +8,12 @@ import pandas as pd
 
 
 try:
-    inputs_stats = snakemake.input
-    outputs = [str(snakemake.output)]  # made list to counter for except: case
+    inputs_stats = snakemake.input  # type: ignore
+    outputs = [str(snakemake.output)]  # type: ignore
 except:
     raise NotImplementedError("use snakemake")
 
+# outputs made list to counter for except: case
 for (
     output
 ) in (

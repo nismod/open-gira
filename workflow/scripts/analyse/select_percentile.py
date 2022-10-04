@@ -10,13 +10,13 @@ from common_functions import find_storm_files, check_srn
 
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    metrics_target = snakemake.params["metrics_target"]
-    thrval = snakemake.params["central_threshold"]
-    percentile = snakemake.params["percentile"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    metrics_target = snakemake.params["metrics_target"]  # type: ignore
+    thrval = snakemake.params["central_threshold"]  # type: ignore
+    percentile = snakemake.params["percentile"]  # type: ignore
 except:  # for testing only
     # output_dir = 'results'
     # region_eval = None #["NA"]  # list of regions to analyse (write None if none specified)

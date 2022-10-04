@@ -15,20 +15,20 @@ import time
 from tqdm import tqdm
 
 try:
-    region = snakemake.params["region"]
-    sample = snakemake.params["sample"]
-    all_boxes = snakemake.params["all_boxes_compute"]
+    region = snakemake.params["region"]  # type: ignore
+    sample = snakemake.params["sample"]  # type: ignore
+    all_boxes = snakemake.params["all_boxes_compute"]  # type: ignore
     nh_split = int(
-        snakemake.params["memory_storm_split"]
+        snakemake.params["memory_storm_split"]  # type: ignore
     )  # number of nh to run each iteration'
-    wind_rerun = snakemake.params["wind_rerun"]
-    output_dir = snakemake.params["output_dir"]
-    wind_file_start = snakemake.params["wind_file_start"]
-    wind_file_end = snakemake.params["wind_file_end"]
-    storm_model_type = snakemake.params["storm_model_type"]
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
+    wind_rerun = snakemake.params["wind_rerun"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    wind_file_start = snakemake.params["wind_file_start"]  # type: ignore
+    wind_file_end = snakemake.params["wind_file_end"]  # type: ignore
+    storm_model_type = snakemake.params["storm_model_type"]  # type: ignore
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
 except:
     # raise RuntimeError("Snakemake parameters not found")
     region = "NA"

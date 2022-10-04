@@ -11,13 +11,13 @@ from shapely.geometry import shape, box
 from common_functions import avg, sm, ae
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    metrics_target = snakemake.params["metrics_target"]
-    top_select = snakemake.params[
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    metrics_target = snakemake.params["metrics_target"]  # type: ignore
+    top_select = snakemake.params[  # type: ignore
         "top_select"
     ]  # select (in percent). Set to 100 for all
-    increased_severity_sort = snakemake.params["increased_severity_sort"]
-    layer_num = snakemake.params["aggregate_level"]
+    increased_severity_sort = snakemake.params["increased_severity_sort"]  # type: ignore
+    layer_num = snakemake.params["aggregate_level"]  # type: ignore
 except:  # for testing only
     output_dir = "results"
     metrics_target = [

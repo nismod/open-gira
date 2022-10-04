@@ -9,8 +9,8 @@ import numpy as np
 
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    models_future = snakemake.params["models_future"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    models_future = snakemake.params["models_future"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

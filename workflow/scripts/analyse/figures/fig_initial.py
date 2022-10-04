@@ -3,8 +3,8 @@
 import os
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    models_all = snakemake.params["models_all"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    models_all = snakemake.params["models_all"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

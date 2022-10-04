@@ -1,12 +1,20 @@
+"""Download the plants data to csv files
 """
-This file downloads the plants data to csv files
-"""
+import json
+import os
+import sys
+import warnings
 
-from importing_modules import *
-from process_power_functions import idxbox
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import shape
+from tqdm import tqdm
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+from .process_power_functions import idxbox
 
 try:
-    output_dir = snakemake.params["output_dir"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
 

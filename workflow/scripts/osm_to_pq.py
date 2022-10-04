@@ -194,11 +194,11 @@ class WaySlicer(osmium.SimpleHandler):
 
 if __name__ == "__main__":
     try:
-        pbf_path = snakemake.input["pbf"]
-        edges_path = snakemake.output["edges"]
-        nodes_path = snakemake.output["nodes"]
-        keep_tags = snakemake.params["keep_tags"]
-        osm_epsg = snakemake.config["osm_epsg"]
+        pbf_path = snakemake.input["pbf"]  # type: ignore
+        edges_path = snakemake.output["edges"]  # type: ignore
+        nodes_path = snakemake.output["nodes"]  # type: ignore
+        keep_tags = snakemake.params["keep_tags"]  # type: ignore
+        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.

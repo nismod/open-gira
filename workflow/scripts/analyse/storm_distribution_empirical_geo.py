@@ -19,16 +19,16 @@ from common_functions import find_storm_files, avg, sm, ae, check_srn, traprule
 
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    metrics_target = snakemake.params["metrics_target"]
-    top_select = snakemake.params[
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    metrics_target = snakemake.params["metrics_target"]  # type: ignore
+    top_select = snakemake.params[  # type: ignore
         "top_select"
     ]  # select (in percent). Set to 100 for all
-    increased_severity_sort = snakemake.params["increased_severity_sort"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    thrval = snakemake.params["central_threshold"]
+    increased_severity_sort = snakemake.params["increased_severity_sort"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    thrval = snakemake.params["central_threshold"]  # type: ignore
 except:  # for testing only
     output_dir = "results"
     metrics_target = [

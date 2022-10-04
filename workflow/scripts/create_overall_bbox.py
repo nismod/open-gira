@@ -5,9 +5,9 @@ import re
 import os.path
 
 try:
-    osm_file = snakemake.input[0]
-    results_dir = snakemake.config["output_dir"]
-    out_file = snakemake.output[0]
+    osm_file = snakemake.input[0]  # type: ignore
+    results_dir = snakemake.config["output_dir"]  # type: ignore
+    out_file = snakemake.output[0]  # type: ignore
 except NameError:
     if len(sys.argv) != 4:
         raise RuntimeError(

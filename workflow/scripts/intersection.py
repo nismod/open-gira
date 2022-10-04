@@ -150,9 +150,9 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
-        network_edges_path = snakemake.input["network"]
-        hazard_dir = snakemake.input["tifs"]
-        output_path = snakemake.output["geoparquet"]
+        network_edges_path = snakemake.input["network"]  # type: ignore
+        hazard_dir = snakemake.input["tifs"]  # type: ignore
+        output_path = snakemake.output["geoparquet"]  # type: ignore
     except NameError:
         print(sys.argv)
         (network_edges_path, hazard_dir, output_path) = sys.argv[1:]

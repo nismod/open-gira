@@ -4,8 +4,8 @@ import pandas as pd
 import os
 
 try:
-    inputs = snakemake.input
-    output = snakemake.output
+    inputs = snakemake.input  # type: ignore
+    output = snakemake.output  # type: ignore
 except:  # if the user wishes to see the (partial) statistics before the full analysis, or wishes to view a semi-complete analysis, they can run this file through python3 in the command line. Please note that stat_merger_individual.py MUST be run (once) first
     print("USING DIRECTORY LISTINGS TO FIND STATS (please check manually)")
     print("""!! Assuming output_dir is 'results' !!""")

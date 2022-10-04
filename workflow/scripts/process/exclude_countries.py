@@ -7,7 +7,7 @@ import glob
 import fiona
 
 try:
-    output_dir = snakemake.params["output_dir"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
 

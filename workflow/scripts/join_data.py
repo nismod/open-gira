@@ -52,8 +52,8 @@ def append_data(base, slice_files):
 
 if __name__ == "__main__":
     try:
-        slice_files = snakemake.input
-        output_file = snakemake.output[0]
+        slice_files = snakemake.input  # type: ignore
+        output_file = snakemake.output[0]  # type: ignore
     except NameError:
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]

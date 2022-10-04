@@ -5,8 +5,8 @@ This file processes the target data
 from importing_modules import *
 
 try:
-    box_id = snakemake.params["box_id"]
-    output_dir = snakemake.params["output_dir"]
+    box_id = snakemake.params["box_id"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]

@@ -346,19 +346,19 @@ def annotate_tariff_flow_costs(
 
 if __name__ == "__main__":
     try:
-        osm_edges_path = snakemake.input["edges"]
-        osm_nodes_path = snakemake.input["nodes"]
-        administrative_data_path = snakemake.input["admin"]
-        nodes_output_path = snakemake.output["nodes"]
-        edges_output_path = snakemake.output["edges"]
-        slice_number = snakemake.params["slice_number"]
-        road_speeds_path = snakemake.config["transport"]["speeds_path"]
-        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
-        transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]
-        default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]
-        default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]
-        flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]
-        osm_epsg = snakemake.config["osm_epsg"]
+        osm_edges_path = snakemake.input["edges"]  # type: ignore
+        osm_nodes_path = snakemake.input["nodes"]  # type: ignore
+        administrative_data_path = snakemake.input["admin"]  # type: ignore
+        nodes_output_path = snakemake.output["nodes"]  # type: ignore
+        edges_output_path = snakemake.output["edges"]  # type: ignore
+        slice_number = snakemake.params["slice_number"]  # type: ignore
+        road_speeds_path = snakemake.config["transport"]["speeds_path"]  # type: ignore
+        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]  # type: ignore
+        transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]  # type: ignore
+        default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]  # type: ignore
+        default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]  # type: ignore
+        flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]  # type: ignore
+        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.

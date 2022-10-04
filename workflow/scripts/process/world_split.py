@@ -11,11 +11,11 @@ from importing_modules import *
 if __name__ == "__main__":
 
     try:
-        admin_data_path = snakemake.input["admin_data"]
-        boxlen = snakemake.params["boxlen_value"]
-        output_dir = snakemake.params["output_dir"]
-        global_metadata_path = snakemake.output["global_metadata"]
-        global_boxes_path = snakemake.output["global_boxes"]
+        admin_data_path = snakemake.input["admin_data"]  # type: ignore
+        boxlen = snakemake.params["boxlen_value"]  # type: ignore
+        output_dir = snakemake.params["output_dir"]  # type: ignore
+        global_metadata_path = snakemake.output["global_metadata"]  # type: ignore
+        global_boxes_path = snakemake.output["global_boxes"]  # type: ignore
     except:
         admin_data_path = sys.argv[1]
         output_dir = sys.argv[2]

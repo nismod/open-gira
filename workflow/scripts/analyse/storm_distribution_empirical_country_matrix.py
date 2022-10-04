@@ -12,8 +12,8 @@ import itertools as it
 import json
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    thrval = snakemake.params["central_threshold"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    thrval = snakemake.params["central_threshold"]  # type: ignore
 except:
     output_dir = sys.argv[1]
     thrval = sys.argv[2]

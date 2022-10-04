@@ -8,15 +8,15 @@ import os
 from shapely.geometry import LineString
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    plotfile = str(snakemake.input)
-    output = str(snakemake.output)
-    metric = snakemake.params["metric"]
-    vmax = snakemake.params["vmax"]
-    vmin = snakemake.params["vmin"]
-    cmap = snakemake.params["cmap"]
-    linewidth = snakemake.params["linewidth"]
-    legend_name = snakemake.params["legend_name"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    plotfile = str(snakemake.input)  # type: ignore
+    output = str(snakemake.output)  # type: ignore
+    metric = snakemake.params["metric"]  # type: ignore
+    vmax = snakemake.params["vmax"]  # type: ignore
+    vmin = snakemake.params["vmin"]  # type: ignore
+    cmap = snakemake.params["cmap"]  # type: ignore
+    linewidth = snakemake.params["linewidth"]  # type: ignore
+    legend_name = snakemake.params["legend_name"]  # type: ignore
 except:
     plotfile = "N/A"
     output = "N/A"

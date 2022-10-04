@@ -17,17 +17,17 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     try:
-        hazard_dir = snakemake.input["hazard_dir"]
+        hazard_dir = snakemake.input["hazard_dir"]  # type: ignore
         coastline = os.path.join(
-            snakemake.input["coastline"], snakemake.params["coastline"]
+            snakemake.input["coastline"], snakemake.params["coastline"]  # type: ignore
         )
         boundaries = os.path.join(
-            snakemake.input["boundaries"], snakemake.params["boundaries"]
+            snakemake.input["boundaries"], snakemake.params["boundaries"]  # type: ignore
         )
-        output_dir = snakemake.output[0]
+        output_dir = snakemake.output[0]  # type: ignore
 
         try:
-            opts_dict = snakemake.config["exposure_tifs"]["plot"]
+            opts_dict = snakemake.config["exposure_tifs"]["plot"]  # type: ignore
         except KeyError:
             opts_dict = {}
 

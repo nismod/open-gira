@@ -12,14 +12,14 @@ import pandas as pd
 from common_functions import find_storm_files, check_srn
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    metrics = snakemake.params["metrics"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    metrics = snakemake.params["metrics"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
 except:  # for testing only
     output_dir = "results"
     metrics = [

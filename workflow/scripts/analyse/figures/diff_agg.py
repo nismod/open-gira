@@ -15,14 +15,14 @@ import time
 
 
 try:
-    metric = snakemake.params["metric"]
-    merge_key = snakemake.params["merge_key"]
-    inputs = snakemake.input  # first is future
-    output = snakemake.output
+    metric = snakemake.params["metric"]  # type: ignore
+    merge_key = snakemake.params["merge_key"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    output = snakemake.output  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 
-
+# first input is future
 assert len(inputs) == 2
 assert type(output) != list
 output = str(output)

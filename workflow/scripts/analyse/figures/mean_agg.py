@@ -4,14 +4,12 @@
 import os
 import geopandas as gpd
 
-import time
-
 try:
-    output_dir = snakemake.params["output_dir"]
-    metric = snakemake.params["metric"]
-    merge_key = snakemake.params["merge_key"]
-    inputs = snakemake.input
-    output = snakemake.output
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    metric = snakemake.params["metric"]  # type: ignore
+    merge_key = snakemake.params["merge_key"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    output = snakemake.output  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 
