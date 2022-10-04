@@ -4,12 +4,9 @@ import warnings
 from typing import Iterable
 
 import geopandas as gpd
-import numpy as np
-import pandas
-
 import snkit
 
-from join_data import append_data
+from .join_data import append_data
 
 
 def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:

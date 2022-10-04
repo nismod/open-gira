@@ -1,10 +1,9 @@
 """Plotter for caribbean region"""
-
+import os
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import os
 from shapely.geometry import LineString
 
 try:

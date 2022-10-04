@@ -1,6 +1,7 @@
 import os
-import requests
 import sys
+
+import requests
 
 try:
     country_ident = snakemake.params["code_country"]  # type: ignore

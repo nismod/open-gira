@@ -1,23 +1,21 @@
 """
 Plotting tools for analysing network connectedness
 """
-
-from collections import defaultdict
 import os
 import re
 import sys
+from collections import defaultdict
 from typing import Iterable
 
 import datashader as ds
-from datashader.utils import export_image
 import geopandas as gpd
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import colors
+import numpy as np
 import pandas as pd
-import spatialpandas
-
 import snkit
+import spatialpandas
+from datashader.utils import export_image
+from matplotlib import colors
 
 
 def natural_sort(to_sort: Iterable) -> list:

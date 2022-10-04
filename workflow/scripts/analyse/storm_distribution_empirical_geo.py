@@ -8,15 +8,14 @@ If top_select = 100 then all storms are shown.
 Outputs gpkg file with metrics as target features (option to select top_select % (ranked by metric) to this file)
 
 """
-
 import os
+
+import geopandas as gpd
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import numpy as np
-import geopandas as gpd
 
-from common_functions import find_storm_files, avg, sm, ae, check_srn, traprule
-
+from .common_functions import ae, avg, check_srn, find_storm_files, sm, traprule
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

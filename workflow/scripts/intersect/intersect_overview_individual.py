@@ -1,11 +1,11 @@
-"""Collects all individual storm json statistics for each region sample and merges into one csv"""
-
-
-import os
+"""Collects all individual storm json statistics for each region sample and merges into one
+csv
+"""
 import json
-from tqdm import tqdm
-import pandas as pd
+import os
 
+import pandas as pd
+from tqdm import tqdm
 
 try:
     inputs_stats = snakemake.input  # type: ignore

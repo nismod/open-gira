@@ -14,14 +14,13 @@ The process is as follows:
 * Save with way and node details
 
 """
-
 import logging
 import sys
 from collections import Counter
 
 import geopandas
-import pandas
 import osmium
+import pandas
 import shapely.geometry as shape
 import shapely.ops as shape_ops
 

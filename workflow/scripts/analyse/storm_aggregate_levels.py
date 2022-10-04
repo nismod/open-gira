@@ -1,14 +1,15 @@
 """Takes a gpkg file and aggregates to chosen level
+
 Outputs a gpkg file with metrics as target features (can use QGIS to plot)
 """
-
 import os
-import sys
+
 import fiona
-from tqdm import tqdm
 import geopandas as gpd
-from shapely.geometry import shape, box
-from common_functions import avg, sm, ae
+from shapely.geometry import shape
+from tqdm import tqdm
+
+from .common_functions import ae, avg, sm
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

@@ -1,9 +1,11 @@
-"""Writes a list of countries which are in the gadm36.gpkg file but do not have population .tifs to file
+"""Writes a list of countries which are in the gadm36.gpkg file but do not have population
+tifs to file
 """
-
+import glob
 import json
 import os
-import glob
+import sys
+
 import fiona
 
 try:

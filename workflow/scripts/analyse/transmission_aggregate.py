@@ -1,21 +1,19 @@
-"""Sums the count of hits on all tranmission lines for selected region, sample, storm and aggregates reconstruction cost to level
-
-
+"""Sums the count of hits on all tranmission lines for selected region, sample, storm and
+aggregates reconstruction cost to level
 """
-
+import json
 import os
-import sys
-from shapely.geometry import shape, LineString
+import time
+
 import fiona
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import json
-from tqdm import tqdm
-import time
-from common_functions import find_storm_files, check_srn
 from geopy import distance
+from shapely.geometry import LineString, shape
+from tqdm import tqdm
 
+from .common_functions import check_srn, find_storm_files
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

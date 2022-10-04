@@ -4,14 +4,16 @@
 Create an image showing exposed road length by combining exposure tifs,
 coastline data, and administrative boundary information.
 """
-import logging
-import geopandas as gp
-import rasterio.plot
-import os
-import matplotlib.pyplot as plt
-import shapely.geometry as shape
-import re
 import glob
+import logging
+import os
+import re
+import sys
+
+import geopandas as gp
+import matplotlib.pyplot as plt
+import rasterio.plot
+import shapely.geometry as shape
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)

@@ -1,12 +1,11 @@
 """Finds EAD and EACA
 
-must have one named constant"""
-
-
+Must have one named constant
+"""
 import os
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

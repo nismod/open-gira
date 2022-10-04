@@ -2,16 +2,15 @@
 # coding: utf-8
 """Split network edges along grid cells, join hazard values.
 """
+import glob
 import logging
 import os
 import re
 import sys
-import glob
 
 import geopandas
 import pandas
 import rasterio
-
 from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm

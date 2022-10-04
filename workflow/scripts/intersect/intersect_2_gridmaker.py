@@ -1,18 +1,15 @@
 """Creates unit grid at resolution of the return period maps."""
+import json
+import os
+import sys
+import time
 
-
+import geopandas as gpd
+import netCDF4 as nc4
 import numpy as np
 import pandas as pd
-import netCDF4 as nc4
-import sys
-import geopandas as gpd
-import os
-import time
-import json
-from shapely.geometry import box
-
 from pathos.multiprocessing import ProcessPool, cpu_count
-
+from shapely.geometry import box
 from tqdm import tqdm
 
 try:

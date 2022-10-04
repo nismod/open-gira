@@ -6,12 +6,13 @@ by thresholding cells by flood depth and grading by
 length of road within the cell.
 """
 import logging
+import os
+import sys
+
 import geopandas as gp
+import numpy as np
 import rasterio
 from rasterio.enums import Resampling
-import os
-import numpy as np
-
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)

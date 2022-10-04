@@ -1,25 +1,28 @@
-# Takes a list of geoparquet files containing geodataframes and joins them
+"""Takes a list of geoparquet files containing geodataframes and joins them
 
-# file1.geoparguet
-# id obs1 obs2 geometry
-# 0  a    b    geom0
-# 1  c    d    geom1
+    file1.geoparguet
+    id obs1 obs2 geometry
+    0  a    b    geom0
+    1  c    d    geom1
 
-# file2.geoparguet
-# id obs1 obs2 geometry
-# 0  A    B    GEOM0
-# 1  C    D    GEOM1
+    file2.geoparguet
+    id obs1 obs2 geometry
+    0  A    B    GEOM0
+    1  C    D    GEOM1
 
-# joined.geoparguet
-# id obs1 obs2 geometry
-# 0  a    b    geom0
-# 1  c    d    geom1
-# 2  A    B    GEOM0
-# 3  C    D    GEOM1
+    joined.geoparguet
+    id obs1 obs2 geometry
+    0  a    b    geom0
+    1  c    d    geom1
+    2  A    B    GEOM0
+    3  C    D    GEOM1
 
-# Usage: python join_data.py [FILE] [output]
-# Example: python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
+Usage:
+    python join_data.py [FILE] [output]
 
+Example:
+    python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
+"""
 import logging
 import sys
 import warnings

@@ -1,7 +1,9 @@
-"""Collects all individual (per region, sample) storm json statistics and merges into one csv"""
+"""Collects all individual (per region, sample) storm json statistics and merges into one
+csv
+"""
+import os
 
 import pandas as pd
-import os
 
 try:
     inputs = snakemake.input  # type: ignore

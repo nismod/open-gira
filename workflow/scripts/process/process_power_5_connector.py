@@ -1,7 +1,18 @@
 """Documents the connections between boxes"""
+import glob
+import json
+import os
+import sys
+import time
+import warnings
 
-from process_power_functions import adj
-from importing_modules import *
+import geopandas as gpd
+from shapely.geometry import LineString
+from tqdm import tqdm
+
+from .process_power_functions import adj
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 try:

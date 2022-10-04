@@ -1,13 +1,12 @@
 """Selects the percentile storm as specified in the config file and copies into power_output/statistics/percentile/
-
 """
-
 import os
+from distutils.dir_util import copy_tree
+
 import numpy as np
 import pandas as pd
-from distutils.dir_util import copy_tree
-from common_functions import find_storm_files, check_srn
 
+from .common_functions import check_srn, find_storm_files
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

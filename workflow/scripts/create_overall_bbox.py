@@ -1,8 +1,8 @@
-import sys
-import subprocess
 import json
-import re
 import os.path
+import re
+import subprocess
+import sys
 
 try:
     osm_file = snakemake.input[0]  # type: ignore

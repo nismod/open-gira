@@ -4,14 +4,15 @@
 
 import logging
 import sys
-from typing import Tuple
 import warnings
+from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
 
-import utils
-from create_network import create_network
+from .create_network import create_network
+from .utils import (annotate_country, annotate_rehabilitation_costs,
+                    get_administrative_data, str_to_bool, write_empty_frames)
 
 
 def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
@@ -87,7 +88,7 @@ if __name__ == "__main__":
         # if the input parquet file does not contain a geometry column, geopandas
         # will raise a ValueError rather than try to procede
         logging.info(f"{error}\n" "writing empty files and skipping processing...")
-        utils.write_empty_frames(edges_output_path, nodes_output_path)
+        write_empty_frames(edges_output_path, nodes_output_path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
     # read nodes
@@ -120,7 +121,7 @@ if __name__ == "__main__":
     network.nodes['station'] = network.nodes.tag_railway == 'station'
 
     # boolean bridge field
-    network.edges['bridge'] = utils.str_to_bool(network.edges['tag_bridge'])
+    network.edges['bridge'] = str_to_bool(network.edges['tag_bridge'])
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
@@ -128,13 +129,13 @@ if __name__ == "__main__":
     network.nodes.set_crs(epsg=osm_epsg, inplace=True)
 
     logging.info("Annotating network with administrative data")
-    network = utils.annotate_country(
+    network = annotate_country(
         network,
-        utils.get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
+        get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
     )
 
     logging.info("Annotating network with rehabilitation costs")
-    network = utils.annotate_rehabilitation_costs(
+    network = annotate_rehabilitation_costs(
         network,
         pd.read_excel(rehabilitation_costs_path, sheet_name="rail"),
         get_rehab_costs

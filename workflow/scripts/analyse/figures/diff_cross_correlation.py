@@ -1,9 +1,8 @@
 """Plots heatmap difference (future mean - current) with modifications"""
-
-
 import os
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

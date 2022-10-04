@@ -1,11 +1,16 @@
+"""Splits the world into boxes of length and height boxlen (input parameter)
 """
-Splits the world into boxes of length and height boxlen (input parameter)
-"""
+import json
+import os
+import sys
+import warnings
 
+import geopandas as gpd
+import numpy as np
+from shapely.geometry import Point
+from tqdm import tqdm
 
-# N.B. this is evil
-# TODO: remove importing_modules and have script specific imports
-from importing_modules import *
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 if __name__ == "__main__":

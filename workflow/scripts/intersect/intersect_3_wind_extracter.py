@@ -1,17 +1,16 @@
-"""
+"""Process stormtracks data and return the wind speed at each grid location.
+
 Adapted wind speed file from J Verschuur.
 
-Processes stormtracks data and returns the wind speed at each grid location.
-
 TODO: Investigate speeding up this script. N.B. ~80% of execution time is file I/O.
+
 """
-
-
-import numpy as np
-import pandas as pd
-import geopandas as gpd
 import os
 import time
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 try:

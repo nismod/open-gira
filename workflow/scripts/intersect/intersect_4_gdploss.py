@@ -14,8 +14,7 @@ from geopy import distance
 from shapely.geometry import LineString, Point
 from tqdm import tqdm
 
-from damage_calculator import applythreshold
-
+from .damage_calculator import applythreshold
 
 try:
     region = snakemake.params["region"]  # type: ignore

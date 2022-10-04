@@ -1,15 +1,16 @@
 """Plots the empirical distribution of storms for simple statistics.
 
-Only the combined storm .csv files are examined, rather than the .gpkg target files. This is much faster but limited to the available statistics in the .txt files.
-Outputs plots of metrics vs return periods
+Only the combined storm .csv files are examined, rather than the .gpkg target files. This is
+much faster but limited to the available statistics in the .txt files. Outputs plots of metrics
+vs return periods
 """
-
 import os
-import numpy as np
-import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-from common_functions import find_storm_files, check_srn
+
+from .common_functions import check_srn, find_storm_files
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

@@ -1,15 +1,14 @@
-"""Plots the empirical storm relationship matrix between (two) countries and conditional probability relationship
-
+"""Plots the empirical storm relationship matrix between (two) countries and conditional
+probability relationship
 """
-
+import itertools as it
 import os
-import numpy as np
 import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import itertools as it
-import json
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

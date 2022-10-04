@@ -1,8 +1,9 @@
 """Takes all csv files in /data/ and plots them, legend is the name of the csv file.
 
-Takes mean of all files unless 'constant' which has separate curve"""
-
+Takes mean of all files unless 'constant' which has separate curve.
+"""
 import os
+
 import matplotlib.pyplot as plt
 import pandas as pd
 

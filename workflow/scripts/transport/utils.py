@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
+"""Shared functions for creating, cleaning, manipulating and analysing networks.
 """
-Shared functions for creating, cleaning, manipulating and analysing networks.
-"""
-
-
 import logging
 import re
 from typing import Any, Callable
 
-import pandas as pd
 import geopandas as gpd
-
+import pandas as pd
 import snkit
-
 
 WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
 

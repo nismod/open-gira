@@ -1,12 +1,10 @@
 """Slice collection of geometries definded in geoJSON file and write
 slices in geoJSONfile.
 """
-
 import json
 import math
-from os.path import join
-from os.path import splitext as splitext_orig
 import sys
+from os.path import splitext as splitext_orig
 
 
 def splitext(string, exts=None):
