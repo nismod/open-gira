@@ -23,6 +23,7 @@ TRANSMISSION_OUT = [
 
 
 rule analyse_transmission:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             STORM_IMPACT_STATISTICS_DIR, f"combined_storm_statistics_{config['central_threshold']}.csv"

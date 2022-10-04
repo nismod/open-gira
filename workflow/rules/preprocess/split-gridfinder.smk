@@ -4,6 +4,7 @@ Process gridfinder elements for each box
 
 
 rule process_gridfinder:
+    conda: "../../../environment.yml"
     input:
         os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg"),
         os.path.join(

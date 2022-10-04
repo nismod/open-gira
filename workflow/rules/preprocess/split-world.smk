@@ -4,6 +4,7 @@ Split the world into boxes
 
 
 rule world_splitter:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"], "input", "admin-boundaries", "gadm36_levels.gpkg"

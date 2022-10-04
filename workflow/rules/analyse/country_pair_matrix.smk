@@ -12,6 +12,7 @@ COUNTRY_MATRIX_OUTPUT = [
 
 
 rule analyse_country_matrix:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             STORM_IMPACT_STATISTICS_DIR, f"combined_storm_statistics_{config['central_threshold']}.csv"

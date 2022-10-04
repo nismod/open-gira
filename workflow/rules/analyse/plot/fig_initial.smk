@@ -24,6 +24,7 @@ initial_checks = os.path.join(
 
 
 rule fig_checks:
+    conda: "../../../../environment.yml"
     params:
         output_dir=config["output_dir"],
         models_all=models_all,

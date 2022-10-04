@@ -8,6 +8,7 @@ def aggregate_input(wildcards):
 
 
 rule convert_to_geoparquet:
+    conda: "../../../environment.yml"
     input:
         pbf=aggregate_input,
     params:

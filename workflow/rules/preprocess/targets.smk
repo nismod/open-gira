@@ -18,6 +18,7 @@ rule process_targets:
 
 
 rule process_target_box:
+    conda: "../../../environment.yml"
     input:  # note also require countries which intersect each box
         os.path.join(config['output_dir'], "power_processed", 'world_boxes.gpkg'),
         rules.download_population_all.input.population_raster_by_country,

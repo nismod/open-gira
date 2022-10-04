@@ -4,6 +4,7 @@ Process powerplants for each box
 
 
 rule process_powerplants:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"],

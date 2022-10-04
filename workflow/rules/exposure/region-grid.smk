@@ -6,6 +6,7 @@ import os
 
 
 rule intersect_unit_generator:
+    conda: "../../../environment.yml"
     input:
         expand(
             os.path.join(

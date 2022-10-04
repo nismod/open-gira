@@ -31,6 +31,7 @@ out_cc_file_diff = [
 
 
 rule fig_cross_correlation:
+    conda: "../../../../environment.yml"
     input:
         in_cc,
     params:
@@ -47,6 +48,7 @@ rule fig_cross_correlation:
 
 
 rule fig_cross_correlation_diff:
+    conda: "../../../../environment.yml"
     input:
         in_cc,
     params:

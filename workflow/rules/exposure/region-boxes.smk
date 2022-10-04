@@ -6,6 +6,7 @@ import os
 
 
 rule intersect_region_boxes:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"], "power_processed", "world_boxes_metadata.txt"

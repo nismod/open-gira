@@ -55,6 +55,7 @@ out_diff_EAD_plot_norm = os.path.join(
 
 ## aggregated (absolute) ##
 rule fig_aggregate_EAD_agg:
+    conda: "../../../../environment.yml"
     input:
         [
             os.path.join(
@@ -82,6 +83,7 @@ rule fig_aggregate_EAD_agg:
 
 
 rule fig_diff_EAD_agg:
+    conda: "../../../../environment.yml"
     input:
         [
             rules.fig_aggregate_EAD_agg.output.out_agg_EAD_agg,
@@ -104,6 +106,7 @@ rule fig_diff_EAD_agg:
 
 # rule fig_diff_EAD_agg_plot:
 #       """Not ideal plot as varies a lot by total km in region"""
+#    conda: "../../../../environment.yml"
 #     input:
 #         out_diff_EAD_agg
 #     params:
@@ -148,6 +151,7 @@ rule fig_aggregate_EAD_agg_norm:
 
 
 rule fig_diff_EAD_agg_norm:
+    conda: "../../../../environment.yml"
     input:
         [
             rules.fig_aggregate_EAD_agg_norm.output.out_agg_EAD_agg_norm,
@@ -169,6 +173,7 @@ rule fig_diff_EAD_agg_norm:
 
 
 # rule fig_diff_EAD_agg_plot_norm:
+#    conda: "../../../../environment.yml"
 #     input:
 #         out_diff_EAD_agg
 #     params:
@@ -187,6 +192,7 @@ rule fig_diff_EAD_agg_norm:
 
 ## individual assets ##
 rule fig_aggregate_EAD_indiv:
+    conda: "../../../../environment.yml"
     input:
         in_agg_EAD_indiv=[
             os.path.join(
@@ -214,6 +220,7 @@ rule fig_aggregate_EAD_indiv:
 
 
 rule fig_diff_EAD_indiv:
+    conda: "../../../../environment.yml"
     input:
         [
             rules.fig_aggregate_EAD_indiv.output.out_agg_EAD_indiv,
@@ -236,6 +243,7 @@ rule fig_diff_EAD_indiv:
 
 rule fig_diff_EAD_indiv_plot:
     """Plots difference"""
+    conda: "../../../../environment.yml"
     input:
         out_diff_EAD_indiv,
     params:
@@ -254,6 +262,7 @@ rule fig_diff_EAD_indiv_plot:
 
 rule fig_current_EAD_indiv_plot:
     """Plots current"""
+    conda: "../../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"],

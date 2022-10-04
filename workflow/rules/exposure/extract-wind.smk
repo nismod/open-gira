@@ -19,6 +19,7 @@ checkpoint intersect_winds_indiv:
     IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
                still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
     it clears all existing files matching the output."""
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"], "power_processed", "world_boxes_metadata.txt"

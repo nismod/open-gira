@@ -12,6 +12,7 @@ def aggregate_input(wildcards):
 
 
 rule make_exposure_tif:
+    conda: "../../../../environment.yml"
     input:
         geoparquet="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}_{HAZARD_SLUG}.geoparquet",
         hazard=aggregate_input,
