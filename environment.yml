@@ -2,12 +2,38 @@
 # conda env create -f environment.yml
 name: open-gira
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
   - python=3.9
   - pip
-  - pip:  # delegate to pip for majority of packages
-    - -r requirements.txt
+  - pip:  # delegate to pip for non-conda packages
+    - nismod-snail==0.2.1 # vector-raster intersections
+    - snkit==1.7.1        # spatial network cleaning
+    - osmium==3.2.0       # OpenStreetMap protobuf handling
+    - snakemake==6.15.1   # workflow
+  - black               # formatter
+  - cython==0.29.28     # c--python interface
   - datashader          # plotting large datasets
+  - flake8              # linter
+  - geopandas>=0.11.0   # geospatial dataframes
+  - geopy               # geocoding client
+  - ipykernel           # notebook support
+  - jupyter             # notebook support
+  - matplotlib==3.5.1   # basic plotting
+  - nb_conda_kernels    # notebook support
+  - netCDF4             # NetCDF file format
+  - networkx            # networks
+  - numpy~=1.22.0       # data arrays
+  - openpyxl            # Excel file format
+  - pathos              # multiprocessing
+  - pyarrow==6.0.0      # parquet file format, Arrow data exchange
+  - pyproj>=3.3.1       # geographic projections
+  - pyrosm              # python OpenStreetMap network reader
+  - pytest==6.2.4       # testing
+  - rasterio            # raster file formats
+  - rasterstats         # raster statistics
+  - requests            # make HTTP requests
   - spatialpandas       # plotting large datasets
+  - tqdm==4.62.3        # progress bars
+  - zenodo_get          # data download client
