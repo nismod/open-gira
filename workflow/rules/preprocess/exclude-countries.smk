@@ -11,6 +11,6 @@ rule process_exclude_countries:
     params:
         output_dir=config["output_dir"],
     output:
-        os.path.join(config["output_dir"], "power_processed", "exclude_countries.txt"),
+        os.path.join(config["output_dir"], "power_processed", "exclude_countries.json"),
     script:
         os.path.join("..", "..", "scripts", "process", "exclude_countries.py")

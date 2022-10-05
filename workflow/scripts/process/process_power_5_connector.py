@@ -17,7 +17,7 @@ network_paths = glob.glob(
 
 
 with open(
-    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+    os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
 ) as filejson:
     world_boxes_metadata = json.load(filejson)
 num_cols = world_boxes_metadata["num_cols"]
@@ -84,8 +84,8 @@ for network_path in tqdm(
             "power_processed",
             "all_boxes",
             box_id,
-            f"connector_{box_id}.txt",
+            f"connector_{box_id}.json",
         ),
         "w",
-    ) as file_ex:
-        json.dump(portal_dict, file_ex)
+    ) as fp:
+        json.dump(portal_dict, fp, indent=2)

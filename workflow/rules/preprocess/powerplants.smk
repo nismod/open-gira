@@ -11,9 +11,7 @@ rule process_powerplants:
             "powerplants",
             "global_power_plant_database.csv",
         ),
-        os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
-        ),
+        rules.world_splitter.output.global_metadata,
     params:
         output_dir=config["output_dir"],
     output:

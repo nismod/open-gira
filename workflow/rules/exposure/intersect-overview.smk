@@ -1,16 +1,16 @@
 """
 Merges the gdp loss statistics.
 
-Provides an overview for all storms. This is useful for further analysis decisions and required to bring together the snakemake wildcards.
+Provides an overview for all storms. This is useful for further analysis
+decisions and required to bring together the snakemake wildcards.
 """
 
 import os
 
 
 def aggregate_input(wildcards):
-    checkpoint_output = checkpoints.intersect_winds_indiv.get(**wildcards).output[
-        0
-    ]  # need this to signify that requires checkpoint data
+    # need this to signify that requires checkpoint data
+    checkpoint_output = checkpoints.intersect_winds_indiv.get(**wildcards).output.gridded_wind_speeds
     print("checkpoint output:", checkpoint_output)  # in this case: "data"
 
     # "data2/new_{num}.txt" is the last output before the aggregating file
@@ -18,26 +18,25 @@ def aggregate_input(wildcards):
     # glob_wildcards(os.path.join(checkpoint_output, "{num}.txt")).num  # extracts the actual wildcards (here: {num})
     # expand(...,...) to create the output of the last output before the aggregating file
 
-    ret = expand(
+    return expand(
         os.path.join(
             config["output_dir"],
             "power_intersection",
             "storm_data",
             "individual_storms",
-            "{region}",
-            "{sample}",
-            "storm_{nh}",
-            "{thrval}",
-            "storm_r{region}_s{sample}_n{nh}.txt",
+            "{REGION}",
+            "{SAMPLE}",
+            "storm_{STORM_ID}",
+            "{WIND_SPEED_THRESHOLD}",
+            "storm_r{REGION}_s{SAMPLE}_n{STORM_ID}.txt",
         ),
-        nh=glob_wildcards(
-            os.path.join(checkpoint_output, "TC_r{region}_s{sample}_n{nh}.csv")
-        ).nh,
-        region=wildcards.region,
-        sample=wildcards.sample,
-        thrval=wildcards.thrval,
+        STORM_ID=glob_wildcards(
+            os.path.join(checkpoint_output, "TC_r{REGION}_s{SAMPLE}_n{STORM_ID}.csv")
+        ).STORM_ID,
+        REGION=wildcards.REGION,
+        SAMPLE=wildcards.SAMPLE,
+        WIND_SPEED_THRESHOLD=wildcards.WIND_SPEED_THRESHOLD,
     )
-    return ret
 
 
 rule merge_overview_indiv_stats:
@@ -46,12 +45,12 @@ rule merge_overview_indiv_stats:
         aggregate_input,
     output:
         os.path.join(
-            config["output_dir"],
+            "{OUTPUT_DIR}",
             "power_output",
             "statistics",
-            "{region}",
-            "{sample}",
-            "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+            "{REGION}",
+            "{SAMPLE}",
+            "combined_storm_statistics_{REGION}_{SAMPLE}_{WIND_SPEED_THRESHOLD}.csv",
         ),
     script:
         os.path.join(

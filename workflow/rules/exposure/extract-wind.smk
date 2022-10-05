@@ -15,58 +15,31 @@ assert WIND_RERUN_BOOL in [True, False]
 
 
 checkpoint intersect_winds_indiv:
-    """Find the .csv files for the wind speed details at each unit.
-    IMPORTANT: to reduce computational time, this rule is executed only once and the .py file works out what needs to
-               still be calculated. THe output of this rule is limited to rsn_req because when snakemake runs the rule
-    it clears all existing files matching the output."""
+    """
+    Find windspeeds for every storm for each grid cell.
+    """
     input:
-        os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
-        ),
-        os.path.join(
-            config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
-        ),
-        os.path.join(
-            config["output_dir"],
-            "input",
-            "stormtracks",
-            "fixed",
-            "STORM_FIXED_RETURN_PERIODS_{region}.nc",
-        ),
-        STORMS_EVENTS,
+        metadata = rules.world_splitter.output.global_metadata,
+        unit_grid = "{OUTPUT_DIR}/power_intersection/regions/{REGION}_unit.gpkg",
+        return_period_map = "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc",
+        storm_files = STORMS_EVENTS,
     params:
-        region="{region}",
-        sample="{sample}",
-        all_boxes_compute=ALL_BOXES,
-        memory_storm_split=STORM_BATCH_SIZE,
-        wind_rerun=WIND_RERUN_BOOL,
-        output_dir=config["output_dir"],
-        storm_model_type=config["storm_model_type"],
-        wind_file_start=WIND_FILE_START,
-        wind_file_end=WIND_FILE_END,
-        central_threshold=config["central_threshold"],
-        minimum_threshold=config["minimum_threshold"],
-        maximum_threshold=config["maximum_threshold"],
+        region = lambda wildcards: wildcards.REGION,
+        sample = lambda wildcards: wildcards.SAMPLE,
+        all_boxes_compute = ALL_BOXES,
+        memory_storm_split = STORM_BATCH_SIZE,
+        wind_rerun = WIND_RERUN_BOOL,
+        output_dir = lambda wildcards: wildcards.OUTPUT_DIR,
+        storm_model_type = STORM_MODEL,
+        wind_file_start = WIND_FILE_START,
+        wind_file_end = WIND_FILE_END,
+        # wind speed thresholds
+        central_threshold = config["central_threshold"],
+        minimum_threshold = config["minimum_threshold"],
+        maximum_threshold = config["maximum_threshold"],
     output:
-        directory(
-            os.path.join(
-                config["output_dir"],
-                "power_intersection",
-                "storm_data",
-                "all_winds",
-                "{region}",
-                "{sample}",
-            )
-        ),
-        os.path.join(
-            config["output_dir"],
-            "power_intersection",
-            "storm_data",
-            "all_winds",
-            "{region}",
-            "{sample}",
-            "{region}_{sample}_completed.txt",
-        ),
+        gridded_wind_speeds = directory("{OUTPUT_DIR}/power_intersection/storm_data/all_winds/{REGION}/{SAMPLE}"),
+        completion_flag = "{OUTPUT_DIR}/power_intersection/storm_data/all_winds/{REGION}/{SAMPLE}/completed.txt",
     script:
         os.path.join(
             "..", "..", "scripts", "intersect", "intersect_3_wind_extracter.py"

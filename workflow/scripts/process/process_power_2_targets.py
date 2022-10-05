@@ -95,7 +95,7 @@ def get_population(box_id, targets, exclude_countries_lst):
     # below: population of target areas (targets.geometry), populations is list corresponding to areas (CHECK, I think)
 
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
     box_country_list_id = world_boxes_metadata["box_country_dict"][box_id]
@@ -204,7 +204,7 @@ def get_gdp(targets):
     ]  # set masked to 0 (later removed)
 
     targets["gdp_pc"] = gdp_pc_lst
-    targets["gdp"] = targets.gdp_pc * targets.population
+    targets["gdp"] = targets.gdp_pc.fillna(0) * targets.population.fillna(0)
     return targets
 
 
@@ -226,9 +226,9 @@ if __name__ == "__main__":
         targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
 
     with open(
-        os.path.join(output_dir, "power_processed", "exclude_countries.txt"), "r"
-    ) as file:
-        exclude_countries_lst = json.load(file)
+        os.path.join(output_dir, "power_processed", "exclude_countries.json"), "r"
+    ) as fp:
+        exclude_countries_lst = json.load(fp)
 
     if len(targets_box) != 0:
         # print("getting target population")
