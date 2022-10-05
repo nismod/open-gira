@@ -10,8 +10,9 @@ import pandas as pd
 from shapely.geometry import shape
 from tqdm import tqdm
 
+from process_power_functions import idxbox
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-from .process_power_functions import idxbox
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

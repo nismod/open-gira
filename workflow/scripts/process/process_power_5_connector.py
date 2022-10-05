@@ -10,7 +10,7 @@ import geopandas as gpd
 from shapely.geometry import LineString
 from tqdm import tqdm
 
-from .process_power_functions import adj
+from process_power_functions import adj
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

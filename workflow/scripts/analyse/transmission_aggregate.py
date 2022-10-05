@@ -13,7 +13,7 @@ from geopy import distance
 from shapely.geometry import LineString, shape
 from tqdm import tqdm
 
-from .common_functions import check_srn, find_storm_files
+from common_functions import check_srn, find_storm_files
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

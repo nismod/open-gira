@@ -9,7 +9,7 @@ import geopandas as gpd
 from shapely.geometry import shape
 from tqdm import tqdm
 
-from .common_functions import ae, avg, sm
+from common_functions import ae, avg, sm
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

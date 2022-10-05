@@ -10,8 +10,8 @@ from typing import Tuple
 import geopandas as gpd
 import pandas as pd
 
-from .create_network import create_network
-from .utils import (annotate_country, annotate_rehabilitation_costs,
+from create_network import create_network
+from utils import (annotate_country, annotate_rehabilitation_costs,
                     get_administrative_data, str_to_bool, write_empty_frames)
 
 

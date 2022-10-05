@@ -12,9 +12,8 @@ import pandas as pd
 import snkit
 from pyproj import Geod
 
-from .create_network import create_network
-
-from .utils import (annotate_country, annotate_rehabilitation_costs, cast,
+from create_network import create_network
+from utils import (annotate_country, annotate_rehabilitation_costs, cast,
                     get_administrative_data, str_to_bool, strip_suffix,
                     write_empty_frames)
 

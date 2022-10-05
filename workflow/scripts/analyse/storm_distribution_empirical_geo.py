@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .common_functions import ae, avg, check_srn, find_storm_files, sm, traprule
+from common_functions import ae, avg, check_srn, find_storm_files, sm, traprule
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore

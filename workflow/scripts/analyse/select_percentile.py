@@ -6,7 +6,7 @@ from distutils.dir_util import copy_tree
 import numpy as np
 import pandas as pd
 
-from .common_functions import check_srn, find_storm_files
+from common_functions import check_srn, find_storm_files
 
 try:
     output_dir = snakemake.params["output_dir"]  # type: ignore
