@@ -27,37 +27,31 @@ some of the core functionality.
 
 ## Installation
 
-### conda
+### Conda
 
-This repository comes with a `environment.yml` file describing the conda and pip packages required to run `open-gira`.
+This repository comes with a `environment.yml` file describing the conda and
+PyPI packages required to run `open-gira`.
 
-Create the `open-gira` conda environment:
-```
-conda env create -f workflow/envs/environment.yml
-```
-and activate it
-```
-conda activate open-gira
-```
+To create the `open-gira` conda environment: `conda env create -f
+environment.yml`
 
-### pip
+And to activate it: `conda activate open-gira`
 
-Install python requirements as listed in `requirements.txt` - for
-example using a venv:
+The `snakemake` package is also required to orchestrate the workflow, but it is
+not included in the `environment.yml` as its usage is context dependent:
+- For local deployment you may with to install `snakemake` into the _activated_
+  `open-gira` environment with `conda install snakemake`.
+- If running on a cluster, you could create a seperate orchestrating
+  environment containing only snakemake, e.g. `conda env create -n snakemake
+  python=3.9 snakemake`. Activate this before requesting targets with
+  `snakemake --profile <path_to_cluster_config> <target>`.
 
-```
-python3 -m venv ./venv
-. venv/bin/activate
-pip install -r requirements.txt
-```
+### Osmium
 
-### Install osmium-tool
-
-Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according to the
-instructions there. Tests run with versions:
+Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according
+to the instructions there. Tests run with versions:
 - osmium-tool v1.13.2
 - libosmium v2.17.1
-
 
 ## Running tests
 

@@ -14,19 +14,22 @@ default-resources:
   - partition=short  # {short, medium, long, devel, interactive}
   - mem_mb=16000
   - time="01:00:00"
-restart-times: 2  # if a job fails, retry it twice
-max-jobs-per-second: 10
+restart-times: 1  # if a job fails, retry it once
+max-jobs-per-second: 16  # maximum jobs to _submit_ per second
 max-status-checks-per-second: 1
 local-cores: 1
-latency-wait: 10
-jobs: 50  # max simultaneous jobs
-keep-going: True
+latency-wait: 3  # seconds to wait for files to appear before failing
+jobs: 64  # max simultaneous jobs
+keep-going: True  # do not stop workflow if job(s) fail
 rerun-incomplete: True
 printshellcmds: True
 scheduler: greedy
 cluster-status: status-sacct.sh  # script to poll for job status
 use-conda: True  # activate conda env prior to running any given rule
+# the following path is where an anaconda install (with mamba) is located, envs
+# installed here by snakemake or otherwise should be reusable across the group
 conda-prefix: /data/ouce-gri-jba/anaconda/envs
-# use `mamba` to manage envs
-# as of Oct 2022, snakemake does not support micromamba
+# use `mamba` to create envs
+# micromamba support coming soon? see:
+# https://github.com/snakemake/snakemake/pull/1889
 conda-frontend: mamba
