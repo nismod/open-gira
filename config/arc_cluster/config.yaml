@@ -13,7 +13,7 @@ default-resources:
   - qos=standard  # {basic, standard, priority} only have credits for standard
   - partition=short  # {short, medium, long, devel, interactive}
   - mem_mb=16000
-  - time="01:00:00"
+  - time="08:00:00"  # maximum time for a single job
 restart-times: 1  # if a job fails, retry it once
 max-jobs-per-second: 16  # maximum jobs to _submit_ per second
 max-status-checks-per-second: 1
