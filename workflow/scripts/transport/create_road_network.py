@@ -378,11 +378,11 @@ if __name__ == "__main__":
             flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
-        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
-        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
+        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
+        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
-        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
-        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0_road_nodes.geoparquet
+        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0_road_edges.geoparquet
         # slice_number = 0
         # road_speeds_path = ../../bundled_data/global_road_speeds.xlsx
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation_costs.xlsx

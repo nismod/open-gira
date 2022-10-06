@@ -36,10 +36,10 @@ if __name__ == "__main__":
     except NameError:
         print(sys.argv)
         (hazard_dir, coastline, boundaries, output_dir, opts_dict) = sys.argv[1:]
-        # hazard_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/'
+        # hazard_dir = '../../results/exposure/tanzania-latest_filter-road/hazard-aqueduct-river/'
         # coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
         # boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
-        # output_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/img/'
+        # output_dir = '../../results/exposure/tanzania-latest_filter-road/hazard-aqueduct-river/img/'
         # opts_dict = {}
 
     # Load up the options from the opts_dict

@@ -202,7 +202,7 @@ if __name__ == "__main__":
         # If "snakemake" doesn't exist then must be running from the
         # command line.
         pbf_path, edges_path, nodes_path, keep_tags, osm_epsg = sys.argv[1:]
-        # pbf_path = 'results/slices/tanzania-mini_filter-highway-core/slice-2.osm.pbf'
+        # pbf_path = 'results/slices/tanzania-mini_filter-road/slice-2.osm.pbf'
         # edges_path = 'results/slice-2.geoparquet'
         # nodes_path = 'results/slice-2.geoparquet'
         # keep_tags = 'highway, railway'

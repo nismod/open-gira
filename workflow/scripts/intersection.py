@@ -155,7 +155,7 @@ if __name__ == "__main__":
     except NameError:
         print(sys.argv)
         (network_edges_path, hazard_dir, output_path) = sys.argv[1:]
-        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
+        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-road/slice-2.geoparquet'
         # output_path = '../../results/test.geoparquet'
         # hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
 

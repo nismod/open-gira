@@ -26,7 +26,7 @@ if __name__ == "__main__":
     except NameError:
         print(sys.argv)
         (db_file, hazard, output_path, opts_dict) = sys.argv[1:]
-        # db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
+        # db_file = '../../results/tanzania-mini_filter-road_hazard-aqueduct-river.geoparquet'
         # hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
         # output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
         # opts_dict = {}

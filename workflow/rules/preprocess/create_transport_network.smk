@@ -21,5 +21,5 @@ rule create_transport_network:
 
 """
 Test with:
-snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core/processed/slice-0_edges.geoparquet
+snakemake --cores all results/geoparquet/tanzania-mini_filter-road/processed/slice-0_edges.geoparquet
 """

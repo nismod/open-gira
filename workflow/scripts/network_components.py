@@ -119,11 +119,11 @@ if __name__ == "__main__":
             map_path,
             components_path,
         ) = sys.argv[1:]
-        # nodes_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
-        # edges_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
-        # population_plot_path = ../../results/tanzania-mini_filter-highway-core/road_component_population.pdf
-        # map_path = ../../results/tanzania-mini_filter-highway-core/road_network_map_by_component.pdf
-        # components_path = ../../results/tanzania-mini_filter-highway-core/road_components.parquet
+        # nodes_path = ../../results/tanzania-mini_filter-road/road_edges.geoparquet
+        # edges_path = ../../results/tanzania-mini_filter-road/road_edges.geoparquet
+        # population_plot_path = ../../results/tanzania-mini_filter-road/road_component_population.pdf
+        # map_path = ../../results/tanzania-mini_filter-road/road_network_map_by_component.pdf
+        # components_path = ../../results/tanzania-mini_filter-road/road_components.parquet
 
     # build a network from files on disk
     network = snkit.network.Network(
