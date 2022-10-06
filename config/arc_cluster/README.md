@@ -71,6 +71,8 @@ To persist a terminal over time (and despite dropped SSH connections) consider u
 
 Here's a [friendly guide](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/) and the [official documentation](https://github.com/tmux/tmux/wiki/Getting-Started).
 
+`tmux` to start a new session.
+
 `Ctrl+b` is used to preface commands (often written as `C-b` in the docs).
 
 `Ctrl+b, d` to detach (keep running, but leave) a session.
