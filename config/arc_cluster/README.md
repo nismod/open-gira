@@ -36,23 +36,25 @@ unset __conda_setup
 
 ### Enabling an environment with snakemake
 
-We need the snakemake executable to create jobs for us. We could get this from
-the module load system, but their version is quite old (6.10.0). N.B. Versions
-<7.0.0 may cause the following problem:
+We use snakemake to create jobs for us. We could use the ARC provided snakemake
+executable from the module load system, but their version is quite old
+(6.10.0). N.B. Versions <7.0.0 may cause the following problem:
 https://github.com/snakemake/snakemake/issues/1392
 
-Instead use a conda environment we have created which contains snakemake:
-`conda activate snakemake-7.12.1`
+Instead use a shared conda environment we have created which contains
+snakemake: `conda activate snakemake-7.12.1`
 
 Your prompt should then change to something like:
-`(snakemake-7.12.1) [cenv0899@arc-login01 ~]$`
+```
+(snakemake-7.12.1) [cenv0899@arc-login01 ~]$
+```
 
 ## Osmium
 
 open-gira jobs which filter Open Street Map datasets may require the use of a
 tool called osmium. This has been compiled on the cluster (with
 `/data/ouce-gri-jba/osmium/build_osmium.sh`). To run osmium, place a symlink
-somewhere on your $PATH, pointing to the wrapper script. For example:
+somewhere on your `$PATH`, pointing to the wrapper script. For example:
 ```
 mkdir -p ~/bin
 ln -s /data/ouce-gri-jba/osmium/run_osmium.sh ~/bin/osmium
