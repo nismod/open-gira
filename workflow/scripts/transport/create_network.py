@@ -1,10 +1,9 @@
-"""Generic function for creating a network from edges and optional nodes."""
-
+"""Generic function for creating a network from edges and optional nodes.
+"""
 import logging
 import warnings
 
 import geopandas as gpd
-
 import snkit
 
 

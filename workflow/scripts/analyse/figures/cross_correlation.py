@@ -1,17 +1,15 @@
 """Plots heatmap with modifications"""
-
-
 import os
-import pandas as pd
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import pandas as pd
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    inputs = snakemake.input
-    remove = snakemake.params["remove_countries"]
-    name_cc_constant = snakemake.params["name_cc_constant"]
-    name_cc_future = snakemake.params["name_cc_future"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    remove = snakemake.params["remove_countries"]  # type: ignore
+    name_cc_constant = snakemake.params["name_cc_constant"]  # type: ignore
+    name_cc_future = snakemake.params["name_cc_future"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

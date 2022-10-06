@@ -1,12 +1,10 @@
 """Slice collection of geometries definded in geoJSON file and write
 slices in geoJSONfile.
 """
-
 import json
 import math
-from os.path import join
-from os.path import splitext as splitext_orig
 import sys
+from os.path import splitext as splitext_orig
 
 
 def splitext(string, exts=None):
@@ -42,9 +40,9 @@ def slice_subextracts(initial_bbox, n):
 
 
 try:
-    slice_count = int(snakemake.config["slice_count"])
-    original_file = snakemake.input[0]
-    out_file = snakemake.output[0]
+    slice_count = int(snakemake.config["slice_count"])  # type: ignore
+    original_file = snakemake.input[0]  # type: ignore
+    out_file = snakemake.output[0]  # type: ignore
 except NameError:
     if len(sys.argv) != 4:
         raise RuntimeError(

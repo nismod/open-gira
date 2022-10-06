@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Read OSM geoparquet, create network, clean it, write out as geopackage."""
-
+"""Read OSM geoparquet, create network, clean it, write out as geopackage.
+"""
 import logging
 import sys
-from typing import Tuple
 import warnings
+from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
+import snkit
 from pyproj import Geod
 
-import snkit
-
-import utils
 from create_network import create_network
+from utils import (annotate_country, annotate_rehabilitation_costs, cast,
+                    get_administrative_data, str_to_bool, strip_suffix,
+                    write_empty_frames)
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -37,18 +38,18 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     for column_name, dtype, nullable in type_conversion_data:
         if column_name in edges.columns:
             edges[column_name] = edges[column_name].apply(
-                utils.cast, casting_function=dtype, nullable=nullable
+                cast, casting_function=dtype, nullable=nullable
             )
 
     if "tag_highway" in edges.columns:
         # None -> empty string
         edges.loc[edges['tag_highway'].isnull(), 'tag_highway'] = ''
         # turn the <highway_type>_link entries into <highway_type>
-        edges.tag_highway = edges.tag_highway.apply(utils.strip_suffix)
+        edges.tag_highway = edges.tag_highway.apply(strip_suffix)
 
     # boolean bridge field from tag_bridges
     if "tag_bridge" in edges.columns:
-        edges['bridge'] = utils.str_to_bool(edges['tag_bridge'])
+        edges['bridge'] = str_to_bool(edges['tag_bridge'])
 
     return edges
 
@@ -346,19 +347,19 @@ def annotate_tariff_flow_costs(
 
 if __name__ == "__main__":
     try:
-        osm_edges_path = snakemake.input["edges"]
-        osm_nodes_path = snakemake.input["nodes"]
-        administrative_data_path = snakemake.input["admin"]
-        nodes_output_path = snakemake.output["nodes"]
-        edges_output_path = snakemake.output["edges"]
-        slice_number = snakemake.params["slice_number"]
-        road_speeds_path = snakemake.config["transport"]["speeds_path"]
-        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
-        transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]
-        default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]
-        default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]
-        flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]
-        osm_epsg = snakemake.config["osm_epsg"]
+        osm_edges_path = snakemake.input["edges"]  # type: ignore
+        osm_nodes_path = snakemake.input["nodes"]  # type: ignore
+        administrative_data_path = snakemake.input["admin"]  # type: ignore
+        nodes_output_path = snakemake.output["nodes"]  # type: ignore
+        edges_output_path = snakemake.output["edges"]  # type: ignore
+        slice_number = snakemake.params["slice_number"]  # type: ignore
+        road_speeds_path = snakemake.config["transport"]["speeds_path"]  # type: ignore
+        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]  # type: ignore
+        transport_costs_path = snakemake.config["transport"]["tariff_costs_path"]  # type: ignore
+        default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]  # type: ignore
+        default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]  # type: ignore
+        flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]  # type: ignore
+        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -377,11 +378,11 @@ if __name__ == "__main__":
             flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
-        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
-        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0.geoparquet
+        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
+        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
-        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_nodes.geoparquet
-        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-highway-core/slice-0_road_edges.geoparquet
+        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0_road_nodes.geoparquet
+        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0_road_edges.geoparquet
         # slice_number = 0
         # road_speeds_path = ../../bundled_data/global_road_speeds.xlsx
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation_costs.xlsx
@@ -412,7 +413,7 @@ if __name__ == "__main__":
         logging.info(f"{error}\n" "writing empty files and skipping processing...")
 
         # snakemake requires that output files exist though, so write empty ones
-        utils.write_empty_frames(edges_output_path, nodes_output_path)
+        write_empty_frames(edges_output_path, nodes_output_path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
@@ -434,9 +435,9 @@ if __name__ == "__main__":
     network.nodes.set_crs(epsg=osm_epsg, inplace=True)
 
     logging.info("Annotating network with administrative data")
-    network = utils.annotate_country(
+    network = annotate_country(
         network,
-        utils.get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
+        get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
     )
 
     logging.info("Annotating network with road type and condition data")
@@ -450,7 +451,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Annotating network with rehabilitation costs")
-    network = utils.annotate_rehabilitation_costs(
+    network = annotate_rehabilitation_costs(
         network,
         pd.read_excel(rehabilitation_costs_path, sheet_name="road"),
         get_rehab_costs

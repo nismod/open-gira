@@ -1,27 +1,23 @@
+"""Takes a region and finds the box_ids within it, exports as a list.
 """
-Takes a region and finds the box_ids within it, exports as a list.
-"""
-
 import json
 import os
 import sys
 
-import fiona
 import geopandas as gpd
-from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
+from shapely.geometry.polygon import Polygon
 
 
 if __name__ == "__main__":
-
     try:
-        global_boxes_metadata_path = snakemake.input["global_boxes_metadata"]
-        global_boxes_path = snakemake.input["global_boxes"]
-        basin_geometry_path = snakemake.input["basin_geometry"]
-        region_str = snakemake.params["region_name"]
-        output_dir = snakemake.params["output_dir"]
-        box_ids_path = snakemake.output["boxes_in_region"]
-        box_ids_with_assets_path = snakemake.output["boxes_in_region_with_assets"]
+        global_boxes_metadata_path = snakemake.input["global_boxes_metadata"]  # type: ignore
+        global_boxes_path = snakemake.input["global_boxes"]  # type: ignore
+        basin_geometry_path = snakemake.input["basin_geometry"]  # type: ignore
+        region_str = snakemake.params["region_name"]  # type: ignore
+        output_dir = snakemake.params["output_dir"]  # type: ignore
+        box_ids_path = snakemake.output["boxes_in_region"]  # type: ignore
+        box_ids_with_assets_path = snakemake.output["boxes_in_region_with_assets"]  # type: ignore
     except NameError:
         global_boxes_metadata_path = sys.argv[1]
         global_boxes_path = sys.argv[2]

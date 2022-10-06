@@ -1,16 +1,15 @@
 """Finds EAD and EACA
 
-must have one named constant"""
-
-
+Must have one named constant
+"""
 import os
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    models_future = snakemake.params["models_future"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    models_future = snakemake.params["models_future"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

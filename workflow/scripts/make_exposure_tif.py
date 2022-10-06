@@ -6,26 +6,27 @@ by thresholding cells by flood depth and grading by
 length of road within the cell.
 """
 import logging
+import os
+import sys
+
 import geopandas as gp
+import numpy as np
 import rasterio
 from rasterio.enums import Resampling
-import os
-import numpy as np
-
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     # move to settings later
     epsg = 3857
     try:
-        db_file = snakemake.input["geoparquet"]
-        hazard = snakemake.input["hazard"][0]
-        output_path = snakemake.output[0]
-        opts_dict = snakemake.config["exposure_tifs"]
+        db_file = snakemake.input["geoparquet"]  # type: ignore
+        hazard = snakemake.input["hazard"][0]  # type: ignore
+        output_path = snakemake.output[0]  # type: ignore
+        opts_dict = snakemake.config["exposure_tifs"]  # type: ignore
     except NameError:
         print(sys.argv)
         (db_file, hazard, output_path, opts_dict) = sys.argv[1:]
-        # db_file = '../../results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet'
+        # db_file = '../../results/tanzania-mini_filter-road_hazard-aqueduct-river.geoparquet'
         # hazard = '../../results/input/hazard-aqueduct-river/tanzania-mini/inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp00100.tif'
         # output_path = '../../results/exposure/tanzania-mini/hazard-aqueduct-river'
         # opts_dict = {}

@@ -20,7 +20,7 @@ checkpoint slice:
 
 """
 Test with:
-snakemake --cores all results/slices/tanzania-mini_filter-highway-core
+snakemake --cores all results/slices/tanzania-mini_filter-road
 
 Note: even testing with a single slice will generate all slices defined in the *_extracts.geojson file
 """
