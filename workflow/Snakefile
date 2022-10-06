@@ -47,7 +47,7 @@ wildcard_constraints:
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
     STORM_BASIN="EP|NA|NI|SI|SP|WP",
-    STORM_RP="[0-9+]",
+    STORM_RP="[0-9]+",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     EVENTS_OR_FIXED="events|fixed",
     SAMPLE="\d+",
