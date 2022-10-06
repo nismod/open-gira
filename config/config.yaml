@@ -12,7 +12,7 @@ output_dir: 'results'
 # to retrieve using wget -i
 hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
-  aqueduct-river: 'config/hazard_lists/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
+  aqueduct-river: 'config/hazard_resource_locations/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
 
 # OSM datasets, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
@@ -82,20 +82,25 @@ exposure_tifs:
 storm_model_type: 'constant'
 
 # Failure threshold central value m/s. This value is the threshold at which the network assets are expected to fail based on available literature. The recommended setting is 40 m/s
-central_threshold: 25
+central_threshold: 35
 
 # Minimum failure threshold value m/s. This is the lowest expected value for failure to account for uncertainty in central_threshold
 minimum_threshold: 20
 
 # Maxmimum failure threshold value m/s. This is the highest expected value for failure to account for uncertainty in central_threshold
-maximum_threshold: 30
+maximum_threshold: 50
 
 # Width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5
 
-# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957]. Note that this must be known for the box_width_height value entered above.
+# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957].
+# Note that this must be known for the box_width_height value entered above.
 # use an empty list to evaluate globally
-specific_boxes: [1029, 1028, 1030, 957]
+
+# this contains Puerto Rico (direct hit for Hurricane Maria of 2017)
+specific_boxes: [1030]
+# box IDs for the Caribbean on a 5 degree grid, east to west, south to north
+specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
 
 # REGIONS #
 # Regions in which to analyse. List of strings.
@@ -108,7 +113,7 @@ regions: ["NA"]
 # storm datasets are split into 'samples', each comprising 1,000 years of storm data
 # typically there are 10 samples available for each model
 # to use all available samples, specify an empty list
-storm_files_sample_set: [0, 1]
+storm_files_sample_set: [0]
 
 # Direct damage cost per km (USD) for high voltage lines. 400 000USD suggestion for upper limit
 reconstruction_cost_high: 400000
@@ -121,7 +126,7 @@ reconstruction_cost_lowmedium: 200000
 storm_batches: 900
 
 # If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
-wind_rerun: False
+wind_rerun: True
 
 # Analysis #
 # Percentage of storms to select for geospatial analysis and visualisation. Set to 100 for all
@@ -137,4 +142,4 @@ percentile: 99
 aggregate_level: 1
 
 # Specific storms to analyse in analyse_all workflow. In form of list of strings [#_#_#, #_#_#,... ]. Write None to include all
-specific_storm_analysis: 'None' #['0_2005_97']
+specific_storm_analysis: ['99_2017_0']

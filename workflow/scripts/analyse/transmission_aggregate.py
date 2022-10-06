@@ -103,7 +103,7 @@ region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
 
 
 boxes_county_file = os.path.join(
-    output_dir, "power_processed", "world_boxes_metadata.txt"
+    output_dir, "power_processed", "world_boxes_metadata.json"
 )
 with open(boxes_county_file, "r") as src:
     boxes_country = json.load(src)["box_country_dict"]

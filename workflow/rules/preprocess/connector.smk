@@ -15,9 +15,7 @@ rule process_connector:
             ),
             box_id=ALL_BOXES,
         ),
-        os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
-        ),
+        rules.world_splitter.output.global_metadata,
     params:
         output_dir=config["output_dir"],
     output:

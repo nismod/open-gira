@@ -1,4 +1,10 @@
-"""Adapted wind speed file from J Verschuur. Processes stormtracks data and returns the wind speed at each grid location."""
+"""
+Adapted wind speed file from J Verschuur.
+
+Processes stormtracks data and returns the wind speed at each grid location.
+
+TODO: Investigate speeding up this script. N.B. ~80% of execution time is file I/O.
+"""
 
 
 import numpy as np
@@ -124,7 +130,8 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
-    # "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    f"{storm_model_type}",
+    f"{region}",
     f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)
@@ -377,9 +384,9 @@ for nh_lst in tqdm(
     else:
         print(f"{nh_lst} do not have sufficient unit damage, skipping")
 
-with open(
-    os.path.join(all_winds_path, f"{region}_{sample}_completed.txt"), "w"
-) as file:  # add dummy
-    file.writelines(f"Winds generated using {storm_model_type} model")
+# it is not known in advance how many files will be created by this script
+# so, to indicate to snakemake that execution has completed, create a flag file
+with open(os.path.join(all_winds_path, "completed.txt"), "w") as fp:
+    fp.writelines(f"Winds generated using {storm_model_type} model")
 
 print(f"Total time {round((time.time()-start)/60,3)}")

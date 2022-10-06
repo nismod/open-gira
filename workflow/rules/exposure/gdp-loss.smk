@@ -35,7 +35,7 @@ rule intersect_damages:
             "all_winds",
             "{region}",
             "{sample}",
-            "{region}_{sample}_completed.txt",
+            "completed.txt",
         ),
     output:
         [
@@ -62,6 +62,7 @@ rule intersect_damages:
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],
+        storm_model=STORM_MODEL,
         wind_file_start=WIND_FILE_START,
         wind_file_end=WIND_FILE_END,
         all_boxes=ALL_BOXES,

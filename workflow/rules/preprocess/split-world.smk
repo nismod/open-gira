@@ -6,11 +6,9 @@ Split the world into boxes
 rule world_splitter:
     conda: "../../../environment.yml"
     input:
-        os.path.join(
-            config["output_dir"], "input", "admin-boundaries", "gadm36_levels.gpkg"
-        ),
+        admin_data = rules.download_gadm_levels.output.admin_bounds_global_layer_per_level,
     output:
-        expand(
+        geometry_by_box = expand(
             os.path.join(
                 config["output_dir"],
                 "power_processed",
@@ -20,12 +18,12 @@ rule world_splitter:
             ),
             box_id=ALL_BOXES,
         ),
-        os.path.join(
-            config["output_dir"], "power_processed", "world_boxes_metadata.txt"
+        global_metadata = os.path.join(
+            config["output_dir"], "power_processed", "world_boxes_metadata.json"
         ),
-        os.path.join(config["output_dir"], "power_processed", "world_boxes.gpkg"),
+        global_boxes = os.path.join(config["output_dir"], "power_processed", "world_boxes.gpkg"),
     params:
-        boxlen_value=config["box_width_height"],
-        output_dir=config["output_dir"],
+        boxlen_value = config["box_width_height"],
+        output_dir = config["output_dir"],
     script:
         os.path.join("..", "..", "scripts", "process", "world_split.py")
