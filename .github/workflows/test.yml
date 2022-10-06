@@ -40,8 +40,12 @@ jobs:
         auto-update-conda: true
         python-version: '3.9'
         environment-file: environment.yml
+    - name: Set up snakemake
       run: |
         conda install snakemake==7.12.1
+
+    - name: Log conda setup
+      run: |
         conda info
         conda list
         conda config --show
