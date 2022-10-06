@@ -41,8 +41,10 @@ jobs:
         python-version: '3.9'
         environment-file: environment.yml
     - name: Set up snakemake
+      # snakemake is not in the environment.yml, install separately
+      # conda-incubator env is called `test`
       run: |
-        conda install -c conda-forge -c bioconda snakemake==7.12.1
+        conda install -c conda-forge -c bioconda -n test snakemake==7.12.1
 
     - name: Log conda setup
       run: |
