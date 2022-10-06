@@ -42,7 +42,7 @@ jobs:
         environment-file: environment.yml
     - name: Set up snakemake
       run: |
-        conda install snakemake==7.12.1
+        conda install -c conda-forge -c bioconda snakemake==7.12.1
 
     - name: Log conda setup
       run: |
