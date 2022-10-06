@@ -62,7 +62,8 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
                 "-m",
                 "snakemake",
                 *targets,
-                "-r",  # show reasons, helps with debugging
+                "--reason",  # show reasons, helps with debugging
+                "--debug-dag",
                 "--configfile",
                 "tests/config/config.yaml",
                 "-j1",  # single core
@@ -94,6 +95,9 @@ class OutputChecker:
             for f in files
         )
         unexpected_files = set()
+
+        # TODO: handle failure mode where no files are generated
+        # this loop (and function) can exit successfully if no files are found
         for path, subdirs, files in os.walk(self.workdir):
             if any([folder for folder in self.ignore_folders if folder in path]):
                 # skip comparison for these folders
@@ -110,6 +114,7 @@ class OutputChecker:
                     pass
                 else:
                     unexpected_files.add(f)
+
         if unexpected_files:
             raise ValueError(
                 "Unexpected files: {}".format(sorted(map(str, unexpected_files)))
