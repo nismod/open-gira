@@ -21,7 +21,7 @@ rule intersect_unit_generator:
         os.path.join(
             config["output_dir"],
             "input",
-            "stormtracks",
+            "storm-ibtracs",
             "fixed",
             "STORM_FIXED_RETURN_PERIODS_{region}.nc",
         ),

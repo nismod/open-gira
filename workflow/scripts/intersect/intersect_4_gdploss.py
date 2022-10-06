@@ -543,7 +543,7 @@ print(f"{nh}: loading data")
 stormfile = os.path.join(
     output_dir,
     "input",
-    "stormtracks",
+    "storm-ibtracs",
     "events",
     f"{storm_model}",
     f"{region}",

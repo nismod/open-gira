@@ -13,7 +13,7 @@ def find_storm_tots(results_folder, samples, region):
         winds_file = os.path.join(
             results_folder,
             "input",
-            "stormtracks",
+            "storm-ibtracs",
             "events",
             f"STORM_DATA_IBTRACS_{region}_1000_YEARS_{sample}.txt",
         )

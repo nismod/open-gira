@@ -1,4 +1,4 @@
-"""Process stormtracks data and return the wind speed at each grid location.
+"""Process storm data and return the wind speed at each grid location.
 
 Adapted wind speed file from J Verschuur.
 
@@ -127,7 +127,7 @@ environ_dict = dict(zip(list_regions, environmental_pressure))
 stormfile = os.path.join(
     output_dir,
     "input",
-    "stormtracks",
+    "storm-ibtracs",
     "events",
     f"{storm_model_type}",
     f"{region}",

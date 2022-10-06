@@ -22,7 +22,7 @@ checkpoint intersect_winds_indiv:
     input:
         metadata = rules.world_splitter.output.global_metadata,
         unit_grid = "{OUTPUT_DIR}/power_intersection/regions/{REGION}_unit.gpkg",
-        return_period_map = "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc",
+        return_period_map = "{OUTPUT_DIR}/input/storm-ibtracs/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc",
         storm_files = STORMS_EVENTS,
     params:
         region = lambda wildcards: wildcards.REGION,
