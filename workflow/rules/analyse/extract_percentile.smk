@@ -16,7 +16,7 @@ rule analyse_percentile:
         STORM_STATS_BY_THRESHOLD,
     params:
         output_dir=config["output_dir"],
-        region_eval=REGIONS,
+        region_eval=STORM_BASINS,
         sample_eval=SAMPLES,
         nh_eval=STORMS,
         metrics_target=TARGET_ANALYSIS_METRICS,

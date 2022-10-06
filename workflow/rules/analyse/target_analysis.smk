@@ -16,7 +16,7 @@ rule analyse_targets:
         metrics_target=TARGET_ANALYSIS_METRICS,
         top_select=config["top_select"],
         increased_severity_sort=config["increased_severity_sort"],
-        region_eval=REGIONS,
+        region_eval=STORM_BASINS,
         sample_eval=SAMPLES,
         nh_eval=STORMS,
         central_threshold=config["central_threshold"],

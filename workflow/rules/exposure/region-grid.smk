@@ -45,5 +45,5 @@ rule intersect_grid:
             os.path.join(
                 config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
             ),
-            region=REGIONS,
+            region=STORM_BASINS,
         )

@@ -103,12 +103,11 @@ CONNECTOR_OUT = (
     )
 )
 
+STORM_BASINS = config["storm_basins"]
+if len(STORM_BASINS) == 0:
+    print("Inputting all storm basins")
 # east pacific, north atlantic, north indian, south india, south pacific, west pacific
-STORM_BASINS = ("EP", "NA", "NI", "SI", "SP", "WP")
-REGIONS = config["regions"]
-if len(REGIONS) == 0:
-    print("Inputting all regions")
-    REGIONS = STORM_BASINS
+    STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
 
 SAMPLES = config["storm_files_sample_set"]
 if not SAMPLES:
@@ -123,12 +122,11 @@ STORMS_RETURN_PERIOD = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "stormtracks",
+        "storm-ibtracs",
         "fixed",
-        "STORM_FIXED_{param}_{region}.nc",
+        "STORM_FIXED_RETURN_PERIODS_{storm_basin}.nc",
     ),
-    region=REGIONS,
-    param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
+    storm_basin=STORM_BASINS,
 )
 
 STORM_MODEL, WIND_FILE_START, WIND_FILE_END, STORM_UNZIP_FILE = storm_model()
@@ -137,13 +135,13 @@ STORMS_EVENTS = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "stormtracks",
+        "storm-ibtracs",
         "events",
         STORM_MODEL,
-        "{region}",
-        WIND_FILE_START + "{region}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
+        "{storm_basin}",
+        WIND_FILE_START + "{storm_basin}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
     ),
-    region=REGIONS,
+    storm_basin=STORM_BASINS,
     num=SAMPLES,
 )
 
@@ -164,12 +162,12 @@ COMPLETION_FLAG_FILES = expand(
         "power_intersection",
         "storm_data",
         "all_winds",
-        "{region}",
+        "{storm_basin}",
         "{sample}",
         "completed.txt",
     ),
     sample=SAMPLES,
-    region=REGIONS,
+    storm_basin=STORM_BASINS,
 )
 
 STORM_STATS_BY_THRESHOLD = expand(
@@ -187,11 +185,11 @@ STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
         config["output_dir"],
         "power_output",
         "statistics",
-        "{region}",
+        "{storm_basin}",
         "{sample}",
-        "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+        "combined_storm_statistics_{storm_basin}_{sample}_{thrval}.csv",
     ),
-    region=REGIONS,
+    storm_basin=STORM_BASINS,
     sample=SAMPLES,
     thrval=WIND_SPEED_THRESHOLDS_MS,
 )
