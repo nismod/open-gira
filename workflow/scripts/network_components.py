@@ -1,23 +1,21 @@
 """
 Plotting tools for analysing network connectedness
 """
-
-from collections import defaultdict
 import os
 import re
 import sys
+from collections import defaultdict
 from typing import Iterable
 
 import datashader as ds
-from datashader.utils import export_image
 import geopandas as gpd
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import colors
+import numpy as np
 import pandas as pd
-import spatialpandas
-
 import snkit
+import spatialpandas
+from datashader.utils import export_image
+from matplotlib import colors
 
 
 def natural_sort(to_sort: Iterable) -> list:
@@ -106,11 +104,11 @@ def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt
 if __name__ == "__main__":
 
     try:
-        nodes_path = snakemake.input["nodes"]
-        edges_path = snakemake.input["edges"]
-        population_plot_path = snakemake.output["component_population"]
-        map_path = snakemake.output["component_map"]
-        components_path = snakemake.output["component_data"]
+        nodes_path = snakemake.input["nodes"]  # type: ignore
+        edges_path = snakemake.input["edges"]  # type: ignore
+        population_plot_path = snakemake.output["component_population"]  # type: ignore
+        map_path = snakemake.output["component_map"]  # type: ignore
+        components_path = snakemake.output["component_data"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -121,11 +119,11 @@ if __name__ == "__main__":
             map_path,
             components_path,
         ) = sys.argv[1:]
-        # nodes_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
-        # edges_path = ../../results/tanzania-mini_filter-highway-core/road_edges.geoparquet
-        # population_plot_path = ../../results/tanzania-mini_filter-highway-core/road_component_population.pdf
-        # map_path = ../../results/tanzania-mini_filter-highway-core/road_network_map_by_component.pdf
-        # components_path = ../../results/tanzania-mini_filter-highway-core/road_components.parquet
+        # nodes_path = ../../results/tanzania-mini_filter-road/road_edges.geoparquet
+        # edges_path = ../../results/tanzania-mini_filter-road/road_edges.geoparquet
+        # population_plot_path = ../../results/tanzania-mini_filter-road/road_component_population.pdf
+        # map_path = ../../results/tanzania-mini_filter-road/road_network_map_by_component.pdf
+        # components_path = ../../results/tanzania-mini_filter-road/road_components.parquet
 
     # build a network from files on disk
     network = snkit.network.Network(

@@ -4,40 +4,42 @@
 Create an image showing exposed road length by combining exposure tifs,
 coastline data, and administrative boundary information.
 """
-import logging
-import geopandas as gp
-import rasterio.plot
-import os
-import matplotlib.pyplot as plt
-import shapely.geometry as shape
-import re
 import glob
+import logging
+import os
+import re
+import sys
+
+import geopandas as gp
+import matplotlib.pyplot as plt
+import rasterio.plot
+import shapely.geometry as shape
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
     try:
-        hazard_dir = snakemake.input["hazard_dir"]
+        hazard_dir = snakemake.input["hazard_dir"]  # type: ignore
         coastline = os.path.join(
-            snakemake.input["coastline"], snakemake.params["coastline"]
+            snakemake.input["coastline"], snakemake.params["coastline"]  # type: ignore
         )
         boundaries = os.path.join(
-            snakemake.input["boundaries"], snakemake.params["boundaries"]
+            snakemake.input["boundaries"], snakemake.params["boundaries"]  # type: ignore
         )
-        output_dir = snakemake.output[0]
+        output_dir = snakemake.output[0]  # type: ignore
 
         try:
-            opts_dict = snakemake.config["exposure_tifs"]["plot"]
+            opts_dict = snakemake.config["exposure_tifs"]["plot"]  # type: ignore
         except KeyError:
             opts_dict = {}
 
     except NameError:
         print(sys.argv)
         (hazard_dir, coastline, boundaries, output_dir, opts_dict) = sys.argv[1:]
-        # hazard_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/'
+        # hazard_dir = '../../results/exposure/tanzania-latest_filter-road/hazard-aqueduct-river/'
         # coastline = '../../results/input/coastlines/ne_10m_ocean/ne_10m_ocean.shp'
         # boundaries = '../../results/input/admin-boundaries/ne_50m/ne_50m_admin_0_countries.shp'
-        # output_dir = '../../results/exposure/tanzania-latest_filter-highway-core/hazard-aqueduct-river/img/'
+        # output_dir = '../../results/exposure/tanzania-latest_filter-road/hazard-aqueduct-river/img/'
         # opts_dict = {}
 
     # Load up the options from the opts_dict

@@ -1,22 +1,22 @@
 """Takes all csv files in /data/ and plots them, legend is the name of the csv file.
 
-Takes mean of all files unless 'constant' which has separate curve"""
-
+Takes mean of all files unless 'constant' which has separate curve.
+"""
 import os
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 try:
-    output_dir = snakemake.params["output_dir"]
-    inputs = snakemake.input
-    output = snakemake.output
-    EACA = snakemake.params[
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    output = snakemake.output  # type: ignore
+    EACA = snakemake.params[  # type: ignore
         "EACA"
     ]  # set True if effective pop affected, else assumes EAD
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 

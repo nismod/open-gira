@@ -18,5 +18,5 @@ rule network_raster:
 
 """
 Test with:
-snakemake --cores all results/splits/tanzania-mini_filter-highway-core/hazard-aqueduct-river/slice-0_edges.geoparquet
+snakemake --cores all results/splits/tanzania-mini_filter-road/hazard-aqueduct-river/slice-0.geoparquet
 """

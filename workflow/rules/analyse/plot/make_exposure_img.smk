@@ -22,5 +22,5 @@ rule make_exposure_img:
 
 """
 Test with:
-snakemake --cores all results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/img/
+snakemake --cores all results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img/
 """

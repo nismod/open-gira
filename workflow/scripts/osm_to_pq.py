@@ -14,14 +14,13 @@ The process is as follows:
 * Save with way and node details
 
 """
-
 import logging
 import sys
 from collections import Counter
 
 import geopandas
-import pandas
 import osmium
+import pandas
 import shapely.geometry as shape
 import shapely.ops as shape_ops
 
@@ -194,16 +193,16 @@ class WaySlicer(osmium.SimpleHandler):
 
 if __name__ == "__main__":
     try:
-        pbf_path = snakemake.input["pbf"]
-        edges_path = snakemake.output["edges"]
-        nodes_path = snakemake.output["nodes"]
-        keep_tags = snakemake.params["keep_tags"]
-        osm_epsg = snakemake.config["osm_epsg"]
+        pbf_path = snakemake.input["pbf"]  # type: ignore
+        edges_path = snakemake.output["edges"]  # type: ignore
+        nodes_path = snakemake.output["nodes"]  # type: ignore
+        keep_tags = snakemake.params["keep_tags"]  # type: ignore
+        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
         pbf_path, edges_path, nodes_path, keep_tags, osm_epsg = sys.argv[1:]
-        # pbf_path = 'results/slices/tanzania-mini_filter-highway-core/slice-2.osm.pbf'
+        # pbf_path = 'results/slices/tanzania-mini_filter-road/slice-2.osm.pbf'
         # edges_path = 'results/slice-2.geoparquet'
         # nodes_path = 'results/slice-2.geoparquet'
         # keep_tags = 'highway, railway'

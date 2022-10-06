@@ -12,5 +12,5 @@ rule network_components:
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/component_population.pdf
+snakemake --cores all results/tanzania-mini_filter-road/component_population.svg
 """

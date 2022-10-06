@@ -24,5 +24,5 @@ rule make_exposure_tif:
 
 """
 Test with:
-snakemake --cores all results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/raster/
+snakemake --cores all results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/raster/
 """

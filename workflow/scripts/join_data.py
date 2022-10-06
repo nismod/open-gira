@@ -1,25 +1,28 @@
-# Takes a list of geoparquet files containing geodataframes and joins them
+"""Takes a list of geoparquet files containing geodataframes and joins them
 
-# file1.geoparguet
-# id obs1 obs2 geometry
-# 0  a    b    geom0
-# 1  c    d    geom1
+    file1.geoparguet
+    id obs1 obs2 geometry
+    0  a    b    geom0
+    1  c    d    geom1
 
-# file2.geoparguet
-# id obs1 obs2 geometry
-# 0  A    B    GEOM0
-# 1  C    D    GEOM1
+    file2.geoparguet
+    id obs1 obs2 geometry
+    0  A    B    GEOM0
+    1  C    D    GEOM1
 
-# joined.geoparguet
-# id obs1 obs2 geometry
-# 0  a    b    geom0
-# 1  c    d    geom1
-# 2  A    B    GEOM0
-# 3  C    D    GEOM1
+    joined.geoparguet
+    id obs1 obs2 geometry
+    0  a    b    geom0
+    1  c    d    geom1
+    2  A    B    GEOM0
+    3  C    D    GEOM1
 
-# Usage: python join_data.py [FILE] [output]
-# Example: python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
+Usage:
+    python join_data.py [FILE] [output]
 
+Example:
+    python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
+"""
 import logging
 import sys
 import warnings
@@ -52,8 +55,8 @@ def append_data(base, slice_files):
 
 if __name__ == "__main__":
     try:
-        slice_files = snakemake.input
-        output_file = snakemake.output[0]
+        slice_files = snakemake.input  # type: ignore
+        output_file = snakemake.output[0]  # type: ignore
     except NameError:
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]

@@ -1,12 +1,27 @@
+"""This file processes the target data
 """
-This file processes the target data
-"""
+import json
+import os
+import sys
+import warnings
 
-from importing_modules import *
+import geopandas as gpd
+import netCDF4 as nc4
+import numpy as np
+import numpy.ma
+import rasterio
+import rasterio.features
+import rasterio.mask
+from pyproj import Geod
+from rasterstats import gen_zonal_stats, point_query
+from shapely.geometry import shape
+from tqdm import tqdm
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 try:
-    box_id = snakemake.params["box_id"]
-    output_dir = snakemake.params["output_dir"]
+    box_id = snakemake.params["box_id"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]

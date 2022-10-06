@@ -1,28 +1,26 @@
 """Takes in data/ file startswith1 minus startwith2
 
-Best to have 1 as future"""
+Best to have 1 as future
 
-"""
 targets: eff pop ae and code
 recon agg: recon cost ae and code
 recon agg norm: recon cost ae frac norm and code
 recon indiv: recon cost ae and link
 """
-
 import os
-import geopandas as gpd
 import time
 
+import geopandas as gpd
 
 try:
-    metric = snakemake.params["metric"]
-    merge_key = snakemake.params["merge_key"]
-    inputs = snakemake.input  # first is future
-    output = snakemake.output
+    metric = snakemake.params["metric"]  # type: ignore
+    merge_key = snakemake.params["merge_key"]  # type: ignore
+    inputs = snakemake.input  # type: ignore
+    output = snakemake.output  # type: ignore
 except:
     raise RuntimeError("Please use snakemake to define inputs")
 
-
+# first input is future
 assert len(inputs) == 2
 assert type(output) != list
 output = str(output)
