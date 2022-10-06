@@ -1,1 +1,1 @@
-../../config/rail.txt
+../../config/osm_filters/rail.txt

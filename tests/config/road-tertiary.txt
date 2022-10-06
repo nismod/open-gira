@@ -1,1 +1,1 @@
-../../config/road-tertiary.txt
+../../config/osm_filters/road-tertiary.txt
