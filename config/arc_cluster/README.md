@@ -120,8 +120,8 @@ Exiting because a job execution failed. Look above for error message
 Complete log: .snakemake/log/2022-10-05T181802.083378.snakemake.log
 ```
 
-This reports an error in the rule create_overall_bbox so we should look in
-logs/create_overall_bbox:
+This reports an error in the rule `create_overall_bbox` so we should look in
+`logs/create_overall_bbox`:
 
 ```
 ls logs
@@ -146,4 +146,4 @@ Traceback (most recent call last):
 FileNotFoundError: [Errno 2] No such file or directory: 'osmium'
 ```
 
-In particular, here, the FileNotFoundError says that the job runner couldn't find osmium, which is needed to run this rule.
+In particular, here, the `FileNotFoundError` says that the job runner couldn't find `osmium`, which is needed to run this rule.
