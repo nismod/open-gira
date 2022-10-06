@@ -40,6 +40,11 @@ jobs:
         auto-update-conda: true
         python-version: '3.9'
         environment-file: environment.yml
+      run: |
+        conda install snakemake==7.12.1
+        conda info
+        conda list
+        conda config --show
 
     - name: Test with pytest
       # Bash shells do not use ~/.profile or ~/.bashrc so these shells
