@@ -57,7 +57,7 @@ def storm_model() -> Tuple[str, str, str, str]:
     if storm_model == "constant":
         wind_file_start = "STORM_DATA_IBTRACS_"
         wind_file_end = ""
-        unzip_file = "STORM_DATA3.zip"
+        unzip_file = "STORM_DATA4.zip"
     elif storm_model == "CMCC-CM2-VHR4":
         wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
         wind_file_end = "_IBTRACSDELTA"
@@ -106,7 +106,7 @@ CONNECTOR_OUT = (
 STORM_BASINS = config["storm_basins"]
 if len(STORM_BASINS) == 0:
     print("Inputting all storm basins")
-# east pacific, north atlantic, north indian, south india, south pacific, west pacific
+    # east pacific, north atlantic, north indian, south india, south pacific, west pacific
     STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
 
 SAMPLES = config["storm_files_sample_set"]
