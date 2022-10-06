@@ -18,7 +18,7 @@ restart-times: 1  # if a job fails, retry it once
 max-jobs-per-second: 16  # maximum jobs to _submit_ per second
 max-status-checks-per-second: 1
 local-cores: 1
-latency-wait: 3  # seconds to wait for files to appear before failing
+latency-wait: 15  # seconds to wait for files to appear before failing
 jobs: 64  # max simultaneous jobs
 keep-going: True  # do not stop workflow if job(s) fail
 rerun-incomplete: True
