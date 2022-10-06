@@ -1,8 +1,8 @@
 # Running open-gira on ARC
 
 As open-gira is built with snakemake, its use is remarkably similar from a
-laptop to a cluster. However there are a few differences in setup and use. They
-are discussed here.
+laptop to a cluster. However there are a few differences. They are discussed
+here.
 
 ## Python environment
 
@@ -14,7 +14,9 @@ if an equivalent environment has already been created).
 
 Prior to using the conda install for the first time you must initialise it for
 your shell with the following command:
-`/data/ouce-gri-jba/anaconda/condabin/conda init`
+```
+/data/ouce-gri-jba/anaconda/condabin/conda init
+```
 
 Your `~/.bashrc` should then contain someting like this:
 ```
@@ -42,7 +44,10 @@ executable from the module load system, but their version is quite old
 https://github.com/snakemake/snakemake/issues/1392
 
 Instead use a shared conda environment we have created which contains
-snakemake: `conda activate snakemake-7.12.1`
+snakemake:
+```
+conda activate snakemake-7.12.1
+```
 
 Your prompt should then change to something like:
 ```
@@ -67,14 +72,19 @@ To persist a terminal over time (and despite dropped SSH connections) consider u
 Here's a [friendly guide](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/) and the [official documentation](https://github.com/tmux/tmux/wiki/Getting-Started).
 
 `Ctrl+b` is used to preface commands (often written as `C-b` in the docs).
+
 `Ctrl+b, d` to detach (keep running, but leave) a session.
+
 `tmux ls` to list running sessions.
+
 `tmux attach-session -t <session_id>` to reattach to a session.
 
 ## Allocate resources
 
 Allocate some nodes for use:
-`salloc --ntasks-per-node=<max tasks per node> --nodes=<num nodes> --partition=<short|medium|long> --time=01:00:00 --mem=8000`
+```
+salloc --ntasks-per-node=<max tasks per node> --nodes=<num nodes> --partition=<short|medium|long> --time=01:00:00 --mem=8000
+```
 
 ## Invoke pipeline
 
@@ -82,11 +92,15 @@ Having allocated resources with `salloc` (see above), you can then invoke
 snakemake to dispatch jobs and satisfy your target rule. From the open-gira
 repository call the command you wish to run, using the cluster specific
 profile. For more details on the cluster execution, see the config.yaml file
-in the profile directory.
-`snakemake --profile config/arc_cluster <target name>`
+in the profile directory. The general pattern is:
+```
+snakemake --profile config/arc_cluster <target name>
+```
 
 To test the pipeline with a short job, try the following:
-`snakemake --profile config/arc_cluster results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img`
+```
+snakemake --profile config/arc_cluster results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img
+```
 
 ## Interpreting errors
 
