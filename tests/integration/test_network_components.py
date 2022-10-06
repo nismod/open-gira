@@ -1,9 +1,9 @@
 from . import runner
 
 
-def test_assess_network_connectedness():
+def test_network_components():
     runner.run_snakemake_test(
-        "assess_network_connectedness",
+        "network_components",
         (
             "results/djibouti-latest_filter-road/component_population.svg",
             "results/djibouti-latest_filter-road/network_map_by_component.png",
