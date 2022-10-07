@@ -2,6 +2,7 @@
 Test runner and file comparison code for snakemake integration tests.
 """
 
+import inspect
 import json
 import os
 import re
@@ -38,14 +39,28 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
             snakemake to generate
     """
 
+    # bit of a hack to get the name of the calling test, test_name
+    # by convention this is the name of the folder where the reference test
+    # input and expected output is located: tests/integration/<test_name>
+    # test_name could instead be passed as an argument from the calling test...
+    # N.B. decided against using the rule name to name this folder, as that
+    # would limit us to one test per rule, but e.g. create_transport_network
+    # can create both road and rail networks, so needs two tests
+    prefix = "test_"
+    calling_function_name = inspect.stack()[1].function
+    if not calling_function_name.startswith(prefix):
+        raise RuntimeError("This function should be called from a test")
+    else:
+        test_name = calling_function_name.replace(prefix, "")
+
     if not isinstance(targets, tuple):
         raise TypeError(f"Expect desired outputs as tuple, got {type(targets)=}")
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
         results_dir = workdir / "results"
-        data_path = Path(f"tests/integration/{rule_name}/data")
-        expected_path = Path(f"tests/integration/{rule_name}/expected")
+        data_path = Path(f"tests/integration/{test_name}/data")
+        expected_path = Path(f"tests/integration/{test_name}/expected")
 
         # check necessary testing data is present
         assert data_path.exists()
