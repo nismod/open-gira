@@ -18,7 +18,11 @@ import pandas as pd
 
 
 def printerr(s: str):
-    """Print to stderr for visibility when invoked via pytest."""
+    """
+    Print to stderr (for visibility when invoked via pytest).
+
+    N.B. To view STDOUT as well as STDERR, invoke pytest with -s flag.
+    """
     print(s, file=sys.stderr)
 
 
@@ -29,7 +33,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
     output.
 
     Args:
-        rule_name (str): Directory name holding reference test IO
+        rule_name (str): Name of rule to invoke
         targets (tuple[str]): Desired output files and directories for
             snakemake to generate
     """
@@ -39,6 +43,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
 
     with TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
+        results_dir = workdir / "results"
         data_path = Path(f"tests/integration/{rule_name}/data")
         expected_path = Path(f"tests/integration/{rule_name}/expected")
 
@@ -50,28 +55,39 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
         shutil.copytree(data_path, workdir)
         auxilliary_dirs = ["config", "external_files", "bundled_data"]
         for folder in auxilliary_dirs:
-            shutil.copytree(f"tests/{folder}", f"{workdir}/{folder}")
+            folder_path = workdir / folder
+            shutil.copytree(f"tests/{folder}", folder_path)
+            assert folder_path.exists()
 
-        # dbg
-        printerr(rule_name)
+        # print to stdout information available when pytest run with -s flag
+        # or on test failure
+        print("\n\nFile system prior to running:")
+        os.system(f"tree -l {results_dir}")
+        print("")
 
-        # Run the test job.
-        sp.check_output(
-            [
-                "python",
-                "-m",
-                "snakemake",
-                *targets,
-                "--reason",  # show reasons, helps with debugging
-                "--debug-dag",
-                "--configfile",
-                "tests/config/config.yaml",
-                "-j1",  # single core
-                "--keep-target-files",
-                "--directory",
-                workdir,
-            ]
-        )
+        command_args = [
+            "python",
+            "-m",
+            "snakemake",
+            "-c1",  # single core
+            "--reason",  # show snakemake's reasoning, helps with debugging
+            "--configfile",  # use test specific configuration
+            "tests/config/config.yaml",
+            "--allowed-rules",  # only run the specified rule, no precursors
+            rule_name,
+            "--directory",  # use the temporary directory to work in
+            str(workdir),
+            *targets,  # files/folders/rules to create/run
+        ]
+        command = " ".join(command_args)
+        print(command)
+        os.system(command)
+
+        print("\nFile system post run:")
+        os.system(f"tree -l {results_dir}")
+
+        print("\nRequired results post run:")
+        os.system(f"tree -l {expected_path / 'results'}")
 
         OutputChecker(data_path, expected_path, workdir, auxilliary_dirs).check()
 
@@ -96,8 +112,7 @@ class OutputChecker:
         )
         unexpected_files = set()
 
-        # TODO: handle failure mode where no files are generated
-        # this loop (and function) can exit successfully if no files are found
+        produced_files = []
         for path, subdirs, files in os.walk(self.workdir):
             if any([folder for folder in self.ignore_folders if folder in path]):
                 # skip comparison for these folders
@@ -108,12 +123,22 @@ class OutputChecker:
                     # ignore .snakemake/, foo/bar/.snakemake_timestamp, etc.
                     continue
                 if f in expected_files:
+                    produced_files.append(Path(path) / f)
                     self.compare_files(self.workdir / f, self.expected_path / f)
                 elif f in input_files:
                     # ignore input files
                     pass
                 else:
                     unexpected_files.add(f)
+        else:
+            # the loop could exit successfully if no files at all are are
+            # found, so check that we've got the right number
+            if len(produced_files) != len(expected_files):
+                raise ValueError(
+                    f"\n{len(produced_files)=} but {len(expected_files)=}"
+                    f"\n{produced_files=}"
+                    f"\n{expected_files=}"
+                )
 
         if unexpected_files:
             raise ValueError(
