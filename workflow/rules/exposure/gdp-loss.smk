@@ -3,6 +3,7 @@ Calculates the gdp losses through the storm damage.
 """
 
 rule intersect_damages:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"],

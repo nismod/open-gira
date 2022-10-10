@@ -3,6 +3,7 @@ Finds connector points for all boxes
 """
 
 rule process_connector:
+    conda: "../../../environment.yml"
     input:
         expand(
             os.path.join(

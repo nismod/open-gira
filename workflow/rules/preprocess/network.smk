@@ -33,6 +33,7 @@ GENERATORS_LINES_CONSUMERS_ALL_BOXES = (
 
 
 rule process_network:
+    conda: "../../../environment.yml"
     input:
         os.path.join(
             config["output_dir"],
