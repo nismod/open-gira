@@ -18,7 +18,7 @@ jobs:
         cache-env: true
 
     - name: Build osmium-tool
-      if: ${{ steps.cache-osmium-tool.outputs.cache-hit != 'true' }}
+      if: steps.cache-osmium-tool.outputs.cache-hit != 'true'
       run: |
         sudo apt install build-essential cmake libboost-program-options-dev \
                     libexpat1-dev zlib1g-dev libbz2-dev gdal-bin
@@ -40,9 +40,9 @@ jobs:
         key: osmium-v1.14.0-libosmium-v2.18.0-cache_bust-v2
 
     - name: Test with pytest
+      # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
       shell: bash -l {0}
       run: |
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
-        micromamba info
         python -m pytest tests
