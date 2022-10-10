@@ -8,6 +8,8 @@ checkpoint slice:
         extracts_config="{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     output:
         directory("{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}"),
+    resources:
+        mem_mb=32_000
     shell:
         # Need to run osmium from different output folders depending on the
         # FILTER_SLUG, and the extracts_config specifies only the filename.
