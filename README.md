@@ -51,7 +51,7 @@ not included in the `environment.yml` as its usage is context dependent:
 Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according
 to the instructions there. Tests run with versions:
 - osmium-tool v1.14.0
-- libosmium v2.17.1
+- libosmium v2.18.0
 
 ## Running tests
 
