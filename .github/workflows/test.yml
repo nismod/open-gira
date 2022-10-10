@@ -6,16 +6,31 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
 
-    - name: Get osmium-tool dependencies
+    - name: Install Python environment
+      uses: mamba-org/provision-with-micromamba@main
+      with:
+        environment-file: environment.yml
+        environment-name: open-gira
+        cache-env: true
+
+    - name: Build osmium-tool
+      if: ${{ steps.cache-osmium-tool.outputs.cache-hit != 'true' }}
       run: |
         sudo apt install build-essential cmake libboost-program-options-dev \
                     libexpat1-dev zlib1g-dev libbz2-dev gdal-bin
         git clone https://github.com/mapbox/protozero
         git clone --branch v2.18.0 --depth 1 https://github.com/osmcode/libosmium
         git clone --branch v1.14.0 --depth 1 https://github.com/osmcode/osmium-tool
+        cd osmium-tool
+        mkdir build
+        cd build
+        cmake ..
+        make
+        cd ../..
 
     - name: Cache osmium-tool
       id: cache-osmium-tool
@@ -24,45 +39,10 @@ jobs:
         path: osmium-tool/build
         key: osmium-v1.14.0-libosmium-v2.18.0-cache_bust-v2
 
-    - name: Build osmium-tool
-      if: steps.cache-osmium-tool.outputs.cache-hit != 'true'
-      run: |
-        cd osmium-tool
-        mkdir build
-        cd build
-        cmake ..
-        make
-        cd ../..
-
-    - name: Set up Python (Miniconda)
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: '3.9'
-        environment-file: environment.yml
-    - name: Set up snakemake
-      # snakemake is not in the environment.yml, install separately
-      # conda-incubator env is called `test`
-      run: |
-        conda install -c conda-forge -c bioconda -n test snakemake==7.12.1
-
-    - name: Log conda setup
-      run: |
-        conda info
-        conda list
-        conda config --show
-
     - name: Test with pytest
-      # Bash shells do not use ~/.profile or ~/.bashrc so these shells
-      # need to be explicitely declared as shell: bash -l {0} on steps
-      # that need to be properly activated. See
-      # https://github.com/marketplace/actions/setup-miniconda#IMPORTANT
       shell: bash -l {0}
       run: |
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
+        micromamba info
         python -m pytest tests
-
-#    - name: Setup tmate session
-#      if: ${{ failure() }}
-#      uses: mxschmitt/action-tmate@v3
