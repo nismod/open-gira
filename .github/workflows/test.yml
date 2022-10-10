@@ -17,6 +17,13 @@ jobs:
         environment-name: open-gira
         cache-env: true
 
+    - name: Cache osmium-tool
+      id: cache-osmium-tool
+      uses: actions/cache@v2
+      with:
+        path: osmium-tool/build
+        key: osmium-v1.14.0-libosmium-v2.18.0-cache_bust-v2
+
     - name: Build osmium-tool
       if: steps.cache-osmium-tool.outputs.cache-hit != 'true'
       run: |
@@ -31,13 +38,6 @@ jobs:
         cmake ..
         make
         cd ../..
-
-    - name: Cache osmium-tool
-      id: cache-osmium-tool
-      uses: actions/cache@v2
-      with:
-        path: osmium-tool/build
-        key: osmium-v1.14.0-libosmium-v2.18.0-cache_bust-v2
 
     - name: Test with pytest
       # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
