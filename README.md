@@ -37,14 +37,10 @@ environment.yml`
 
 And to activate it: `conda activate open-gira`
 
-The `snakemake` package is also required to orchestrate the workflow, but it is
-not included in the `environment.yml` as its usage is context dependent:
-- For local deployment you may with to install `snakemake` into the _activated_
-  `open-gira` environment with `conda install snakemake`.
-- If running on a cluster, you could create a seperate orchestrating
-  environment containing only snakemake, e.g. `conda env create -n snakemake
-  python=3.9 snakemake`. Activate this before requesting targets with
-  `snakemake --profile <path_to_cluster_config> <target>`.
+If running on a cluster, you could create a seperate orchestrating
+environment containing only snakemake, e.g. `conda env create -n snakemake
+python=3.9 snakemake`. Activate this before requesting targets with
+`snakemake --profile <path_to_cluster_config> <target>`.
 
 ### Osmium
 
