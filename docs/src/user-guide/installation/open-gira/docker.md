@@ -1,7 +1,7 @@
 # Installation via Docker
 
-The simplest approach to getting open-gira working is to build it within a container using Docker.
-You must have [Docker installed](https://docs.docker.com/engine/install/).
+It is possible to run `open-gira` within a container using Docker. You must have [Docker
+installed](https://docs.docker.com/engine/install/).
 
 1. Clone this repository
 
@@ -41,8 +41,5 @@ And once inside we can navigate to the open-gira folder.
 cd open-gira
 ```
 
-We're now ready to run snakemake, launch a python prompt, or do whatever else we like.
-Note that the Dockerfile has created the `./tanzania-latest.json` file we would otherwise need to
-write ourselves (see [configuration](../../configuration.md)), and has also downloaded the
-[OpenStreetMap data](../osm-data.md) and [flood hazard data](../hazad-data.md).
-This means the only installation step left is to (optionally) install QGIS outside of the container.
+We're now ready to run snakemake, launch a python prompt, or do whatever else we like inside
+the container.

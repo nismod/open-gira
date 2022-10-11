@@ -1,7 +1,7 @@
 [book]
 title = "open-gira Documentation"
-authors = ["Tom Russell", "Matt Jaquiery"]
-description = "This ebook serves as a user guide for the open-gira software."
+authors = ["Tom Russell", "Matt Jaquiery", "Fred Thomas"]
+description = "User guide for the open-gira software."
 
 [build]
 build-dir = "build"

@@ -3,7 +3,7 @@
 *.pyc
 __pycache__/*
 venv/*
-src/
+src/snkit
 
 # Data
 data/*
