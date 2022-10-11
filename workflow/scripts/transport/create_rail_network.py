@@ -151,8 +151,6 @@ if __name__ == "__main__":
 
     # TODO: drop superfluous columns (e.g. OSM tags)
 
-    # TODO: add asset_categories for direct damage estimation
-
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)
     network.nodes.to_parquet(nodes_output_path)
