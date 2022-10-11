@@ -107,7 +107,7 @@ specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
 # Empty list for global analysis.
 # Options: "EP", "NA", "NI", "SI", "SP", "WP".
 # If `specific_boxes` are selected, this must be coherent with `storm_basins`
-storm_basins: ["NA"]
+storm_basins: []
 
 # SAMPLES #
 # storm datasets are split into 'samples', each comprising 1,000 years of storm data
