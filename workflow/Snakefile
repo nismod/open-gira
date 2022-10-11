@@ -135,7 +135,7 @@ include: "rules/analyse/power_analyse_all.smk"
 
 ##### target rules #####
 
-rule all_road_networks
+rule all_road_networks:
     input:
         expand(
             os.path.join(
