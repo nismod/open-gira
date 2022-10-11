@@ -12,17 +12,21 @@ The process is as follows:
 * Intersect with bounding box
 * Split by any nodes shared with other ways
 * Save with way and node details
-
 """
+
 import logging
 import sys
 from collections import Counter
+from typing import Union
 
 import geopandas
 import osmium
 import pandas
-import shapely.geometry as shape
 import shapely.ops as shape_ops
+from shapely.errors import GeometryTypeError
+from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
+from shapely.geometry import box as shapely_box
+from shapely.geometry.collection import GeometryCollection
 
 
 class WayParser(osmium.SimpleHandler):
@@ -71,7 +75,7 @@ class NodeParser(osmium.SimpleHandler):
 
         # create shapely geometry from osm object
         # https://docs.osmcode.org/pyosmium/latest/ref_osm.html#osmium.osm.Location
-        point = shape.point.Point(n.location.lon, n.location.lat)
+        point = Point(n.location.lon, n.location.lat)
 
         self.output_data.append(
             {
@@ -104,6 +108,7 @@ class WaySlicer(osmium.SimpleHandler):
         base_input = {}
         for k in self.tags_to_preserve:
             base_input[f"tag_{k}"] = w.tags[k] if k in w.tags else None
+
         # Parse nodes for relevant properties (one pass)
         locations = []
         shared_nodes_used = []
@@ -112,27 +117,31 @@ class WaySlicer(osmium.SimpleHandler):
             locations.append((n.lon, n.lat))
             if n.ref in self.shared_nodes.keys():
                 shared_nodes_used.append(
-                    {"node": n, "point": shape.Point((n.lon, n.lat))}
+                    {"node": n, "point": Point((n.lon, n.lat))}
                 )
                 if n.lon in node_index.keys():
                     node_index[n.lon][n.lat] = n
                 else:
                     node_index[n.lon] = {n.lat: n}
 
-        # Cut into bounding box multilinestring
-        linestring = shape.linestring.LineString(locations)
-        # constrain to bounding box
-        lines = bbox.intersection(linestring)  # MULTILINESTRING | LINESTRING
+        # generate linestring and constrain to bounding box
+        cut_to_bbox: Union[Point, Linestring, MultiLineString] = bbox.intersection(LineString(locations))
+        if not isinstance(cut_to_bbox, (LineString, MultiLineString)):
+            # the intersection can return a point when the way has one end
+            # outside the bbox, and its other end on the bbox edge
+            # in this case, discard the way
+            return
+
         # split by shared nodes
-        # GEOMETRYCOLLECTION of LINESTRINGs
-        shared_points = shape.MultiPoint([n["point"] for n in shared_nodes_used])
-        if lines.intersects(shared_points):
-            segments = shape_ops.split(lines, shared_points)
+        # GEOMETRYCOLLECTION of LINESTRINGS
+        shared_points = MultiPoint([n["point"] for n in shared_nodes_used])
+        if cut_to_bbox.intersects(shared_points):
+            segments = shape_ops.split(cut_to_bbox, shared_points)
         else:
             try:
-                segments = shape.GeometryCollection(lines.geoms)
+                segments = GeometryCollection(cut_to_bbox.geoms)
             except AttributeError:  # Single line
-                segments = shape.GeometryCollection([lines])
+                segments = GeometryCollection([cut_to_bbox])
         s_id = 0
         for line in segments.geoms:
             # Determine start and end nodes from shared nodes or invent if bbox clipping
@@ -221,7 +230,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     box = osmium.io.Reader(pbf_path).header().box()
-    bbox = shape.box(
+    bbox = shapely_box(
         box.bottom_left.lon, box.bottom_left.lat, box.top_right.lon, box.top_right.lat
     )
 
