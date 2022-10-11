@@ -14,9 +14,8 @@ from pyproj import Geod
 
 from create_network import create_network
 from assets import RoadAssets
-from utils import (annotate_country, annotate_rehabilitation_costs, cast,
-                    get_administrative_data, str_to_bool, strip_suffix,
-                    write_empty_frames)
+from utils import (annotate_country, cast, get_administrative_data,
+    str_to_bool, strip_suffix, write_empty_frames)
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -124,46 +123,6 @@ def get_road_lanes(row: pd.Series) -> int:
             return 2
         else:
             return 1
-
-
-def get_rehab_costs(
-    row: pd.Series, rehab_costs: pd.DataFrame
-) -> Tuple[float, float, str]:
-    """
-    Determine the cost of rehabilitation for a given road segment (row).
-
-    Args:
-        row (pd.Series): Road segment
-        rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various road types
-
-    Returns:
-        Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
-    """
-
-    # bridge should be boolean after data cleaning step
-    if row.bridge:
-        highway_type = "bridge"
-    else:
-        highway_type = row.tag_highway
-
-    if row.paved:
-        condition = "paved"
-    else:
-        condition = "unpaved"
-
-    minimum = rehab_costs.cost_min.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    maximum = rehab_costs.cost_max.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    unit = rehab_costs.cost_unit.loc[
-        (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-    ].squeeze()
-
-    return float(minimum), float(maximum), str(unit)
 
 
 def annotate_condition(
@@ -346,7 +305,49 @@ def annotate_tariff_flow_costs(
     return network
 
 
+def annotate_rehabilitation_costs(
+    network: snkit.network.Network, rehab_costs: pd.DataFrame
+) -> snkit.network.Network:
+
+    def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+        """
+        Fetch the cost of rehabilitation for a given road segment (row).
+
+        Args:
+            row (pd.Series): Road segment
+            rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various road types
+
+        Returns:
+            float: Cost in units of USD per km per lane.
+        """
+
+        # bridge should be boolean after data cleaning step
+        if row.bridge:
+            highway_type = "bridge"
+        else:
+            highway_type = row.tag_highway
+
+        if row.paved:
+            condition = "paved"
+        else:
+            condition = "unpaved"
+
+        cost = float(
+            rehab_costs.cost_USD_per_km_per_lane.loc[
+                (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
+            ].squeeze()
+        )
+
+    # lookup costs
+    network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
+        get_rehab_costs, axis=1, args=(rehab_costs,)
+    ) * network.edges.lanes
+
+    return network
+
+
 if __name__ == "__main__":
+
     try:
         osm_edges_path = snakemake.input["edges"]  # type: ignore
         osm_nodes_path = snakemake.input["nodes"]  # type: ignore
@@ -361,6 +362,7 @@ if __name__ == "__main__":
         default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]  # type: ignore
         flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]  # type: ignore
         osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
+
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -379,6 +381,7 @@ if __name__ == "__main__":
             flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
+
         # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
         # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
@@ -457,13 +460,6 @@ if __name__ == "__main__":
         network, pd.read_excel(road_speeds_path, sheet_name="road")
     )
 
-    logging.info("Annotating network with rehabilitation costs")
-    network = annotate_rehabilitation_costs(
-        network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="road"),
-        get_rehab_costs
-    )
-
     logging.info("Annotating network with tariff and flow costs")
     network = annotate_tariff_flow_costs(
         network,
@@ -471,7 +467,11 @@ if __name__ == "__main__":
         flow_cost_time_factor,
     )
 
-    # TODO: drop superfluous columns? (e.g. OSM tags)
+    logging.info("Annotate network with rehabilitation costs")
+    network = annotate_rehabilitation_costs(
+        network,
+        pd.read_excel(rehabilitation_costs_path, sheet_name="road")
+    )
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)

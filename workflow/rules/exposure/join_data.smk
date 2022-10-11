@@ -27,7 +27,7 @@ snakemake --cores all results/tanzania-mini_filter-highway-core_hazard-aqueduct-
 """
 
 
-rule join_direct_damages:
+rule join_direct_damage_fraction:
     input:
         slices = lambda wildcards: expand(
             os.path.join(
@@ -35,13 +35,14 @@ rule join_direct_damages:
                 "direct_damages",
                 "{DATASET}_{FILTER_SLUG}",
                 "{HAZARD_SLUG}",
-                "slice-{i}.parquet",
+                "fraction",
+                "slice-{i}.geoparquet",
             ),
             **wildcards,
             i=range(config["slice_count"])
         ),
     output:
-        joined = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage-fraction.parquet",
+        joined = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet",
     run:
         import os
 
@@ -51,7 +52,7 @@ rule join_direct_damages:
         if not os.path.exists(parent_dir):
             os.makedirs(parent_dir)
 
-        unified = pd.concat([pd.read_parquet(path) for path in input.slices])
+        unified = gpd.GeoDataFrame(pd.concat([gpd.read_parquet(path) for path in input.slices]))
         unified.to_parquet(output.joined)
 
 

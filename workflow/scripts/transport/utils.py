@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Shared functions for creating, cleaning, manipulating and analysing networks.
 """
+Shared functions for creating, cleaning, manipulating and analysing networks.
+"""
+
 import logging
 import re
 from typing import Any, Callable, Optional
@@ -223,23 +225,5 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
 
     network.nodes = nodes
     network.edges = edges
-
-    return network
-
-
-def annotate_rehabilitation_costs(
-    network: snkit.network.Network, rehab_costs: pd.DataFrame, getter: Callable
-) -> snkit.network.Network:
-
-    # lookup costs
-    network.edges["rehab_costs"] = network.edges.apply(
-        getter, axis=1, args=(rehab_costs,)
-    )
-
-    # unpack results into 3 columns
-    network.edges[
-        ["rehab_cost_min", "rehab_cost_max", "rehab_cost_unit"]
-    ] = network.edges["rehab_costs"].apply(pd.Series)
-    network.edges.drop(["rehab_costs"], axis=1, inplace=True)
 
     return network

@@ -41,6 +41,14 @@ for network, file_path in config['network_filters'].items():
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
 
+if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
+    raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
+
+permitted_hazard_types = {"flood", "earthquake", "storm"}
+configured_hazard_types = set(config["hazard_types"].values())
+if not configured_hazard_types.issubset(permitted_hazard_types):
+    raise ValueError(f"unsupported hazard types: {permitted_hazard_types - configured_hazard_types}")
+
 # check requested direct damage asset types
 requested_asset_damage_types = set(config['direct_damages']['asset_types'])
 if len(requested_asset_damage_types) == 0:
@@ -126,6 +134,18 @@ include: "rules/analyse/plot/fig_master.smk"
 include: "rules/analyse/power_analyse_all.smk"
 
 ##### target rules #####
+
+rule all_road_networks
+    input:
+        expand(
+            os.path.join(
+                f"{config['output_dir']}",
+                f"{{dataset}}_filter-{{network_filter}}",
+                edges.geoparquet
+            ),
+            dataset=config['infrastructure_datasets'].keys(),
+            network_filter=config['network_filters'].keys(),
+        )
 
 # Require the completed overlay image file to be present for each hazard
 rule all:

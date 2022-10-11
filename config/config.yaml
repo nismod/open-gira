@@ -14,11 +14,21 @@ hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
   aqueduct-river: 'config/hazard_resource_locations/aqueduct_river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
 
+# TODO: have hazards as instances of some kind of struct rather than several dicts?
+hazard_types:
+  aqueduct-coast: 'flood'
+  aqueduct-river: 'flood'
+
 # OSM datasets, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
-  europe-latest: 'https://download.geofabrik.de/europe-latest.osm.pbf'
-  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   africa-latest: 'http://download.geofabrik.de/africa-latest.osm.pbf'
+  asia-latest: 'http://download.geofabrik.de/asia-latest.osm.pbf'
+  australia-oceania-latest: 'http://download.geofabrik.de/australia-oceania-latest.osm.pbf'
+  central-america-latest: 'https://download.geofabrik.de/central-america-latest.osm.pbf'
+  europe-latest: 'https://download.geofabrik.de/europe-latest.osm.pbf'
+  north-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
+  south-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'

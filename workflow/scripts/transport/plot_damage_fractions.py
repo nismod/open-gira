@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 def natural_sort(to_sort):
-    return sorted(to_sort, key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', s)])
+    return sorted(to_sort, key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)])
 
 
 def closest_factors(n: int) -> tuple[tuple[int, int], int]:
