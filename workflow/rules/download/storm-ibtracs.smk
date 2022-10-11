@@ -4,33 +4,13 @@ tropical cyclone wind speed return periods
 
 Reference
 ---------
-https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164
-https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085
+https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164/3
+https://data.4tu.nl/articles/dataset/STORM_climate_change_tropical_cyclone_wind_speed_return_periods/14510817/3
+https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085/4
 """
 
 
-rule download_stormtracks_fixed:
-    """
-    Download storm return period and wind speed maps
-    """
-    output:
-        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
-        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
-    params:
-        wind_speeds = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
-        return_periods = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
-    shell:
-        """
-        wget \
-            {params.wind_speeds} \
-            {params.return_periods} \
-            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/fixed \
-            --timestamping \
-            --no-check-certificate
-        """
-
-
-rule download_stormtracks_events:
+rule download_storm:
     """
     Download an archive of all storm event tracks for a given model (and some
     metadata, readmes, etc.)
@@ -41,31 +21,130 @@ rule download_stormtracks_events:
     glob).
     """
     output:
-        zip_file = "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/archive.zip"
+        zip_file = "{OUTPUT_DIR}/input/storm-ibtracs/{EVENTS_OR_FIXED}/{STORM_MODEL}/archive.zip"
     shell:
         """
+        if [[ "{wildcards.EVENTS_OR_FIXED}" == "events" ]]
+        then
+            resource_file="storm_tracks_{wildcards.STORM_MODEL}.txt"
+        else
+            resource_file="storm_fixed_{wildcards.STORM_MODEL}.txt"
+        fi
+
         wget \
-            --input-file=config/hazard_resource_locations/storm_tracks_{wildcards.STORM_MODEL}.txt \
-            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/ \
+            --input-file=config/hazard_resource_locations/$resource_file \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/storm-ibtracs/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/ \
             --timestamping \
             --no-check-certificate \
             --content-disposition
         mv \
-            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/*.zip \
-            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/archive.zip
+            {wildcards.OUTPUT_DIR}/input/storm-ibtracs/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/*.zip \
+            {wildcards.OUTPUT_DIR}/input/storm-ibtracs/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/archive.zip
         """
 
 
-rule extract_stormtracks_events:
+rule extract_storm_events:
     """
     Unzip a storm file for a basin we are interested in
     """
     input:
-        rules.download_stormtracks_events.output.zip_file
+        "{OUTPUT_DIR}/input/storm-ibtracs/events/{STORM_MODEL}/archive.zip"
     output:
-        "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{REGION}/{STORM_SAMPLE_BASENAME}.txt"
+        "{OUTPUT_DIR}/input/storm-ibtracs/events/{STORM_MODEL}/{STORM_BASIN}/{STORM_SAMPLE_BASENAME}.txt"
     shell:
         """
-        unzip -o {input} {wildcards.STORM_SAMPLE_BASENAME}.txt \
-            -d {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/{wildcards.REGION}/
+        if [[ "{wildcards.STORM_MODEL}" == "constant" ]]
+        then
+            echo "Extracting current climate events"
+            # version 4 has data nested in "VERSIE4" directory
+            unzip -j -o {input} VERSIE4/{wildcards.STORM_SAMPLE_BASENAME}.txt \
+                -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/
+        else
+            echo "Extracting future climate events"
+            unzip -o {input} {wildcards.STORM_SAMPLE_BASENAME}.txt \
+                -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/
+        fi
+        """
+
+
+rule extract_storm_fixed_present:
+    """
+    Unzip a storm file
+    """
+    input:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/constant/archive.zip"
+    output:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+    shell:
+        """
+        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+            -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/fixed/constant/{wildcards.STORM_BASIN}/
+        """
+
+
+rule rename_storm_fixed_present:
+    input:
+        rules.extract_storm_fixed_present.output
+    output:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_constant_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+    shell:
+        """
+        mv {input} {output}
+        """
+
+
+rule extract_storm_fixed_future:
+    """
+    Unzip a storm file
+    """
+    input:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL_FUTURE}/archive.zip"
+    output:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL_FUTURE}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL_FUTURE}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+    params:
+        STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL_FUTURE.upper()
+    shell:
+        """
+        # first try STORM_MODEL_FUTURE, otherwise fall back to trying the uppercase version
+        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+            -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
+        || \
+        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+            -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
+        """
+
+rule wrap_storm_fixed:
+    input:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+    output:
+        temp("{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.wrapped.tif")
+    shell:
+        """
+        gdalwarp -te -180 -60 180 60 {input} {output}
+        """
+
+rule mosaic_storm_fixed:
+    """
+    Merge basin return period maps to global extent
+    """
+    input:
+        basin_tif_ep="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/EP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_EP_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_na="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/NA/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NA_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_ni="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/NI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NI_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_si="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/SI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SI_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_sp="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/SP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SP_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_wp="{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/WP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_WP_{STORM_RP}_YR_RP.wrapped.tif",
+    output:
+        "{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif"
+    shell:
+        """
+        gdal_calc.py \
+            -A {input.basin_tif_ep} \
+            -B {input.basin_tif_na} \
+            -C {input.basin_tif_ni} \
+            -D {input.basin_tif_si} \
+            -E {input.basin_tif_sp} \
+            -F {input.basin_tif_wp} \
+            --outfile={output} \
+            --calc="numpy.max((A,B,C,D,E,F),axis=0)"
         """

@@ -102,12 +102,12 @@ specific_boxes: [1030]
 # box IDs for the Caribbean on a 5 degree grid, east to west, south to north
 specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
 
-# REGIONS #
-# Regions in which to analyse. List of strings.
+# STORM BASINS #
+# Tropical cyclone basins to analyse. List of strings.
 # Empty list for global analysis.
 # Options: "EP", "NA", "NI", "SI", "SP", "WP".
-# If `specific_boxes` are selected, this must be coherent with `regions`
-regions: ["NA"]
+# If `specific_boxes` are selected, this must be coherent with `storm_basins`
+storm_basins: []
 
 # SAMPLES #
 # storm datasets are split into 'samples', each comprising 1,000 years of storm data

@@ -101,12 +101,12 @@ box_width_height: 5
 # use an empty list to evaluate globally
 specific_boxes: [1029, 1028, 1030, 957]
 
-# REGIONS #
-# Regions in which to analyse. List of strings.
+# STORM BASINS #
+# Tropical cyclone basins to analyse. List of strings.
 # Empty list for global analysis.
 # Options: "EP", "NA", "NI", "SI", "SP", "WP".
 # If `specific_boxes` are selected, this must be coherent with `regions`
-regions: ["NA"]
+storm_basins: ["NA"]
 
 # SAMPLES #
 # storm datasets are split into 'samples', each comprising 1,000 years of storm data
