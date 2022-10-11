@@ -144,6 +144,7 @@ class WaySlicer(osmium.SimpleHandler):
                     node = self.get_node_by_coords(n, prefixes[i], node_index)
                 except KeyError:
                     # Not found, must be a node we created by clipping to bbox
+                    # TODO: investigate possible bug: these nodes not just at bbox!
                     node = {
                         f"{prefixes[i]}reference": pandas.NA,
                         f"{prefixes[i]}longitude": n[0],
