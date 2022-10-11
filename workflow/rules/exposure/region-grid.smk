@@ -6,6 +6,7 @@ import os
 
 
 rule intersect_unit_generator:
+    conda: "../../../environment.yml"
     input:
         expand(
             os.path.join(
@@ -25,7 +26,7 @@ rule intersect_unit_generator:
             "STORM_FIXED_RETURN_PERIODS_{region}.nc",
         ),
         os.path.join(
-            config["output_dir"], "power_intersection", "regions", "{region}_boxes.txt"
+            config["output_dir"], "power_intersection", "regions", "{region}_boxes_with_assets.json"
         ),
     output:
         os.path.join(

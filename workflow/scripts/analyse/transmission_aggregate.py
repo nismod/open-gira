@@ -1,29 +1,27 @@
-"""Sums the count of hits on all tranmission lines for selected region, sample, storm and aggregates reconstruction cost to level
-
-
+"""Sums the count of hits on all tranmission lines for selected region, sample, storm and
+aggregates reconstruction cost to level
 """
-
+import json
 import os
-import sys
-from shapely.geometry import shape, LineString
+import time
+
 import fiona
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import json
-from tqdm import tqdm
-import time
-from common_functions import find_storm_files, check_srn
 from geopy import distance
+from shapely.geometry import LineString, shape
+from tqdm import tqdm
 
+from common_functions import check_srn, find_storm_files
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    layer_num = snakemake.params["aggregate_level"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    thrval = snakemake.params["central_threshold"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    layer_num = snakemake.params["aggregate_level"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    thrval = snakemake.params["central_threshold"]  # type: ignore
 except:
     output_dir = "results"  # sys.argv[1]
     layer_num = 1
@@ -103,7 +101,7 @@ region_eval, sample_eval, nh_eval = check_srn(region_eval, sample_eval, nh_eval)
 
 
 boxes_county_file = os.path.join(
-    output_dir, "power_processed", "world_boxes_metadata.txt"
+    output_dir, "power_processed", "world_boxes_metadata.json"
 )
 with open(boxes_county_file, "r") as src:
     boxes_country = json.load(src)["box_country_dict"]

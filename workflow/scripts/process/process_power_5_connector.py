@@ -1,11 +1,22 @@
 """Documents the connections between boxes"""
+import glob
+import json
+import os
+import sys
+import time
+import warnings
+
+import geopandas as gpd
+from shapely.geometry import LineString
+from tqdm import tqdm
 
 from process_power_functions import adj
-from importing_modules import *
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 try:
-    output_dir = snakemake.params["output_dir"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore  # type: ignore
 except:
     output_dir = sys.argv[1]
 
@@ -17,7 +28,7 @@ network_paths = glob.glob(
 
 
 with open(
-    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+    os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
 ) as filejson:
     world_boxes_metadata = json.load(filejson)
 num_cols = world_boxes_metadata["num_cols"]
@@ -84,8 +95,8 @@ for network_path in tqdm(
             "power_processed",
             "all_boxes",
             box_id,
-            f"connector_{box_id}.txt",
+            f"connector_{box_id}.json",
         ),
         "w",
-    ) as file_ex:
-        json.dump(portal_dict, file_ex)
+    ) as fp:
+        json.dump(portal_dict, fp, indent=2)

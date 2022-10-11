@@ -1,9 +1,12 @@
+"""Common functions required to perform preprocessing
 """
-common functions required to perform preprocessing
-"""
+import warnings
 
+import numpy as np
+import shapely.wkt as sw
+import snkit
 
-from importing_modules import *
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def adj(idx, num_cols, tot_boxes):
@@ -190,7 +193,7 @@ snkit.network.nearest_edge = patch_nearest_edge
 # start = time.time()
 #
 # with open(
-#     os.path.join("data", "processed", "world_boxes_metadata.txt"), "r"
+#     os.path.join("data", "processed", "world_boxes_metadata.json"), "r"
 # ) as filejson:
 #     world_boxes_metadata = json.load(filejson)
 # boxlen = world_boxes_metadata["boxlen"]

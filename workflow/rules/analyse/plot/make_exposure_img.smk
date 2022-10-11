@@ -5,6 +5,7 @@ cell index. Cell indices are then used to build the raster file.
 
 
 rule make_exposure_img:
+    conda: "../../../../environment.yml"
     input:
         hazard_dir="{OUTPUT_DIR}/exposure/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/raster/",
         coastline="{OUTPUT_DIR}/input/coastlines/ne_10m_ocean/",
@@ -21,5 +22,5 @@ rule make_exposure_img:
 
 """
 Test with:
-snakemake --cores all results/exposure/tanzania-mini_filter-highway-core/hazard-aqueduct-river/img/
+snakemake --cores all results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img/
 """

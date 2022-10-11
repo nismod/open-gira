@@ -9,7 +9,7 @@ def test_create_rail_network():
     neighbouring countries: Eritrea, Somalia and Ethiopia.
     """
     runner.run_snakemake_test(
-        "create_rail_network",
+        "create_transport_network",
         (
             "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_nodes.geoparquet",
             "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_edges.geoparquet",

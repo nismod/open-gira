@@ -1,4 +1,5 @@
 rule network_components:
+    conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
         edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet",
@@ -11,5 +12,5 @@ rule network_components:
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-highway-core/component_population.pdf
+snakemake --cores all results/tanzania-mini_filter-road/component_population.svg
 """

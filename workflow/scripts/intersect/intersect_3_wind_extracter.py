@@ -1,28 +1,33 @@
-"""Adapted wind speed file from J Verschuur. Processes stormtracks data and returns the wind speed at each grid location."""
+"""Process stormtracks data and return the wind speed at each grid location.
 
+Adapted wind speed file from J Verschuur.
 
-import numpy as np
-import pandas as pd
-import geopandas as gpd
+TODO: Investigate speeding up this script. N.B. ~80% of execution time is file I/O.
+
+"""
 import os
 import time
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 try:
-    region = snakemake.params["region"]
-    sample = snakemake.params["sample"]
-    all_boxes = snakemake.params["all_boxes_compute"]
+    region = snakemake.params["region"]  # type: ignore
+    sample = snakemake.params["sample"]  # type: ignore
+    all_boxes = snakemake.params["all_boxes_compute"]  # type: ignore
     nh_split = int(
-        snakemake.params["memory_storm_split"]
+        snakemake.params["memory_storm_split"]  # type: ignore
     )  # number of nh to run each iteration'
-    wind_rerun = snakemake.params["wind_rerun"]
-    output_dir = snakemake.params["output_dir"]
-    wind_file_start = snakemake.params["wind_file_start"]
-    wind_file_end = snakemake.params["wind_file_end"]
-    storm_model_type = snakemake.params["storm_model_type"]
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
+    wind_rerun = snakemake.params["wind_rerun"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    wind_file_start = snakemake.params["wind_file_start"]  # type: ignore
+    wind_file_end = snakemake.params["wind_file_end"]  # type: ignore
+    storm_model_type = snakemake.params["storm_model_type"]  # type: ignore
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
 except:
     # raise RuntimeError("Snakemake parameters not found")
     region = "NA"
@@ -124,7 +129,8 @@ stormfile = os.path.join(
     "input",
     "stormtracks",
     "events",
-    # "STORM_DATA_IBTRACS_" + region + "_1000_YEARS_" + sample + ".txt",
+    f"{storm_model_type}",
+    f"{region}",
     f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
 )
 TC = pd.read_csv(stormfile, header=None)
@@ -377,9 +383,9 @@ for nh_lst in tqdm(
     else:
         print(f"{nh_lst} do not have sufficient unit damage, skipping")
 
-with open(
-    os.path.join(all_winds_path, f"{region}_{sample}_completed.txt"), "w"
-) as file:  # add dummy
-    file.writelines(f"Winds generated using {storm_model_type} model")
+# it is not known in advance how many files will be created by this script
+# so, to indicate to snakemake that execution has completed, create a flag file
+with open(os.path.join(all_winds_path, "completed.txt"), "w") as fp:
+    fp.writelines(f"Winds generated using {storm_model_type} model")
 
 print(f"Total time {round((time.time()-start)/60,3)}")

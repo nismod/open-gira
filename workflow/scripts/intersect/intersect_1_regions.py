@@ -1,79 +1,88 @@
-"""Takes a region and finds the box box_ids within it, exports as a list."""
-
-
+"""Takes a region and finds the box_ids within it, exports as a list.
+"""
 import json
-import netCDF4 as nc4
-import sys
-import geopandas as gpd
 import os
-from shapely.geometry import box
+import sys
 
-try:
-    region = snakemake.params["region"]
-    output_dir = snakemake.params["output_dir"]
-except:
-    output_dir = sys.argv[1]
-    region = sys.argv[2]
+import geopandas as gpd
+from shapely.geometry.multipolygon import MultiPolygon
+from shapely.geometry.polygon import Polygon
 
 
-gdf_box = gpd.read_file(os.path.join(output_dir, "power_processed", "world_boxes.gpkg"))
-fn = os.path.join(
-    output_dir,
-    "input",
-    "stormtracks",
-    "fixed",
-    f"STORM_FIXED_RETURN_PERIODS_{region}.nc",
-)
-ds = nc4.Dataset(fn)
-lon_min, lat_min, lon_max, lat_max = (
-    min(ds["lon"]),
-    min(ds["lat"]),
-    max(ds["lon"]),
-    max(ds["lat"]),
-)
-region_box = box(lon_min, lat_min, min(180, lon_max), lat_max)
-if lon_max > 180:
-    assert lon_max - 360 > -180
-    region_box2 = box(-180, lat_min, lon_max - 360, lat_max)
-    gdf_boxes_in_region = gdf_box.overlay(
-        gpd.GeoDataFrame({"geometry": [region_box, region_box2]}, crs="EPSG:4326"),
-        how="intersection",
-    )
-else:
-    gdf_boxes_in_region = gdf_box.overlay(
-        gpd.GeoDataFrame({"geometry": [region_box]}, crs="EPSG:4326"),
-        how="intersection",
-    )
-boxes_in_region = list(gdf_boxes_in_region["box_id"])
+if __name__ == "__main__":
+    try:
+        global_boxes_metadata_path = snakemake.input["global_boxes_metadata"]  # type: ignore
+        global_boxes_path = snakemake.input["global_boxes"]  # type: ignore
+        basin_geometry_path = snakemake.input["basin_geometry"]  # type: ignore
+        region_str = snakemake.params["region_name"]  # type: ignore
+        output_dir = snakemake.params["output_dir"]  # type: ignore
+        box_ids_path = snakemake.output["boxes_in_region"]  # type: ignore
+        box_ids_with_assets_path = snakemake.output["boxes_in_region_with_assets"]  # type: ignore
+    except NameError:
+        global_boxes_metadata_path = sys.argv[1]
+        global_boxes_path = sys.argv[2]
+        basin_geometry_path = sys.argv[3]
+        region_str = sys.argv[4]
+        output_dir = sys.argv[5]
+        box_ids_path = sys.argv[6]
+        box_ids_with_assets_path = sys.argv[7]
 
-with open(
-    os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
-) as filejson:
-    box_country_dict = json.load(filejson)["box_country_dict"]
+    regions: gpd.GeoDataFrame = gpd.read_file(basin_geometry_path)
 
-boxes_in_region_copy = boxes_in_region.copy()
-for box_id in boxes_in_region_copy:
-    if not box_country_dict[box_id]:  # no countries in box
-        boxes_in_region.remove(box_id)
-        continue
-    gridfinder_box = gpd.read_file(
-        os.path.join(
+    # check the regions use -180 < longitude <= 180
+    assert max(regions.geometry.bounds.maxx) <= 180
+
+    # select a region
+    region_polygon = regions[regions.name==region_str].geometry.squeeze()
+    if not isinstance(region_polygon, (Polygon, MultiPolygon)):
+        raise ValueError(f"could not extract suitable region geometry: {region_polygon=} {regions=} {region_str=}")
+
+    # read in the global grid
+    global_grid: gpd.GeoDataFrame = gpd.read_file(global_boxes_path)
+    # check the grid uses -180 < longitude <= 180
+    assert max(global_grid.geometry.bounds.maxx) <= 180
+
+    # find box_ids of boxes intersecting region polygon
+    boxes_in_region: list[str] = global_grid[global_grid.intersects(region_polygon)].box_id.to_list()
+
+    # write out all boxes within this region
+    with open(box_ids_path, "w") as fp:
+        json.dump(boxes_in_region, fp)
+
+    # create a second list of box ids -- those containing part of a country,
+    # with some infrastructure inside them
+    boxes_in_region_with_assets = boxes_in_region.copy()
+    for box_id in boxes_in_region:
+
+        with open(global_boxes_metadata_path, "r") as fp:
+            box_country_dict = json.load(fp)["box_country_dict"]
+
+        # empty box will contain None, implying no countries in box
+        if not box_country_dict[box_id]:
+            boxes_in_region_with_assets.remove(box_id)
+            continue
+
+        # TODO: ideally, we'd take this filename logic and the box_id loop to
+        # rule level -- that way, each box could be a different job and we'd
+        # be closer to only processing boxes we're interested in
+        # for now, leave as-is to simplify creating the "boxes in the region
+        # with infrastructure" list
+        gridfinder_box_path = os.path.join(
             output_dir,
             "power_processed",
             "all_boxes",
             box_id,
             f"gridfinder_{box_id}.gpkg",
         )
-    )
-    if (
-        len(gridfinder_box) == 1 and gridfinder_box["geometry"].iloc[0] == None
-    ):  # no infrastructure in box
-        boxes_in_region.remove(box_id)
-        print(f"{box_id} contains land but is empty")
+        if os.path.exists(gridfinder_box_path):
+            gridfinder_box = gpd.read_file(gridfinder_box_path)
 
-region_path = os.path.join(output_dir, "power_intersection", "regions")
-if not os.path.exists(region_path):
-    os.makedirs(region_path)
+            if len(gridfinder_box) == 1 and gridfinder_box["geometry"].iloc[0] == None:
+                # no infrastructure in box
+                boxes_in_region_with_assets.remove(box_id)
+        else:
+            # gridfinder file for this box doesn't exist (we haven't produced it)
+            boxes_in_region_with_assets.remove(box_id)
 
-with open(os.path.join(region_path, f"{region}_boxes.txt"), "w") as jsondump:
-    json.dump(boxes_in_region, jsondump)
+    with open(box_ids_with_assets_path, "w") as fp:
+        json.dump(boxes_in_region_with_assets, fp)

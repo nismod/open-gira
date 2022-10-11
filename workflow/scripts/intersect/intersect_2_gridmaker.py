@@ -1,23 +1,20 @@
 """Creates unit grid at resolution of the return period maps."""
+import json
+import os
+import sys
+import time
 
-
+import geopandas as gpd
+import netCDF4 as nc4
 import numpy as np
 import pandas as pd
-import netCDF4 as nc4
-import sys
-import geopandas as gpd
-import os
-import time
-import json
-from shapely.geometry import box
-
 from pathos.multiprocessing import ProcessPool, cpu_count
-
+from shapely.geometry import box
 from tqdm import tqdm
 
 try:
-    region = snakemake.params["region"]
-    output_dir = snakemake.params["output_dir"]
+    region = snakemake.params["region"]  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
     region = sys.argv[2]
@@ -148,7 +145,7 @@ if __name__ == "__main__":
 
     with open(
         os.path.join(
-            output_dir, "power_intersection", "regions", f"{region}_boxes.txt"
+            output_dir, "power_intersection", "regions", f"{region}_boxes.json"
         ),
         "r",
     ) as src:
@@ -183,7 +180,7 @@ if __name__ == "__main__":
         unit_contains.update(dict_indiv)
     with open(
         os.path.join(
-            output_dir, "power_intersection", "regions", f"{region}_unit_contains.txt"
+            output_dir, "power_intersection", "regions", f"{region}_unit_contains.json"
         ),
         "w",
     ) as writefile:

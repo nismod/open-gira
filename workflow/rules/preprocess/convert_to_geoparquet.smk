@@ -8,6 +8,7 @@ def aggregate_input(wildcards):
 
 
 rule convert_to_geoparquet:
+    conda: "../../../environment.yml"
     input:
         pbf=aggregate_input,
     params:
@@ -22,5 +23,5 @@ rule convert_to_geoparquet:
 
 """
 Test with:
-snakemake --cores all results/geoparquet/tanzania-mini_filter-highway-core/raw/slice-0_edges.geoparquet
+snakemake --cores all results/geoparquet/tanzania-mini_filter-road/raw/slice-0_edges.geoparquet
 """

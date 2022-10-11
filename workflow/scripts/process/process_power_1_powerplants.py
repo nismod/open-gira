@@ -1,12 +1,21 @@
+"""Download the plants data to csv files
 """
-This file downloads the plants data to csv files
-"""
+import json
+import os
+import sys
+import warnings
 
-from importing_modules import *
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import shape
+from tqdm import tqdm
+
 from process_power_functions import idxbox
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 try:
-    output_dir = snakemake.params["output_dir"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
 except:
     output_dir = sys.argv[1]
 
@@ -14,7 +23,7 @@ if __name__ == "__main__":
 
     # preliminary function variables
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         world_boxes_metadata = json.load(filejson)
     boxlen = world_boxes_metadata["boxlen"]
@@ -77,7 +86,7 @@ if __name__ == "__main__":
         powerplants_box.to_csv(p, index=False)
 
     with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "r"
+        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
     ) as filejson:
         tot_boxes = json.load(filejson)["tot_boxes"]
 

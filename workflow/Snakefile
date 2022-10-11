@@ -59,6 +59,9 @@ wildcard_constraints:
     FILTER_SLUG="filter-[^_/]+",
     HAZARD_SLUG="hazard-[^_/]+",
     FILENAME="[^/]+",
+    REGION="EP|NA|NI|SI|SP|WP",
+    STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
+    SAMPLE="\d+",
 
 # generate values for global variables used across rules
 include: "rules/storm_workflow_global_variables.smk"
@@ -78,15 +81,16 @@ include: "rules/download/power_download_all.smk"
 
 include: "rules/preprocess/filter_osm_data.smk"
 include: "rules/preprocess/trim_hazard_data.smk"
-include: "rules/preprocess/targets.smk"
-include: "rules/preprocess/network.smk"
-include: "rules/preprocess/split-gridfinder.smk"
 include: "rules/preprocess/create_bbox_extracts.smk"
-include: "rules/preprocess/exclude-countries.smk"
 include: "rules/preprocess/create_transport_network.smk"
 include: "rules/preprocess/slice.smk"
 include: "rules/preprocess/join_network.smk"
 include: "rules/preprocess/split-world.smk"
+include: "rules/preprocess/network.smk"
+include: "rules/preprocess/split-gridfinder.smk"
+include: "rules/preprocess/exclude-countries.smk"
+include: "rules/preprocess/targets.smk"
+include: "rules/preprocess/join_data.smk"
 include: "rules/preprocess/convert_to_geoparquet.smk"
 include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"

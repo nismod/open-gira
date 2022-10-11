@@ -1,23 +1,34 @@
-"""Splits the world into boxes of length and height boxlen (input parameter)"""
+"""Splits the world into boxes of length and height boxlen (input parameter)
+"""
+import json
+import os
+import sys
+import warnings
 
+import geopandas as gpd
+import numpy as np
+from shapely.geometry import Point
+from tqdm import tqdm
 
-# N.B. this is evil
-# TODO: remove importing_modules and have script specific imports
-from importing_modules import *
-
-
-try:
-    boxlen = snakemake.params["boxlen_value"]
-    output_dir = snakemake.params["output_dir"]
-except:
-    output_dir = sys.argv[1]
-    boxlen = sys.argv[2]
-
-
-boxlen = float(boxlen)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 if __name__ == "__main__":
+
+    try:
+        admin_data_path = snakemake.input["admin_data"]  # type: ignore
+        boxlen = snakemake.params["boxlen_value"]  # type: ignore
+        output_dir = snakemake.params["output_dir"]  # type: ignore
+        global_metadata_path = snakemake.output["global_metadata"]  # type: ignore
+        global_boxes_path = snakemake.output["global_boxes"]  # type: ignore
+    except:
+        admin_data_path = sys.argv[1]
+        output_dir = sys.argv[2]
+        boxlen = sys.argv[3]
+        global_metadata_path = sys.argv[4]
+        global_boxes_path = sys.argv[5]
+
+    boxlen = float(boxlen)
 
     assert 180 % boxlen == 0  # ensure divisibility
 
@@ -41,7 +52,6 @@ if __name__ == "__main__":
     )
 
     print("loading country layer=0")
-    admin_data_path = os.path.join(output_dir, "input", "admin-boundaries", "gadm36_levels.gpkg")
     countries = gpd.read_file(admin_data_path, layer=0).drop(["NAME_0"], axis="columns")
     countries = countries.rename({"GID_0": "code"}, axis="columns")
 
@@ -62,9 +72,7 @@ if __name__ == "__main__":
     countries_by_box = dict(sorted(countries_by_box.items(), key=lambda item: int(item[0].split("_")[-1])))
 
     print("writing metadata...")
-    with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.txt"), "w"
-    ) as filejson:
+    with open(global_metadata_path, "w") as filejson:
         lon_min, lat_min, lon_max, lat_max = grid.bounds.values[0]
         info = {
             "boxlen": boxlen,
@@ -77,7 +85,7 @@ if __name__ == "__main__":
             "tot_boxes": int(len(lon_centroids) * len(lat_centroids)),
             "box_country_dict": countries_by_box,
         }
-        json.dump(info, filejson)
+        json.dump(info, filejson, indent=2, sort_keys=True)
 
     print("creating box folders")
     for box_id in grid["box_id"]:
@@ -104,6 +112,4 @@ if __name__ == "__main__":
         )
 
     print("writing full to gpkg")
-    grid.to_file(
-        os.path.join(output_dir, "power_processed", "world_boxes.gpkg"), driver="GPKG"
-    )
+    grid.to_file(global_boxes_path, driver="GPKG")

@@ -4,9 +4,6 @@ import warnings
 from typing import Iterable
 
 import geopandas as gpd
-import numpy as np
-import pandas
-
 import snkit
 
 from join_data import append_data
@@ -38,10 +35,10 @@ def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
 
 if __name__ == "__main__":
     try:
-        node_slice_files = snakemake.input["nodes"]
-        edge_slice_files = snakemake.input["edges"]
-        nodes_output_file = snakemake.output["nodes"]
-        edges_output_file = snakemake.output["edges"]
+        node_slice_files = snakemake.input["nodes"]  # type: ignore
+        edge_slice_files = snakemake.input["edges"]  # type: ignore
+        nodes_output_file = snakemake.output["nodes"]  # type: ignore
+        edges_output_file = snakemake.output["edges"]  # type: ignore
     except NameError:
         # not sure of an elegant way to handle the two lists of input filenames
         sys.exit("please invoke via snakemake")

@@ -1,36 +1,71 @@
-"""Download STORM IBTrACS present climate synthetic tropical cyclone tracks and tropical cyclone 
-wind speed return periods
+"""
+Download STORM IBTrACS present climate synthetic tropical cyclone tracks and
+tropical cyclone wind speed return periods
 
 Reference
 ---------
-https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085
 https://data.4tu.nl/articles/dataset/STORM_tropical_cyclone_wind_speed_return_periods/12705164
+https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tropical_cyclone_tracks/12706085
 """
 
 
 rule download_stormtracks_fixed:
+    """
+    Download storm return period and wind speed maps
+    """
     output:
-        STORMS_RETURN_PERIOD,
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
+        "{OUTPUT_DIR}/input/stormtracks/fixed/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
+    params:
+        wind_speeds = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_TC_WIND_SPEEDS_{REGION}.nc",
+        return_periods = "https://opendap.4tu.nl/thredds/fileServer/data2/uuid/779b9dfd-b0ff-4531-8833-aaa9c0cf6b5a/STORM_FIXED_RETURN_PERIODS_{REGION}.nc"
     shell:
-        f"""
+        """
         wget \
-            --input-file=workflow/scripts/storm_fixed_return.txt \
-            --directory-prefix={config['output_dir']}/input/stormtracks/fixed \
+            {params.wind_speeds} \
+            {params.return_periods} \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/fixed \
             --timestamping \
             --no-check-certificate
         """
 
 
 rule download_stormtracks_events:
+    """
+    Download an archive of all storm event tracks for a given model (and some
+    metadata, readmes, etc.)
+
+    N.B. We rename the downloaded ZIP file from it's original name to
+    archive.zip. This makes it easier to match on this file later. The mv
+    command should fail if there's more than one zipfile as input (from the
+    glob).
+    """
     output:
-        STORMS_EVENTS,
+        zip_file = "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/archive.zip"
     shell:
-        f"""
+        """
         wget \
-            --input-file=workflow/scripts/storm_tracks_{STORM_MODEL}.txt \
-            --directory-prefix={config['output_dir']}/input/stormtracks/events \
+            --input-file=config/hazard_resource_locations/storm_tracks_{wildcards.STORM_MODEL}.txt \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/ \
             --timestamping \
             --no-check-certificate \
             --content-disposition
-        unzip -o {config['output_dir']}/input/stormtracks/events/{UNZIP_FILE} -d {config['output_dir']}/input/stormtracks/events
+        mv \
+            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/*.zip \
+            {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/archive.zip
+        """
+
+
+rule extract_stormtracks_events:
+    """
+    Unzip a storm file for a basin we are interested in
+    """
+    input:
+        rules.download_stormtracks_events.output.zip_file
+    output:
+        "{OUTPUT_DIR}/input/stormtracks/events/{STORM_MODEL}/{REGION}/{STORM_SAMPLE_BASENAME}.txt"
+    shell:
+        """
+        unzip -o {input} {wildcards.STORM_SAMPLE_BASENAME}.txt \
+            -d {wildcards.OUTPUT_DIR}/input/stormtracks/events/{wildcards.STORM_MODEL}/{wildcards.REGION}/
         """

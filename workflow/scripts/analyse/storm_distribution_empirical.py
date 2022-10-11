@@ -1,25 +1,26 @@
 """Plots the empirical distribution of storms for simple statistics.
 
-Only the combined storm .csv files are examined, rather than the .gpkg target files. This is much faster but limited to the available statistics in the .txt files.
-Outputs plots of metrics vs return periods
+Only the combined storm .csv files are examined, rather than the .gpkg target files. This is
+much faster but limited to the available statistics in the .txt files. Outputs plots of metrics
+vs return periods
 """
-
 import os
-import numpy as np
-import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-from common_functions import find_storm_files, check_srn
+
+from common_functions import check_srn, find_storm_files
 
 try:
-    output_dir = snakemake.params["output_dir"]
-    metrics = snakemake.params["metrics"]
-    region_eval = snakemake.params["region_eval"]
-    sample_eval = snakemake.params["sample_eval"]
-    nh_eval = snakemake.params["nh_eval"]
-    central_threshold = snakemake.params["central_threshold"]
-    minimum_threshold = snakemake.params["minimum_threshold"]
-    maximum_threshold = snakemake.params["maximum_threshold"]
+    output_dir = snakemake.params["output_dir"]  # type: ignore
+    metrics = snakemake.params["metrics"]  # type: ignore
+    region_eval = snakemake.params["region_eval"]  # type: ignore
+    sample_eval = snakemake.params["sample_eval"]  # type: ignore
+    nh_eval = snakemake.params["nh_eval"]  # type: ignore
+    central_threshold = snakemake.params["central_threshold"]  # type: ignore
+    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
+    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
 except:  # for testing only
     output_dir = "results"
     metrics = [

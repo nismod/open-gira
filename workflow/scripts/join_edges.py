@@ -1,29 +1,33 @@
-# Takes a list of geoparquet files containing edges and join corresponding
-# geodataframes. The geodataframes must have the following columns:
-# start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
+"""Takes a list of geoparquet files containing edges and join corresponding
+geodataframes. The geodataframes must have the following columns:
 
-# example join:
+    start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
 
-# file1.geoparguet
-# id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
-# 0  a    b    0                    0                   0                    1                  1                 1                  geom0
-# 1  c    d    1                    1                   1                    2                  1                 2                  geom1
+example join:
 
-# file2.geoparguet
-# id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
-# 0  A    B    2                    2                   2                    4                  3                 3                  GEOM0
-# 1  C    D    4                    3                   3                    4                  4                 4                  GEOM1
+    file1.geoparquet
+    id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
+    0  a    b    0                    0                   0                    1                  1                 1                  geom0
+    1  c    d    1                    1                   1                    2                  1                 2                  geom1
 
-# joined.geoparguet
-# id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
-# 0  a    b    0                    0                   0                    1                  1                 1                  geom0
-# 1  c    d    1                    1                   1                    2                  1                 2                  geom1
-# 0  A    B    2                    2                   2                    4                  3                 3                  GEOM0
-# 1  C    D    4                    3                   3                    4                  4                 4                  GEOM1
+    file2.geoparquet
+    id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
+    0  A    B    2                    2                   2                    4                  3                 3                  GEOM0
+    1  C    D    4                    3                   3                    4                  4                 4                  GEOM1
 
-# Usage: python join_edges [FILE] [output]
-# Example: python join_edges file1.geoparguet file2.geoparguet joined.geoparguet
+    joined.geoparquet
+    id obs1 obs2 start_node_longitude start_node_latitude start_node_reference end_node_longitude end_node_latitude end_node_reference geometry
+    0  a    b    0                    0                   0                    1                  1                 1                  geom0
+    1  c    d    1                    1                   1                    2                  1                 2                  geom1
+    0  A    B    2                    2                   2                    4                  3                 3                  GEOM0
+    1  C    D    4                    3                   3                    4                  4                 4                  GEOM1
 
+Usage:
+    python join_edges [FILE] [output]
+
+Example:
+    python join_edges file1.geoparquet file2.geoparquet joined.geoparquet
+"""
 import logging
 import sys
 import warnings
@@ -91,8 +95,8 @@ def add_custom_node_references(base):
 
 if __name__ == "__main__":
     try:
-        slice_files = snakemake.input
-        output_file = snakemake.output[0]
+        slice_files = snakemake.input  # type: ignore
+        output_file = snakemake.output[0]  # type: ignore
     except NameError:
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]

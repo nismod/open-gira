@@ -4,16 +4,15 @@
 Split network edges along grid cells, join hazard values.
 """
 
+import glob
 import logging
 import os
 import re
 import sys
-import glob
 
 import geopandas
 import pandas
 import rasterio
-
 from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
@@ -152,13 +151,13 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
-        network_edges_path = snakemake.input["network"]
-        hazard_dir = snakemake.input["tifs"]
-        output_path = snakemake.output["geoparquet"]
+        network_edges_path = snakemake.input["network"]  # type: ignore
+        hazard_dir = snakemake.input["tifs"]  # type: ignore
+        output_path = snakemake.output["geoparquet"]  # type: ignore
     except NameError:
         print(sys.argv)
         (network_edges_path, hazard_dir, output_path) = sys.argv[1:]
-        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-highway-core/slice-2.geoparquet'
+        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-road/slice-2.geoparquet'
         # output_path = '../../results/test.geoparquet'
         # hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
 

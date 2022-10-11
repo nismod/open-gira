@@ -4,6 +4,7 @@ from glob import glob
 
 
 rule network_raster:
+    conda: "../../../environment.yml"
     input:
         network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/processed/{SLICE_SLUG}_edges.geoparquet",
         # We read in the entire directory here to avoid splitting the job for each *.tif file
@@ -17,5 +18,5 @@ rule network_raster:
 
 """
 Test with:
-snakemake --cores all results/splits/tanzania-mini_filter-highway-core/hazard-aqueduct-river/slice-0_edges.geoparquet
+snakemake --cores all results/splits/tanzania-mini_filter-road/hazard-aqueduct-river/slice-0.geoparquet
 """

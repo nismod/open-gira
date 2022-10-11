@@ -7,6 +7,7 @@ https://www.worldpop.org/geodata/listing?id=79
 """
 
 rule download_population:
+    conda: "../../../environment.yml"
     params:
         output_dir=config["output_dir"],
         code_country="{country}",

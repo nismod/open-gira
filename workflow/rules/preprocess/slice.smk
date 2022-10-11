@@ -8,6 +8,8 @@ checkpoint slice:
         extracts_config="{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
     output:
         directory("{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}"),
+    resources:
+        mem_mb=32_000
     shell:
         # Need to run osmium from different output folders depending on the
         # FILTER_SLUG, and the extracts_config specifies only the filename.
@@ -20,7 +22,7 @@ checkpoint slice:
 
 """
 Test with:
-snakemake --cores all results/slices/tanzania-mini_filter-highway-core
+snakemake --cores all results/slices/tanzania-mini_filter-road
 
 Note: even testing with a single slice will generate all slices defined in the *_extracts.geojson file
 """

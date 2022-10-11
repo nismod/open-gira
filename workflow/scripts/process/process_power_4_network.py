@@ -11,13 +11,26 @@ targets, plants, no edges -> targets file but connected=False, plants file but c
 targets, no plants, edges -> targets file, dummy plants file, edges file
 targets, plants, edges -> all files
 """
-import snkit.network
+import os
+import sys
+import time
+import warnings
 
-from importing_modules import *
+import geopandas as gpd
+import pandas as pd
+import shapely.wkt as sw
+import snkit
+import snkit.network
+from pyproj import Geod
+from shapely import wkt
+from shapely.errors import ShapelyDeprecationWarning
+from shapely.geometry import LineString, Point
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 try:
-    box_id = snakemake.params["box_id"]
-    output_dir = snakemake.params["output_dir"]
+    box_id = snakemake.params["box_id"]  # type: ignore  # type: ignore
+    output_dir = snakemake.params["output_dir"]  # type: ignore  # type: ignore
 except:
     output_dir = sys.argv[1]
     box_id = sys.argv[2]
