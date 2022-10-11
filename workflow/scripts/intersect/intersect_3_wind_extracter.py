@@ -22,9 +22,7 @@ try:
     )  # number of nh to run each iteration'
     wind_rerun = snakemake.params["wind_rerun"]  # type: ignore
     output_dir = snakemake.params["output_dir"]  # type: ignore
-    wind_file_start = snakemake.params["wind_file_start"]  # type: ignore
-    wind_file_end = snakemake.params["wind_file_end"]  # type: ignore
-    storm_model_type = snakemake.params["storm_model_type"]  # type: ignore
+    stormfile = snakemake.params["storm_file"]  # type: ignore
     central_threshold = snakemake.params["central_threshold"]  # type: ignore
     minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
     maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
@@ -38,9 +36,7 @@ except:
     nh_split = 2500
     wind_rerun = False
     output_dir = "results"
-    wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
-    wind_file_end = "_IBTRACSDELTA"
-    storm_model_type = "CMCC-CM2-VHR4"
+    stormfile = "results/input/storm-ibtracs/events/constant/NA/STORM_DATA_CMCC-CM2-VHR4_NA_1000_YEARS_0_IBTRACSDELTA.txt"
     central_threshold = 43
     minimum_threshold = 39
     maximum_threshold = 47
@@ -124,15 +120,6 @@ environmental_pressure = [1006.5, 1014.1, 1014.1, 1008.8, 1010.6, 1008.1, 1008.3
 environ_dict = dict(zip(list_regions, environmental_pressure))
 
 #### load in cyclone tracks for region
-stormfile = os.path.join(
-    output_dir,
-    "input",
-    "storm-ibtracs",
-    "events",
-    f"{storm_model_type}",
-    f"{region}",
-    f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
-)
 TC = pd.read_csv(stormfile, header=None)
 TC.columns = [
     "year",
@@ -188,8 +175,6 @@ for unit in tqdm(grid_box.itertuples(), desc="distances", total=len(grid_box)):
         str(unit.longitude)[:7].replace(".", "d").replace("-", "m")
         + "x"
         + str(unit.latitude)[:7].replace(".", "d").replace("-", "m")
-        + "xx"
-        + storm_model_type
         + f"-l{minimum_threshold}c{central_threshold}u{maximum_threshold}"
     )  # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
     unit_path_indiv = os.path.join(unit_path, unique_num + ".parquet")
@@ -386,6 +371,6 @@ for nh_lst in tqdm(
 # it is not known in advance how many files will be created by this script
 # so, to indicate to snakemake that execution has completed, create a flag file
 with open(os.path.join(all_winds_path, "completed.txt"), "w") as fp:
-    fp.writelines(f"Winds generated using {storm_model_type} model")
+    fp.writelines(f"Winds generated.")
 
 print(f"Total time {round((time.time()-start)/60,3)}")

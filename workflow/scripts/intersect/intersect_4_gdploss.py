@@ -26,58 +26,10 @@ try:
     central_threshold = snakemake.params["central_threshold"]  # type: ignore
     minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
     maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
-    storm_model = snakemake.params["storm_model"]  # type: ignore
-    wind_file_start = snakemake.params["wind_file_start"]  # type: ignore
-    wind_file_end = snakemake.params["wind_file_end"]  # type: ignore
+    stormfile = snakemake.params["storm_file"]  # type: ignore
     all_boxes = snakemake.params["all_boxes"]  # type: ignore
 except:
     raise RuntimeError("Snakemake parameters not found")
-    region = "NA"
-    sample = "0"
-    nh = "0_148_11"
-    output_dir = "results"
-    reconstruction_cost_lowmedium = 200000
-    reconstruction_cost_high = 400000
-    wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
-    wind_file_end = "_IBTRACSDELTA"
-    central_threshold = 43
-    minimum_threshold = 39
-    maximum_threshold = 47
-    all_boxes = ["box_955", "box_956", "box_957", "box_884"]
-    all_boxes = [
-        f"box_{num}"
-        for num in [
-            809,
-            810,
-            811,
-            812,
-            880,
-            881,
-            882,
-            883,
-            884,
-            952,
-            955,
-            956,
-            957,
-            1024,
-            1025,
-            1026,
-            1027,
-            1028,
-            1029,
-            1030,
-            1031,
-            1097,
-            1098,
-            1099,
-            1103,
-            1104,
-        ]
-    ]
-    all_boxes = [
-        f"box_{num}" for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]
-    ]
 
 
 reconstruction_cost_high = float(reconstruction_cost_high)
@@ -539,16 +491,6 @@ polys_affected = gpd.GeoDataFrame()
 
 
 print(f"{nh}: loading data")
-# print('loading tracks')
-stormfile = os.path.join(
-    output_dir,
-    "input",
-    "storm-ibtracs",
-    "events",
-    f"{storm_model}",
-    f"{region}",
-    f"{wind_file_start}{region}_1000_YEARS_{sample}{wind_file_end}.txt",
-)
 TC = pd.read_csv(stormfile, header=None)
 TC.columns = [
     "year",
