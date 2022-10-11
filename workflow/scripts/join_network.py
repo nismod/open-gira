@@ -56,15 +56,24 @@ if __name__ == "__main__":
     edges = edges.drop(["edge_id", "from_node_id", "to_node_id"], axis="columns")
 
     network = snkit.network.Network(edges=edges, nodes=nodes)
-    logging.info("Labelling edges and nodes with ids")
+
+    # TODO: adding all the topology and component ids here does not work
+    # it is too slow to do it on a large (country sized) network in one go
+    # rather, do it for each slice, and then at this step, check which slice components
+    # join neighbouring slice components and relabel components as such
+
+    # TODO: this will require using the {start|end}_node_reference=NaN nodes
+    # these should only be at bbox edges, but appear to be all over slices
+
     # relabel with network-wide ids prior to adding topology
-    network = snkit.network.add_ids(network)
-
-    logging.info("Labelling edge ends with node ids")
-    network = snkit.network.add_topology(network)
-
-    logging.info("Labelling edges and nodes with network component ids")
-    network = snkit.network.add_component_ids(network)
+#   logging.info("Labelling edges and nodes with ids")
+#   network = snkit.network.add_ids(network)
+#
+#   logging.info("Labelling edge ends with node ids")
+#   network = snkit.network.add_topology(network)
+#
+#   logging.info("Labelling edges and nodes with network component ids")
+#   network = snkit.network.add_component_ids(network)
 
     logging.info("Writing network to disk")
     network.nodes.to_parquet(nodes_output_file)
