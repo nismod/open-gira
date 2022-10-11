@@ -141,7 +141,7 @@ rule all_road_networks:
             os.path.join(
                 f"{config['output_dir']}",
                 f"{{dataset}}_filter-{{network_filter}}",
-                edges.geoparquet
+                "edges.geoparquet"
             ),
             dataset=config['infrastructure_datasets'].keys(),
             network_filter=config['network_filters'].keys(),
