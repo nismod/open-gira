@@ -2,6 +2,7 @@ rule intersect_region_with_boxes:
     """
     Determine the boxes within a given region
     """
+    conda: "../../../environment.yml"
     input:
         global_boxes_metadata = rules.world_splitter.output.global_metadata,
         global_boxes = rules.world_splitter.output.global_boxes,

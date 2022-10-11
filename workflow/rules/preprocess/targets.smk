@@ -18,6 +18,7 @@ rule process_targets:
 
 
 rule process_target_box:
+    conda: "../../../environment.yml"
     input:  # note also require countries which intersect each box
         # TODO: modify script to use these inputs -- atm, paths are hardcoded in script
         rules.world_splitter.output.global_boxes,

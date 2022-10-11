@@ -18,6 +18,7 @@ checkpoint intersect_winds_indiv:
     """
     Find windspeeds for every storm for each grid cell.
     """
+    conda: "../../../environment.yml"
     input:
         metadata = rules.world_splitter.output.global_metadata,
         unit_grid = "{OUTPUT_DIR}/power_intersection/regions/{REGION}_unit.gpkg",

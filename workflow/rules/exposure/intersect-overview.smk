@@ -41,6 +41,7 @@ def aggregate_input(wildcards):
 
 rule merge_overview_indiv_stats:
     """Use this rule for the combined stats file for each region sample"""
+    conda: "../../../environment.yml"
     input:
         aggregate_input,
     output:
@@ -60,6 +61,7 @@ rule merge_overview_indiv_stats:
 
 rule merge_overview_all_stats:
     """Use this rule for the combined stats file (all)"""
+    conda: "../../../environment.yml"
     input:
         STORM_STATS_BY_REGION_SAMPLE_THRESHOLD,
     output:

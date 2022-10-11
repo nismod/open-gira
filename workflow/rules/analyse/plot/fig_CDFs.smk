@@ -36,6 +36,7 @@ out_cdf_EACA = os.path.join(
 
 
 rule fig_cdfs_EAD:
+    conda: "../../../../environment.yml"
     input:
         in_cdf_EAD,
     params:
@@ -53,6 +54,7 @@ rule fig_cdfs_EAD:
 
 
 rule fig_cdfs_EACA:
+    conda: "../../../../environment.yml"
     input:
         in_cdf_EACA,
     params:

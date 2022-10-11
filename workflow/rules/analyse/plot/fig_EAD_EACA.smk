@@ -11,6 +11,7 @@ out_EAD_EACA = [
 
 
 rule fig_EAD_EACA:
+    conda: "../../../../environment.yml"
     input:
         [
             os.path.join(

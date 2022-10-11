@@ -7,6 +7,7 @@ https://gridfinder.org/
 
 
 rule download_gridfinder:
+    conda: "../../../environment.yml"
     output:
         electricity_grid_global = os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg")
     shell:

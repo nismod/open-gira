@@ -1,6 +1,7 @@
 # Take .geoparquet OSM files and output files of cleaned network nodes and edges
 
 rule create_transport_network:
+    conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_edges.geoparquet",

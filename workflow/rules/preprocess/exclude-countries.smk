@@ -5,6 +5,7 @@ Rule to document countries to be excluded (no .tif file)
 
 # TODO: can we infer which countries to exclude from our other inputs?
 rule process_exclude_countries:
+    conda: "../../../environment.yml"
     input:
         rules.download_gadm_levels.output.admin_bounds_global_layer_per_level,
         rules.download_population_all.input.population_raster_by_country,
