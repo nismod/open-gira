@@ -2,7 +2,6 @@
 Process targets for each country box
 """
 
-
 rule process_targets:
     input:
         expand(
@@ -22,7 +21,7 @@ rule process_target_box:
     input:  # note also require countries which intersect each box
         # TODO: modify script to use these inputs -- atm, paths are hardcoded in script
         rules.world_splitter.output.global_boxes,
-        rules.download_population_all.input.population_raster_by_country,
+        rules.download_worldpop_all.input.population_raster_by_country,
         os.path.join(config['output_dir'], "power_processed", "all_boxes", "{box_id}", "geom_{box_id}.gpkg"),
         os.path.join(config['output_dir'], "input", "gridfinder", "targets.tif"),
         rules.world_splitter.output.global_metadata,

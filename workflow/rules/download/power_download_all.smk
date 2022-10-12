@@ -9,7 +9,6 @@ rule download_all:
     input:
         STORM_RETURN_PERIODS,
         STORM_EVENTS,
-        rules.download_population_all.input.population_raster_by_country,
         rules.download_GDP.output.gdp_datasets,
         rules.download_powerplants.output.powerplants_global,
         rules.download_gridfinder.output.electricity_grid_global,
