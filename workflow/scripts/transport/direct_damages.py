@@ -63,7 +63,7 @@ if __name__ == "__main__":
     exposure: gpd.GeoDataFrame = gpd.read_parquet(exposure_path)
 
     if exposure.empty:
-        logging.info("writing empty files and skipping processing...")
+        logging.info("No data in geometry column, writing empty files.")
 
         # snakemake requires that output files exist, even if empty
         utils.write_empty_frames(damage_fraction_path)

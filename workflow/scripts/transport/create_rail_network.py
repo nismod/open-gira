@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Read OSM geoparquet, create network, clean it, write out as geopackage."""
+"""
+Read OSM geoparquet, create network, clean it, write out as geopackage.
+"""
 
 import logging
 import sys
@@ -13,7 +15,7 @@ import snkit
 from create_network import create_network
 from assets import RailAssets
 from utils import (annotate_country, get_administrative_data, str_to_bool,
-            write_empty_frames)
+            write_empty_frames, NO_GEOM_ERROR_MSG)
 
 
 def annotate_rehabilitation_costs(
@@ -98,20 +100,26 @@ if __name__ == "__main__":
     try:
         edges = gpd.read_parquet(osm_edges_path)
     except ValueError as error:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info(f"{error}\n" "writing empty files and skipping processing...")
-        write_empty_frames(edges_output_path, nodes_output_path)
-        sys.exit(0)  # exit gracefully so snakemake will continue
+        if NO_GEOM_ERROR_MSG in str(error):
+            logging.info("No data in geometry column, writing empty files.")
+            # if the input parquet file does not contain a geometry column, geopandas
+            # will raise a ValueError rather than try to procede
+            write_empty_frames(edges_output_path, nodes_output_path)
+            sys.exit(0)  # exit gracefully so snakemake will continue
+        else:
+            raise error
 
     # read nodes
     try:
         nodes = gpd.read_parquet(osm_nodes_path)
     except ValueError as error:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info(f"{error}\n" "no nodes from OSM to process...")
-        nodes = None
+        if NO_GEOM_ERROR_MSG in str(error):
+            logging.info(f"No nodes from OSM to process")
+            # if the input parquet file does not contain a geometry column, geopandas
+            # will raise a ValueError rather than try to procede
+            nodes = None
+        else:
+            raise error
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(

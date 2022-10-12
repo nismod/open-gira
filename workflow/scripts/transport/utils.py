@@ -13,6 +13,7 @@ import pandas as pd
 import snkit
 
 WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
+NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
 
 
 def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> None:

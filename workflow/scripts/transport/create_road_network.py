@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Read OSM geoparquet, create network, clean it, write out as geopackage.
 """
+Read OSM geoparquet, create network, clean it, write out as geopackage.
+"""
+
 import logging
 import sys
 import warnings
@@ -15,7 +17,7 @@ from pyproj import Geod
 from create_network import create_network
 from assets import RoadAssets
 from utils import (annotate_country, cast, get_administrative_data,
-    str_to_bool, strip_suffix, write_empty_frames)
+    str_to_bool, strip_suffix, write_empty_frames, NO_GEOM_ERROR_MSG)
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -412,13 +414,14 @@ if __name__ == "__main__":
     try:
         edges = gpd.read_parquet(osm_edges_path)
     except ValueError as error:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info(f"{error}\n" "writing empty files and skipping processing...")
-
-        # snakemake requires that output files exist though, so write empty ones
-        write_empty_frames(edges_output_path, nodes_output_path)
-        sys.exit(0)  # exit gracefully so snakemake will continue
+        if NO_GEOM_ERROR_MSG in str(error):
+            logging.info("No data in geometry column, writing empty files.")
+            # if the input parquet file does not contain a geometry column, geopandas
+            # will raise a ValueError rather than try to procede
+            write_empty_frames(edges_output_path, nodes_output_path)
+            sys.exit(0)  # exit gracefully so snakemake will continue
+        else:
+            raise error
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
