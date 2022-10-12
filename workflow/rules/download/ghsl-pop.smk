@@ -36,7 +36,7 @@ rule download_ghsl:
         wget -nc https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2022A/GHS_POP_E{wildcards.YEAR}_GLOBE_R2022A_54009_{wildcards.RESOLUTION}/V1-0/GHS_POP_E{wildcards.YEAR}_GLOBE_R2022A_54009_{wildcards.RESOLUTION}_V1_0.zip \
             --directory-prefix=$output_dir
 
-        unzip -o GHS_POP_E{wildcards.YEAR}_GLOBE_R2022A_54009_{wildcards.RESOLUTION}_V1_0.zip \
+        unzip -o $output_dir/GHS_POP_E{wildcards.YEAR}_GLOBE_R2022A_54009_{wildcards.RESOLUTION}_V1_0.zip \
             -d $output_dir
         """
 
