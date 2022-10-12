@@ -36,7 +36,7 @@ def make_grid_points_nc2(box_id, region, ps):
     fn = os.path.join(
         output_dir,
         "input",
-        "stormtracks",
+        "storm-ibtracs",
         "fixed",
         f"STORM_FIXED_RETURN_PERIODS_{region}.nc",
     )

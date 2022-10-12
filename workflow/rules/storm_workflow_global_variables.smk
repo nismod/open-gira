@@ -47,41 +47,6 @@ def all_boxes() -> List[str]:
         ]
 
 
-def storm_model() -> Tuple[str, str, str, str]:
-    """
-    Return the naming scheme for a given IBTRACS storm dataset.
-    """
-
-    storm_model = config["storm_model_type"]
-
-    if storm_model == "constant":
-        wind_file_start = "STORM_DATA_IBTRACS_"
-        wind_file_end = ""
-        unzip_file = "STORM_DATA3.zip"
-    elif storm_model == "CMCC-CM2-VHR4":
-        wind_file_start = "STORM_DATA_CMCC-CM2-VHR4_"
-        wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "CMCC.zip"
-    elif storm_model == "CNRM-CM6-1-HR":
-        wind_file_start = "STORM_DATA_CNRM-CM6-1-HR_"
-        wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "CNRM.zip"
-    elif storm_model == "EC-Earth3P-HR":
-        wind_file_start = "STORM_DATA_EC-Earth3P-HR_"
-        wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "ECEARTH.zip"
-    elif storm_model == "HadGEM3-GC31-HM":
-        wind_file_start = "STORM_DATA_HadGEM3-GC31-HM_"
-        wind_file_end = "_IBTRACSDELTA"
-        unzip_file = "HADGEM.zip"
-    else:
-        raise RuntimeError(
-            f"The selected storm type model ({storm_model}) is not a valid option"
-        )
-
-    return storm_model, wind_file_start, wind_file_end, unzip_file
-
-
 #### POWER/STORMS WORKFLOW ####
 
 # list of ISO A3 country codes
@@ -103,12 +68,11 @@ CONNECTOR_OUT = (
     )
 )
 
-# east pacific, north atlantic, north indian, south india, south pacific, west pacific
-STORM_BASINS = ("EP", "NA", "NI", "SI", "SP", "WP")
-REGIONS = config["regions"]
-if len(REGIONS) == 0:
-    print("Inputting all regions")
-    REGIONS = STORM_BASINS
+STORM_BASINS = config["storm_basins"]
+if len(STORM_BASINS) == 0:
+    print("Inputting all storm basins")
+    # east pacific, north atlantic, north indian, south india, south pacific, west pacific
+    STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
 
 SAMPLES = config["storm_files_sample_set"]
 if not SAMPLES:
@@ -119,33 +83,93 @@ STORMS = config["specific_storm_analysis"]
 if STORMS == "None":
     STORMS = None
 
-STORMS_RETURN_PERIOD = expand(
-    os.path.join(
-        config["output_dir"],
-        "input",
-        "stormtracks",
-        "fixed",
-        "STORM_FIXED_{param}_{region}.nc",
-    ),
-    region=REGIONS,
-    param=["RETURN_PERIODS", "TC_WIND_SPEEDS"],
+STORM_RPS = (
+    list(range(10, 100, 10))
+    + list(range(100, 1000, 100))
+    + list(range(1000, 11000, 1000))
 )
 
-STORM_MODEL, WIND_FILE_START, WIND_FILE_END, STORM_UNZIP_FILE = storm_model()
+STORM_GCMS = ("CMCC-CM2-VHR4", "CNRM-CM6-1-HR", "EC-Earth3P-HR", "HadGEM3-GC31-HM")
 
-STORMS_EVENTS = expand(
+STORM_RETURN_PERIODS_CURRENT = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "stormtracks",
-        "events",
-        STORM_MODEL,
-        "{region}",
-        WIND_FILE_START + "{region}_1000_YEARS_{num}" + WIND_FILE_END + ".txt",
+        "storm-ibtracs",
+        "fixed",
+        "constant",
+        "STORM_FIXED_RETURN_PERIODS_constant_{storm_rp}_YR_RP.tif",
     ),
-    region=REGIONS,
+    storm_rp=STORM_RPS,
+)
+
+STORM_RETURN_PERIODS_FUTURE = expand(
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "storm-ibtracs",
+        "fixed",
+        "{storm_gcm}",
+        "STORM_FIXED_RETURN_PERIODS_{storm_gcm}_{storm_rp}_YR_RP.tif",
+    ),
+    storm_gcm=STORM_GCMS,
+    storm_rp=STORM_RPS,
+)
+
+STORM_RETURN_PERIODS = STORM_RETURN_PERIODS_CURRENT + STORM_RETURN_PERIODS_FUTURE
+
+STORM_EVENTS_CURRENT = expand(
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "storm-ibtracs",
+        "events",
+        "constant",
+        "{storm_basin}",
+        "STORM_DATA_IBTRACS_{storm_basin}_1000_YEARS_{num}.txt",
+    ),
+    storm_basin=STORM_BASINS,
     num=SAMPLES,
 )
+
+STORM_EVENTS_FUTURE = expand(
+    os.path.join(
+        config["output_dir"],
+        "input",
+        "storm-ibtracs",
+        "events",
+        "{storm_gcm}",
+        "{storm_basin}",
+        "STORM_DATA_{storm_gcm}_{storm_basin}_1000_YEARS_{num}_IBTRACSDELTA.txt",
+    ),
+    storm_gcm=STORM_GCMS,
+    storm_basin=STORM_BASINS,
+    num=SAMPLES,
+)
+
+STORM_EVENTS = STORM_EVENTS_CURRENT + STORM_EVENTS_FUTURE
+
+try:
+    STORM_BATCH_SIZE = int(config["storm_batches"])
+    assert STORM_BATCH_SIZE > 0
+except:
+    raise RuntimeError("storm_batches incorrectly specified in config.yaml file")
+
+WIND_RERUN_BOOL = config["wind_rerun"]
+assert WIND_RERUN_BOOL in [True, False]
+
+def get_storm_file(wildcards):
+    """Helper to get storm events file, given:
+    - OUTPUT_DIR
+    - STORM_BASIN
+    - STORM_MODEL (global climate model)
+    - SAMPLE (0-9)
+    """
+    if wildcards.STORM_MODEL == "constant":
+        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
+    else:
+        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
+    return fname
 
 # check wind speed thresholds for damage are correctly ordered
 assert config["central_threshold"] >= config["minimum_threshold"]
@@ -164,12 +188,12 @@ COMPLETION_FLAG_FILES = expand(
         "power_intersection",
         "storm_data",
         "all_winds",
-        "{region}",
+        "{storm_basin}",
         "{sample}",
         "completed.txt",
     ),
     sample=SAMPLES,
-    region=REGIONS,
+    storm_basin=STORM_BASINS,
 )
 
 STORM_STATS_BY_THRESHOLD = expand(
@@ -187,11 +211,11 @@ STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
         config["output_dir"],
         "power_output",
         "statistics",
-        "{region}",
+        "{storm_basin}",
         "{sample}",
-        "combined_storm_statistics_{region}_{sample}_{thrval}.csv",
+        "combined_storm_statistics_{storm_basin}_{sample}_{thrval}.csv",
     ),
-    region=REGIONS,
+    storm_basin=STORM_BASINS,
     sample=SAMPLES,
     thrval=WIND_SPEED_THRESHOLDS_MS,
 )

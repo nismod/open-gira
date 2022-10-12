@@ -10,6 +10,7 @@ rule intersect_damages:
             "power_intersection",
             "storm_data",
             "all_winds",
+            "{storm_gcm}",
             "{region}",
             "{sample}",
             "TC_r{region}_s{sample}_n{nh}.csv",
@@ -44,6 +45,7 @@ rule intersect_damages:
                 "power_intersection",
                 "storm_data",
                 "individual_storms",
+                "{storm_gcm}",
                 "{region}",
                 "{sample}",
                 "storm_{nh}",
@@ -62,9 +64,7 @@ rule intersect_damages:
         central_threshold=config["central_threshold"],
         minimum_threshold=config["minimum_threshold"],
         maximum_threshold=config["maximum_threshold"],
-        storm_model=STORM_MODEL,
-        wind_file_start=WIND_FILE_START,
-        wind_file_end=WIND_FILE_END,
+        storm_file=get_storm_file,
         all_boxes=ALL_BOXES,
     script:
         os.path.join("..", "..", "scripts", "intersect", "intersect_4_gdploss.py")

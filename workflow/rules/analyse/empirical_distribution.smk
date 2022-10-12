@@ -15,7 +15,7 @@ rule analyse_empirical_distribution:
     params:
         output_dir = config['output_dir'],
         metrics = STORM_ANALYSIS_METRICS,
-        region_eval = REGIONS,
+        region_eval = STORM_BASINS,
         sample_eval = SAMPLES,
         nh_eval = STORMS,
         central_threshold = config['central_threshold'],
