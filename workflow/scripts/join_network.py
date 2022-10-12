@@ -26,11 +26,17 @@ def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
         logging.info("base input file empty... suppressing geopandas exception")
         base = gpd.GeoDataFrame([])
 
-    concatenated = append_data(base, slice_files)
+    concatenated = append_data(base, slice_files).reset_index(drop=True)
+    logging.info(f"{len(concatenated)=}")
 
-    deduplicated = concatenated.drop_duplicates("geometry")
+    # drop_duplicates on a GeoDataFrame can be extremely slow
+    # instead use something easily hashable
+    wkt: pd.Series = concatenated["geometry"].apply(lambda geom: geom.wkt)
+    deduplicated = concatenated.loc[wkt.drop_duplicates().index, :]
+    deduplicated = deduplicated.reset_index(drop=True)
+    logging.info(f"{len(deduplicated)=}")
 
-    return deduplicated.reset_index(drop=True)
+    return deduplicated
 
 
 if __name__ == "__main__":
@@ -47,8 +53,10 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    logging.info("Joining network slices")
+    logging.info("Joining network node slices")
     nodes = append_slices(node_slice_files)
+
+    logging.info("Joining network edge slices")
     edges = append_slices(edge_slice_files)
 
     # drop the ids we used on a per-slice basis
@@ -56,8 +64,15 @@ if __name__ == "__main__":
     edges = edges.drop(["edge_id", "from_node_id", "to_node_id"], axis="columns")
 
     network = snkit.network.Network(edges=edges, nodes=nodes)
-    logging.info("Labelling edges and nodes with ids")
+
+    # TODO: adding all the topology and component ids here does not work well for large areas
+    # perhaps, do it for each slice, and then at this step, check which slice components
+    # join neighbouring slice components and relabel components as such
+    # N.B. this will require using the {start|end}_node_reference=NaN nodes
+    # these should only be at bbox edges, but appear to be all over slices
+
     # relabel with network-wide ids prior to adding topology
+    logging.info("Labelling edges and nodes with ids")
     network = snkit.network.add_ids(network)
 
     logging.info("Labelling edge ends with node ids")

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-"""Split network edges along grid cells, join hazard values.
 """
+Split network edges along grid cells, join hazard values.
+"""
+
 import glob
 import logging
 import os
@@ -129,7 +131,7 @@ def main(network_edges_path, hazard_tifs, output_path):
 def associate_raster(df, key, fname, band_number=1):
     with rasterio.open(fname) as dataset:
         band_data = dataset.read(band_number)
-        df[key] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
+        df[f"hazard-{key}"] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
 
 
 def write_empty_files(columns, outputs_path):
@@ -169,8 +171,8 @@ if __name__ == "__main__":
             )
         )
 
-    # print(f"hazard_dir={hazard_dir}")
-    # print(f"tifs={tifs}")
     main(
-        network_edges_path=network_edges_path, hazard_tifs=tifs, output_path=output_path
+        network_edges_path=network_edges_path,
+        hazard_tifs=tifs,
+        output_path=output_path,
     )

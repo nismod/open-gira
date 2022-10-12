@@ -21,7 +21,7 @@ checkpoint trim_hazard_data:
         files=aggregate_input,
         json="{OUTPUT_DIR}/json/{DATASET}.json",
     output:
-        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}"),
+        trimmed_dir=directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}"),
     run:
         os.system(f"mkdir --parents {output}")
 

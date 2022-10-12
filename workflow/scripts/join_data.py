@@ -32,6 +32,7 @@ import pandas
 
 
 def append_data(base, slice_files):
+    logging.info(f"{len(slice_files)=} still to append...")
     slice_files.pop()
     if len(slice_files) == 0:
         return base

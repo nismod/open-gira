@@ -5,40 +5,51 @@
 import logging
 import sys
 import warnings
-from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
+import snkit
 
 from create_network import create_network
-from utils import (annotate_country, annotate_rehabilitation_costs,
-                    get_administrative_data, str_to_bool, write_empty_frames)
+from assets import RailAssets
+from utils import (annotate_country, get_administrative_data, str_to_bool,
+            write_empty_frames)
 
 
-def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> Tuple[float, float, str]:
-    """
-    Determine the cost of rehabilitation for a given rail segment (row).
+def annotate_rehabilitation_costs(
+    network: snkit.network.Network, rehab_costs: pd.DataFrame
+) -> snkit.network.Network:
 
-    Args:
-        row (pd.Series): Road segment
-        rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various rail types
+    def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+        """
+        Determine the cost of rehabilitation for a given rail segment (row).
 
-    Returns:
-        Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
-    """
+        Args:
+            row (pd.Series): Road segment
+            rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various rail types
 
-    # bridge should be a boolean type after data cleaning step
-    if row.bridge:
-        asset_type = "bridge"
-    else:
-        asset_type = "rail"
+        Returns:
+            Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
+        """
 
-    data: pd.Series = rehab_costs[rehab_costs["asset_type"] == asset_type].squeeze()
+        # bridge should be a boolean type after data cleaning step
+        if row.bridge:
+            asset_type = "bridge"
+        else:
+            asset_type = "rail"
 
-    return data.cost_min, data.cost_max, data.cost_unit
+        return float(rehab_costs[rehab_costs["asset_type"] == asset_type].squeeze())
+
+    # lookup costs
+    network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
+        get_rehab_costs, axis=1, args=(rehab_costs,)
+    )
+
+    return network
 
 
 if __name__ == "__main__":
+
     try:
         osm_edges_path = snakemake.input["edges"]  # type: ignore
         osm_nodes_path = snakemake.input["nodes"]  # type: ignore
@@ -48,6 +59,7 @@ if __name__ == "__main__":
         slice_number = snakemake.params["slice_number"]  # type: ignore
         rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]  # type: ignore
         osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
+
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
@@ -63,6 +75,7 @@ if __name__ == "__main__":
             flow_cost_time_factor,
             osm_epsg,
         ) = sys.argv[1:]
+
         # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
         # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_nodes.geoparquet
         # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
@@ -117,6 +130,11 @@ if __name__ == "__main__":
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
 
+    # select and label assets with their type
+    network.nodes.loc[network.nodes.tag_railway == 'station', 'asset_type'] = RailAssets.STATION
+    network.edges.loc[str_to_bool(network.edges['tag_bridge']), 'asset_type'] = RailAssets.BRIDGE
+    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
+
     # boolean station field
     network.nodes['station'] = network.nodes.tag_railway == 'station'
 
@@ -134,18 +152,11 @@ if __name__ == "__main__":
         get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
     )
 
-    logging.info("Annotating network with rehabilitation costs")
+    logging.info("Annotate network with rehabilitation costs")
     network = annotate_rehabilitation_costs(
         network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="rail"),
-        get_rehab_costs
+        pd.read_excel(rehabilitation_costs_path, sheet_name="rail")
     )
-
-    # TODO: add tariffs to edges for flow routing
-
-    # TODO: drop superfluous columns (e.g. OSM tags)
-
-    # TODO: add asset_categories for direct damage estimation
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)
