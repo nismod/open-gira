@@ -39,3 +39,16 @@ rule download_ghsl:
         unzip -o GHS_POP_E{wildcards.YEAR}_GLOBE_R2022A_54009_{wildcards.RESOLUTION}_V1_0.zip \
             -d $output_dir
         """
+
+rule download_ghsl_all:
+    input:
+        expand(
+            os.path.join(
+                config["output_dir"],
+                "input",
+                "ghsl",
+                "GHS_POP_E{year}_GLOBE_R2022A_54009_{resolution}_V1_0.tif",
+            ),
+            resolution=(100, 1000),
+            year=(2020, )
+        )
