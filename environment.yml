@@ -16,6 +16,7 @@ dependencies:
   - cython==0.29.28     # c--python interface
   - datashader          # plotting large datasets
   - flake8              # linter
+  - gdal>=3.3           # command-line tools for spatial data
   - geopandas>=0.11.0   # geospatial dataframes
   - geopy               # geocoding client
   - ipykernel           # notebook support
