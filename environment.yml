@@ -6,7 +6,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
     - nismod-snail==0.2.1 # vector-raster intersections
