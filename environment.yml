@@ -35,7 +35,7 @@ dependencies:
   # https://github.com/apache/arrow/pull/14157
   - pyproj>=3.3.1       # geographic projections
   - pyrosm              # python OpenStreetMap network reader
-  - pytest==6.2.4       # testing
+  - pytest              # testing
   - pytest-xdist        # parallelise testing across CPUs
   - rasterio            # raster file formats
   - rasterstats         # raster statistics
