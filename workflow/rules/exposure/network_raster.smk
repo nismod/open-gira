@@ -12,6 +12,9 @@ rule network_raster:
     output:
         geoparquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.geoparquet",
         parquet="{OUTPUT_DIR}/splits/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{SLICE_SLUG}.parquet",
+    # intersection.py is intermittently failing, use retries as temporary fix
+    # TODO: investigate why this job is sometimes failing with a coredump from intersection.py
+    retries: 3
     script:
         "../../scripts/intersection.py"
 
