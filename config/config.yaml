@@ -52,7 +52,7 @@ keep_tags:
   rail: ['railway', 'bridge', 'name']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 81
+slice_count: 64
 
 # CRS OSM uses
 osm_epsg: 4326
@@ -77,13 +77,11 @@ direct_damages:
   asset_types: [
     'road_paved',
     'road_unpaved',
-    'road_bridge',
     'rail_railway',
-    'rail_bridge',
   ]
-  # tabular data for each of the listed asset_types
-  # damage fractions for asset types, per hazard (flood, storm, etc.)
-  curves_path: 'bundled_data/damage_curves.xlsx'
+  # CSV damage fraction as a function of hazard intensity
+  # per asset type, per hazard (flood, storm, etc.)
+  curves_dir: 'bundled_data/damage_curves/'
 
 
 ###############################
