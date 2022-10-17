@@ -10,7 +10,7 @@ dependencies:
   - pip
   - pip:  # delegate to pip for non-conda packages
     - nismod-snail==0.2.1 # vector-raster intersections
-    - snkit==1.7.1        # spatial network cleaning
+    - snkit==1.7.2        # spatial network cleaning
     - osmium==3.2.0       # OpenStreetMap protobuf handling
   - black               # formatter
   - cython==0.29.28     # c--python interface
