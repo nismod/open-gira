@@ -18,6 +18,7 @@ from utils import (annotate_country, get_administrative_data, str_to_bool,
             write_empty_frames, NO_GEOM_ERROR_MSG)
 
 
+
 def annotate_rehabilitation_costs(
     network: snkit.network.Network, rehab_costs: pd.DataFrame
 ) -> snkit.network.Network:
@@ -40,7 +41,7 @@ def annotate_rehabilitation_costs(
         else:
             asset_type = "rail"
 
-        return float(rehab_costs[rehab_costs["asset_type"] == asset_type].squeeze())
+        return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
 
     # lookup costs
     network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
