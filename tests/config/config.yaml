@@ -65,13 +65,12 @@ direct_damages:
   asset_types: [
     'road_paved',
     'road_unpaved',
-    'road_bridge',
     'rail_railway',
-    'rail_bridge',
   ]
-  # tabular data for each of the listed asset_types
-  # damage fractions for asset types, per hazard (flood, storm, etc.)
-  curves_path: 'bundled_data/damage_curves.xlsx'
+  # CSV damage fraction as a function of hazard intensity
+  # per asset type, per hazard (flood, storm, etc.)
+  curves_dir: 'bundled_data/damage_curves/'
+
 
 ###############################
 ### STORM / ENERGY WORKFLOW ###
