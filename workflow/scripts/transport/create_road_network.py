@@ -335,7 +335,7 @@ def annotate_rehabilitation_costs(
             condition = "unpaved"
 
         return float(
-            rehab_costs.cost_USD_per_km_per_lane.loc[
+            rehab_costs["rehab_cost_USD_per_km_per_lane"].loc[
                 (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
             ].squeeze()
         )
