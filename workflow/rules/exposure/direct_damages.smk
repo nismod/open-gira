@@ -6,8 +6,8 @@ rule direct_damages:
     input:
         exposure = rules.network_raster.output.geoparquet
     output:
-        damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/slice-{i}.geoparquet",
-        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/slice-{i}.geoparquet",
+        damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
+        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.geoparquet",
     params:
         # determine the network type from the filter, e.g. road, rail
         network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),
@@ -19,13 +19,13 @@ rule direct_damages:
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/slice-5.parquet
+snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/cost/slice-5.geoparquet
 """
 
 
 rule plot_damage_fractions:
     input:
-        damages = rules.join_direct_damage_fraction.output.joined
+        damages = rules.join_direct_damages.output.joined
     output:
         plots = directory("{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/plots")
     script:

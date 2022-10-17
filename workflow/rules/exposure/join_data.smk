@@ -20,14 +20,13 @@ rule join_exposure:
     script:
         "../../scripts/join_data.py"
 
-
 """
 Test with:
 snakemake --cores all results/tanzania-mini_filter-highway-core_hazard-aqueduct-river.geoparquet
 """
 
 
-rule join_direct_damage_fraction:
+rule join_direct_damages:
     input:
         slices = lambda wildcards: expand(
             os.path.join(
@@ -35,28 +34,18 @@ rule join_direct_damage_fraction:
                 "direct_damages",
                 "{DATASET}_{FILTER_SLUG}",
                 "{HAZARD_SLUG}",
-                "fraction",
+                "{FRACTION_OR_COST}",
                 "slice-{i}.geoparquet",
             ),
             **wildcards,
             i=range(config["slice_count"])
         ),
     output:
-        joined = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet",
-    run:
-        import os
-
-        import pandas as pd
-
-        parent_dir = os.path.dirname(input.slices[0])
-        if not os.path.exists(parent_dir):
-            os.makedirs(parent_dir)
-
-        unified = gpd.GeoDataFrame(pd.concat([gpd.read_parquet(path) for path in input.slices]))
-        unified.to_parquet(output.joined)
-
+        joined = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_{FRACTION_OR_COST}.geoparquet",
+    script:
+        "../../scripts/join_data.py"
 
 """
 Test with:
-snakemake --cores all results/egypt-latest_filter-road_hazard-aqueduct-river_damage-fraction.parquet
+snakemake --cores all results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction.geoparquet
 """
