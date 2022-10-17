@@ -6,7 +6,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
     - nismod-snail==0.2.1 # vector-raster intersections
@@ -16,6 +16,7 @@ dependencies:
   - cython==0.29.28     # c--python interface
   - datashader          # plotting large datasets
   - flake8              # linter
+  - gdal>=3.3           # command-line tools for spatial data
   - geopandas>=0.11.0   # geospatial dataframes
   - geopy               # geocoding client
   - ipykernel           # notebook support
@@ -34,7 +35,7 @@ dependencies:
   # https://github.com/apache/arrow/pull/14157
   - pyproj>=3.3.1       # geographic projections
   - pyrosm              # python OpenStreetMap network reader
-  - pytest==6.2.4       # testing
+  - pytest              # testing
   - pytest-xdist        # parallelise testing across CPUs
   - rasterio            # raster file formats
   - rasterstats         # raster statistics
