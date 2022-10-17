@@ -19,8 +19,11 @@ hazard_types:
   aqueduct-coast: 'flood'
   aqueduct-river: 'flood'
 
-# OSM datasets, principally from: https://download.geofabrik.de/ #
+# OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
+  # whole planet file
+  planet-latest: 'https://planet.osm.org/pbf/planet-latest.osm.pbf'
+  # 'continent' extracts
   africa-latest: 'http://download.geofabrik.de/africa-latest.osm.pbf'
   asia-latest: 'http://download.geofabrik.de/asia-latest.osm.pbf'
   australia-oceania-latest: 'http://download.geofabrik.de/australia-oceania-latest.osm.pbf'
@@ -28,11 +31,13 @@ infrastructure_datasets:
   europe-latest: 'https://download.geofabrik.de/europe-latest.osm.pbf'
   north-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
   south-america-latest: 'http://download.geofabrik.de/south-america-latest.osm.pbf'
-# wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
-# egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
-# kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
-# tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
-# tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
+  # country extracts
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+  egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
+  kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
+  tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  # small extract for testing purposes
+  tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
 # the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
