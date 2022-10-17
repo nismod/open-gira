@@ -13,6 +13,7 @@ import sys
 import geopandas
 import pandas
 import rasterio
+import pyproj
 from pyproj import Geod
 from snail.core.intersections import get_cell_indices, split_linestring
 from tqdm import tqdm
@@ -35,9 +36,23 @@ def main(network_edges_path, hazard_tifs, output_path):
     -------
     (void)
     """
+
     hazard_tifs_basenames = [
         re.sub("\\.tif$", "", os.path.basename(tif)) for tif in hazard_tifs
     ]
+
+    # Read network edges
+    logging.info("Read edges")
+    core_edges = geopandas.read_parquet(network_edges_path)
+    if core_edges.empty:
+        logging.info("No data in geometry column, writing empty files.")
+        columns = [
+            *pandas.read_parquet(network_edges_path).columns,
+            "length_km",
+            *hazard_tifs_basenames,
+        ]
+        write_empty_files(columns, output_path)
+        return
 
     # Read metadata for a single raster
     logging.info("Determining raster grid properties")
@@ -63,21 +78,6 @@ def main(network_edges_path, hazard_tifs, output_path):
                         f"Transform equal? {'True' if list(raster.transform) == raster_transform else 'False'}"
                     )
                 )
-
-    # Read network edges
-    logging.info("Read edges")
-    try:
-        core_edges = geopandas.read_parquet(network_edges_path)
-    except ValueError:
-        logging.info("No data in geometry column, writing empty files.")
-        columns = [
-            "geometry",
-            *pandas.read_parquet(network_edges_path).columns,
-            "length_km",
-            *hazard_tifs_basenames,
-        ]
-        write_empty_files(columns, output_path)
-        return
 
     # Split edges
     logging.info("Split edges")
@@ -136,7 +136,11 @@ def associate_raster(df, key, fname, band_number=1):
 
 def write_empty_files(columns, outputs_path):
     try:
-        empty_geodf = geopandas.GeoDataFrame(columns=columns, geometry="geometry")
+        empty_geodf = geopandas.GeoDataFrame(
+            columns=columns,
+            geometry="geometry",
+            crs=pyproj.CRS.from_user_input(4326)
+        )
     except ValueError:
         raise ValueError("Empty dataframe must contain a geometry column")
     logging.info("Write data")

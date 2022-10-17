@@ -22,7 +22,9 @@ def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> Non
 
     N.B. Output files must exist for snakemake's sake.
     """
-    empty_gdf = gpd.GeoDataFrame([])
+
+    # write with a CRS, makes it easier to concatenate dataframes later
+    empty_gdf = gpd.GeoDataFrame({"geometry": []}, crs=pyproj.CRS.from_user_input(WGS84_EPSG))
     empty_gdf.to_parquet(edges_path)
 
     # some parts of the workflow only consider edges, not nodes
