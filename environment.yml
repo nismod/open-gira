@@ -39,6 +39,7 @@ dependencies:
   - rasterio            # raster file formats
   - rasterstats         # raster statistics
   - requests            # make HTTP requests
+  - scipy               # scientific computing library
   - spatialpandas       # plotting large datasets
   - snakemake==7.15.1   # workflow management
   - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
