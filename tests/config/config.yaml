@@ -21,6 +21,9 @@ hazard_datasets:
   # long return period to show up well when testing exposure maps
   aqueduct-river: 'external_files/hazard_sources.txt'
 
+hazard_types:
+  aqueduct-river: 'flood'
+
 # testing data (from geofabrik)
 infrastructure_datasets:
   # djibouti is small (fast to run), coastal (coastal flooding, checks exposure img drawing)
