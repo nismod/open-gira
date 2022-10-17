@@ -65,12 +65,6 @@ if __name__ == "__main__":
 
     network = snkit.network.Network(edges=edges, nodes=nodes)
 
-    # TODO: adding all the topology and component ids here does not work well for large areas
-    # perhaps, do it for each slice, and then at this step, check which slice components
-    # join neighbouring slice components and relabel components as such
-    # N.B. this will require using the {start|end}_node_reference=NaN nodes
-    # these should only be at bbox edges, but appear to be all over slices
-
     # relabel with network-wide ids prior to adding topology
     logging.info("Labelling edges and nodes with ids")
     network = snkit.network.add_ids(network)
@@ -78,8 +72,19 @@ if __name__ == "__main__":
     logging.info("Labelling edge ends with node ids")
     network = snkit.network.add_topology(network)
 
-    logging.info("Labelling edges and nodes with network component ids")
-    network = snkit.network.add_component_ids(network)
+    # TODO: adding the topology and component ids needs accelerating, 9M rows takes over a day
+
+    # TODO: check what takes the time, is it identifying the components or labelling them?
+
+    # perhaps, do it for each slice, and then at this step, check which slice components
+    # join neighbouring slice components and relabel components as such
+    # N.B. this will require using the {start|end}_node_reference=NaN nodes
+    # N.B. these should only be at bbox edges, but appear to be all over slices
+
+    # another option is to use igraph rather than networkx in snkit to identify the components
+
+#    logging.info("Labelling edges and nodes with network component ids")
+#    network = snkit.network.add_component_ids(network)
 
     logging.info("Writing network to disk")
     network.nodes.to_parquet(nodes_output_file)
