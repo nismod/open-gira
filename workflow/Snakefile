@@ -139,18 +139,6 @@ include: "rules/analyse/power_analyse_all.smk"
 
 ##### target rules #####
 
-rule all_road_networks:
-    input:
-        expand(
-            os.path.join(
-                f"{config['output_dir']}",
-                f"{{dataset}}_filter-{{network_filter}}",
-                "edges.geoparquet"
-            ),
-            dataset=config['infrastructure_datasets'].keys(),
-            network_filter=config['network_filters'].keys(),
-        )
-
 # Require the completed overlay image file to be present for each hazard
 rule all:
     input:
