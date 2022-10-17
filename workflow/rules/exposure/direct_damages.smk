@@ -23,16 +23,16 @@ snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqued
 """
 
 
-rule plot_damage_fractions:
+rule plot_damage_distributions:
     input:
-        damages = rules.join_direct_damages.output.joined
+        damages = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet"
     output:
-        plots = directory("{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/plots")
+        plots = directory("{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction_plots")
     script:
-        "../../scripts/transport/plot_damage_fractions.py"
+        "../../scripts/transport/plot_damage_distributions.py"
 
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/plots
+snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/fraction_plots
 """
