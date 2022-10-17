@@ -32,10 +32,11 @@ infrastructure_datasets:
   north-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
   south-america-latest: 'http://download.geofabrik.de/south-america-latest.osm.pbf'
   # country extracts
-  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
+  djibouti-latest: 'https://download.geofabrik.de/africa/djibouti-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   # small extract for testing purposes
   tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
