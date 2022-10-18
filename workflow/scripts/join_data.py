@@ -26,6 +26,7 @@ Example:
 """
 
 import logging
+import os
 import sys
 import warnings
 
@@ -103,4 +104,9 @@ if __name__ == "__main__":
 
     base = append_data(base, slice_files)
     base = base.reset_index(drop=True)
+
+    folder_path = os.path.dirname(os.path.abspath(output_file))
+    if not os.path.exists(folder_path):
+        os.path.makedirs(folder_path)
+
     base.to_parquet(output_file)
