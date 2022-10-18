@@ -4,6 +4,7 @@
 
 rule direct_damages:
     input:
+        unsplit = rules.convert_to_geoparquet.output.edges,  # for pre-intersection geometry
         exposure = rules.network_raster.output.geoparquet
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
@@ -25,14 +26,14 @@ snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqued
 
 rule plot_damage_distributions:
     input:
-        damages = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet"
+        damages = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet"
     output:
-        plots = directory("{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction_plots")
+        plots = directory("{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction_plots")
     script:
         "../../scripts/transport/plot_damage_distributions.py"
 
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/fraction_plots
+snakemake --cores 1 results/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction_plots
 """
