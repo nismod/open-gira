@@ -241,7 +241,9 @@ class OutputChecker:
                 )
             if difference := set(generated.columns) ^ set(expected.columns):
                 raise ValueError(
-                    f"tables do not have same schema: {difference=} cols are in one but not both"
+                    f"tables do not have same schema: {difference=} cols are in one but not both\n\n"
+                    f"{generated.columns=}\n\n"
+                    f"{expected.columns=}"
                 )
 
             # there is a case where df.equals(identical_df) can return False despite all elements being equal
