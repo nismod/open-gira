@@ -69,6 +69,7 @@ def load_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
 if __name__ == "__main__":
 
     try:
+        unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
@@ -80,6 +81,7 @@ if __name__ == "__main__":
     except NameError:
         # running as a script, rather than via snakemake...
         (
+            unsplit_path,
             exposure_path,
             damage_fraction_path,
             damage_cost_path,
@@ -90,7 +92,8 @@ if __name__ == "__main__":
         ) = sys.argv[1:]
 
         # where for example:
-        # exposure_path = results/splits/egypt-latest_filter-road/hazard-aqueduct-river/slice-1.parquet
+        # unsplit_path = results/geoparquet/egypt-latest_filter-road/slice-0.geoparquet
+        # exposure_path = results/splits/egypt-latest_filter-road/hazard-aqueduct-river/slice-1.geoparquet
         # damage_fraction_path = results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/slice-1_fraction.parquet
         # damage_cost_path = results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/slice-1_cost.parquet
         # damage_curves_dir = bundled_data/damage_curves/
@@ -180,10 +183,29 @@ if __name__ == "__main__":
             .multiply(damage_fraction[REHABILITATION_COST_FIELD], axis="index") \
             .multiply(damage_fraction[SPLIT_LENGTH_FIELD], axis="index")
 
+    logging.info(f"Reading raw network data for unsplit geometry")
+    unsplit: gpd.GeoDataFrame = gpd.read_parquet(unsplit_path)
+    logging.info(f"{unsplit.shape=}")
+
     # join the other fields with the direct damage estimates
+    logging.info("Unifying rasterised segments and summing damage costs")
     direct_damages: gpd.GeoDataFrame = gpd.GeoDataFrame(
-        pd.concat([direct_damages_only, damage_fraction[non_hazard_columns]], axis="columns")
+        pd.concat(
+            [
+                # sum the damages for each raster pixel of a given edge
+                # the index used to groupby is repeated for raster splits of a given segment
+                direct_damages_only.groupby(direct_damages_only.index).sum(),
+                # for all non hazard/damage data, drop any edge_id duplicate rows to match shape of damages
+                damage_fraction[non_hazard_columns].drop_duplicates('edge_id', keep='first').drop(columns="geometry"),
+                # geometry prior to intersection with raster
+                unsplit.loc[:, "geometry"]
+            ],
+            axis="columns"
+        )
     )
+
+    assert len(unsplit) == len(direct_damages)
+
     # write to disk
     logging.info(f"Writing {direct_damages.shape=} to disk")
     direct_damages.to_parquet(damage_cost_path)
