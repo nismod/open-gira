@@ -10,6 +10,8 @@ import sys
 import re
 from os.path import splitext as splitext_orig
 
+from network_components import natural_sort
+
 
 def splitext(string, exts=None):
     dataset, ext = splitext_orig(string)
@@ -52,6 +54,9 @@ except NameError:
     input_json_path = sys.argv[2]
     extract_paths: list[str] = sys.argv[3:]
 
+# sort for reproducibility
+extract_paths = natural_sort(extract_paths)
+
 # check inputs
 # fail if we have more than one out dir in the supplied paths
 out_dir, = set(map(os.path.dirname, extract_paths))
@@ -75,6 +80,8 @@ with open(input_json_path, "r") as fp:
     # fail if more than one initial bounding box
     extract, = json.load(fp)["extracts"]
 
+
+
 # write out slice sub-extracts
 for extract_path, bbox in zip(extract_paths, slice_subextracts(extract["bbox"], n)):
 
@@ -84,7 +91,7 @@ for extract_path, bbox in zip(extract_paths, slice_subextracts(extract["bbox"], 
             {
                 # yield next extract from generator
                 "bbox": bbox,
-                "output": os.path.basename(extract_path)
+                "output": os.path.basename(extract_path).replace(".geojson", ".osm.pbf")
             }
         ]
     }

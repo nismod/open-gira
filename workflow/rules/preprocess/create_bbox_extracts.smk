@@ -6,7 +6,7 @@ rule create_bbox_extracts:
     output:
         # double curly braces allow us to expand but keep wildcards!
         expand(
-            "{{OUTPUT_DIR}}/json/{{DATASET}}_extracts/slice-{n}.json",
+            "{{OUTPUT_DIR}}/json/{{DATASET}}_extracts/slice-{n}.geojson",
             n=range(config["slice_count"]),
         ),
     script:
