@@ -30,11 +30,14 @@ def slice_subextracts(initial_bbox, n):
 
     Returns:
     --------
-    Iterator on bounding boxes, one for each slice (list[list[float]])
+    List of bounding boxes, one for each slice (list[list[float]])
     """
+
     xmin0, ymin0, xmax0, ymax0 = tuple(initial_bbox)
     dx = (xmax0 - xmin0) / n
     dy = (ymax0 - ymin0) / n
+
+    bboxes = []
     for ix in range(n):
         xmin = xmin0 + ix * dx
         xmax = xmin0 + (ix + 1) * dx
@@ -42,7 +45,9 @@ def slice_subextracts(initial_bbox, n):
             ymin = ymin0 + iy * dy
             ymax = ymin0 + (iy + 1) * dy
 
-            yield [xmin, ymin, xmax, ymax]
+            bboxes.append([xmin, ymin, xmax, ymax])
+
+    return bboxes
 
 
 try:
@@ -63,8 +68,6 @@ out_dir, = set(map(os.path.dirname, extract_paths))
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 
-assert slice_count == len(extract_paths)
-
 # check we've got a square number
 # N.B. this is also checked in the Snakefile
 n = math.sqrt(slice_count)
@@ -80,18 +83,20 @@ with open(input_json_path, "r") as fp:
     # fail if more than one initial bounding box
     extract, = json.load(fp)["extracts"]
 
+# generate all slice bboxes given sqrt(slice_count)
+slice_bboxes: list[list[float]] = slice_subextracts(extract["bbox"], n)
 
-
-# write out slice sub-extracts
-for extract_path, bbox in zip(extract_paths, slice_subextracts(extract["bbox"], n)):
+# write out slice sub-extracts for the paths we've been given
+for extract_path in extract_paths:
+    extract_filename = os.path.basename(extract_path)
+    i, = re.match(r"slice-(\d+)", extract_filename).groups()
 
     slice_json = {
         "directory": ".",
         "extracts": [
             {
-                # yield next extract from generator
-                "bbox": bbox,
-                "output": os.path.basename(extract_path).replace(".geojson", ".osm.pbf")
+                "bbox": slice_bboxes[int(i)],
+                "output": extract_filename.replace(".geojson", ".osm.pbf")
             }
         ]
     }
