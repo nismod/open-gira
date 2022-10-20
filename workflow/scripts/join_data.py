@@ -34,6 +34,7 @@ import geopandas as gpd
 import pandas
 
 from transport.utils import NO_GEOM_ERROR_MSG
+from network_components import natural_sort
 
 
 def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFrame:
@@ -48,32 +49,30 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
         gpd.GeoDataFrame
     """
 
-    logging.info(f"{len(slice_files)=} still to append...")
+    for i, slice_path in enumerate(slice_files):
+        logging.info(f"Appending {slice_path}, {i} of {len(slice_files)}...")
 
-    slice_files.pop()
-    if len(slice_files) == 0:
-        return base
+        try:
+            gdf = gpd.read_parquet(slice_path)
 
-    try:
-        gdf = gpd.read_parquet(slice_files[-1])
+        except ValueError as error:
+            if NO_GEOM_ERROR_MSG in str(error):
+                # if the input parquet file does not contain a geometry column,
+                # geopandas will raise a ValueError rather than try to procede. we
+                # catch that here, but check the error message - to be more
+                # specific than catching and suppressing any ValueError
 
-    except ValueError as error:
-        if NO_GEOM_ERROR_MSG in str(error):
-            # if the input parquet file does not contain a geometry column,
-            # geopandas will raise a ValueError rather than try to procede. we
-            # catch that here, but check the error message - to be more
-            # specific than catching and suppressing any ValueError
+                # use an empty geodataframe to append instead
+                gdf = gpd.GeoDataFrame([])
 
-            # use an empty geodataframe to append instead
-            gdf = gpd.GeoDataFrame([])
 
-        else:
-            raise error
+        # there is no geopandas concat, so use pandas and then create a new gdf
+        base = gpd.GeoDataFrame(pandas.concat([base, gdf]), crs=base.crs)
 
-    # there is no geopandas concat, so use pandas and then create a new gdf
-    base = gpd.GeoDataFrame(pandas.concat([base, gdf]), crs=base.crs)
+        # remove our reference to object
+        del gdf
 
-    return append_data(base, slice_files)
+    return base
 
 
 if __name__ == "__main__":
@@ -89,10 +88,7 @@ if __name__ == "__main__":
     # When getting the input files from snakemake, there is no
     # garantee that they will always in the same order. Sort them for
     # consistency. Makes testing easier.
-    slice_files = sorted(slice_files)
-    # We're reading the different files as a stack from the top.  Let's
-    # reverse the order of files to keep the first file on top.
-    slice_files = slice_files[::-1]
+    slice_files = natural_sort(slice_files)
 
     try:
         base = gpd.read_parquet(slice_files[-1])
