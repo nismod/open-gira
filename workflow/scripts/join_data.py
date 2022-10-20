@@ -49,8 +49,9 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
         gpd.GeoDataFrame
     """
 
+    dataframes: list[gpd.GeoDataFrame] = []
     for i, slice_path in enumerate(slice_files):
-        logging.info(f"Appending {slice_path}, {i} of {len(slice_files)}...")
+        logging.info(f"Reading {i} of {len(slice_files)}...")
 
         try:
             gdf = gpd.read_parquet(slice_path)
@@ -65,14 +66,10 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
                 # use an empty geodataframe to append instead
                 gdf = gpd.GeoDataFrame([])
 
+        dataframes.append(gdf)
 
-        # there is no geopandas concat, so use pandas and then create a new gdf
-        base = gpd.GeoDataFrame(pandas.concat([base, gdf]), crs=base.crs)
-
-        # remove our reference to object
-        del gdf
-
-    return base
+    # there is no geopandas concat, so use pandas and then create a new gdf
+    return gpd.GeoDataFrame(pandas.concat([base, *dataframes]), crs=base.crs)
 
 
 if __name__ == "__main__":
