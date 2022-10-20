@@ -64,11 +64,11 @@ if __name__ == "__main__":
     network = snkit.network.Network(edges=edges, nodes=nodes)
 
     # relabel with network-wide ids prior to adding topology
-    logging.info("Labelling edges and nodes with ids")
-    network = snkit.network.add_ids(network)
+#    logging.info("Labelling edges and nodes with ids")
+#    network = snkit.network.add_ids(network)
 
-    logging.info("Labelling edge ends with node ids")
-    network = snkit.network.add_topology(network)
+#    logging.info("Labelling edge ends with node ids")
+#    network = snkit.network.add_topology(network)
 
     # TODO: adding the topology and component ids needs accelerating, 9M rows takes over a day
 
