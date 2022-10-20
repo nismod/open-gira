@@ -7,16 +7,14 @@ import geopandas as gpd
 import snkit
 
 from join_data import append_data
+from network_components import natural_sort
 
 
 def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
     # When getting the input files from snakemake, there is no
     # garantee that they will always in the same order. Sort them for
     # consistency. Makes testing easier.
-
-    # We're reading the different files as a stack from the top.  Let's
-    # reverse the order of files to keep the first file on top.
-    slice_files = sorted(slice_files, reverse=True)
+    slice_files = natural_sort(slice_files)
 
     try:
         base = gpd.read_parquet(slice_files[-1])
