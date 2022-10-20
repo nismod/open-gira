@@ -17,14 +17,14 @@ def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
     slice_files = natural_sort(slice_files)
 
     try:
-        base = gpd.read_parquet(slice_files[-1])
+        base = gpd.read_parquet(slice_files[0])
     except ValueError:
         # if the input parquet file does not contain a geometry column, geopandas
         # will raise a ValueError rather than try to procede
         logging.info("base input file empty... suppressing geopandas exception")
         base = gpd.GeoDataFrame([])
 
-    concatenated = append_data(base, slice_files).reset_index(drop=True)
+    concatenated = append_data(base, slice_files[1:]).reset_index(drop=True)
     logging.info(f"{len(concatenated)=}")
 
     # drop_duplicates on a GeoDataFrame can be extremely slow
