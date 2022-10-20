@@ -51,7 +51,7 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
 
     dataframes: list[gpd.GeoDataFrame] = []
     for i, slice_path in enumerate(slice_files):
-        logging.info(f"Reading {i} of {len(slice_files)}...")
+        logging.info(f"Reading {i + 1} of {len(slice_files)}...")
 
         try:
             gdf = gpd.read_parquet(slice_path)
