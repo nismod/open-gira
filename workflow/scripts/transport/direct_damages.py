@@ -14,6 +14,7 @@ import pandas as pd
 from scipy.interpolate import interp1d
 
 import utils
+from plot_damage_distributions import natural_sort
 
 
 # exposure table hazard intensity fields expected to be prefixed as such
@@ -189,20 +190,24 @@ if __name__ == "__main__":
 
     # join the other fields with the direct damage estimates
     logging.info("Unifying rasterised segments and summing damage costs")
-    direct_damages: gpd.GeoDataFrame = gpd.GeoDataFrame(
-        pd.concat(
-            [
-                # sum the damages for each raster pixel of a given edge
-                # the index used to groupby is repeated for raster splits of a given segment
-                direct_damages_only.groupby(direct_damages_only.index).sum(),
-                # for all non hazard/damage data, drop any edge_id duplicate rows to match shape of damages
-                damage_fraction[non_hazard_columns].drop_duplicates('edge_id', keep='first').drop(columns="geometry"),
-                # geometry prior to intersection with raster
-                unsplit.loc[:, "geometry"]
-            ],
-            axis="columns"
-        )
-    )
+
+    # grouping on edge_id, sum all direct damage estimates to give a total dollar cost per edge
+    direct_damages = pd.concat(
+        [direct_damages_only, damage_fraction["edge_id"]],
+        axis="columns"
+    ).set_index("edge_id")
+    grouped_direct_damages = direct_damages.groupby(direct_damages.index).sum()
+
+    # lose columns like "cell_indicies" or rastered length measures that are specific to _rastered_ edges
+    non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
+    unsplit_subset = unsplit[non_hazard_output_columns].set_index("edge_id")
+
+    # join the direct damage estimates with the unsplit geometry and other relevant columns
+    direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one")
+    direct_damages["edge_id"] = direct_damages.index
+
+    # sort damage columns alphabetically
+    direct_damages = direct_damages[natural_sort(direct_damages.columns)]
 
     assert len(unsplit) == len(direct_damages)
 
