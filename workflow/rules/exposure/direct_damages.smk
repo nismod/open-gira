@@ -4,7 +4,7 @@
 
 rule direct_damages:
     input:
-        unsplit = rules.convert_to_geoparquet.output.edges,  # for pre-intersection geometry
+        unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
         exposure = rules.network_raster.output.geoparquet
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
