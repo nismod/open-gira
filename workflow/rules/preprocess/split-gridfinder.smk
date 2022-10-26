@@ -6,20 +6,9 @@ Process gridfinder elements for each box
 rule process_gridfinder:
     conda: "../../../environment.yml"
     input:
-        os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg"),
-        rules.world_splitter.output.global_metadata,
-    params:
-        output_dir=config["output_dir"],
+        gridfinder="{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
+        global_boxes=rules.world_splitter.output.global_boxes,
     output:
-        expand(
-            os.path.join(
-                config["output_dir"],
-                "power_processed",
-                "all_boxes",
-                "{box_id}",
-                "gridfinder_{box_id}.gpkg",
-            ),
-            box_id=ALL_BOXES,
-        )
+        gridfinder="{OUTPUT_DIR}/processed/power/{BOX}/gridfinder_{BOX}.parquet",
     script:
-        os.path.join("..", "..", "scripts", "process", "process_power_3_gridfinder.py")
+       "../../scripts/process/process_power_3_gridfinder.py"
