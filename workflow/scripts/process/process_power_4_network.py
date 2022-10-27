@@ -1,13 +1,14 @@
 """
 Creates the network from the plants and targets data
 """
-import os
+import warnings
 
 import geopandas
 import pandas
 import snkit
 import snkit.network
 from pyproj import Geod
+from shapely.errors import ShapelyDeprecationWarning
 
 
 if __name__ == "__main__":
@@ -49,6 +50,8 @@ if __name__ == "__main__":
     network = snkit.network.Network(nodes, edges)
 
     if len(edges) > 0:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
         network = snkit.network.split_multilinestrings(network)
 
         geod = Geod(ellps="WGS84")
