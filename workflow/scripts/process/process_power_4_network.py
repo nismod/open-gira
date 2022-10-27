@@ -33,7 +33,7 @@ if __name__ == "__main__":
     target_nodes.geometry = target_nodes.geometry.centroid
 
     nodes = geopandas.GeoDataFrame(
-        pandas.concat([plants, targets], ignore_index=True),
+        pandas.concat([plants, target_nodes], ignore_index=True),
         crs=plants.crs)
 
     # Edges
