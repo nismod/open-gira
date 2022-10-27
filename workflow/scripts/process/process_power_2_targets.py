@@ -79,8 +79,13 @@ if __name__ == '__main__':
 
     targets = get_target_areas(targets_file, box_geom)
     targets["type"] = "target"
-    targets["population"] = get_population(targets, population_file)
-    targets["gdp_pc"] = get_gdp_pc(targets, gdp_file)
-    targets["gdp"] = targets.population * targets.gdp_pc
+    if len(targets):
+        targets["population"] = get_population(targets, population_file)
+        targets["gdp_pc"] = get_gdp_pc(targets, gdp_file)
+        targets["gdp"] = targets.population * targets.gdp_pc
+    else:
+        targets["population"] = 0
+        targets["gdp_pc"] = 0
+        targets["gdp"] = 0
 
     targets.to_parquet(output_file)
