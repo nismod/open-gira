@@ -52,40 +52,48 @@ if __name__ == "__main__":
     if len(edges) > 0:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
-        network = snkit.network.split_multilinestrings(network)
+            network = snkit.network.split_multilinestrings(network)
 
-        geod = Geod(ellps="WGS84")
-        edge_limit = 20_000  # meters - TODO test limit
+            geod = Geod(ellps="WGS84")
+            edge_limit = 20_000  # meters - TODO test limit
+            def node_to_edge_distance(point, line, geod):
+                b = line.interpolate(line.project(point))
+                _, _, distance = geod.inv(point.x, point.y, b.x, b.y)
+                return distance
 
-        # Connect power plants
-        network = snkit.network.link_nodes_to_nearest_edge(
-            network,
-            lambda node, edge: node.type == "source"
-            and geod.geometry_length(edge.geometry) < edge_limit,
-        )
-        network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
+            # Connect power plants
+            network = snkit.network.link_nodes_to_nearest_edge(
+                network,
+                lambda node, edge: (
+                    (node.type == "source")
+                    and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
+                )
+            )
+            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
 
-        network.nodes["id"] = network.nodes.reset_index().apply(
-            lambda row: f"conn_source_{row['index']}_{box_id}"
-            if type(row.id) is float
-            else row.id,
-            axis=1,
-        )
+            network.nodes["id"] = network.nodes.reset_index().apply(
+                lambda row: f"conn_source_{row['index']}_{box_id}"
+                if type(row.id) is float
+                else row.id,
+                axis=1,
+            )
 
-        # Connect targets
-        network = snkit.network.link_nodes_to_nearest_edge(
-            network,
-            lambda node, edge: node.type == "target"
-            and geod.geometry_length(edge.geometry) < edge_limit,
-        )
-        network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
+            # Connect targets
+            network = snkit.network.link_nodes_to_nearest_edge(
+                network,
+                lambda node, edge: (
+                    (node.type == "target")
+                    and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
+                )
+            )
+            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
 
-        network.nodes["id"] = network.nodes.reset_index().apply(
-            lambda row: f"conn_target_{row['index']}_{box_id}"
-            if type(row.id) is float
-            else row.id,
-            axis=1,
-        )
+            network.nodes["id"] = network.nodes.reset_index().apply(
+                lambda row: f"conn_target_{row['index']}_{box_id}"
+                if type(row.id) is float
+                else row.id,
+                axis=1,
+            )
 
     # Add nodes at line endpoints
     network = snkit.network.add_endpoints(network)
