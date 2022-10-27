@@ -5,7 +5,7 @@ import os
 import geopandas
 from shapely.geometry import LineString
 
-from process_power_functions import adj
+from open_gira.process_power_functions import adj
 
 
 output_dir = snakemake.config["output_dir"]  # type: ignore
