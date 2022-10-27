@@ -34,17 +34,15 @@ def all_boxes() -> List[str]:
     Returns:
         list[str]
     """
+    return [f"box_{num}" for num in all_box_ids()]
 
+
+def all_box_ids() -> List[int]:
     if len(config["specific_boxes"]) != 0:
-        return [f"box_{num}" for num in config["specific_boxes"]]
+        return config["specific_boxes"]
 
-    else:
-        return [
-            f"box_{int(idx)}"
-            for idx in range(
-                0, int((180 - -180) * (90 - -90) / float(config["box_width_height"]) ** 2)
-            )
-        ]
+    max_i = int(360 * 180 / float(config["box_width_height"]) ** 2)
+    return range(0, max_i)
 
 
 #### POWER/STORMS WORKFLOW ####
@@ -59,12 +57,12 @@ CONNECTOR_OUT = (
     expand(
         os.path.join(
             config["output_dir"],
-            "power_processed",
-            "all_boxes",
+            "processed",
+            "power",
             "{box_id}",
             "connector_{box_id}.json",
         ),
-        box_id=ALL_BOXES,
+        box_id=all_box_ids(),
     )
 )
 
