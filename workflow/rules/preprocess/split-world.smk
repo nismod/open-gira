@@ -8,7 +8,7 @@ rule world_splitter:
     input:
         admin_data = rules.download_gadm_levels.output.admin_bounds_global_layer_per_level,
     output:
-        global_metadata = "{OUTPUT_DIR}/power_processed/world_boxes_metadata.json",
-        global_boxes = "{OUTPUT_DIR}/power_processed/world_boxes.gpkg",
+        global_metadata = "{OUTPUT_DIR}/processed/world_boxes_metadata.json",
+        global_boxes = "{OUTPUT_DIR}/processed/world_boxes.gpkg",
     script:
         "../../scripts/process/world_split.py"
