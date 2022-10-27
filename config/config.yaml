@@ -13,8 +13,8 @@ output_dir: 'results'
 hazard_datasets:
   aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
   #aqueduct-coast: 'config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt'
-  aqueduct-river: 'config/hazard_resource_locations/aqueduct-river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
-  #aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
+  #aqueduct-river: 'config/hazard_resource_locations/aqueduct-river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
+  aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
 
 # TODO: have hazards as instances of some kind of struct rather than several dicts?
 hazard_types:
@@ -34,8 +34,9 @@ infrastructure_datasets:
   north-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
   south-america-latest: 'http://download.geofabrik.de/south-america-latest.osm.pbf'
   # country extracts
-  egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
   djibouti-latest: 'https://download.geofabrik.de/africa/djibouti-latest.osm.pbf'
+  egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
+  great-britain-latest: 'http://download.geofabrik.de/europe/great-britain-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
@@ -55,7 +56,7 @@ keep_tags:
   rail: ['railway', 'bridge', 'name']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 64
+slice_count: 1024
 
 # CRS OSM uses
 osm_epsg: 4326
