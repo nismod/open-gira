@@ -1,29 +1,22 @@
 """Download the plants data to csv files
 """
-import json
-import os
-import sys
-import warnings
-
-import geopandas as gpd
-import pandas as pd
+import geopandas
+import pandas
 import pygeos
-from tqdm import tqdm
-
-from process_power_functions import idxbox
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 if __name__ == "__main__":
-    try:
-        input_file = snakemake.input.powerplants  # type: ignore
-        output_file = snakemake.output.powerplants  # type: ignore
-    except:
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
+    input_file = snakemake.input.powerplants  # type: ignore
+    output_file = snakemake.output.powerplants  # type: ignore
+    global_boxes_path = snakemake.input.global_boxes  # type: ignore
+    box_id = snakemake.wildcards.BOX  # type: ignore
 
-    powerplants = pd.read_csv(
+    boxes = geopandas.read_file(global_boxes_path) \
+        .set_index("box_id")
+    box = boxes.loc[[f"box_{box_id}"], :]
+    box = box.set_crs("epsg:4326")
+
+    powerplants = pandas.read_csv(
         input_file,
         # dtype for other_fuel3 added to suppress error
         dtype={"other_fuel3": object},
@@ -41,5 +34,7 @@ if __name__ == "__main__":
     )
     powerplants["type"] = "source"
     powerplants["geometry"] = pygeos.points(powerplants.longitude, powerplants.latitude)
-    powerplants = gpd.GeoDataFrame(powerplants.drop(columns=["longitude","latitude"]))
+    powerplants = geopandas.GeoDataFrame(powerplants.drop(columns=["longitude","latitude"]))
+    powerplants = powerplants.set_crs("epsg:4326")
+    powerplants = powerplants.sjoin(box).rename(columns={'index_right': box.index.name})
     powerplants.to_parquet(output_file)
