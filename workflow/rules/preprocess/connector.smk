@@ -5,20 +5,10 @@ Finds connector points for all boxes
 rule process_connector:
     conda: "../../../environment.yml"
     input:
-        expand(
-            os.path.join(
-                config["output_dir"],
-                "power_processed",
-                "all_boxes",
-                "{box_id}",
-                "network_{box_id}.gpkg",
-            ),
-            box_id=ALL_BOXES,
-        ),
-        rules.world_splitter.output.global_metadata,
-    params:
-        output_dir=config["output_dir"],
+        edges="{OUTPUT_DIR}/processed/power/{BOX}/edges_{BOX}.parquet",
+        nodes="{OUTPUT_DIR}/processed/power/{BOX}/nodes_{BOX}.parquet",
+        global_metadata=rules.world_splitter.output.global_metadata,
     output:
-        CONNECTOR_OUT,
+        connector="{OUTPUT_DIR}/processed/power/{BOX}/connector_{BOX}.json",
     script:
-        os.path.join("..", "..", "scripts", "process", "process_power_5_connector.py")
+        "../../scripts/process/process_power_5_connector.py"
