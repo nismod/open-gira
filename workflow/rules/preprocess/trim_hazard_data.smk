@@ -32,7 +32,7 @@ checkpoint trim_hazard_data:
         for f in input.files:
             print(f"Trimming {f} for {wildcards.HAZARD_SLUG}, {wildcards.DATASET}.")
             out_file = f"{output}/{os.path.basename(f)}"
-            os.system(f"gdalwarp -te {xmin} {ymin} {xmax} {ymax} {f} {out_file}")
+            os.system(f"gdalwarp -te {xmin} {ymin} {xmax} {ymax} -of VRT {f} /vsistdout/ | gdal_translate -co compress=lzw /vsistdin/ {out_file}")
 
         """
         Test with:
