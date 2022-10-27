@@ -156,27 +156,16 @@ if __name__ == "__main__":
     tqdm.pandas()
     try:
         network_edges_path = snakemake.input["network"]  # type: ignore
-        hazard_dir = snakemake.input["tifs"]  # type: ignore
+        hazard_tifs = snakemake.input["tif_paths"]  # type: ignore
         output_path = snakemake.output["geoparquet"]  # type: ignore
     except NameError:
-        print(sys.argv)
-        (network_edges_path, hazard_dir, output_path) = sys.argv[1:]
-        # network_edges_path = '../../results/geoparquet/tanzania-mini_filter-road/slice-2.geoparquet'
-        # output_path = '../../results/test.geoparquet'
-        # hazard_dir = '../../results/input/hazard-aqueduct-river/tanzania-mini'
+        sys.exit("Please run from snakemake")
 
-    tifs = glob.glob(os.path.join(hazard_dir, "*.tif"))
-
-    if len(tifs) == 0:
-        raise ValueError(
-            (
-                f"The list of hazard .tif files is empty. Check they were downloaded to "
-                f"{hazard_dir}"
-            )
-        )
+    if len(hazard_tifs) == 0:
+        raise ValueError(f"The list of hazard .tif files is empty, quitting.")
 
     main(
         network_edges_path=network_edges_path,
-        hazard_tifs=tifs,
+        hazard_tifs=hazard_tifs,
         output_path=output_path,
     )

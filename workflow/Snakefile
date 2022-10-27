@@ -74,6 +74,8 @@ wildcard_constraints:
     EVENTS_OR_FIXED="events|fixed",
     FRACTION_OR_COST="fraction|cost",
     SAMPLE="\d+",
+    # may be upper or lower, one 'f' or two
+    TIFF_FILE="[^\/\.\s]+\.[tT][iI][fF][fF]?",
 
 # generate values for global variables used across rules
 include: "rules/storm_workflow_global_variables.smk"

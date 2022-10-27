@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 checkpoint download_hazard_datasets:
     output:
-        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw"),
+        raw_folder=directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw"),
     run:
         with TemporaryDirectory() as tmpdir:
             input_file_key = re.sub("^hazard-", "", wildcards.HAZARD_SLUG)
