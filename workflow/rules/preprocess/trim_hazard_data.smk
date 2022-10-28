@@ -52,13 +52,14 @@ rule trim_raster:
         # https://trac.osgeo.org/gdal/wiki/UserDocs/GdalWarp#GeoTIFFoutput-coCOMPRESSisbroken
 
         # first, generate a VRT format job specification (a short XML file) with gdalwarp
-        gdalwarp -te ${{COORDS[@]}} -of VRT {input.raw_raster_file} {output.trimmed_raster_file}.vrt
+        JOB_SPEC=$(mktemp)  # file in /tmp
+        gdalwarp -te ${{COORDS[@]}} -of VRT {input.raw_raster_file} $JOB_SPEC
 
         # then use gdal_translate to execute the job as specified
-        gdal_translate -co compress=lzw {output.trimmed_raster_file}.vrt {output.trimmed_raster_file}
+        gdal_translate -co compress=lzw $JOB_SPEC {output.trimmed_raster_file}
 
         # clean up job specification file
-        rm {output.trimmed_raster_file}.vrt
+        rm $JOB_SPEC
         """
 
 """
