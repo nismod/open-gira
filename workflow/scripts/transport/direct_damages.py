@@ -3,11 +3,14 @@ Given an exposure estimate and some damage curves, calculate the damage
 fraction for exposed assets.
 """
 
+from collections import namedtuple
 import logging
 import sys
 import warnings
 from glob import glob
 from os.path import splitext, basename, relpath, join
+from pathlib import Path
+from typing import Union, Tuple, Optional
 
 import geopandas as gpd
 import pandas as pd
@@ -23,6 +26,109 @@ HAZARD_INTENSITY_PREFIX = "hazard-"
 REHABILITATION_COST_FIELD = "rehab_cost_USD_per_km"
 # length of edge calculated after intersection
 SPLIT_LENGTH_FIELD = "length_km"
+
+
+# struct to hold attributes of an aqueduct flood map
+# unset attributes will have the value None
+AqueductMap = namedtuple(
+    "AqueductMap",
+    (
+        "coast_or_river",
+        "year",
+        "return_period",
+        "climate_model",    # only river
+        "scenario",         # only river
+        "subsidence",       # only coastal
+        "slr_percentile"    # only coastal
+    ),
+    defaults=[None] * 4,  # final 4 fields are optional
+)
+
+
+def parse_aqueduct_name(name: Union[str, Path]) -> AqueductMap:
+    """
+    Parse an aqueduct hazard string (as used in flood map filenames) and
+    return the components.
+
+    Not all argument names are pertinent to all maps (coastal vs. riverine)
+
+    Arguments:
+        Union[str, Path]: Name to parse. May have file type extension.
+
+    Returns (AqueductMap): A named tuple with the following attributes:
+        coast_or_river (str): Coastal or riverine {'inunriver', 'inuncoast')
+        year (int): Year (projections are for this year)
+        return_period (int): Return period (expect to see these events on
+            average every return period years)
+        climate_model (Optional[str]): Model (climate model used, or else historic observations)
+        scenario (Optional[str]): Scenario (historic, RCP, etc.)
+        subsidence (Optional[bool]): Subsidence (whether model takes into account subsidence)
+        slr_percentile (Optional[float]): Sea level rise percentile (location in the probability
+            distribution of sea level rise)
+    """
+
+    COASTAL = "inuncoast"
+    RIVERINE = "inunriver"
+
+    WITH_SUBSIDENCE = "wtsub"
+    WITHOUT_SUBSIDENCE = "nosub"
+
+    # drop any file extension
+    name, _ = splitext(str(name))
+
+    coast_or_river, *split_name = name.split("_")
+
+    if coast_or_river == RIVERINE:
+
+        # unpack rest of name
+        scenario, climate_model, year, return_period = split_name
+
+        return AqueductMap(
+            coast_or_river=coast_or_river,
+            scenario=scenario,
+            climate_model=climate_model,
+            year=int(year),
+            return_period=int(return_period.replace("rp", "")),
+        )
+
+    elif coast_or_river == COASTAL:
+
+        # unpack rest of name
+        scenario, sub_str, year, return_period, *slr_perc_list = split_name
+
+        if sub_str == WITH_SUBSIDENCE:
+            subsidence = True
+        elif sub_str == WITHOUT_SUBSIDENCE:
+            subsidence = False
+        else:
+            raise ValueError(f"malformed aqueduct subsidence string {sub_str=}")
+
+        # sea level rise percentile
+        slr_perc_str = "_".join(slr_perc_list)
+
+        # N.B. default is 95th percentile
+        if slr_perc_str == "0":
+            slr_percentile = 95.0
+        elif slr_perc_str == "0_perc_50":
+            slr_percentile = 50.0
+        elif slr_perc_str == "0_perc_05":
+            slr_percentile = 5.0
+        else:
+            raise ValueError(
+                f"malformed aqueduct sea level percentile string {slr_perc_str=}"
+            )
+
+        return AqueductMap(
+            coast_or_river=coast_or_river,
+            scenario=scenario,
+            subsidence=subsidence,
+            year=int(year),
+            return_period=int(return_period.replace("rp", "")),
+            slr_percentile=slr_percentile,
+        )
+
+    else:
+        raise ValueError("do not recognise hazard map type {coast_or_river=}")
 
 
 def load_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: set) -> dict[str, pd.DataFrame]:
