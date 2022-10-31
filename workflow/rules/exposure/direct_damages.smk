@@ -9,6 +9,7 @@ rule direct_damages:
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
         damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.geoparquet",
+        expected_annual_damages = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/annual/{SLICE_SLUG}.geoparquet",
     params:
         # determine the network type from the filter, e.g. road, rail
         network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),

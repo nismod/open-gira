@@ -34,14 +34,14 @@ rule join_direct_damages:
                 "direct_damages",
                 "{DATASET}_{FILTER_SLUG}",
                 "{HAZARD_SLUG}",
-                "{FRACTION_OR_COST}",
+                "{FRACTION_OR_COST_OR_ANNUAL}",
                 "slice-{i}.geoparquet",
             ),
             **wildcards,
             i=range(config["slice_count"])
         ),
     output:
-        joined = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_{FRACTION_OR_COST}.geoparquet",
+        joined = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_{FRACTION_OR_COST_OR_ANNUAL}.geoparquet",
     script:
         "../../scripts/join_data.py"
 
