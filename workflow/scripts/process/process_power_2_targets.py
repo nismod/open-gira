@@ -1,5 +1,7 @@
 """This file processes the target data
 """
+import logging
+
 import geopandas
 import numpy as np
 import pandas
@@ -20,15 +22,20 @@ def get_target_areas(targets_file, box_geom):
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
     with rasterio.open(targets_file) as dataset:
         # Read the dataset's valid data mask as a ndarray.
-        box_dataset, box_transform = rasterio.mask.mask(dataset, [box_geom], crop=True)
+        try:
+            box_dataset, box_transform = rasterio.mask.mask(dataset, [box_geom], crop=True)
 
-        # Extract feature shapes and values from the array.
-        for geom, val in rasterio.features.shapes(box_dataset, transform=box_transform):
-            if val > 0:
-                feature = shape(geom)
-                geoms.append(feature)
-                area_m2, _ = geod.geometry_area_perimeter(feature)
-                areas_km2.append(area_m2 / 1e6)
+            # Extract feature shapes and values from the array.
+            for geom, val in rasterio.features.shapes(box_dataset, transform=box_transform):
+                if val > 0:
+                    feature = shape(geom)
+                    geoms.append(feature)
+                    area_m2, _ = geod.geometry_area_perimeter(feature)
+                    areas_km2.append(abs(area_m2 / 1e6))
+        except ValueError as ex:
+            # could be that box_geom does not overlap dataset
+            logging.info("Box may not overlap targets", ex)
+            pass
 
     return geopandas.GeoDataFrame({
         "area_km2": areas_km2,
@@ -44,7 +51,9 @@ def get_population(targets, population_file):
         add_stats={"nansum": np.nansum},  # count NaN as zero for summation
         all_touched=True,  # possible overestimate, but targets grid is narrower than pop
     )
-    populations = [d["nansum"] for d in stats]
+    # fill masked values, in case of nodata
+    populations = np.ma.array([d["nansum"] for d in stats]).filled(fill_value=0)
+    populations = np.nan_to_num(populations.astype(float))
 
     return populations
 
