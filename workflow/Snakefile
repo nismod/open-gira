@@ -85,7 +85,6 @@ include: "rules/preprocess/convert_to_geoparquet.smk"
 include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
-include: "rules/preprocess/power_preprocess_all.smk"
 
 include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"
