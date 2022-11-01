@@ -247,31 +247,6 @@ def load_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
     return damage_curves
 
 
-def rejoin_and_save(left: pd.DataFrame, right: gpd.GeoDataFrame, path: str) -> None:
-    """
-    Take a left dataframe (assets, hazard columns) and a right dataframe (assets,
-    non-hazard columns) and join, validate and save the result to disk.
-
-    Arguments:
-        left (pd.DataFrame): Typically numeric data, e.g. inundation, damage
-            cost, etc. per asset
-        right (gpd.GeoDataFrame): Typically non-hazard data, e.g. geometry,
-            metadata, etc. per asset.
-    """
-
-    joined = gpd.GeoDataFrame(left.join(right, validate="one_to_one"))
-    joined = joined[natural_sort(joined.columns)]
-
-    assert len(right) == len(joined)
-    assert len(left) == len(joined)
-    assert "edge_id" in joined.columns
-
-    logging.info(f"{joined.shape}")
-    joined.to_parquet(path)
-
-    return
-
-
 if __name__ == "__main__":
 
     try:
@@ -391,6 +366,7 @@ if __name__ == "__main__":
         rp_map_families[rp_map.family_name].add(rp_map)
 
     expected_annual_damages = {}
+    logging.info(f"Integrating {len(rp_map_families)} damage-probability curves")
     for family_name, rp_maps in rp_map_families.items():
 
         sorted_rp_maps: list[ReturnPeriodMap] = sorted(rp_maps)
@@ -409,14 +385,21 @@ if __name__ == "__main__":
     non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
     unsplit_subset = unsplit[non_hazard_output_columns].set_index("edge_id", drop=False)
 
-    # rejoin cost estimates with geometry and metadata columns and write to disk
-    logging.info("Writing out direct damages per return period map")
-    rejoin_and_save(grouped_direct_damages, unsplit_subset, damage_cost_path)
-    logging.info("Writing out expected annual damages")
-    rejoin_and_save(
-        pd.DataFrame(data=expected_annual_damages, index=unsplit_subset.index),
-        unsplit_subset,
-        expected_annual_damages_path
-    )
+    # rejoin direct damage cost estimates with geometry and metadata columns and write to disk
+    direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one")
+    direct_damages["edge_id"] = direct_damages.index
+    # we may not have calculated damages for every possible asset_type
+    assert len(direct_damages) <= len(unsplit_subset)
+    assert "edge_id" in direct_damages.columns
+    logging.info(f"Writing out {direct_damages.shape=} per return period map")
+    direct_damages.to_parquet(damage_cost_path)
+
+    # rejoin expected annual damage cost estimates with geometry and metadata columns and write to disk
+    expected_annual_damages = pd.DataFrame(data=expected_annual_damages, index=grouped_direct_damages.index)
+    expected_annual_damages = gpd.GeoDataFrame(expected_annual_damages.join(unsplit_subset, validate="one_to_one"))
+    assert len(expected_annual_damages) <= len(unsplit_subset)
+    assert "edge_id" in expected_annual_damages.columns
+    logging.info(f"Writing out {expected_annual_damages.shape=} (integrated damage-probability curves)")
+    expected_annual_damages.to_parquet(expected_annual_damages_path)
 
     logging.info("Done")
