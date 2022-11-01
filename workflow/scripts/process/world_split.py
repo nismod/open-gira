@@ -1,66 +1,62 @@
-"""Splits the world into boxes of length and height boxlen (input parameter)
+"""Splits the world into boxes of equal length and height
 """
 import json
-import os
 import sys
-import warnings
 
-import geopandas as gpd
-import numpy as np
+import geopandas
+import numpy
 from shapely.geometry import Point
-from tqdm import tqdm
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+def create_global_grid(box_width_height):
+    assert 180 % box_width_height == 0  # ensure divisibility
+
+    lat_centroids = numpy.arange(90 - box_width_height / 2, -90, -box_width_height)
+    lon_centroids = numpy.arange(-180 + box_width_height / 2, 180, box_width_height)
+
+    points = []
+    for lat in lat_centroids:  # left to right and down
+        for lon in lon_centroids:
+            points.append(Point(lon, lat))
+    points_gdf = geopandas.GeoDataFrame({"geometry": points})
+    grid_geoms = points_gdf.buffer(box_width_height / 2, cap_style=3)
+
+    grid = geopandas.GeoDataFrame(
+        {
+            "geometry": grid_geoms,
+            "box_id": [f"box_{i}" for i in range(len(grid_geoms))],
+        },
+        crs="EPSG:4326",
+    )
+    ncols = len(lon_centroids)
+    nrows = len(lat_centroids)
+    return grid, ncols, nrows
 
 
 if __name__ == "__main__":
-
     try:
         admin_data_path = snakemake.input["admin_data"]  # type: ignore
-        boxlen = snakemake.params["boxlen_value"]  # type: ignore
-        output_dir = snakemake.params["output_dir"]  # type: ignore
+        box_width_height = snakemake.config["box_width_height"]  # type: ignore
+        output_dir = snakemake.config["output_dir"]  # type: ignore
         global_metadata_path = snakemake.output["global_metadata"]  # type: ignore
         global_boxes_path = snakemake.output["global_boxes"]  # type: ignore
     except:
         admin_data_path = sys.argv[1]
         output_dir = sys.argv[2]
-        boxlen = sys.argv[3]
+        box_width_height = sys.argv[3]
         global_metadata_path = sys.argv[4]
         global_boxes_path = sys.argv[5]
 
-    boxlen = float(boxlen)
+    box_width_height = float(box_width_height)
+    grid, ncols, nrows = create_global_grid(box_width_height)
 
-    assert 180 % boxlen == 0  # ensure divisibility
-
-    lat_centroids = np.arange(90 - boxlen / 2, -90, -boxlen)
-    lon_centroids = np.arange(-180 + boxlen / 2, 180, boxlen)
-
-    points = []
-
-    for lat in lat_centroids:  # left to right and down
-        for lon in lon_centroids:
-            points.append(Point(lon, lat))
-
-    points_gdf = gpd.GeoDataFrame({"geometry": points})
-    grid = points_gdf.buffer(boxlen / 2, cap_style=3)
-    grid = gpd.GeoDataFrame(
-        {
-            "geometry": grid,
-            "box_id": [f"box_{idx_}" for idx_ in range(len(grid))],
-        },
-        crs="EPSG:4326",
-    )
-
-    print("loading country layer=0")
-    countries = gpd.read_file(admin_data_path, layer=0).drop(["NAME_0"], axis="columns")
-    countries = countries.rename({"GID_0": "code"}, axis="columns")
-
-    print(f"country length: {len(countries)}")
-    print("Find countries intersecting with each grid cell...")
+    countries = geopandas.read_file(admin_data_path, layer=0) \
+        .drop(["NAME_0"], axis="columns") \
+        .rename({"GID_0": "code"}, axis="columns")
 
     # e.g. "box_284" -> ['GBR', 'FRA']
     countries_by_box: dict[str, list[str]] = {}
-    for box_id, box_countries in gpd.sjoin(countries, grid).groupby('box_id'):
+    for box_id, box_countries in geopandas.sjoin(countries, grid).groupby('box_id'):
         countries_by_box[box_id] = list(box_countries.code)
 
     # post-processing to match Max's previous output
@@ -71,45 +67,19 @@ if __name__ == "__main__":
     # 2) sort the elements by their box index
     countries_by_box = dict(sorted(countries_by_box.items(), key=lambda item: int(item[0].split("_")[-1])))
 
-    print("writing metadata...")
     with open(global_metadata_path, "w") as filejson:
         lon_min, lat_min, lon_max, lat_max = grid.bounds.values[0]
         info = {
-            "boxlen": boxlen,
+            "boxlen": box_width_height,
             "lon_min": lon_min,
             "lat_min": lat_min,
             "lon_max": lon_max,
             "lat_max": lat_max,
-            "num_cols": len(lon_centroids),
-            "num_rows": len(lat_centroids),
-            "tot_boxes": int(len(lon_centroids) * len(lat_centroids)),
+            "num_cols": ncols,
+            "num_rows": nrows,
+            "tot_boxes": int(ncols * nrows),
             "box_country_dict": countries_by_box,
         }
         json.dump(info, filejson, indent=2, sort_keys=True)
 
-    print("creating box folders")
-    for box_id in grid["box_id"]:
-        all_boxes_path = os.path.join(
-            output_dir, "power_processed", "all_boxes", f"{box_id}"
-        )
-        if not os.path.exists(all_boxes_path):
-            os.makedirs(all_boxes_path)
-
-    # for 5 degree boxes, this means writing ~2600 geopackage files
-    # TODO: investigate if we really need to write these like this
-    for box_id, box in tqdm(
-        grid.groupby("box_id"), desc="saving each box", total=len(grid)
-    ):  # separately so that world_boxes.gpkg can be opened on QGIS without having to rerun snakemake
-        box.to_file(
-            os.path.join(
-                output_dir,
-                "power_processed",
-                "all_boxes",
-                box_id,
-                f"geom_{box_id}.gpkg",
-            ),
-            driver="GPKG",
-        )
-
-    print("writing full to gpkg")
     grid.to_file(global_boxes_path, driver="GPKG")

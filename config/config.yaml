@@ -96,11 +96,11 @@ box_width_height: 5
 # List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957].
 # Note that this must be known for the box_width_height value entered above.
 # use an empty list to evaluate globally
-
+specific_boxes: []
 # this contains Puerto Rico (direct hit for Hurricane Maria of 2017)
-specific_boxes: [1030]
+# specific_boxes: [1030]
 # box IDs for the Caribbean on a 5 degree grid, east to west, south to north
-specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
+# specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
 
 # STORM BASINS #
 # Tropical cyclone basins to analyse. List of strings.

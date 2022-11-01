@@ -9,7 +9,8 @@ import geopandas as gpd
 
 
 GPKG_EXT = ".gpkg"
-PARQUET_EXT = ".geoparquet"
+PARQUET_EXT = ".parquet"
+GEOPARQUET_EXT = ".geoparquet"
 
 
 def geoparquet_to_geopackage(parquet_path) -> str:
@@ -31,7 +32,10 @@ if __name__ == "__main__":
     parquet_files: list = sys.argv[1:]
 
     for infile in parquet_files:
-        if not infile.lower().endswith(PARQUET_EXT):
+        if not (
+            infile.lower().endswith(PARQUET_EXT)
+            or infile.lower().endswith(GEOPARQUET_EXT)
+        ):
             raise ValueError("{infile=} does not appear to be geoparquet")
         gpkg_path = geoparquet_to_geopackage(infile)
         logging.info(f"{infile} -> {gpkg_path}")

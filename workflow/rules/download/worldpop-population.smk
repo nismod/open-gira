@@ -6,7 +6,7 @@ Reference
 https://www.worldpop.org/geodata/listing?id=79
 """
 
-rule download_population:
+rule download_worldpop:
     conda: "../../../environment.yml"
     params:
         output_dir=config["output_dir"],
@@ -22,7 +22,7 @@ rule download_population:
         "../../scripts/download/scrape_url.py"
 
 
-rule download_population_all:
+rule download_worldpop_all:
     input:
         population_raster_by_country = expand(
             os.path.join(
