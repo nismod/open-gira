@@ -1,6 +1,7 @@
 ## open-gira
 
 open-gira is designed to combine infrastructure information with hazard information to
-produce an estimate of the threat those hazards represent to that infrastructure.
-In this user guide we will be using a map of roads in Tanzania, and exploring their
-vulnerability to flooding (from both coasts and rivers). 
+produce an estimate of the risk those hazards pose to that infrastructure.
+
+For example, we can use open-gira to analyse open data on roads, railways, and river flooding,
+or electricity transmission lines and tropical cyclones.
