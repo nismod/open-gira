@@ -21,6 +21,8 @@ def get_target_areas(targets_file, box_geom):
 
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
     with rasterio.open(targets_file) as dataset:
+        crs = dataset.crs.data
+
         # Read the dataset's valid data mask as a ndarray.
         try:
             box_dataset, box_transform = rasterio.mask.mask(dataset, [box_geom], crop=True)
@@ -37,15 +39,20 @@ def get_target_areas(targets_file, box_geom):
             logging.info("Box may not overlap targets", ex)
             pass
 
-    return geopandas.GeoDataFrame({
-        "area_km2": areas_km2,
-        "geometry": geoms
-    })
+    return geopandas.GeoDataFrame(
+        data={
+            "area_km2": areas_km2,
+            "geometry": geoms
+        },
+        crs=crs
+    )
 
 
 def get_population(targets, population_file):
+    with rasterio.open(population_file) as dataset:
+        crs = dataset.crs.data
     stats = gen_zonal_stats(
-        targets.set_crs("epsg:4326").to_crs("esri:54009").geometry,  # reprojected for raster
+        targets.to_crs(crs).geometry,  # reprojected for raster
         population_file,
         stats=[],
         add_stats={"nansum": np.nansum},  # count NaN as zero for summation
