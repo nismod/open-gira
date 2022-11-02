@@ -80,6 +80,7 @@ if __name__ == "__main__":
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
 
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     # When getting the input files from snakemake, there is no
@@ -95,11 +96,12 @@ if __name__ == "__main__":
         else:
             raise error
 
-    base = append_data(base, slice_files)
-    base = base.reset_index(drop=True)
+    joined = append_data(base, slice_files).reset_index(drop=True)
 
     folder_path = os.path.dirname(os.path.abspath(output_file))
     if not os.path.exists(folder_path):
         os.path.makedirs(folder_path)
 
-    base.to_parquet(output_file)
+    logging.info(f"Writing {joined.shape=} to {output_file}")
+
+    joined.to_parquet(output_file)

@@ -34,18 +34,18 @@ rule join_direct_damages:
                 "direct_damages",
                 "{DATASET}_{FILTER_SLUG}",
                 "{HAZARD_SLUG}",
-                "{FRACTION_OR_COST_OR_ANNUAL}",
+                "{DIRECT_DAMAGE_TYPES}",
                 "slice-{i}.geoparquet",
             ),
             **wildcards,
             i=range(config["slice_count"])
         ),
     output:
-        joined = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_{FRACTION_OR_COST_OR_ANNUAL}.geoparquet",
+        joined = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_{DIRECT_DAMAGE_TYPES}.geoparquet",
     script:
         "../../scripts/join_data.py"
 
 """
 Test with:
-snakemake --cores all results/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction.geoparquet
+snakemake --cores all results/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction_per_RP.geoparquet
 """

@@ -255,12 +255,15 @@ if __name__ == "__main__":
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
         expected_annual_damages_path: str = snakemake.output["expected_annual_damages"]
+        return_period_and_ead_path: str = snakemake.output["return_period_and_ead"]
         damage_curves_dir: str = snakemake.config["direct_damages"]["curves_dir"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
         asset_types: set[str] = set(snakemake.config["direct_damages"]["asset_types"])
     except NameError:
         raise ValueError("Must be run via snakemake.")
+
+    OUTPUT_FILE_PATHS: tuple[str] = (damage_fraction_path, damage_cost_path, expected_annual_damages_path, return_period_and_ead_path)
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
@@ -281,7 +284,7 @@ if __name__ == "__main__":
         logging.info("No data in geometry column, writing empty files.")
 
         # snakemake requires that output files exist, even if empty
-        for path in (damage_fraction_path, damage_cost_path, expected_annual_damages_path):
+        for path in OUTPUT_FILE_PATHS:
             utils.write_empty_frames(path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
@@ -330,9 +333,6 @@ if __name__ == "__main__":
 
     # concatenate damage fractions for different asset types into single dataframe
     damage_fraction: gpd.GeoDataFrame = gpd.GeoDataFrame(pd.concat(damage_fraction_by_asset_type))
-    # write to disk
-    logging.info(f"Writing {damage_fraction.shape=} to disk")
-    damage_fraction.to_parquet(damage_fraction_path)
 
     # multiply the damage fraction estimates by a cost to rebuild the asset
     # units are: 1 * USD/km * km = USD
@@ -369,9 +369,10 @@ if __name__ == "__main__":
     logging.info(f"Integrating {len(rp_map_families)} damage-probability curves")
     for family_name, rp_maps in rp_map_families.items():
 
+        # sort by least to most probable
         sorted_rp_maps: list[ReturnPeriodMap] = sorted(rp_maps)
 
-        # [0, 1] valued decimal probabilities (least to most probable now we've sorted)
+        # [0, 1] valued decimal probabilities
         probabilities: list[float] = [rp_map.annual_probability for rp_map in sorted_rp_maps]
         # family subset of grouped_direct_damages
         family_column_names: list[str] = [f"{HAZARD_PREFIX}{rp_map.name}" for rp_map in sorted_rp_maps]
@@ -386,20 +387,44 @@ if __name__ == "__main__":
     unsplit_subset = unsplit[non_hazard_output_columns].set_index("edge_id", drop=False)
 
     # rejoin direct damage cost estimates with geometry and metadata columns and write to disk
-    direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one")
+    # join on 'right' / grouped_direct_damages index to only keep rows we have damages for
+    direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one", how="right")
     direct_damages["edge_id"] = direct_damages.index
     # we may not have calculated damages for every possible asset_type
     assert len(direct_damages) <= len(unsplit_subset)
     assert "edge_id" in direct_damages.columns
-    logging.info(f"Writing out {direct_damages.shape=} per return period map")
-    direct_damages.to_parquet(damage_cost_path)
 
+    expected_annual_damages_only = pd.DataFrame(data=expected_annual_damages, index=grouped_direct_damages.index)
     # rejoin expected annual damage cost estimates with geometry and metadata columns and write to disk
-    expected_annual_damages = pd.DataFrame(data=expected_annual_damages, index=grouped_direct_damages.index)
-    expected_annual_damages = gpd.GeoDataFrame(expected_annual_damages.join(unsplit_subset, validate="one_to_one"))
+    # join on 'right' / expected_annual_damages index to only keep rows we have damages for
+    expected_annual_damages = gpd.GeoDataFrame(unsplit_subset.join(expected_annual_damages_only, validate="one_to_one", how="right"))
     assert len(expected_annual_damages) <= len(unsplit_subset)
     assert "edge_id" in expected_annual_damages.columns
-    logging.info(f"Writing out {expected_annual_damages.shape=} (integrated damage-probability curves)")
+
+    # combined the per return period and the integrated outputs into a single dataframe
+    return_period_and_ead_damages = direct_damages.join(expected_annual_damages_only, validate="one_to_one")
+    assert len(return_period_and_ead_damages) == len(direct_damages) == len(expected_annual_damages_only)
+
+    # damage_fraction is on the split geometries, will have more rows
+    assert len(damage_fraction) >= len(direct_damages)
+    assert len(damage_fraction) >= len(expected_annual_damages)
+
+    # direct_damages and expected_annual_damages should have the same feature count
+    assert len(direct_damages) == len(expected_annual_damages)
+
+    for dataframe in (damage_fraction, direct_damages, expected_annual_damages, return_period_and_ead_damages):
+        assert "edge_id" in dataframe
+
+    logging.info(f"Writing out {damage_fraction.shape=} (per split geometry, hazard RP map)")
+    damage_fraction.to_parquet(damage_fraction_path)
+
+    logging.info(f"Writing out {direct_damages.shape=} (per unified geometry, hazard RP map)")
+    direct_damages.to_parquet(damage_cost_path)
+
+    logging.info(f"Writing out {expected_annual_damages.shape=} (per unified geometry, hazard map (integrated RP))")
     expected_annual_damages.to_parquet(expected_annual_damages_path)
+
+    logging.info(f"Writing out {return_period_and_ead_damages.shape=} (per split geometry, hazard RP map and hazard map (integrated RP))")
+    return_period_and_ead_damages.to_parquet(return_period_and_ead_path)
 
     logging.info("Done")
