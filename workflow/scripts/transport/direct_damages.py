@@ -405,13 +405,14 @@ if __name__ == "__main__":
     for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=HAZARD_PREFIX):
         model_families[rp_map.without_model].add(rp_map)  # only differ by climate model / subsidence
 
-    logging.info("Min/max aggregating input raster models")
+    aggregations = ("min", "mean", "max")
+    logging.info(f"Applying {aggregations=} to input raster models")
     for family_name, family_rp_maps in model_families.items():
-        for agg_str in ("min", "max"):
+        for agg_str in aggregations:
             sample_map, *_ = family_rp_maps
             family_aggregation_name = sample_map.name.replace(sample_map.model, agg_str.upper())
             family_column_names: list[str] = [f"{HAZARD_PREFIX}{rp_map.name}" for rp_map in family_rp_maps]
-            agg_func = getattr(grouped_direct_damages, agg_str)
+            agg_func = getattr(grouped_direct_damages[family_column_names], agg_str)
             grouped_direct_damages[f"{HAZARD_PREFIX}{family_aggregation_name}"] = agg_func(axis="columns")
         grouped_direct_damages = grouped_direct_damages.drop(columns=family_column_names)
 
@@ -435,7 +436,8 @@ if __name__ == "__main__":
 
         # integrate the damage as a function of probability curve using Simpson's rule
         # Simpson's rule as the function to be integrated is non-linear
-        expected_annual_damages[f"{HAZARD_PREFIX}{family_name}"] = simpson(family_direct_damages, x=probabilities, axis=1)
+        # add _EAD for easier downstream selection of these columns vs. RPs
+        expected_annual_damages[f"{HAZARD_PREFIX}{family_name}_EAD"] = simpson(family_direct_damages, x=probabilities, axis=1)
 
     #############################################
     ### JOINING, VALIDATION AND SERIALIZATION ###
