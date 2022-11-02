@@ -435,7 +435,7 @@ if __name__ == "__main__":
 
         # integrate the damage as a function of probability curve using Simpson's rule
         # Simpson's rule as the function to be integrated is non-linear
-        expected_annual_damages[family_name] = simpson(family_direct_damages, x=probabilities, axis=1)
+        expected_annual_damages[f"{HAZARD_PREFIX}{family_name}"] = simpson(family_direct_damages, x=probabilities, axis=1)
 
     #############################################
     ### JOINING, VALIDATION AND SERIALIZATION ###
