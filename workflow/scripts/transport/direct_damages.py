@@ -5,11 +5,13 @@ fraction for exposed assets.
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
-import logging
-import sys
-import warnings
 from glob import glob
+import logging
 from os.path import splitext, basename, join
+import re
+import sys
+from typing import Union
+import warnings
 
 import geopandas as gpd
 import pandas as pd
@@ -49,12 +51,21 @@ class ReturnPeriodMap(ABC):
 
     @property
     @abstractmethod
-    def family_name(self):
+    def without_RP(self):
         """
         A name identifying the kind of hazard, without any return period.
 
         N.B. For collapsing return periods into expected annual damages (EAD)
         it is useful to generate a name without return period information.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def without_model(self) -> str:
+        """
+        A name identifying the attributes of the hazard, without any model
+        information (climate model / subsidence).
         """
         raise NotImplementedError
 
@@ -123,7 +134,7 @@ class AqueductFlood(ReturnPeriodMap):
 
             self.riverine = True
             self.coastal = False
-            self.climate_model = climate_model
+            self.model = climate_model
 
         elif map_type == self.COASTAL:
 
@@ -155,6 +166,7 @@ class AqueductFlood(ReturnPeriodMap):
             self.riverine = False
             self.coastal = True
             self.subsidence = subsidence
+            self.model = sub_str
             self.slr_percentile = slr_percentile
 
         else:
@@ -171,7 +183,17 @@ class AqueductFlood(ReturnPeriodMap):
         return
 
     @property
-    def family_name(self) -> str:
+    def without_model(self) -> str:
+        """
+        A name identifying the attributes of the hazard, without any model
+        information (climate model / subsidence).
+        """
+        split_name = self.name.split("_")
+        split_name.pop(2)  # index of climate model / subsidence component
+        return "_".join(split_name)
+
+    @property
+    def without_RP(self) -> str:
         """
         A name identifying the attributes of the hazard, without any return
         period.
@@ -183,6 +205,16 @@ class AqueductFlood(ReturnPeriodMap):
         split_name = self.name.split("_")
         split_name.pop(4)  # index of return period element for river and coastal map names
         return "_".join(split_name)
+
+
+def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:
+    """
+    Given a list of strings, generate some ReturnPeriodMap objects. Optionally
+    remove a prefix string from the input.
+    """
+    if prefix is not None:
+        names = [re.sub(f"^{prefix}", "", name) for name in names]
+    return [get_rp_map(name) for name in natural_sort(names)]
 
 
 def get_rp_map(name: str) -> ReturnPeriodMap:
@@ -292,6 +324,10 @@ if __name__ == "__main__":
     hazard_columns = [col for col in exposure.columns if col.startswith(HAZARD_PREFIX)]
     non_hazard_columns = list(set(exposure.columns) - set(hazard_columns))
 
+    ##############################################################
+    ### DAMAGE FRACTIONS (per split geometry, for all rasters) ###
+    ##############################################################
+
     # calculate damages for assets we have damage curves for
     damage_fraction_by_asset_type = []
     logging.info(f"Exposed assets {set(exposure.asset_type)}")
@@ -334,6 +370,10 @@ if __name__ == "__main__":
     # concatenate damage fractions for different asset types into single dataframe
     damage_fraction: gpd.GeoDataFrame = gpd.GeoDataFrame(pd.concat(damage_fraction_by_asset_type))
 
+    #######################################################################
+    ### DAMAGE COST (for split, then grouped geometry, for all rasters) ###
+    #######################################################################
+
     # multiply the damage fraction estimates by a cost to rebuild the asset
     # units are: 1 * USD/km * km = USD
     logging.info("Calculating direct damage costs")
@@ -355,22 +395,37 @@ if __name__ == "__main__":
     ).set_index("edge_id")
     grouped_direct_damages = direct_damages.groupby(direct_damages.index).sum()
 
-    # integrate over return periods for expected annual damages
-    # remove the prefix we added earlier in the pipeline to mark these columns as hazard estimates
-    hazard_name_no_prefix: list[str] = [(col.replace(HAZARD_PREFIX, "")) for col in natural_sort(hazard_columns)]
-    rp_maps: list[ReturnPeriodMap] = [get_rp_map(name) for name in hazard_name_no_prefix]
+    ###################################################################################
+    ### EXPECTED ANNUAL DAMAGE COST (for grouped geometry, aggregations of rasters) ###
+    ###################################################################################
 
-    # generate a mapping from a 'family' of hazards to their set of return period maps
+    # reduce climate model / subsidence to simple MIN/MAX
+    # generate a mapping from a 'family' of hazards to their set of related return period maps
+    model_families: dict[str, set[ReturnPeriodMap]] = defaultdict(set)
+    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=HAZARD_PREFIX):
+        model_families[rp_map.without_model].add(rp_map)  # only differ by climate model / subsidence
+
+    logging.info("Min/max aggregating input raster models")
+    for family_name, family_rp_maps in model_families.items():
+        for agg_str in ("min", "max"):
+            sample_map, *_ = family_rp_maps
+            family_aggregation_name = sample_map.name.replace(sample_map.model, agg_str.upper())
+            family_column_names: list[str] = [f"{HAZARD_PREFIX}{rp_map.name}" for rp_map in family_rp_maps]
+            agg_func = getattr(grouped_direct_damages, agg_str)
+            grouped_direct_damages[f"{HAZARD_PREFIX}{family_aggregation_name}"] = agg_func(axis="columns")
+        grouped_direct_damages = grouped_direct_damages.drop(columns=family_column_names)
+
+    # integrate over return periods for expected annual damages
     rp_map_families: dict[str, set[ReturnPeriodMap]] = defaultdict(set)
-    for rp_map in rp_maps:
-        rp_map_families[rp_map.family_name].add(rp_map)
+    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=HAZARD_PREFIX):
+        rp_map_families[rp_map.without_RP].add(rp_map)  # only differ by return period
 
     expected_annual_damages = {}
     logging.info(f"Integrating {len(rp_map_families)} damage-probability curves")
-    for family_name, rp_maps in rp_map_families.items():
+    for family_name, family_rp_maps in rp_map_families.items():
 
         # sort by least to most probable
-        sorted_rp_maps: list[ReturnPeriodMap] = sorted(rp_maps)
+        sorted_rp_maps: list[ReturnPeriodMap] = sorted(family_rp_maps)
 
         # [0, 1] valued decimal probabilities
         probabilities: list[float] = [rp_map.annual_probability for rp_map in sorted_rp_maps]
@@ -381,6 +436,10 @@ if __name__ == "__main__":
         # integrate the damage as a function of probability curve using Simpson's rule
         # Simpson's rule as the function to be integrated is non-linear
         expected_annual_damages[family_name] = simpson(family_direct_damages, x=probabilities, axis=1)
+
+    #############################################
+    ### JOINING, VALIDATION AND SERIALIZATION ###
+    #############################################
 
     # lose columns like "cell_indicies" or rastered length measures that are specific to _rastered_ edges
     non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
@@ -427,4 +486,4 @@ if __name__ == "__main__":
     logging.info(f"Writing out {return_period_and_ead_damages.shape=} (per split geometry, hazard RP map and hazard map (integrated RP))")
     return_period_and_ead_damages.to_parquet(return_period_and_ead_path)
 
-    logging.info("Done")
+    logging.info("Done calculating direct damages")
