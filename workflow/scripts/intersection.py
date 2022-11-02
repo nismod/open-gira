@@ -4,7 +4,6 @@
 Split network edges along grid cells, join hazard values.
 """
 
-import glob
 import logging
 import os
 import re
@@ -114,10 +113,22 @@ def main(network_edges_path, hazard_tifs, output_path):
     )
 
     logging.info("Add hazard values")
-    for i in tqdm(range(len(hazard_tifs))):
-        associate_raster(core_splits, hazard_tifs_basenames[i], hazard_tifs[i])
 
-    logging.info("Write data")
+    # N.B. this loop is the heavy lifting of this script
+    # it reads hazard intensity values len(hazard_tifs) * len(core_splits) times
+
+    # to prevent a fragmented dataframe (and a memory explosion), add series to a dict
+    # and then concat afterwards -- do not append to an existing dataframe
+    hazard_intensity_data: dict[str, pandas.Series] = {}
+
+    for i in tqdm(range(len(hazard_tifs))):
+        hazard_intensity_data[f"hazard-{hazard_tifs_basenames[i]}"] = associate_raster(core_splits, hazard_tifs[i])
+
+    hazard_intensity_data = pandas.DataFrame(hazard_intensity_data)
+    core_splits = pandas.concat([core_splits, hazard_intensity_data], axis="columns")
+    assert len(hazard_intensity_data) == len(core_splits)
+
+    logging.info(f"Write data {core_splits.shape=}")
     core_splits.to_parquet(output_path)
 
     logging.info("Write data without geometry")
@@ -128,10 +139,10 @@ def main(network_edges_path, hazard_tifs, output_path):
     logging.info("Done.")
 
 
-def associate_raster(df, key, fname, band_number=1):
+def associate_raster(df, fname, band_number=1):
     with rasterio.open(fname) as dataset:
         band_data = dataset.read(band_number)
-        df[f"hazard-{key}"] = df.cell_index.apply(lambda i: band_data[i[1], i[0]])
+        return df.cell_index.apply(lambda i: band_data[i[1], i[0]])
 
 
 def write_empty_files(columns, outputs_path):
@@ -162,7 +173,7 @@ if __name__ == "__main__":
         sys.exit("Please run from snakemake")
 
     if len(hazard_tifs) == 0:
-        raise ValueError(f"The list of hazard .tif files is empty, quitting.")
+        raise ValueError("The list of hazard .tif files is empty, quitting.")
 
     main(
         network_edges_path=network_edges_path,
