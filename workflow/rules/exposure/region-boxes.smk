@@ -1,6 +1,7 @@
 rule intersect_region_with_boxes:
     """
     Determine the boxes within a given region
+    # TODO decide if we can skip this and just run with splits, potentially empty boxes
     """
     conda: "../../../environment.yml"
     input:

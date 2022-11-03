@@ -77,18 +77,11 @@ exposure_tifs:
       # Colour mapping to use for raster data
       cmap: 'Reds'
 
-## STORM Power Network Analysis ##
-# Storm model type. Options: constant (no climate effects), CMCC-CM2-VHR4, CNRM-CM6-1-HR, EC-Earth3P-HR, HadGEM3-GC31-HM.
-storm_model_type: 'constant'
+## STORM Power Network Analysis
 
-# Failure threshold central value m/s. This value is the threshold at which the network assets are expected to fail based on available literature. The recommended setting is 40 m/s
-central_threshold: 35
-
-# Minimum failure threshold value m/s. This is the lowest expected value for failure to account for uncertainty in central_threshold
-minimum_threshold: 20
-
-# Maxmimum failure threshold value m/s. This is the highest expected value for failure to account for uncertainty in central_threshold
-maximum_threshold: 50
+# Failure thresholds m/s. These values are the thresholds at which the network assets
+# are expected to fail based on available literature. A central setting is 40 m/s
+transmission_windspeed_failure: [20, 35, 50]
 
 # Width and height of dataset-splitting box (must be factor of 180)
 box_width_height: 5

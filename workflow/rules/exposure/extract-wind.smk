@@ -1,5 +1,5 @@
 """
-Extracts winds data for specified region sample and year.
+Estimate max wind speed at infrastructure asset locations per event
 """
 
 checkpoint intersect_winds_indiv:
@@ -9,25 +9,16 @@ checkpoint intersect_winds_indiv:
     conda: "../../../environment.yml"
     input:
         metadata = rules.world_splitter.output.global_metadata,
-        unit_grid = "{OUTPUT_DIR}/power_intersection/regions/{STORM_BASIN}_unit.gpkg",
-        return_period_map = "{OUTPUT_DIR}/input/storm-ibtracs/fixed/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}.nc",
-        storm_files = STORM_EVENTS,
-    params:
-        region = lambda wildcards: wildcards.STORM_BASIN,
-        sample = lambda wildcards: wildcards.SAMPLE,
-        all_boxes_compute = ALL_BOXES,
-        memory_storm_split = STORM_BATCH_SIZE,
-        wind_rerun = WIND_RERUN_BOOL,
-        output_dir = lambda wildcards: wildcards.OUTPUT_DIR,
-        storm_file = get_storm_file,
-        # wind speed thresholds
-        central_threshold = config["central_threshold"],
-        minimum_threshold = config["minimum_threshold"],
-        maximum_threshold = config["maximum_threshold"],
+        edges_split = "{OUTPUT_DIR}/processed/power/{BOX}/edges_split_{BOX}.geoparquet",
+        storm_files = STORM_EVENTS,  # TODO limited to specific storms if any
+        # Do we want ws output files per group of storms? (basin/model/sample)
+        # TODO deal with inconsistency in present vs future filename patterns
+        # storm_file="{OUTPUT_DIR}/input/storm-ibtracs/events/{STORM_MODEL}/{STORM_BASIN}/STORM_DATA_{STORM_GCM_OR_IBTRACS}_{STORM_BASIN}_1000_YEARS_{SAMPLE_IBTRACSDELTA}.txt",
     output:
-        gridded_wind_speeds = directory("{OUTPUT_DIR}/power_intersection/storm_data/all_winds/{STORM_MODEL}/{STORM_BASIN}/{SAMPLE}"),
-        completion_flag = "{OUTPUT_DIR}/power_intersection/storm_data/all_winds/{STORM_MODEL}/{STORM_BASIN}/{SAMPLE}/completed.txt",
+        # TODO figure out if this should be per storm or per sample?
+        # TODO BASIN and BOX is redundant - can we skip BASIN? would do some lookup function thing
+        # STORM_SUBSET - key in config dict
+        wind_speeds = "{OUTPUT_DIR}/processed/power/exposure/{STORM_SUBSET}/{STORM_MODEL}/{BASIN}/ws_{BOX}_{SAMPLE}.parquet",
+        # TODO gather into "{OUTPUT_DIR}/processed/power/exposure/{STORM_SUBSET}.parquet",
     script:
-        os.path.join(
-            "..", "..", "scripts", "intersect", "intersect_3_wind_extracter.py"
-        )
+        "../../scripts/intersect/intersect_3_wind_extracter.py"

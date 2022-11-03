@@ -1,376 +1,213 @@
 """Process storm data and return the wind speed at each grid location.
 
-Adapted wind speed file from J Verschuur.
-
-TODO: Investigate speeding up this script. N.B. ~80% of execution time is file I/O.
+TODO: Investigate speeding up this script. N.B. ~80% of execution time was file I/O.
 
 """
 import os
-import time
-
-import geopandas as gpd
-import numpy as np
-import pandas as pd
+import geopandas
+import numpy
+import pandas
+from pyproj import CRS
 from tqdm import tqdm
 
-try:
-    region = snakemake.params["region"]  # type: ignore
-    sample = snakemake.params["sample"]  # type: ignore
-    all_boxes = snakemake.params["all_boxes_compute"]  # type: ignore
-    nh_split = int(
-        snakemake.params["memory_storm_split"]  # type: ignore
-    )  # number of nh to run each iteration'
-    wind_rerun = snakemake.params["wind_rerun"]  # type: ignore
-    output_dir = snakemake.params["output_dir"]  # type: ignore
-    stormfile = snakemake.params["storm_file"]  # type: ignore
-    central_threshold = snakemake.params["central_threshold"]  # type: ignore
-    minimum_threshold = snakemake.params["minimum_threshold"]  # type: ignore
-    maximum_threshold = snakemake.params["maximum_threshold"]  # type: ignore
-except:
-    # raise RuntimeError("Snakemake parameters not found")
-    region = "NA"
-    sample = 0
-    all_boxes = [
-        f"box_{num}" for num in [884, 955, 956, 957, 1028, 1029, 1030, 1031, 1103, 1104]
-    ]
-    nh_split = 2500
-    wind_rerun = False
-    output_dir = "results"
-    stormfile = "results/input/storm-ibtracs/events/constant/NA/STORM_DATA_CMCC-CM2-VHR4_NA_1000_YEARS_0_IBTRACSDELTA.txt"
-    central_threshold = 43
-    minimum_threshold = 39
-    maximum_threshold = 47
 
-min_windlocmax = (
-    float(minimum_threshold)
-    - 10  # minimum wind speed value (at unit) to consider significant to further save
-)
-min_windmax = (
-    float(minimum_threshold) - 8
-)  # minimum wind speed value (over entire storm at cyclone centre) to consider significant to further save
-hurr_buffer_dist = 1300  # maximum distance to consider to storm centre
+def main():
+    edges_split_path = snakemake.input.edges_split  # type: ignore
+    # TODO filter for relevance or replace with single file for (basin/model/sample)
+    storm_files = snakemake.input.storm_files  # type: ignore
+    output_path = snakemake.output.wind_speeds  # type: ignore
 
+    # TODO look this up per box and/or skip basins that don't intersect
+    basin = snakemake.wildcards.STORM_BASIN  # type: ignore
 
-def t(num, t):
-    print(str(num), time.time() - t)
+    # TODO check config to restrict analysis
+    # snakemake.config.storm_files_sample_set
+    # snakemake.config.specific_storm_analysis
 
+    network = geopandas.read_parquet(edges_split_path)
 
-def haversine(lon1, lat1, lon2_lst, lat2_lst):
-    lon2_arr = np.array(lon2_lst)
-    lat2_arr = np.array(lat2_lst)
+    # Environmental pressure values (standard estimate of background pressure away from the
+    # cyclone) are taken from the AIR hurricane model, table 3 in Butke (2012).
+    # Available at:
+    # https://www.air-worldwide.com/publications/air-currents/2012/the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
+    environmental_pressure = {
+        "NI": 1006.5,
+        "SA": 1014.1,
+        "NA": 1014.1,
+        "EP": 1008.8,
+        "SI": 1010.6,
+        "SP": 1008.1,
+        "WP": 1008.3,
+    }
 
-    # convert degrees to radians
-    lon1 = np.deg2rad(lon1)
-    lat1 = np.deg2rad(lat1)
-    lon2_arr = np.deg2rad(lon2_arr)
-    lat2_arr = np.deg2rad(lat2_arr)
+    basin_environmental_pressure = environmental_pressure[basin]
 
-    # formula
-    dlon = lon2_arr - lon1
-    dlat = lat2_arr - lat1
-    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2_arr) * np.sin(dlon / 2) ** 2
-    c = 2 * np.arcsin(np.sqrt(a))
-    r_e = 6371
-    return c * r_e
+    # TODO generate unique grid points from network cell indices
+    points = None  # network
+
+    # TODO check track_id in subset or do some subset read of storm files
+    for storm_file in storm_files:
+        storms = read_storms(storm_file)
+        for track_id, track in tqdm(storms):
+            print(track_id)
+            track = interpolate_track(track)  # interpolate extra track points
+            storm_max_ws = evaluate_speeds(track, points, basin_environmental_pressure)
+            points[track_id] = storm_max_ws
+
+    # TODO consider output - network joined with max speeds for all storms? could be large
+    network_with_speeds = None
+    network_with_speeds.to_parquet(output_path)
 
 
-def holland_wind_field(r, wind, pressure, pressure_env, distance, lat):
-    lat = lat * np.pi / 180
-    distance = distance * 1000
-    r = r * 1000
-    rho = 1.10
-    f = np.abs(1.45842300 * 10**-4 * np.sin(lat))
-    e = 2.71828182846
-    # p_drop = 2*wind**2
-    p_drop = (pressure_env - pressure) * 100
-    B = rho * e * wind**2 / p_drop
-    Vg = (
-        np.sqrt(
-            ((r / distance) ** B) * (wind**2) * np.exp(1 - (r / distance) ** B)
-            + (r**2) * (f**2) / 4
-        )
-        - (r * f) / 2
+
+def read_storms(stormfile):
+    # load in cyclone tracks for region
+    tracks = pd.read_csv(
+        stormfile,
+        names=(
+            "year",
+            "month",
+            "tc_number",
+            "timestep",
+            "basin_id",
+            "lat",
+            "lon",
+            "min_pressure_hpa",
+            "max_wind_speed_ms",
+            "radius_to_max_winds_km",
+            "category",
+            "landfall",
+            "distance_to_land_km",
+        ),
     )
-    return Vg
+
+    # add unique number to cyclone data
+    sample = os.path.basename(stormfile).replace(".txt", "")
+    tracks["track_id"] = (
+        sample
+        + "_"
+        + tracks["year"].astype(int).astype(str)
+        + "_"
+        + tracks["tc_number"].astype(int).astype(str)
+    )
+
+    tracks["sample"] = sample
+
+    # change geometry from 0-360 to -180-180
+    tracks.lon = numpy.where(tracks.lon > 180, tracks.lon - 360, tracks.lon)
+    tracks["geometry"] = geopandas.points_from_xy(
+        tracks.lon, tracks.lat, crs="EPSG:4326"
+    )
+    tracks = geopandas.GeoDataFrame(tracks.drop(columns=["lat", "lon"]))
+    return tracks.groupby("track_id")
 
 
-start = time.time()
+def interpolate_track(track, substeps=5):
+    track = track.drop(columns="geometry").copy()
+    track["x"] = track.geometry.x
+    track["y"] = track.geometry.y
 
-all_winds_path = os.path.join(
-    output_dir, "power_intersection", "storm_data", "all_winds", region, sample
-)
-grid_box = gpd.read_file(
-    os.path.join(output_dir, "power_intersection", "regions", f"{region}_unit.gpkg")
-)
+    dfs = [track]
+    columns_to_interpolate = [
+        "min_pressure_hpa",
+        "max_wind_speed_ms",
+        "radius_to_max_winds_km",
+        "category",
+        "landfall",
+        "distance_to_land_km",
+        "track_id",  # do we want to interpolate this??
+        "x",
+        "y",
+    ]
+    for increment in range(1, substeps):
+        substep = increment / substeps
+        tmp = track.copy()
+        tmp[columns_to_interpolate] = numpy.nan
+        tmp.timestep = tmp.timestep + substep
+        dfs.append(tmp)
 
-if len(all_boxes) != 0:
-    grid_box = grid_box[
-        grid_box["box_id"].isin(all_boxes)
-    ]  # filter for boxes that are to be examined only!
-
-totpoints = [len(grid_box)] * len(grid_box)  # for console progress purposes
-idx_pts = list(range(len(totpoints)))
-
-sample_num = [sample] * len(grid_box)
-
-print("running wind analysis...")
-
-list_regions = ["NI", "SA", "NA", "EP", "SI", "SP", "WP"]
-environmental_pressure = [1006.5, 1014.1, 1014.1, 1008.8, 1010.6, 1008.1, 1008.3]
-environ_dict = dict(zip(list_regions, environmental_pressure))
-
-#### load in cyclone tracks for region
-TC = pd.read_csv(stormfile, header=None)
-TC.columns = [
-    "year",
-    "month",
-    "number",
-    "step",
-    "basin",
-    "lat",
-    "lon",
-    "pressure",
-    "wind",
-    "radius",
-    "cat",
-    "landfall",
-    "dis_land",
-]  # https://www.nature.com/articles/s41597-020-0381-2.pdf
-
-### add unique number to cyclone data
-TC["number_hur"] = (
-    sample
-    + "_"
-    + TC["year"].astype(int).astype(str)
-    + "_"
-    + TC["number"].astype(int).astype(str)
-)
-
-unique_nh = TC["number_hur"].unique()
-TC["sample"] = str(sample)
-
-# TC = TC[TC["number_hur"].isin(nh_func)]  # filter for nhs only
-
-##### change geometry from 0-360 to -180-180
-TC["lon"] = TC["lon"].apply(lambda x: x if x <= 180 else x - 360)
-
-hurr_buffer_dist = 1300
-
-distance_arr = np.array([])
-unit_path = os.path.join(
-    output_dir, "power_intersection", "storm_data", "unit_data", region, sample
-)
-
-if not os.path.exists(unit_path):
-    os.makedirs(unit_path)
+    interpolated_track = (
+        pandas.concat(dfs)
+        .sort_values("timestep")
+        .set_index("timestep")
+        .interpolate("linear")
+        .fillna(0)
+    )
+    interpolated_track["geometry"] = geopandas.points_from_xy(
+        interpolated_track.x, interpolated_track.y, crs="EPSG:4326"
+    )
+    return geopandas.GeoDataFrame(interpolated_track)
 
 
-unit_paths_all = (
-    dict()
-)  # {unit_path: [list of nh in that unit], ... }  Note that this can speed up the loading time for the for loop after next.
-
-for unit in tqdm(grid_box.itertuples(), desc="distances", total=len(grid_box)):
-
-    unique_num = (
-        str(unit.longitude)[:7].replace(".", "d").replace("-", "m")
-        + "x"
-        + str(unit.latitude)[:7].replace(".", "d").replace("-", "m")
-        + f"-l{minimum_threshold}c{central_threshold}u{maximum_threshold}"
-    )  # implemented such that different units with same ID name (can happen if on second run, there are a different set of all_boxes)
-    unit_path_indiv = os.path.join(unit_path, unique_num + ".parquet")
-    if not os.path.isfile(unit_path_indiv):
-        distance_arr = haversine(unit.longitude, unit.latitude, TC["lon"], TC["lat"])
-        TC_sample = TC.copy()
-        TC_sample["distance"] = distance_arr
-        TC_sample["box_id"] = unit.box_id
-        TC_sample["ID_point"] = unit.ID_point
-        TC_sample = TC_sample[TC_sample["distance"] <= hurr_buffer_dist]
-
-        nh_sample_unique = list(TC_sample["number_hur"].unique())
-
-        TC_sample.to_parquet(unit_path_indiv, compression="snappy", index=False)
-
-    else:
-        print(f"{unit_path_indiv} exists already")
-
-        if nh_split < 25:
-            # Option 1: time consuming (in this for loop) but useful if storm_batches is small (will rule out many nh options)
-            TC_sample = pd.read_parquet(unit_path_indiv)
-            nh_sample_unique = list(TC_sample["number_hur"].unique())
-
-        else:
-            # Option 2: quicker (in this for loop) and useful if storm_batches is high (most likely an overlap so less to rule out)
-            nh_sample_unique = None
-
-    unit_paths_all.update({unit_path_indiv: nh_sample_unique})
-
-
-unique_nh_splitlst = [
-    unique_nh[i * nh_split : (i + 1) * nh_split]
-    for i in range(0, int(len(unique_nh) / nh_split) + 1)
-]  # split into lists of length (max) nh_split (is list of lists)
-if (
-    len(unique_nh_splitlst[-1]) == 0
-):  # last one can be [] is nh_split == len(unique_nh_splitlst)
-    unique_nh_splitlst = unique_nh_splitlst[:-1]  # remove []
-
-
-for nh_lst in tqdm(
-    unique_nh_splitlst, desc="Storm Damages", total=len(unique_nh_splitlst)
+def holland_wind_field(
+    radius_to_max_winds_km,
+    wind_speed_ms,
+    pressure_hpa,
+    pressure_env_hpa,
+    distance_m,
+    lat_degrees,
 ):
+    """Calculate wind speed at a point some distance from a cyclone track point.
 
-    if wind_rerun == False:
-        if False in [
-            os.path.isfile(
-                os.path.join(
-                    output_dir,
-                    "power_intersection",
-                    "storm_data",
-                    "all_winds",
-                    region,
-                    sample,
-                    f"TC_r{region}_s{sample}_n{nh}.csv",
-                )
+    See in particular Section 3.2 in Lin and Chavas (2012).
+
+    References
+    ----------
+    - Lin and Chavas (2012)
+      https://www.sbafla.com/method/portals/methodology/FloodJournalArticles/Lin_Chavas_JGR12_ParametricWind.pdf
+    - Holland (1980)
+      https://doi.org/10.1175/1520-0493(1980)108%3C1212:AAMOTW%3E2.0.CO;2
+    """
+    radius_to_max_winds_m = radius_to_max_winds_km * 1000
+    rho = 1.10
+    f = numpy.abs(1.45842300e-4 * numpy.sin(numpy.radians(lat_degrees)))
+    e = 2.71828182846
+    delta_p = (pressure_env_hpa - pressure_hpa) * 100
+    # case where (pressure_env_hpa == pressure_hpa) so p_drop is zero will raise ZeroDivisionError
+    B = (
+        numpy.power(wind_speed_ms, 2) * e * rho
+        + f * wind_speed_ms * radius_to_max_winds_m * e * rho
+    ) / delta_p
+    Vg = (
+        numpy.sqrt(
+            # case where distance_m is zero will raise ZeroDivisionError
+            (
+                numpy.power(radius_to_max_winds_m / distance_m, B)
+                * B
+                * delta_p
+                * numpy.exp(0 - (radius_to_max_winds_m / distance_m) ** B)
             )
-            for nh in nh_lst
-        ]:
-            print("")
-        else:
-            print("skipping, saved all nh already")
-            continue  # skip, all in nh_lst saved already
-
-    TC_all_lst = []
-    ss = time.time()
-    # for unit_path_indiv in tqdm(unit_paths_all, desc=f'iterating through unit paths for {nh}',total=len(unit_paths_all)):
-    for unit_path_indiv, nh_unique in tqdm(
-        unit_paths_all.items(), total=len(unit_paths_all), desc="Loading units"
-    ):
-        if (
-            nh_unique != None
-        ):  # if it is None, continue because it is unknown which nh are in which units
-            if not any([x == y for x in nh_unique for y in nh_lst]):  # if no overlap
-                # print("skipping")
-                continue  # then dont continue because no point loading as will be empty
-
-        TC_add = pd.read_parquet(unit_path_indiv)
-        TC_add = TC_add[TC_add["number_hur"].isin(nh_lst)]
-        TC_all_lst.append(TC_add)
-    print(f"Time for grid loading: {round((time.time()-ss)/60,3)} mins")
-
-    print("concatenating")
-    if len(TC_all_lst) != 0:
-        TC_all = pd.concat(TC_all_lst, ignore_index=True)
-    else:
-        TC_all = []  # dummy
-
-    if len(TC_all) != 0:
-        s = time.time()
-
-        TC_all["environ_pressure"] = environ_dict[region]
-
-        print("max winds")
-        ### get the maximum wind and minimum distance per event
-        max_wind = (
-            TC_all.groupby(["number_hur"])["wind"]
-            .max()
-            .reset_index()
-            .rename(columns={"wind": "wind_max"})
+            + (numpy.power(radius_to_max_winds_m, 2) * numpy.power(f, 2) / 4)
         )
-        min_distance = (
-            TC_all.groupby(["number_hur"])["distance"]
-            .min()
-            .reset_index()
-            .rename(columns={"distance": "distance_min"})
+        - (f * radius_to_max_winds_m) / 2
+    )
+    return Vg  # , B, delta_p, f
+
+
+def evaluate_speeds(track, points, pressure_env_hpa):
+    """Evaluate maximum wind speeds at points given a track"""
+    # could calculate rolling max to keep memory down
+    speeds = numpy.zeros((len(track), len(points)))
+    geod_wgs84 = CRS("epsg:4326").get_geod()
+    for i, track_point in enumerate(track.itertuples()):
+        # distances from track to evaluation points
+        _, _, distance_m = geod_wgs84.inv(
+            numpy.full(len(points), track_point.geometry.x),
+            numpy.full(len(points), track_point.geometry.y),
+            points.geometry.x,
+            points.geometry.y,
         )
-        print("performing merges")
-        ### merge and remove based on lowest threshold for severity hurricane
-        TC_all = TC_all.merge(max_wind, on="number_hur")
-        TC_all = TC_all[
-            TC_all["wind_max"] > min_windmax
-        ]  ### only with a maximum wind of more than
-
-        ### merge and remove based on mimum distance set
-        TC_all = TC_all.merge(min_distance, on="number_hur")
-        # TC_all = TC_all[TC_all['distance_min']<max_distance]
-
-        print("Holland wind field")
-        TC_all["wind_location"] = holland_wind_field(
-            TC_all["radius"],
-            TC_all["wind"],
-            TC_all["pressure"],
-            TC_all["environ_pressure"],
-            TC_all["distance"],
-            TC_all["lat"],
+        wind_speeds = holland_wind_field(
+            track_point.radius_to_max_winds_km,
+            track_point.max_wind_speed_ms,
+            track_point.min_pressure_hpa,
+            pressure_env_hpa,
+            distance_m,
+            track_point.geometry.y,
         )
+        speeds[i] = wind_speeds
+    return speeds.max(axis=0)
 
-        max_wind_location = (
-            TC_all.groupby(["number_hur"])["wind_location"]
-            .max()
-            .reset_index()
-            .rename(columns={"wind_location": "wind_location_max"})
-        )
-        print("merging ")
-        ### merge and remove based on lowest threshold for severity hurricane at location
-        TC_all = TC_all.merge(max_wind_location, on="number_hur")
-        TC_all = TC_all[TC_all["wind_location_max"] > min_windlocmax]
 
-        above20ms = (
-            TC_all[TC_all["wind_location"] > 20][["wind_location", "number_hur"]]
-            .groupby(["number_hur"])["wind_location"]
-            .count()
-            .reset_index()
-            .rename(columns={"wind_location": "duration_20ms"})
-        )
-        above15ms = (
-            TC_all[TC_all["wind_location"] > 15][["wind_location", "number_hur"]]
-            .groupby(["number_hur"])["wind_location"]
-            .count()
-            .reset_index()
-            .rename(columns={"wind_location": "duration_15ms"})
-        )
-
-        ### extract the maximum wind speed at point only and associated parameters
-        # could add other stats here
-        TC_all = TC_all[
-            [
-                "number_hur",
-                "wind_location",
-                "month",
-                "year",
-                "sample",
-                "pressure",
-                "distance",
-                "wind",
-                "wind_max",
-                "ID_point",
-                "box_id",
-            ]
-        ]
-        print("finalising")
-        TC_all = TC_all.merge(above20ms, on="number_hur", how="outer").replace(
-            np.nan, 0
-        )
-        TC_all = TC_all.merge(above15ms, on="number_hur", how="outer").replace(
-            np.nan, 0
-        )
-        TC_all["basin"] = region
-
-        print(f"Time for grid processing: {round((time.time()-s)/60,3)} mins")
-
-        if not os.path.exists(all_winds_path):
-            os.makedirs(all_winds_path)
-
-        for nh, csv_nh in TC_all.groupby("number_hur"):  #
-            print(f"saving {nh}")
-            p = os.path.join(all_winds_path, f"TC_r{region}_s{sample}_n{nh}.csv")
-            csv_nh.to_csv(p, index=False)
-
-    else:
-        print(f"{nh_lst} do not have sufficient unit damage, skipping")
-
-# it is not known in advance how many files will be created by this script
-# so, to indicate to snakemake that execution has completed, create a flag file
-with open(os.path.join(all_winds_path, "completed.txt"), "w") as fp:
-    fp.writelines(f"Winds generated.")
-
-print(f"Total time {round((time.time()-start)/60,3)}")
+if __name__ == "__main__":
+    main()

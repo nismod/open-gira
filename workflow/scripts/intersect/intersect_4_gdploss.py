@@ -14,7 +14,6 @@ from geopy import distance
 from shapely.geometry import LineString, Point
 from tqdm import tqdm
 
-from damage_calculator import applythreshold
 
 try:
     region = snakemake.params["region"]  # type: ignore
@@ -37,6 +36,13 @@ assert reconstruction_cost_high >= 0
 reconstruction_cost_lowmedium = float(reconstruction_cost_lowmedium)
 assert reconstruction_cost_lowmedium >= 0
 threshold_list = [central_threshold, minimum_threshold, maximum_threshold]
+
+def applythreshold(winds_df, wind_threshold):
+    """Returns locations where wind is 'severe' enough to affect the power line based on some condition.
+    Current condition is >= {wind_threshold} m/s"""
+
+    winds_df = winds_df[winds_df["wind_location"] >= wind_threshold]
+    return winds_df
 
 
 def isNone(df):
@@ -406,7 +412,8 @@ def eval_coords(coords, type, wind, fragility_data):
 
 
 def direct_damage(linestring_df):
-    """For a dataframe where the geometry consists of linestrings, returns a list of direct damages (order of linestring_df) based on fragility curve"""
+    """For a dataframe where the geometry consists of linestrings, returns a list of direct
+     damages (order of linestring_df) based on fragility curve"""
 
     damage_lst = []
 

@@ -88,6 +88,7 @@ STORM_RPS = (
 )
 
 STORM_GCMS = ("CMCC-CM2-VHR4", "CNRM-CM6-1-HR", "EC-Earth3P-HR", "HadGEM3-GC31-HM")
+STORM_MODELS = STORM_GCMS + ("constant", )
 
 STORM_RETURN_PERIODS_CURRENT = expand(
     os.path.join(

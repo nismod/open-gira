@@ -1,5 +1,11 @@
-"""
-Finds the units that contain infrastructure
+"""Intersect power network with return period maps
+
+- split edges on global grid
+- assign edges and nodes to grid indices
+- join windspeed per return period map
+
+Next:
+- calculate winds per event, only needed for unique grid indices with infrastructure
 """
 
 import os
@@ -8,42 +14,9 @@ import os
 rule intersect_unit_generator:
     conda: "../../../environment.yml"
     input:
-        expand(
-            os.path.join(
-                config["output_dir"],
-                "power_processed",
-                "all_boxes",
-                "{box_id}",
-                "geom_{box_id}.gpkg",
-            ),
-            box_id=ALL_BOXES,
-        ),
-        os.path.join(
-            config["output_dir"],
-            "input",
-            "storm-ibtracs",
-            "fixed",
-            "STORM_FIXED_RETURN_PERIODS_{region}.nc",
-        ),
-        os.path.join(
-            config["output_dir"], "power_intersection", "regions", "{region}_boxes_with_assets.json"
-        ),
+        network="{OUTPUT_DIR}/processed/power/{BOX}/edges_{BOX}.parquet",
+        tifs="{OUTPUT_DIR}/input/storm-ibtracs/fixed/*"
     output:
-        os.path.join(
-            config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
-        ),
-    params:
-        region="{region}",
-        output_dir=config["output_dir"],
+        geoparquet="{OUTPUT_DIR}/processed/power/{BOX}/edges_split_{BOX}.geoparquet",
     script:
-        os.path.join("..", "..", "scripts", "intersect", "intersect_2_gridmaker.py")
-
-
-rule intersect_grid:
-    input:
-        expand(
-            os.path.join(
-                config["output_dir"], "power_intersection", "regions", "{region}_unit.gpkg"
-            ),
-            region=STORM_BASINS,
-        )
+        "../../scripts/intersection.py"

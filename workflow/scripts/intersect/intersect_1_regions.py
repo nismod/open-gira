@@ -1,4 +1,7 @@
 """Takes a region and finds the box_ids within it, exports as a list.
+
+# TODO delete this script if region-boxes.smk is unnecessary
+
 """
 import json
 import os
