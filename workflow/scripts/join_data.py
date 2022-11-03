@@ -32,6 +32,7 @@ import warnings
 
 import geopandas as gpd
 import pandas
+from tqdm import tqdm
 
 from transport.utils import NO_GEOM_ERROR_MSG
 from network_components import natural_sort
@@ -50,8 +51,7 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
     """
 
     dataframes: list[gpd.GeoDataFrame] = []
-    for i, slice_path in enumerate(slice_files):
-        logging.info(f"Reading {i + 1} of {len(slice_files)}...")
+    for i, slice_path in tqdm(enumerate(slice_files)):
 
         try:
             gdf = gpd.read_parquet(slice_path)
@@ -68,8 +68,10 @@ def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFr
 
         dataframes.append(gdf)
 
-    # there is no geopandas concat, so use pandas and then create a new gdf
-    return gpd.GeoDataFrame(pandas.concat([base, *dataframes]), crs=base.crs)
+    logging.info("Joining slice files")
+
+    # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
+    return pandas.concat([base, *dataframes])
 
 
 if __name__ == "__main__":
@@ -82,6 +84,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
+
+    logging.info(f"Reading {len(slice_files)=} files")
 
     # When getting the input files from snakemake, there is no
     # garantee that they will always in the same order. Sort them for
