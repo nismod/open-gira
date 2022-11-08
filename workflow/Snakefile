@@ -66,6 +66,8 @@ wildcard_constraints:
     SLICE_SLUG="slice-[0-9]+",
     FILTER_SLUG="filter-[^_/]+",
     HAZARD_SLUG="hazard-[^_/]+",
+    ADMIN_SLUG="admin-level-[0-4]",
+    AGG_FUNC_SLUG="agg-sum",
     FILENAME="[^/]+",
     STORM_BASIN="EP|NA|NI|SI|SP|WP",
     STORM_RP="[0-9]+",
@@ -93,6 +95,7 @@ include: "rules/download/wri-powerplants.smk"
 include: "rules/download/osm.smk"
 include: "rules/download/power_download_all.smk"
 
+include: "rules/preprocess/gadm.smk"
 include: "rules/preprocess/filter_osm_data.smk"
 include: "rules/preprocess/trim_hazard_data.smk"
 include: "rules/preprocess/create_bbox_extracts.smk"
@@ -120,6 +123,7 @@ include: "rules/exposure/region-boxes.smk"
 include: "rules/exposure/region-grid.smk"
 include: "rules/exposure/power_intersect_all.smk"
 include: "rules/exposure/direct_damages.smk"
+include: "rules/exposure/aggregate_to_admin_area.smk"
 
 include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"
