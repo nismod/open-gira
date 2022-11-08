@@ -32,6 +32,7 @@ dependencies:
   # workaround for a bug in aws-sdk-cpp, which is used by pyarrow
   # https://issues.apache.org/jira/browse/ARROW-15141
   # https://github.com/apache/arrow/pull/14157
+  - pyogrio             # vectorised geospatial file i/o
   - pyproj>=3.3.1       # geographic projections
   - pyrosm              # python OpenStreetMap network reader
   - pytest==6.2.4       # testing

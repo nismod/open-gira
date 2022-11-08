@@ -6,12 +6,11 @@ import os
 import sys
 
 import geopandas as gpd
-import numpy as np
+import pyogrio
 
 
 GPKG_EXT = ".gpkg"
 PARQUET_EXT = ".geoparquet"
-GPKG_INCOMPATIBLE_CLASSES = (np.ndarray,)
 
 
 def geoparquet_to_geopackage(parquet_path: str) -> str:
@@ -31,21 +30,9 @@ def geoparquet_to_geopackage(parquet_path: str) -> str:
     stem, _ = os.path.splitext(parquet_path)
     gpkg_path = stem + GPKG_EXT
 
-    try:
-        gdf.to_file(gpkg_path)
-    except ValueError:
-        # fiona will refuse to serialize some data to geopackage, try dropping
+    # vectorised file io with pyogrio, ~50x faster than gpd.to_file via fiona
+    pyogrio.write_dataframe(gdf, gpkg_path)
 
-        # hunt for bad dtypes -- and hope first row is representative!
-        dtypes = gdf.iloc[0, :].apply(type).values
-        bad_indicies = []
-        for klass in GPKG_INCOMPATIBLE_CLASSES:
-            for i in range(len(dtypes)):
-                if dtypes[i] == klass:
-                    bad_indicies.append(i)
-
-        logging.warning(f"Dropping {gdf.columns[bad_indicies]} as not compatible with GPKG")
-        gdf.drop(columns=gdf.columns[bad_indicies]).to_file(gpkg_path)
     return gpkg_path
 
 
@@ -63,4 +50,4 @@ if __name__ == "__main__":
         if not infile.lower().endswith(PARQUET_EXT):
             raise ValueError("{infile=} does not appear to be geoparquet")
         gpkg_path = geoparquet_to_geopackage(infile)
-        logging.info(f"{infile} -> {gpkg_path}")
+        logging.info(gpkg_path)
