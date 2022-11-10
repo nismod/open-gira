@@ -1,6 +1,7 @@
 """
 Plotting tools for analysing network connectedness
 """
+
 import os
 import re
 import sys
@@ -17,19 +18,7 @@ import spatialpandas
 from datashader.utils import export_image
 from matplotlib import colors
 
-
-def natural_sort(to_sort: Iterable) -> list:
-    """
-    Natural sort iterables of strings by splitting on digits and sorting by the
-    resulting list.
-    """
-    return sorted(
-        to_sort,
-        key=lambda entry: [
-            int(fragment) if fragment.isdigit() else fragment.lower()
-            for fragment in re.split('(\d+)', entry)
-        ]
-    )
+from open_gira.utils import natural_sort
 
 
 def random_cmap(n) -> colors.LinearSegmentedColormap:

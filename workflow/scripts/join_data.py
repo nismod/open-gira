@@ -35,7 +35,7 @@ import pandas
 from tqdm import tqdm
 
 from transport.utils import NO_GEOM_ERROR_MSG
-from network_components import natural_sort
+from open_gira.utils import natural_sort
 
 
 def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFrame:

@@ -14,9 +14,9 @@ import snkit
 
 from create_network import create_network
 from assets import RailAssets
-from utils import (annotate_country, get_administrative_data, str_to_bool,
-            write_empty_frames, NO_GEOM_ERROR_MSG)
-
+from utils import annotate_country, get_administrative_data, NO_GEOM_ERROR_MSG
+from open_gira.io import write_empty_frames
+from open_gira.utils import str_to_bool
 
 
 def annotate_rehabilitation_costs(

@@ -17,7 +17,9 @@ from pyproj import Geod
 from create_network import create_network
 from assets import RoadAssets
 from utils import (annotate_country, cast, get_administrative_data,
-    str_to_bool, strip_suffix, write_empty_frames, NO_GEOM_ERROR_MSG)
+    strip_suffix, NO_GEOM_ERROR_MSG)
+from open_gira.io import write_empty_frames
+from open_gira.utils import str_to_bool
 
 
 def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:

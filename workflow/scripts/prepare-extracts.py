@@ -10,7 +10,7 @@ import sys
 import re
 from os.path import splitext as splitext_orig
 
-from network_components import natural_sort
+from open_gira.utils import natural_sort
 
 
 def splitext(string, exts=None):

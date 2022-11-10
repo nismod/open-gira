@@ -6,36 +6,15 @@ Shared functions for creating, cleaning, manipulating and analysing networks.
 
 import logging
 import re
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import geopandas as gpd
 import pandas as pd
 import snkit
-import pyproj
 
 
-WGS84_EPSG = 4326
 WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
 NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
-
-
-def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> None:
-    """
-    If we don't have sufficient / good enough input data, write out empty output.
-
-    N.B. Output files must exist for snakemake's sake.
-    """
-
-    # write with a CRS, makes it easier to concatenate dataframes later
-    empty_gdf = gpd.GeoDataFrame({"geometry": []}, crs=pyproj.CRS.from_user_input(WGS84_EPSG))
-    empty_gdf.to_parquet(edges_path)
-
-    # some parts of the workflow only consider edges, not nodes
-    # when not passed a nodes_path, do not attempt to write
-    if nodes_path:
-        empty_gdf.to_parquet(nodes_path)
-
-    return
 
 
 def strip_prefix(s: str, prefix: str = "tag_") -> str:
@@ -80,36 +59,6 @@ def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
             return None
         else:
             raise ValueError("Couldn't recast to non-nullable value") from casting_error
-
-
-def str_to_bool(series: pd.Series) -> pd.Series:
-    """
-    Make a stab at turning a series of strings into a boolean series.
-
-    Args:
-        series (pd.Series): Input series
-
-    Returns:
-        pd.Series: Boolean series of whether or not strings are truthy (by our logic).
-    """
-
-    FALSE_VALUES = {'n', 'no', 'false', 'f', ''}
-
-    def str_parser(s: str) -> bool:
-        """
-        If a string is in the set below, return False, otherwise, return True.
-        """
-
-        if not isinstance(s, str):
-            raise ValueError(f"{s=} has {type(s)=}, but should be str")
-
-        return s.lower() not in FALSE_VALUES
-
-    # set our null values to the empty string
-    new_series = series.copy(deep=True)
-    new_series.loc[series.isnull()] = ''
-
-    return new_series.apply(str_parser)
 
 
 def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:

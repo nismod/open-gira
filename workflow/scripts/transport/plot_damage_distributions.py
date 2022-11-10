@@ -10,9 +10,7 @@ import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
-
-def natural_sort(to_sort):
-    return sorted(to_sort, key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)])
+from open_gira.utils import natural_sort
 
 
 def closest_factors(n: int) -> tuple[tuple[int, int], int]:

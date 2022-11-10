@@ -7,7 +7,7 @@ import geopandas as gpd
 import snkit
 
 from join_data import append_data
-from network_components import natural_sort
+from open_gira.utils import natural_sort
 
 
 def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:

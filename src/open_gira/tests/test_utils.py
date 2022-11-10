@@ -2,7 +2,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from workflow.scripts.transport.utils import str_to_bool
+from open_gira.utils import natural_sort, str_to_bool
+
+
+class TestNaturalSort:
+    def test_natural_sort(self):
+        assert natural_sort(["1", "10", "2"]) == ["1", "2", "10"]
+        assert natural_sort(["1-10", "1-2"]) == ["1-2", "1-10"]
+        assert natural_sort(["1_10", "1_2"]) == ["1_2", "1_10"]
+        assert natural_sort(["1 10", "1 2"]) == ["1 2", "1 10"]
 
 
 class TestStrToBool:
