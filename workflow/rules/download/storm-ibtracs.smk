@@ -146,5 +146,6 @@ rule mosaic_storm_fixed:
             -E {input.basin_tif_sp} \
             -F {input.basin_tif_wp} \
             --outfile={output} \
-            --calc="numpy.max((A,B,C,D,E,F),axis=0)"
+            --calc="numpy.max((A,B,C,D,E,F),axis=0)" \
+            --NoDataValue=0
         """

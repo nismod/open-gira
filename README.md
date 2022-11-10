@@ -4,15 +4,15 @@
 [![pyTest](https://github.com/nismod/open-gira/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nismod/open-gira/actions/workflows/test.yml)
 [![snakemake workflow](https://img.shields.io/badge/snakemake-open--gira-informational)](https://snakemake.github.io/snakemake-workflow-catalog/?usage=nismod/open-gira)
 
-This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow will 
-analyse physical climate risks to infrastructure networks using global open data. 
+This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow will
+analyse physical climate risks to infrastructure networks using global open data.
 
 The related open-source Python library [snail](https://github.com/nismod/snail) provides
 some of the core functionality.
 
 > Work in Progress
 >
-> Goals: 
+> Goals:
 > - automated pipeline for reproducible analysis anywhere in the world
 > - maps per-country and of larger areas
 > - charts/stats of exposure per admin region, per hazard type, scenario, epoch
@@ -64,7 +64,7 @@ The locations of the datasets to download are specified in `config/config.yaml`.
 
 ## Running the pipeline
 
-The snakemake configuration details are in `config/config.yml`. 
+The snakemake configuration details are in `config/config.yml`.
 You can edit this to set the target OSM
 infrastructure datasets, number of slices, and hazard datasets. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
@@ -104,7 +104,7 @@ associating road splits to corresponding flood levels.
 
 The pipeline consists in the following steps:
 
-1. The target OSM datasets are downloaded or copied and saved as 
+1. The target OSM datasets are downloaded or copied and saved as
    `<output_dir>/input/<dataset>.osm.pbf`.
 2. The initial OSM datasets are filtered, keeping only relevant tags for road links
    (using `osmium tags-filter`). This results in smaller files
@@ -123,18 +123,18 @@ The pipeline consists in the following steps:
 6. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
    according to the `slice_count` config option, and these slices are saved
    in a json file `<output_dir>/json/<dataset>-extracts.geojson`.
-7. The filtered OSM file is sliced into areas of equal size using the bounding 
-   box grid from step 6. The slices are saved to 
+7. The filtered OSM file is sliced into areas of equal size using the bounding
+   box grid from step 6. The slices are saved to
    `<output_dir>/slices/<dataset>_filter-<filter>/slice-<N>.osm.pbf`.
 8. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
    resulting in `<output_dir>/geoparquet/<dataset>_filter-<filters>_slice-<N>.geoparquet`.
 9. Each geoparquet slice is intersected against flood level data from the
    hazard datasets. The hazard datasets consist of a collection of
    raster data files. The network/hazard intersection results in data
-   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>_hazard-<hazard>.geoparquet` 
+   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>_hazard-<hazard>.geoparquet`
    describing roads split according to the raster grid and associated flood level values.
    A corresponding `parquet` files (without geometries) is also created.
-10. Split data is then joined into a unique dataset describing 
+10. Split data is then joined into a unique dataset describing
     infrastructure and associated hazard level values for each combination of
     OSM dataset and hazard dataset. This results in
     `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`.
@@ -174,3 +174,18 @@ Snakemake has utilities to improve the workflow code quality:
 - `snakemake --lint` suggests improvements and fixes for common problems
 - `snakefmt .` reformats files according to a code style guide, similar to `black` for Python code.
 
+
+## Documentation
+
+Documentation is written using the [`mdbook`](https://rust-lang.github.io/mdBook/index.html)
+format, using markdown files in the `./docs` directory.
+
+Follow the [installation instructions](https://rust-lang.github.io/mdBook/guide/installation.html) to get the `mdbook` command-line tool.
+
+Build the docs locally:
+
+    cd docs
+    mdbook build
+    open book/index.html
+
+Or run `mdbook serve` to run a server and rebuild the docs as you make changes.

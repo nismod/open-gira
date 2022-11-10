@@ -1,107 +1,40 @@
 """Download the plants data to csv files
 """
-import json
-import os
-import sys
-import warnings
+import geopandas
+import pandas
+import pygeos
 
-import geopandas as gpd
-import pandas as pd
-from shapely.geometry import shape
-from tqdm import tqdm
-
-from process_power_functions import idxbox
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-try:
-    output_dir = snakemake.params["output_dir"]  # type: ignore
-except:
-    output_dir = sys.argv[1]
 
 if __name__ == "__main__":
+    input_file = snakemake.input.powerplants  # type: ignore
+    output_file = snakemake.output.powerplants  # type: ignore
+    global_boxes_path = snakemake.input.global_boxes  # type: ignore
+    box_id = snakemake.wildcards.BOX  # type: ignore
 
-    # preliminary function variables
-    with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
-    ) as filejson:
-        world_boxes_metadata = json.load(filejson)
-    boxlen = world_boxes_metadata["boxlen"]
-    lat_max = world_boxes_metadata["lat_max"]
-    lon_min = world_boxes_metadata["lon_min"]
-    num_cols = world_boxes_metadata["num_cols"]
-    tot_boxes = world_boxes_metadata["tot_boxes"]
+    boxes = geopandas.read_file(global_boxes_path) \
+        .set_index("box_id")
+    box = boxes.loc[[f"box_{box_id}"], :]
+    box = box.set_crs("epsg:4326")
 
-    """returns all powerplants (processed data)"""
-    powerplant_file = os.path.join(
-        output_dir, "input", "powerplants", "global_power_plant_database.csv"
+    powerplants = pandas.read_csv(
+        input_file,
+        # dtype for other_fuel3 added to suppress error
+        dtype={"other_fuel3": object},
+        usecols=(
+            "gppd_idnr",
+            "name",
+            "capacity_mw",
+            "estimated_generation_gwh_2017",
+            "primary_fuel",
+            "longitude",
+            "latitude",
+        )
+    ).rename(
+        columns={"gppd_idnr": "source_id"}
     )
-    powerplants = pd.read_csv(
-        powerplant_file, dtype={"other_fuel3": object}
-    )  # dtype added to suppress error
-
-    powerplants["box_id"] = idxbox(
-        powerplants["latitude"],
-        powerplants["longitude"],
-        boxlen,
-        lat_max,
-        num_cols,
-        lon_min,
-        tot_boxes,
-    )  # sort for box
-
-    powerplants["geometry"] = powerplants.apply(
-        lambda row: shape(
-            {"type": "Point", "coordinates": [row.longitude, row.latitude]}
-        ),
-        axis=1,
-    )
-
-    cols = [
-        "gppd_idnr",
-        "name",
-        "capacity_mw",
-        "estimated_generation_gwh_2017",
-        "primary_fuel",
-        "box_id",
-        "geometry",
-    ]
-    powerplants = gpd.GeoDataFrame(powerplants[cols])
-
-    powerplants.rename(columns={"gppd_idnr": "source_id"}, inplace=True)
-
     powerplants["type"] = "source"
-
-    for box_id, powerplants_box in tqdm(
-        powerplants.groupby("box_id"),
-        desc="saving powerplant csv",
-        total=len(powerplants["box_id"].unique()),
-    ):
-        all_boxes_path = os.path.join(
-            output_dir, "power_processed", "all_boxes", f"{box_id}"
-        )
-        if not os.path.exists(all_boxes_path):
-            os.makedirs(all_boxes_path)
-        p = os.path.join(all_boxes_path, f"powerplants_{box_id}.csv")
-        powerplants_box.to_csv(p, index=False)
-
-    with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
-    ) as filejson:
-        tot_boxes = json.load(filejson)["tot_boxes"]
-
-    cols[0] = "source_id"
-    cols[-1] = "type"
-    cols.append("geometry")
-    for id in tqdm(
-        range(int(float(tot_boxes))), desc="empty folders", total=float(tot_boxes)
-    ):  # create empty ones
-        all_boxes_pp_file = os.path.join(
-            output_dir,
-            "power_processed",
-            "all_boxes",
-            f"box_{id}",
-            f"powerplants_box_{id}.csv",
-        )
-        if not os.path.exists(all_boxes_pp_file):
-            gpd.GeoDataFrame(columns=cols).to_csv(all_boxes_pp_file, index=False)
+    powerplants["geometry"] = pygeos.points(powerplants.longitude, powerplants.latitude)
+    powerplants = geopandas.GeoDataFrame(powerplants.drop(columns=["longitude","latitude"]))
+    powerplants = powerplants.set_crs("epsg:4326")
+    powerplants = powerplants.sjoin(box).rename(columns={'index_right': box.index.name})
+    powerplants.to_parquet(output_file)

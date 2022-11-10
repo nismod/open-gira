@@ -2,7 +2,7 @@
 
 The configuration file for the run is found in `./config/config.yaml`.
 
-Your configuration file should look like the below:
+Your configuration file should similar to the below:
 
 ```yaml
 # Output directory
@@ -46,15 +46,13 @@ You should also have a `./config/highway-core.txt` file that looks like:
 motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link
 ```
 
-This configuration file holds everything we need to run the workflow.
-The directory `<output_dir>` (hereafter `./results/`) will be created when the workflow runs.
-The infrastructure datasets will be downloaded, along with all the hazard raster 
-files listed in the hazard datasets.
-The infrastructure datasets will be filtered and sliced, and then combined with
-the hazard data to produce four output files, one for each of the 
-infrastructure-hazard dataset combinations.
+This configuration file holds everything we need to run the workflow. The directory
+`<output_dir>` (hereafter `./results/`) will be created when the workflow runs. The
+infrastructure datasets will be downloaded, along with all the hazard raster files listed in
+the hazard datasets. The infrastructure datasets will be filtered and sliced, and then combined
+with the hazard data to produce four output files, one for each of the infrastructure-hazard
+dataset combinations.
 
-The infrastructure datasets listed in this config are real, but the hazard datasets
-only contain a tiny fraction of the raster files available. 
-This means the workflow is relatively quick to run compared to 
-when we have gigabytes of hazard raster files.
+The infrastructure datasets listed in this config are real, but the hazard datasets only
+contain a tiny fraction of the raster files available. This means the workflow is relatively
+quick to run compared to when we have gigabytes of hazard raster files.
