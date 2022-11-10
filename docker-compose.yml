@@ -3,8 +3,6 @@ version: '3.7'
 services:
   app:
     build: .
-#    entrypoint: python
-    command: tail -F anything
     volumes:
       - .:/open-gira
   # https://github.com/peaceiris/docker-mdbook

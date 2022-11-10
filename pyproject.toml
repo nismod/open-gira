@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open_gira"
+version = "0.0.1"
+authors = [
+  { name="Tom Russell", email="tom.russell@ouce.ox.ac.uk" },
+]
+description = "Helper package for open-gira workflow"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/nismod/open-gira"
+"Bug Tracker" = "https://github.com/nismod/open-gira/issues"

@@ -1,270 +1,107 @@
 """This file processes the target data
 """
-import json
-import os
-import sys
-import warnings
+import logging
 
-import geopandas as gpd
-import netCDF4 as nc4
+import geopandas
 import numpy as np
-import numpy.ma
+import pandas
 import rasterio
 import rasterio.features
 import rasterio.mask
+import xarray as xr
 from pyproj import Geod
-from rasterstats import gen_zonal_stats, point_query
+from rasterstats import gen_zonal_stats
 from shapely.geometry import shape
-from tqdm import tqdm
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-try:
-    box_id = snakemake.params["box_id"]  # type: ignore
-    output_dir = snakemake.params["output_dir"]  # type: ignore
-except:
-    output_dir = sys.argv[1]
-    box_id = sys.argv[2]
 
 
-def combine(lsts):
-    """combines lists where not masked, takes average if multiple non-masked values"""
-    if len({len(i) for i in lsts}) != 1:  # must be ame length
-        raise RuntimeWarning("Lists not same length")
-    llen = len(lsts[0])
-    num_lsts = len(lsts)
-    count_overlap = 0
-    fix = [None] * llen
-    for j in range(
-        llen
-    ):  # count when different list contain different non-masked values
-        lst_intersect = [lst[j] for lst in lsts]
-        mask_count = lst_intersect.count(numpy.ma.masked) + lst_intersect.count(None)
-        if mask_count <= num_lsts - 2:  # 2 or more non-masked values
-            avgval = sum(
-                [
-                    0 if np.ma.is_masked(x) == True or x == None else x
-                    for x in lst_intersect
-                ]
-            ) / (num_lsts - mask_count)
-            fix[j] = avgval
-            count_overlap += 1
-
-    assert (
-        count_overlap / llen < 0.4
-    )  # assert less than 40% is overlap (catch possible errors. None found in testing)
-
-    all = [numpy.ma.masked] * llen
-    for i in range(llen):
-        for lst in lsts:
-            if fix[i] != None:
-                all[i] = fix[i]
-            else:
-                val = lst[i]
-                if numpy.ma.is_masked(val) == False:
-                    all[i] = val
-                    break
-    assert len(all) == llen
-    return all
-
-
-def get_target_areas(box_id):
-    world_boxes_path = os.path.join(
-        output_dir, "power_processed", "all_boxes", box_id, f"geom_{box_id}.gpkg"
-    )
-    gdf = gpd.read_file(world_boxes_path)
-    box = gdf["geometry"]
-
+def get_target_areas(targets_file, box_geom):
     geod = Geod(ellps="WGS84")
+    geoms = []
+    areas_km2 = []
 
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
-    with rasterio.open(
-        os.path.join(output_dir, "input", "gridfinder", "targets.tif")
-    ) as src:
+    with rasterio.open(targets_file) as dataset:
+        crs = dataset.crs.data
 
-        # for each country (see: code) overlay connections to distribution grid
+        # Read the dataset's valid data mask as a ndarray.
         try:
-            data, transform = rasterio.mask.mask(src, box, crop=True)
-        except:
-            return gpd.GeoDataFrame()
+            box_dataset, box_transform = rasterio.mask.mask(dataset, [box_geom], crop=True)
 
-    geoms = []
-    centroids = []
-    areas = []
-    # Extract feature shapes and values from the array.
-    for geom, val in rasterio.features.shapes(data, transform=transform):
-        if val > 0:
-            feature = shape(geom)
-            geoms.append(feature)
-            centroids.append(feature.centroid)
-            area, perimeter = geod.geometry_area_perimeter(feature)
-            areas.append(area / 1e6)
+            # Extract feature shapes and values from the array.
+            for geom, val in rasterio.features.shapes(box_dataset, transform=box_transform):
+                if val > 0:
+                    feature = shape(geom)
+                    geoms.append(feature)
+                    area_m2, _ = geod.geometry_area_perimeter(feature)
+                    areas_km2.append(abs(area_m2 / 1e6))
+        except ValueError as ex:
+            # could be that box_geom does not overlap dataset
+            logging.info("Box may not overlap targets", ex)
+            pass
 
-    return gpd.GeoDataFrame(
-        {"area_km2": areas, "centroid": centroids, "geometry": geoms}
+    return geopandas.GeoDataFrame(
+        data={
+            "area_km2": areas_km2,
+            "geometry": geoms
+        },
+        crs=crs
     )
 
 
-def get_population(box_id, targets, exclude_countries_lst):
-
-    # below: population of target areas (targets.geometry), populations is list corresponding to areas (CHECK, I think)
-
-    with open(
-        os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
-    ) as filejson:
-        world_boxes_metadata = json.load(filejson)
-    box_country_list_id = world_boxes_metadata["box_country_dict"][box_id]
-
-    pop_all = []
-    pop_d_all = []
-    country_all = [[]] * len(targets)
-    country_dict = {}  # {code1: {indices...}, code2: ... }
-    for kk, code in enumerate(box_country_list_id):  # run for every country in the box
-        print(f"{box_id}: {kk+1}/{len(box_country_list_id)} -- {code}")
-
-        if code not in exclude_countries_lst:
-            gen = gen_zonal_stats(
-                targets.geometry,
-                os.path.join(
-                    output_dir,
-                    "input",
-                    "population",
-                    f"{code}_ppp_2020_UNadj_constrained.tif",
-                ),
-                stats=[],
-                add_stats={"nansum": np.nansum},  # count NaN as zero for summation
-                all_touched=True,  # possible overestimate, but targets grid is narrower than pop
-            )
-
-            populations = [
-                d["nansum"]
-                for d in tqdm(
-                    gen, desc=f"{code} population progress", total=len(targets.geometry)
-                )
-            ]
-            population_density = point_query(
-                targets.centroid,
-                os.path.join(
-                    output_dir,
-                    "input",
-                    "population",
-                    f"{code}_ppp_2020_UNadj_constrained.tif",
-                ),
-            )
-            # country = [code] * len(targets)
-            country_dict[code] = {
-                ii
-                for ii, item in enumerate(populations)
-                if not np.ma.is_masked(item) or population_density[ii] != None
-            }
-
-        else:  # code does not have .tif data so list of None is applied
-            populations = [None] * len(targets)
-            population_density = [None] * len(targets)
-
-        pop_all.append(populations)
-        pop_d_all.append(population_density)
-
-    if len(box_country_list_id) == 1:
-        pop_all = pop_all[0]
-        pop_d_all = pop_d_all[0]
-
-    if len(box_country_list_id) > 1:
-        # join up again
-        pop_all = combine(pop_all)
-        pop_d_all = combine(pop_d_all)
-
-    for code, indices in country_dict.items():
-        for ii in indices:
-            country_all[ii] = code
-
-    targets["population"] = pop_all
-    targets["population_density_at_centroid"] = pop_d_all
-    targets["population_density_at_centroid"].fillna(np.nan, inplace=True)
-    targets["country"] = country_all
-
-    def estimate_population_from_density(row):
-        if row.population is numpy.ma.masked:
-            return row.area_km2 * row.population_density_at_centroid
-        else:
-            return row.population
-
-    targets["population"] = targets.apply(estimate_population_from_density, axis=1)
-    return targets
-
-
-def get_gdp(targets):
-
-    # just pick centroid - GDP per capita doesn't vary at this fine granularity
-    gdp_pc = []
-    fn = os.path.join(output_dir, "input", "GDP", "GDP_per_capita_PPP_1990_2015_v2.nc")
-    ds = nc4.Dataset(fn)
-
-    lat_idx_arr = np.interp(
-        targets.centroid.y, [-90, 90], [2160, 0]
-    )  # convert latitude to GDP nc file
-    lon_idx_arr = np.interp(
-        targets.centroid.x, [-180, 180], [0, 4320]
-    )  # convert longitude to GDP nc file
-
-    # Find value
-    assert len(lat_idx_arr) == len(lon_idx_arr)
-    gdp_pc_lst = [
-        ds["GDP_per_capita_PPP"][-1, lat_idx_arr[jj], lon_idx_arr[jj]]
-        for jj in range(len(lat_idx_arr))
-    ]  # returns gdp_pc of centroid of the target area (2015)
-
-    gdp_pc_lst = [
-        float(x) if numpy.ma.is_masked(x) == False else 0 for x in gdp_pc_lst
-    ]  # set masked to 0 (later removed)
-
-    targets["gdp_pc"] = gdp_pc_lst
-    targets["gdp"] = targets.gdp_pc.fillna(0) * targets.population.fillna(0)
-    return targets
-
-
-if __name__ == "__main__":
-    # print("getting target areas")
-    targets_box = get_target_areas(box_id)
-
-    if len(targets_box) == 0:
-        cols = [
-            "area_km2",
-            "centroid",
-            "geometry",
-            "population",
-            "population_density_at_centroid",
-            "gdp_pc",
-            "gdp",
-            "type",
-        ]
-        targets_box = gpd.GeoDataFrame(columns=cols + ["box_id"])
-
-    with open(
-        os.path.join(output_dir, "power_processed", "exclude_countries.json"), "r"
-    ) as fp:
-        exclude_countries_lst = json.load(fp)
-
-    if len(targets_box) != 0:
-        # print("getting target population")
-        targets_box = get_population(box_id, targets_box, exclude_countries_lst)
-
-        # print("getting target gdp")
-        targets_box = get_gdp(targets_box)
-
-        # print("processing targets")
-        targets_box = targets_box[~targets_box.gdp.isnull()].reset_index(
-            drop=True
-        )  # remove the null targets
-        targets_box["type"] = "target"
-        targets_box["box_id"] = box_id
-
-    # combine
-    # print("saving intermediate files")
-    targets_box.to_csv(
-        os.path.join(
-            output_dir, "power_processed", "all_boxes", box_id, f"targets_{box_id}.csv"
-        ),
-        index=False,
+def get_population(targets, population_file):
+    with rasterio.open(population_file) as dataset:
+        crs = dataset.crs.data
+    stats = gen_zonal_stats(
+        targets.to_crs(crs).geometry,  # reprojected for raster
+        population_file,
+        stats=[],
+        add_stats={"nansum": np.nansum},  # count NaN as zero for summation
+        all_touched=True,  # possible overestimate, but targets grid is narrower than pop
     )
-    print(f"Saved {box_id} targets")
+    # fill masked values, in case of nodata
+    populations = np.ma.array([d["nansum"] for d in stats]).filled(fill_value=0)
+    populations = np.nan_to_num(populations.astype(float))
+
+    return populations
+
+
+def get_gdp_pc(targets, gdp_file):
+    gdp = xr.open_dataset(gdp_file)
+    centroids = targets.geometry.centroid
+    df = pandas.DataFrame({"x": centroids.x, "y": centroids.y})
+    df["gdp_pc"] = df.apply(
+        lambda row: float(gdp.GDP_per_capita_PPP.sel(
+                longitude=row.x,
+                latitude=row.y,
+                time=2015,
+                method="nearest"
+            ).data),
+        axis=1
+    )
+    return df.gdp_pc
+
+
+if __name__ == '__main__':
+    population_file = snakemake.input.population  # type: ignore
+    gdp_file = snakemake.input.gdp  # type: ignore
+    targets_file = snakemake.input.targets  # type: ignore
+    output_file = snakemake.output.targets  # type: ignore
+    global_boxes_path = snakemake.input.global_boxes  # type: ignore
+    box_id = snakemake.wildcards.BOX  # type: ignore
+
+    boxes = geopandas.read_file(global_boxes_path) \
+        .set_index("box_id")
+    box_geom = boxes.loc[f"box_{box_id}", "geometry"]
+
+    targets = get_target_areas(targets_file, box_geom)
+    targets["type"] = "target"
+    if len(targets):
+        targets["population"] = get_population(targets, population_file)
+        targets["gdp_pc"] = get_gdp_pc(targets, gdp_file)
+        targets["gdp"] = targets.population * targets.gdp_pc
+    else:
+        targets["population"] = 0
+        targets["gdp_pc"] = 0
+        targets["gdp"] = 0
+
+    targets.to_parquet(output_file)

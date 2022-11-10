@@ -1,9 +1,10 @@
 # Python
 **/.ipynb_checkpoints
 *.pyc
+*.egg-info
 __pycache__/*
 venv/*
-src/
+src/snkit
 
 # Data
 data/*

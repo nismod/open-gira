@@ -1,102 +1,62 @@
 """Documents the connections between boxes"""
-import glob
 import json
 import os
-import sys
-import time
-import warnings
 
-import geopandas as gpd
+import geopandas
 from shapely.geometry import LineString
-from tqdm import tqdm
 
-from process_power_functions import adj
-
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+from open_gira.process_power_functions import adj
 
 
-try:
-    output_dir = snakemake.params["output_dir"]  # type: ignore  # type: ignore
-except:
-    output_dir = sys.argv[1]
+output_dir = snakemake.config["output_dir"]  # type: ignore
+global_metadata_path = snakemake.input.global_metadata  # type: ignore
+adjacent_nodes = snakemake.input.adjacent_nodes  # type: ignore
+nodes_path = snakemake.input.nodes  # type: ignore
+edges_path = snakemake.input.edges  # type: ignore
+connector_path = snakemake.output.connector  # type: ignore
+box_id = int(snakemake.wildcards.BOX)  # type: ignore
 
-network_paths = glob.glob(
-    os.path.join(
-        output_dir, "power_processed", "all_boxes", "box_*", "network_box_*.gpkg"
+
+portal_dict = {}  # master dict
+nodes = geopandas.read_parquet(nodes_path)
+
+for neighbour_node_path in adjacent_nodes:
+    if not os.path.exists(neighbour_node_path):
+        continue
+
+    neighbour_nodes = geopandas.read_parquet(neighbour_node_path)
+    if len(neighbour_nodes) == 0:
+        continue
+
+    neighbour_box_id = neighbour_nodes.loc[0, 'box_id']
+    duplicates = neighbour_nodes.merge(
+        nodes,
+        left_on="geometry",
+        right_on="geometry",
+        suffixes=("_ex", "_idx"),
     )
-)  # finds the network_{box_id}.gpkg files that exist in all_boxes
+    update_lst = [
+        {
+            "edge_id": f"edge_X_{from_box}__{to_box}",
+            "source_id": from_source_id,
+            "link": f"cb_{from_box}__{to_box}",
+            "type": "transmission",
+            "from_id": from_idx,  # connection in box_idx
+            "to_id": to_ex,  # connection in box next to box_idx
+            "geometry": str(LineString([fromto_geom, fromto_geom])),
+        }
+        for from_idx, to_ex, from_box, to_box, from_source_id, fromto_geom in zip(
+            duplicates.id_idx,
+            duplicates.id_ex,
+            duplicates.box_id_idx,
+            duplicates.box_id_ex,
+            duplicates.source_id_idx,
+            duplicates.geometry,
+        )
+    ]
 
+    # update master dict with neighbour dict
+    portal_dict[f"box_{neighbour_box_id}"] = update_lst
 
-with open(
-    os.path.join(output_dir, "power_processed", "world_boxes_metadata.json"), "r"
-) as filejson:
-    world_boxes_metadata = json.load(filejson)
-num_cols = world_boxes_metadata["num_cols"]
-tot_boxes = world_boxes_metadata["tot_boxes"]
-
-
-for network_path in tqdm(
-    network_paths, desc="connecting all boxes", total=len(network_paths)
-):
-    s = time.time()
-    # extract box numbers
-    box_id = os.path.basename(network_path)[8:-5]
-    id = int(box_id[4:])
-    examine = adj(id, num_cols, tot_boxes)
-
-    portal_dict = {}  # master dict
-    gdf_idx = gpd.read_file(network_path, layer="nodes")
-    if list(gdf_idx.id) != [None]:  # check not dummy
-
-        for id_ex in examine:
-            portal_lst_ex = []  # neighbour list
-            path_test = os.path.join(
-                output_dir,
-                "power_processed",
-                "all_boxes",
-                f"box_{id_ex}",
-                f"network_box_{id_ex}.gpkg",
-            )
-            if os.path.exists(path_test):
-                gdf_ex = gpd.read_file(path_test, layer="nodes")
-                if list(gdf_ex.id) != [None]:  # check not dummy
-                    duplicates = gdf_ex.merge(
-                        gdf_idx,
-                        left_on="geometry",
-                        right_on="geometry",
-                        suffixes=("_ex", "_idx"),
-                    )
-                    update_lst = [
-                        {
-                            "edge_id": f"edge_X_{from_box}__{to_box}",
-                            "source_id": from_source_id,
-                            "link": f"cb_{from_box}__{to_box}",
-                            "type": "transmission",
-                            "from_id": from_idx,  # connection in box_idx
-                            "to_id": to_ex,  # connection in box next to box_idx
-                            "geometry": str(LineString([fromto_geom, fromto_geom])),
-                        }
-                        for from_idx, to_ex, from_box, to_box, from_source_id, fromto_geom in zip(
-                            duplicates.id_idx,
-                            duplicates.id_ex,
-                            duplicates.box_id_idx,
-                            duplicates.box_id_ex,
-                            duplicates.source_id_idx,
-                            duplicates.geometry,
-                        )
-                    ]
-
-                    portal_dict.update(
-                        {f"box_{id_ex}": update_lst}
-                    )  # update master dict with neighbour dict
-    with open(
-        os.path.join(
-            output_dir,
-            "power_processed",
-            "all_boxes",
-            box_id,
-            f"connector_{box_id}.json",
-        ),
-        "w",
-    ) as fp:
-        json.dump(portal_dict, fp, indent=2)
+with open(connector_path, "w") as fp:
+    json.dump(portal_dict, fp, indent=2)
