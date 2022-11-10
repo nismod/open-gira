@@ -22,13 +22,13 @@ rule direct_damages:
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/cost/slice-5.geoparquet
+snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/slice-5.geoparquet
 """
 
 
 rule plot_damage_distributions:
     input:
-        damages = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction.geoparquet"
+        damages = "{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction_per_RP.geoparquet"
     output:
         plots = directory("{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction_plots")
     script:
