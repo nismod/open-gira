@@ -3,12 +3,16 @@ Common functionality for reading and writing to disk.
 """
 
 from glob import glob
+import logging
 from os.path import splitext, basename, join
 from typing import Optional
 
 import geopandas as gpd
 import pandas as pd
 import pyproj
+from tqdm import tqdm
+
+from open_gira.utils import natural_sort
 
 
 NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
@@ -44,7 +48,7 @@ def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
     logging.info("Joining GeoDataFrames")
 
     # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
-    concatenated = pandas.concat(dataframes)
+    concatenated = pd.concat(dataframes)
 
     return concatenated.reset_index(drop=True)
 
