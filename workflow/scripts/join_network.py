@@ -6,25 +6,12 @@ from typing import Iterable
 import geopandas as gpd
 import snkit
 
-from join_data import append_data
+from open_gira.io import concat_geoparquet
 from open_gira.utils import natural_sort
 
 
-def append_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
-    # When getting the input files from snakemake, there is no
-    # garantee that they will always in the same order. Sort them for
-    # consistency. Makes testing easier.
-    slice_files = natural_sort(slice_files)
-
-    try:
-        base = gpd.read_parquet(slice_files[0])
-    except ValueError:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info("base input file empty... suppressing geopandas exception")
-        base = gpd.GeoDataFrame([])
-
-    concatenated = append_data(base, slice_files[1:]).reset_index(drop=True)
+def concat_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
+    concatenated: gpd.GeoDataFrame = concat_geoparquet(slice_files)
     logging.info(f"{len(concatenated)=}")
 
     # drop_duplicates on a GeoDataFrame can be extremely slow
@@ -52,10 +39,10 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     logging.info("Joining network node slices")
-    nodes = append_slices(node_slice_files)
+    nodes = concat_slices(node_slice_files)
 
     logging.info("Joining network edge slices")
-    edges = append_slices(edge_slice_files)
+    edges = concat_slices(edge_slice_files)
 
     # drop the ids we used on a per-slice basis
     nodes = nodes.drop(["node_id"], axis="columns")

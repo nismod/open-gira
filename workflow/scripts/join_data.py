@@ -34,44 +34,8 @@ import geopandas as gpd
 import pandas
 from tqdm import tqdm
 
-from transport.utils import NO_GEOM_ERROR_MSG
+from open_gira.io import concat_geoparquet
 from open_gira.utils import natural_sort
-
-
-def append_data(base: gpd.GeoDataFrame, slice_files: list[str]) -> gpd.GeoDataFrame:
-    """
-    Append GeoDataFrames to one another after deserializing from geoparquet
-
-    Args:
-        base (gpd.GeoDataFrame): GeoDataFrame to append others to
-        slice_files (list[str]): List of geoparquet file paths
-
-    Returns:
-        gpd.GeoDataFrame
-    """
-
-    dataframes: list[gpd.GeoDataFrame] = []
-    for i, slice_path in tqdm(enumerate(slice_files)):
-
-        try:
-            gdf = gpd.read_parquet(slice_path)
-
-        except ValueError as error:
-            if NO_GEOM_ERROR_MSG in str(error):
-                # if the input parquet file does not contain a geometry column,
-                # geopandas will raise a ValueError rather than try to procede. we
-                # catch that here, but check the error message - to be more
-                # specific than catching and suppressing any ValueError
-
-                # use an empty geodataframe to append instead
-                gdf = gpd.GeoDataFrame([])
-
-        dataframes.append(gdf)
-
-    logging.info("Joining slice files")
-
-    # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
-    return pandas.concat([base, *dataframes])
 
 
 if __name__ == "__main__":
@@ -87,20 +51,7 @@ if __name__ == "__main__":
 
     logging.info(f"Reading {len(slice_files)=} files")
 
-    # When getting the input files from snakemake, there is no
-    # garantee that they will always in the same order. Sort them for
-    # consistency. Makes testing easier.
-    slice_files = natural_sort(slice_files)
-
-    try:
-        base = gpd.read_parquet(slice_files[-1])
-    except ValueError as error:
-        if NO_GEOM_ERROR_MSG in str(error):
-            base = gpd.GeoDataFrame([])
-        else:
-            raise error
-
-    joined = append_data(base, slice_files).reset_index(drop=True)
+    joined: gpd.GeoDataFrame = concat_geoparquet(slice_files)
 
     folder_path = os.path.dirname(os.path.abspath(output_file))
     if not os.path.exists(folder_path):

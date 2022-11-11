@@ -15,7 +15,7 @@ import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
-from transport.utils import NO_GEOM_ERROR_MSG
+from open_gira.io import NO_GEOM_ERROR_MSG
 from open_gira.utils import natural_sort
 
 

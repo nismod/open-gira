@@ -16,9 +16,8 @@ from pyproj import Geod
 
 from create_network import create_network
 from assets import RoadAssets
-from utils import (annotate_country, cast, get_administrative_data,
-    strip_suffix, NO_GEOM_ERROR_MSG)
-from open_gira.io import write_empty_frames
+from utils import annotate_country, cast, get_administrative_data, strip_suffix
+from open_gira.io import write_empty_frames, NO_GEOM_ERROR_MSG
 from open_gira.utils import str_to_bool
 
 

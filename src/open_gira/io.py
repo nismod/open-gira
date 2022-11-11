@@ -11,7 +11,42 @@ import pandas as pd
 import pyproj
 
 
+NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
 WGS84_EPSG = 4326
+
+
+def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
+    """
+    Sort list of paths, create GeoDataFrames, concatenate into a single
+    GeoDataFrame, reset the index and return.
+    """
+
+    dataframes: list[gpd.GeoDataFrame] = []
+
+    # sort paths for reproducibility
+    for i, path in tqdm(enumerate(natural_sort(paths))):
+
+        try:
+            gdf = gpd.read_parquet(path)
+
+        except ValueError as error:
+            if NO_GEOM_ERROR_MSG in str(error):
+                # if the input parquet file does not contain a geometry column,
+                # geopandas will raise a ValueError rather than try to procede. we
+                # catch that here, but check the error message - to be more
+                # specific than catching and suppressing any ValueError
+
+                # use an empty geodataframe to append instead
+                gdf = gpd.GeoDataFrame([])
+
+        dataframes.append(gdf)
+
+    logging.info("Joining GeoDataFrames")
+
+    # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
+    concatenated = pandas.concat(dataframes)
+
+    return concatenated.reset_index(drop=True)
 
 
 def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> None:
