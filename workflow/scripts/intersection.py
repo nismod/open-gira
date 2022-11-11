@@ -10,6 +10,7 @@ import re
 import sys
 
 import geopandas
+import numpy as np
 import pandas
 import rasterio
 import pyproj
@@ -140,8 +141,13 @@ def main(network_edges_path, hazard_tifs, output_path):
 
 
 def associate_raster(df, fname, band_number=1):
+    """
+    For each split geometry, lookup the raster value for the `cell_index`.
+
+    N.B. This will store no data values in the returned `df`.
+    """
     with rasterio.open(fname) as dataset:
-        band_data = dataset.read(band_number)
+        band_data: np.ndarray = dataset.read(band_number)
         return df.cell_index.apply(lambda i: band_data[i[1], i[0]])
 
 
