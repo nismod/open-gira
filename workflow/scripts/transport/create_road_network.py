@@ -14,10 +14,10 @@ import pandas as pd
 import snkit
 from pyproj import Geod
 
-from create_network import create_network
-from assets import RoadAssets
 from utils import annotate_country, cast, get_administrative_data, strip_suffix
+from open_gira.assets import RoadAssets
 from open_gira.io import write_empty_frames, NO_GEOM_ERROR_MSG
+from open_gira.network import create_network
 from open_gira.utils import str_to_bool
 
 

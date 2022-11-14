@@ -12,10 +12,10 @@ import geopandas as gpd
 import pandas as pd
 import snkit
 
-from create_network import create_network
-from assets import RailAssets
 from utils import annotate_country, get_administrative_data
+from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames, NO_GEOM_ERROR_MSG
+from open_gira.network import create_network
 from open_gira.utils import str_to_bool
 
 

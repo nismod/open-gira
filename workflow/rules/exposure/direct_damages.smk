@@ -17,7 +17,7 @@ rule direct_damages:
         # determine the hazard type from the hazard slug, e.g. flood, earthquake, storm
         hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
     script:
-        "../../scripts/transport/direct_damages.py"
+        "../../scripts/direct_damages.py"
 
 
 """
@@ -32,7 +32,7 @@ rule plot_damage_distributions:
     output:
         plots = directory("{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction_plots")
     script:
-        "../../scripts/transport/plot_damage_distributions.py"
+        "../../scripts/plot_damage_distributions.py"
 
 
 """

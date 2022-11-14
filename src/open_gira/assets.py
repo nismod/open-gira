@@ -1,10 +1,5 @@
 """
-Logic and data structures for infrastructure assets involved in direct damage.
-
-N.B. This module is imported and used by the Snakefile, so is parsed as part of
-initialising the workflow. This means it is executed in a different context to
-the traditional 'scripts' (with a different sys.path). If it is ever run as a
-script, it will need to be robust to executing with different sys.path entries.
+Logic and data structures for infrastructure assets involved in direct damages.
 """
 
 from enum import Enum

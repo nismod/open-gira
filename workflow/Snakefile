@@ -16,7 +16,7 @@ from glob import glob
 
 import requests
 
-from scripts.transport.assets import Assets
+from open_gira.assets import Assets
 
 
 configfile: "config/config.yaml"
