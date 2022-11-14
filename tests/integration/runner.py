@@ -188,6 +188,7 @@ class OutputChecker:
             generated = read(generated_file)
             expected = read(expected_file)
 
+            printerr(generated_file)
             self.compare_dataframes(generated, expected)
 
         # JSON
@@ -228,10 +229,12 @@ class OutputChecker:
         """
         Compare two dataframes, raise ValueError if they aren't the same.
         """
-        # after sorting the columns so they're in the same order,
+        # sort the columns so they're in the same order
+        generated = generated.sort_index(axis="columns")
+        expected = expected.sort_index(axis="columns")
+
         # use dataframe.equals to quickly check for complete table equality
-        # unfortunately there is an edge case this method doesn't catch...
-        if not generated.sort_index(axis="columns").equals(expected.sort_index(axis="columns")):
+        if not generated.equals(expected):
             printerr(">>> Method: compare (geo)pandas dataframes")
 
             # do some basic shape and schema checks
