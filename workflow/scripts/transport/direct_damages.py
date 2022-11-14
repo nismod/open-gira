@@ -15,6 +15,7 @@ from scipy.integrate import simpson
 
 from open_gira.io import write_empty_frames, read_damage_curves
 from open_gira.direct_damages import ReturnPeriodMap, generate_rp_maps
+from open_gira.utils import natural_sort
 
 
 # exposure table hazard intensity fields expected to be prefixed as such
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     # calculate damages for assets we have damage curves for
     damage_fraction_by_asset_type = []
     logging.info(f"Exposed assets {set(exposure.asset_type)}")
-    for asset_type in set(exposure.asset_type) & set(damage_curves.keys()):
+    for asset_type in natural_sort(set(exposure.asset_type) & set(damage_curves.keys())):
 
         logging.info(f"Processing {asset_type=}")
         damage_curve: pd.DataFrame = damage_curves[asset_type]
