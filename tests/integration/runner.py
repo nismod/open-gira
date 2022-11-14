@@ -188,7 +188,6 @@ class OutputChecker:
             generated = read(generated_file)
             expected = read(expected_file)
 
-            printerr(generated_file)
             self.compare_dataframes(generated, expected)
 
         # JSON
