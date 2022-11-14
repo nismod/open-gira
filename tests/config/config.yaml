@@ -21,6 +21,9 @@ hazard_datasets:
   # long return period to show up well when testing exposure maps
   aqueduct-river: 'external_files/hazard_sources.txt'
 
+hazard_types:
+  aqueduct-river: 'flood'
+
 # testing data (from geofabrik)
 infrastructure_datasets:
   # djibouti is small (fast to run), coastal (coastal flooding, checks exposure img drawing)
@@ -58,6 +61,18 @@ transport:
     flow_cost_time_factor: 0.49
   rail:
     flow_cost_time_factor: 0.49
+
+direct_damages:
+  # assets to calculate direct damages for
+  # use empty list to process direct damages for all implemented asset types
+  asset_types: [
+    'road_paved',
+    'road_unpaved',
+    'rail_railway',
+  ]
+  # CSV damage fraction as a function of hazard intensity
+  # per asset type, per hazard (flood, storm, etc.)
+  curves_dir: 'bundled_data/damage_curves/'
 
 
 ###############################

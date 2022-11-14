@@ -1,5 +1,5 @@
 # Python
-*.ipynb_checkpoints/*
+**/.ipynb_checkpoints
 *.pyc
 *.egg-info
 __pycache__/*

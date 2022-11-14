@@ -1,4 +1,5 @@
-"""Takes a list of geoparquet files containing geodataframes and joins them
+"""
+Takes a list of geoparquet files containing geodataframes and joins them
 
     file1.geoparguet
     id obs1 obs2 geometry
@@ -23,34 +24,18 @@ Usage:
 Example:
     python join_data.py file1.geoparguet file2.geoparguet joined.geoparguet
 """
+
 import logging
+import os
 import sys
 import warnings
 
 import geopandas as gpd
 import pandas
+from tqdm import tqdm
 
-
-def append_data(base, slice_files):
-    slice_files.pop()
-    if len(slice_files) == 0:
-        return base
-
-    try:
-        gdf = gpd.read_parquet(slice_files[-1])
-    except ValueError as error:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info(f"{error}\n")
-
-        # snakemake requires that output files exist though, so write empty ones
-        gdf = gpd.GeoDataFrame([])
-
-    # glue the dataframes together
-    # N.B. there is no geopandas concat, so use pandas and then create a new gdf
-    base = gpd.GeoDataFrame(pandas.concat([base, gdf]), crs=base.crs)
-
-    return append_data(base, slice_files)
+from open_gira.io import concat_geoparquet
+from open_gira.utils import natural_sort
 
 
 if __name__ == "__main__":
@@ -61,25 +46,17 @@ if __name__ == "__main__":
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
 
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    # When getting the input files from snakemake, there is no
-    # garantee that they will always in the same order. Sort them for
-    # consistency. Makes testing easier.
-    slice_files = sorted(slice_files)
-    # We're reading the different files as a stack from the top.  Let's
-    # reverse the order of files to keep the first file on top.
-    slice_files = slice_files[::-1]
+    logging.info(f"Reading {len(slice_files)=} files")
 
-    try:
-        base = gpd.read_parquet(slice_files[-1])
-    except ValueError:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info("base input file empty... suppressing geopandas exception")
+    joined: gpd.GeoDataFrame = concat_geoparquet(slice_files)
 
-        base = gpd.GeoDataFrame([])
+    folder_path = os.path.dirname(os.path.abspath(output_file))
+    if not os.path.exists(folder_path):
+        os.path.makedirs(folder_path)
 
-    base = append_data(base, slice_files)
-    base = base.reset_index(drop=True)
-    base.to_parquet(output_file)
+    logging.info(f"Writing {joined.shape=} to {output_file}")
+
+    joined.to_parquet(output_file)

@@ -16,6 +16,8 @@ from glob import glob
 
 import requests
 
+from open_gira.assets import Assets
+
 
 configfile: "config/config.yaml"
 
@@ -39,19 +41,43 @@ for network, file_path in config['network_filters'].items():
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
 
+if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
+    raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
+
+permitted_hazard_types = {"flood", "earthquake", "storm"}
+configured_hazard_types = set(config["hazard_types"].values())
+if not configured_hazard_types.issubset(permitted_hazard_types):
+    raise ValueError(f"unsupported hazard types: {permitted_hazard_types - configured_hazard_types}")
+
+# check requested direct damage asset types
+requested_asset_damage_types = set(config['direct_damages']['asset_types'])
+if len(requested_asset_damage_types) == 0:
+    # if we were passed an empty list, mutate the config to use all available
+    # asset types for direct damage calculation
+    config['direct_damages']['asset_types'] = Assets.implemented_assets()
+else:
+    # if we have a non-empty list, check the request against what's implemented
+    # will raise ValueError in case of mismatch
+    Assets.valid_selection(requested_asset_damage_types)
+
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
     DATASET="[^_/]+",
     SLICE_SLUG="slice-[0-9]+",
     FILTER_SLUG="filter-[^_/]+",
     HAZARD_SLUG="hazard-[^_/]+",
+    ADMIN_SLUG="admin-level-[0-4]",
+    AGG_FUNC_SLUG="agg-sum",
     FILENAME="[^/]+",
     STORM_BASIN="EP|NA|NI|SI|SP|WP",
     STORM_RP="[0-9]+",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     EVENTS_OR_FIXED="events|fixed",
+    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     SAMPLE="\d+",
+    # may be upper or lower, one 'f' or two
+    TIFF_FILE="[^\/\.\s]+\.[tT][iI][fF][fF]?",
 
 # generate values for global variables used across rules
 include: "rules/storm_workflow_global_variables.smk"
@@ -70,6 +96,7 @@ include: "rules/download/wri-powerplants.smk"
 include: "rules/download/osm.smk"
 include: "rules/download/power_download_all.smk"
 
+include: "rules/preprocess/gadm.smk"
 include: "rules/preprocess/filter_osm_data.smk"
 include: "rules/preprocess/trim_hazard_data.smk"
 include: "rules/preprocess/create_bbox_extracts.smk"
@@ -85,6 +112,17 @@ include: "rules/preprocess/convert_to_geoparquet.smk"
 include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
+
+include: "rules/exposure/join_data.smk"
+include: "rules/exposure/network_raster.smk"
+include: "rules/exposure/gdp-loss.smk"
+include: "rules/exposure/intersect-overview.smk"
+include: "rules/exposure/extract-wind.smk"
+include: "rules/exposure/region-boxes.smk"
+include: "rules/exposure/region-grid.smk"
+include: "rules/exposure/power_intersect_all.smk"
+include: "rules/exposure/direct_damages.smk"
+include: "rules/exposure/aggregate_to_admin_area.smk"
 
 include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"
@@ -103,14 +141,6 @@ include: "rules/analyse/plot/fig_EAD_EACA.smk"
 include: "rules/analyse/plot/fig_EAD.smk"
 include: "rules/analyse/plot/fig_master.smk"
 include: "rules/analyse/power_analyse_all.smk"
-
-include: "rules/exposure/network_raster.smk"
-include: "rules/exposure/gdp-loss.smk"
-include: "rules/exposure/intersect-overview.smk"
-include: "rules/exposure/extract-wind.smk"
-include: "rules/exposure/region-boxes.smk"
-include: "rules/exposure/region-grid.smk"
-include: "rules/exposure/power_intersect_all.smk"
 
 ##### target rules #####
 
@@ -138,6 +168,7 @@ rule clean:
         rm -rf {config[output_dir]}/geoparquet &&
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
+        rm -rf {config[output_dir]}/direct_damages &&
         rm -rf {config[output_dir]}/power_processed &&
         rm -rf {config[output_dir]}/power_intersection
         """
@@ -151,6 +182,7 @@ rule clean_all:
         rm -rf {config[output_dir]}/geoparquet &&
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
+        rm -rf {config[output_dir]}/direct_damages &&
         rm -rf {config[output_dir]}/power_processed &&
         rm -rf {config[output_dir]}/power_intersection
         """

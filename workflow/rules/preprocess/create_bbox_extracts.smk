@@ -4,7 +4,11 @@ rule create_bbox_extracts:
     input:
         "{OUTPUT_DIR}/json/{DATASET}.json",
     output:
-        "{OUTPUT_DIR}/json/{DATASET}_extracts.geojson",
+        # double curly braces allow us to expand but keep wildcards!
+        expand(
+            "{{OUTPUT_DIR}}/json/{{DATASET}}_extracts/slice-{n}.geojson",
+            n=range(config["slice_count"]),
+        ),
     script:
         "../../scripts/prepare-extracts.py"
 

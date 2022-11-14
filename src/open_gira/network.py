@@ -1,5 +1,7 @@
-"""Generic function for creating a network from edges and optional nodes.
 """
+Functionality for creating and manipulating networks.
+"""
+
 import logging
 import warnings
 
