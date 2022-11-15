@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 checkpoint download_hazard_datasets:
     output:
-        directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw"),
+        raw_folder=directory("{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw"),
     run:
         with TemporaryDirectory() as tmpdir:
             input_file_key = re.sub("^hazard-", "", wildcards.HAZARD_SLUG)
@@ -42,8 +42,11 @@ checkpoint download_hazard_datasets:
 
             if len(remote_files):
                 with open(f"{tmpdir}/input.txt", "w") as sources:
-                    sources.writelines(remote_files)
-                os.system(f"cd {target_dir} && wget --no-clobber -i {tmpdir}/input.txt")
+                    sources.writelines("\n".join(remote_files))
+                # use xargs to run multiple wget processes, one per hazard URL
+                # -n 1 to expect only one argument per process
+                # -P {workflow.cores} to limit the total concurrent connections to --cores value
+                os.system(f"cd {target_dir} && xargs -n 1 -P {workflow.cores} wget --no-clobber < {tmpdir}/input.txt")
 
         """
         Test with:

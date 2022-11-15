@@ -1,10 +1,16 @@
-"""Slice collection of geometries definded in geoJSON file and write
-slices in geoJSONfile.
 """
+Take bounding box defined in input GeoJSON file and split into slices, write
+slices to list of output files.
+"""
+
 import json
 import math
+import os
 import sys
+import re
 from os.path import splitext as splitext_orig
+
+from open_gira.utils import natural_sort
 
 
 def splitext(string, exts=None):
@@ -24,11 +30,14 @@ def slice_subextracts(initial_bbox, n):
 
     Returns:
     --------
-    Iterator on bounding boxes, one for each slice (list[list[float]])
+    List of bounding boxes, one for each slice (list[list[float]])
     """
+
     xmin0, ymin0, xmax0, ymax0 = tuple(initial_bbox)
     dx = (xmax0 - xmin0) / n
     dy = (ymax0 - ymin0) / n
+
+    bboxes = []
     for ix in range(n):
         xmin = xmin0 + ix * dx
         xmax = xmin0 + (ix + 1) * dx
@@ -36,22 +45,31 @@ def slice_subextracts(initial_bbox, n):
             ymin = ymin0 + iy * dy
             ymax = ymin0 + (iy + 1) * dy
 
-            yield [xmin, ymin, xmax, ymax]
+            bboxes.append([xmin, ymin, xmax, ymax])
+
+    return bboxes
 
 
 try:
     slice_count = int(snakemake.config["slice_count"])  # type: ignore
-    original_file = snakemake.input[0]  # type: ignore
-    out_file = snakemake.output[0]  # type: ignore
+    input_json_path = snakemake.input[0]  # type: ignore
+    extract_paths: list[str] = snakemake.output  # type: ignore
 except NameError:
-    if len(sys.argv) != 4:
-        raise RuntimeError(
-            "Incorrect number of input args, 3 required. Args: .json file, slice count, output directory"
-        )
-    original_file = sys.argv[1]
-    slice_count = int(sys.argv[2])
-    out_file = sys.argv[3]
+    slice_count = int(sys.argv[1])
+    input_json_path = sys.argv[2]
+    extract_paths: list[str] = sys.argv[3:]
 
+# sort for reproducibility
+extract_paths = natural_sort(extract_paths)
+
+# check inputs
+# fail if we have more than one out dir in the supplied paths
+out_dir, = set(map(os.path.dirname, extract_paths))
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
+
+# check we've got a square number
+# N.B. this is also checked in the Snakefile
 n = math.sqrt(slice_count)
 if n % 1 > 0 and n != 1:
     raise ValueError("Total slice count must be a square number or 1.")
@@ -60,16 +78,28 @@ elif slice_count == 1:
 else:
     n = int(n)
 
-with open(original_file, "r") as fp:
-    originaljsonfile = json.load(fp)
+# read the initial bbox
+with open(input_json_path, "r") as fp:
+    # fail if more than one initial bounding box
+    extract, = json.load(fp)["extracts"]
 
-subextractsjson = {"directory": ".", "extracts": []}
-for extract in originaljsonfile["extracts"]:
-    dataset, ext = splitext(extract["output"])
-    for n, bbox in enumerate(slice_subextracts(extract["bbox"], n)):
-        subextractsjson["extracts"].append(
-            {"bbox": bbox, "output": f"slice-{n}{ext}"}
-        )
-    with open(out_file, "w") as fp:
-        json.dump(subextractsjson, fp, indent=4)
-    subextractsjson["extracts"].clear()
+# generate all slice bboxes given sqrt(slice_count)
+slice_bboxes: list[list[float]] = slice_subextracts(extract["bbox"], n)
+
+# write out slice sub-extracts for the paths we've been given
+for extract_path in extract_paths:
+    extract_filename = os.path.basename(extract_path)
+    i, = re.match(r"slice-(\d+)", extract_filename).groups()
+
+    slice_json = {
+        "directory": ".",
+        "extracts": [
+            {
+                "bbox": slice_bboxes[int(i)],
+                "output": extract_filename.replace(".geojson", ".osm.pbf")
+            }
+        ]
+    }
+
+    with open(extract_path, "w") as fp:
+        json.dump(slice_json, fp, indent=4)

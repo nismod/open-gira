@@ -36,7 +36,7 @@ import geopandas as gpd
 import numpy as np
 import pandas
 
-from join_data import append_data
+from open_gira.io import concat_geoparquet
 
 
 def add_custom_node_references(base):
@@ -103,23 +103,6 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    # When getting the input files from snakemake, there is no
-    # garantee that they will always in the same order. Sort them for
-    # consistency. Makes testing easier.
-    slice_files = sorted(slice_files)
-    # We're reading the different files as a stack from the top.  Let's
-    # reverse the order of files to keep the first file on top.
-    slice_files = slice_files[::-1]
-
-    try:
-        base = gpd.read_parquet(slice_files[-1])
-    except ValueError:
-        # if the input parquet file does not contain a geometry column, geopandas
-        # will raise a ValueError rather than try to procede
-        logging.info("base input file empty... suppressing geopandas exception")
-
-        base = gpd.GeoDataFrame([])
-
-    base = append_data(base, slice_files)
-    base = add_custom_node_references(base)
-    base.to_parquet(output_file)
+    concatenated = concat_geoparquet(slice_files)
+    concatenated = add_custom_node_references(concatenated)
+    concatenated.to_parquet(output_file)
