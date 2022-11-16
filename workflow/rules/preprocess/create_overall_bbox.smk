@@ -2,7 +2,7 @@
 rule create_overall_bbox:
     conda: "../../../environment.yml"
     input:
-        "{OUTPUT_DIR}/input/{DATASET}.osm.pbf",
+        "{OUTPUT_DIR}/input/OSM/{DATASET}.osm.pbf",
     output:
         "{OUTPUT_DIR}/json/{DATASET}.json",
     script:
