@@ -1,6 +1,6 @@
 """
 Download STORM IBTrACS present climate synthetic tropical cyclone tracks and
-tropical cyclone wind speed return periods
+tropical cyclone wind speed return period maps
 
 Reference
 ---------
@@ -12,8 +12,8 @@ https://data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_synthetic_tro
 
 rule download_storm:
     """
-    Download an archive of all storm event tracks for a given model (and some
-    metadata, readmes, etc.)
+    Download an archive of all storm data for a given model (and some metadata,
+    readmes, etc.). For event sets and return period maps.
 
     N.B. We rename the downloaded ZIP file from it's original name to
     archive.zip. This makes it easier to match on this file later. The mv
@@ -26,13 +26,13 @@ rule download_storm:
         """
         if [[ "{wildcards.EVENTS_OR_FIXED}" == "events" ]]
         then
-            resource_file="storm_tracks_{wildcards.STORM_MODEL}.txt"
+            RESOURCE_FILE="storm_tracks_{wildcards.STORM_MODEL}.txt"
         else
-            resource_file="storm_fixed_{wildcards.STORM_MODEL}.txt"
+            RESOURCE_FILE="storm_fixed_{wildcards.STORM_MODEL}.txt"
         fi
 
         wget \
-            --input-file=config/hazard_resource_locations/$resource_file \
+            --input-file=config/hazard_resource_locations/$RESOURCE_FILE \
             --directory-prefix={wildcards.OUTPUT_DIR}/input/storm-ibtracs/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/ \
             --timestamping \
             --no-check-certificate \
@@ -42,6 +42,10 @@ rule download_storm:
             {wildcards.OUTPUT_DIR}/input/storm-ibtracs/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/archive.zip
         """
 
+"""
+Test with:
+snakemake -c1 results/input/storm-ibtracs/events/HadGEM-GC31-HM/archive.zip
+"""
 
 rule extract_storm_events:
     """
@@ -66,6 +70,12 @@ rule extract_storm_events:
         fi
         """
 
+"""
+Test with:
+snakemake -c1 results/input/storm-ibtracs/events/constant/NA/STORM_DATA_IBTRACS_NA_1000_YEARS_0.txt
+snakemake -c1 results/input/storm-ibtracs/events/HadGEM3-GC31-HM/NA/STORM_DATA_HadGEM3-GC31-HM_NA_1000_YEARS_0_IBTRACSDELTA.txt
+"""
+
 
 rule extract_storm_fixed_present:
     """
@@ -81,6 +91,11 @@ rule extract_storm_fixed_present:
             -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/fixed/constant/{wildcards.STORM_BASIN}/
         """
 
+"""
+Test with:
+snakemake -c1 results/input/storm-ibtracs/fixed/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
+"""
+
 
 rule rename_storm_fixed_present:
     input:
@@ -91,6 +106,11 @@ rule rename_storm_fixed_present:
         """
         mv {input} {output}
         """
+
+"""
+Test with:
+snakemake -c1 results/input/storm-ibtracs/fixed/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
+"""
 
 
 rule extract_storm_fixed_future:
@@ -113,6 +133,7 @@ rule extract_storm_fixed_future:
             -d {wildcards.OUTPUT_DIR}/input/storm-ibtracs/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
         """
 
+
 rule wrap_storm_fixed:
     input:
         "{OUTPUT_DIR}/input/storm-ibtracs/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
@@ -122,6 +143,7 @@ rule wrap_storm_fixed:
         """
         gdalwarp -te -180 -60 180 60 {input} {output}
         """
+
 
 rule mosaic_storm_fixed:
     """
