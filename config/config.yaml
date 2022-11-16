@@ -111,7 +111,7 @@ exposure_tifs:
 ## STORM Power Network Analysis
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
-# are expected to fail based on available literature. A central setting is 40 m/s
+# are expected to fail based on available literature.
 transmission_windspeed_failure: [20, 35, 50]
 
 # Width and height of dataset-splitting box (must be factor of 180)

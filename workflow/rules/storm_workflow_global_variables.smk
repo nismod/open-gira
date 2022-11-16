@@ -170,15 +170,6 @@ def get_storm_file(wildcards):
         fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
     return fname
 
-# check wind speed thresholds for damage are correctly ordered
-assert config["central_threshold"] >= config["minimum_threshold"]
-assert config["central_threshold"] <= config["maximum_threshold"]
-WIND_SPEED_THRESHOLDS_MS = [
-    config["central_threshold"],
-    config["minimum_threshold"],
-    config["maximum_threshold"],
-]
-
 # these files are written by the storm intersection script on finishing
 # they are essentially a flag indicating successful completion
 COMPLETION_FLAG_FILES = expand(
@@ -194,52 +185,3 @@ COMPLETION_FLAG_FILES = expand(
     sample=SAMPLES,
     storm_basin=STORM_BASINS,
 )
-
-STORM_STATS_BY_THRESHOLD = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "combined_storm_statistics_{thrval}.csv",
-    ),
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "{storm_basin}",
-        "{sample}",
-        "combined_storm_statistics_{storm_basin}_{sample}_{thrval}.csv",
-    ),
-    storm_basin=STORM_BASINS,
-    sample=SAMPLES,
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-STORM_IMPACT_STATISTICS_DIR = os.path.join(config["output_dir"], "power_output", "statistics")
-
-# variables to analyse for each storm
-STORM_ANALYSIS_METRICS = [
-    "GDP losses",
-    "targets with no power (f=0)",
-    "population affected",
-    "population with no power (f=0)",
-    "effective population affected",
-    "reconstruction cost",
-]
-
-# variables to analyse for targets (electricity consumers)
-TARGET_ANALYSIS_METRICS = [
-    "population_without_power",
-    "effective_population",
-    "affected_population",
-    "mw_loss_storm",
-    "f_value",
-    "gdp_damage",
-]
-
-# bastardised string version of boolean: 'T' or 'F'
-SORT_BY_INCREASING_SEVERITY = 'T' if (config["increased_severity_sort"] == True) else 'F'

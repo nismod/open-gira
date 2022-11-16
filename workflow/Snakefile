@@ -115,32 +115,16 @@ include: "rules/preprocess/powerplants.smk"
 
 include: "rules/exposure/join_data.smk"
 include: "rules/exposure/network_raster.smk"
-include: "rules/exposure/gdp-loss.smk"
-include: "rules/exposure/intersect-overview.smk"
+#include: "rules/exposure/gdp-loss.smk" # TODO: reinstate once we've got intersected windspeeds
 include: "rules/exposure/extract-wind.smk"
 include: "rules/exposure/region-boxes.smk"
 include: "rules/exposure/region-grid.smk"
-include: "rules/exposure/power_intersect_all.smk"
 include: "rules/exposure/direct_damages.smk"
 include: "rules/exposure/aggregate_to_admin_area.smk"
 
-include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"
-include: "rules/analyse/empirical_distribution.smk"
-include: "rules/analyse/country_pair_matrix.smk"
-include: "rules/analyse/transmission_aggregate.smk"
-include: "rules/analyse/extract_percentile.smk"
-include: "rules/analyse/target_analysis.smk"
-include: "rules/analyse/plot/fig_initial.smk"
-include: "rules/analyse/plot/fig_cross_correlation.smk"
 include: "rules/analyse/plot/make_exposure_tif.smk"
-include: "rules/analyse/plot/fig_EACA.smk"
 include: "rules/analyse/plot/make_exposure_img.smk"
-include: "rules/analyse/plot/fig_CDFs.smk"
-include: "rules/analyse/plot/fig_EAD_EACA.smk"
-include: "rules/analyse/plot/fig_EAD.smk"
-include: "rules/analyse/plot/fig_master.smk"
-include: "rules/analyse/power_analyse_all.smk"
 
 ##### target rules #####
 
