@@ -13,17 +13,10 @@ import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.integrate import simpson
 
-from open_gira.io import write_empty_frames, read_damage_curves
+from open_gira import fields
 from open_gira.direct_damages import ReturnPeriodMap, generate_rp_maps
+from open_gira.io import write_empty_frames, read_damage_curves
 from open_gira.utils import natural_sort
-
-
-# exposure table hazard intensity fields expected to be prefixed as such
-HAZARD_PREFIX = "hazard-"
-# exposure table field containing the cost to rebuild per unit length
-REHABILITATION_COST_FIELD = "rehab_cost_USD_per_km"
-# length of edge calculated after intersection
-SPLIT_LENGTH_FIELD = "length_km"
 
 
 if __name__ == "__main__":
@@ -73,7 +66,7 @@ if __name__ == "__main__":
         sys.exit(0)  # exit gracefully so snakemake will continue
 
     # column groupings for data selection
-    hazard_columns = [col for col in exposure.columns if col.startswith(HAZARD_PREFIX)]
+    hazard_columns = [col for col in exposure.columns if col.startswith(fields.HAZARD_PREFIX)]
     non_hazard_columns = list(set(exposure.columns) - set(hazard_columns))
 
     ##########################################################
@@ -136,8 +129,8 @@ if __name__ == "__main__":
     # units are: 1 * USD/km * km = USD
     logging.info("Calculating direct damage costs")
     direct_damages_only = damage_fraction[hazard_columns] \
-        .multiply(damage_fraction[REHABILITATION_COST_FIELD], axis="index") \
-        .multiply(damage_fraction[SPLIT_LENGTH_FIELD], axis="index")
+        .multiply(damage_fraction[fields.REHAB_COST], axis="index") \
+        .multiply(damage_fraction[fields.SPLIT_LENGTH], axis="index")
 
     logging.info("Reading raw network data for unsplit geometry")
     unsplit: gpd.GeoDataFrame = gpd.read_parquet(unsplit_path)
@@ -160,7 +153,7 @@ if __name__ == "__main__":
     # reduce climate model / subsidence to simple MIN/MAX
     # generate a mapping from a 'family' of hazards to their set of related return period maps
     model_families: dict[str, set[ReturnPeriodMap]] = defaultdict(set)
-    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=HAZARD_PREFIX):
+    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=fields.HAZARD_PREFIX):
         model_families[rp_map.without_model].add(rp_map)  # only differ by climate model / subsidence
 
     aggregations = ("min", "mean", "max")
@@ -169,14 +162,14 @@ if __name__ == "__main__":
         for agg_str in aggregations:
             sample_map, *_ = family_rp_maps
             family_aggregation_name = sample_map.name.replace(sample_map.model, agg_str.upper())
-            family_column_names: list[str] = [f"{HAZARD_PREFIX}{rp_map.name}" for rp_map in family_rp_maps]
+            family_column_names: list[str] = [f"{fields.HAZARD_PREFIX}{rp_map.name}" for rp_map in family_rp_maps]
             agg_func = getattr(grouped_direct_damages[family_column_names], agg_str)
-            grouped_direct_damages[f"{HAZARD_PREFIX}{family_aggregation_name}"] = agg_func(axis="columns")
+            grouped_direct_damages[f"{fields.HAZARD_PREFIX}{family_aggregation_name}"] = agg_func(axis="columns")
         grouped_direct_damages = grouped_direct_damages.drop(columns=family_column_names)
 
     # integrate over return periods for expected annual damages
     rp_map_families: dict[str, set[ReturnPeriodMap]] = defaultdict(set)
-    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=HAZARD_PREFIX):
+    for rp_map in generate_rp_maps(grouped_direct_damages.columns, prefix=fields.HAZARD_PREFIX):
         rp_map_families[rp_map.without_RP].add(rp_map)  # only differ by return period
 
     expected_annual_damages = {}
@@ -189,13 +182,13 @@ if __name__ == "__main__":
         # [0, 1] valued decimal probabilities
         probabilities: list[float] = [rp_map.annual_probability for rp_map in sorted_rp_maps]
         # family subset of grouped_direct_damages
-        family_column_names: list[str] = [f"{HAZARD_PREFIX}{rp_map.name}" for rp_map in sorted_rp_maps]
+        family_column_names: list[str] = [f"{fields.HAZARD_PREFIX}{rp_map.name}" for rp_map in sorted_rp_maps]
         family_direct_damages: pd.DataFrame = grouped_direct_damages[family_column_names]
 
         # integrate the damage as a function of probability curve using Simpson's rule
         # Simpson's rule as the function to be integrated is non-linear
         # add _EAD for easier downstream selection of these columns vs. RPs
-        expected_annual_damages[f"{HAZARD_PREFIX}{family_name}_EAD"] = \
+        expected_annual_damages[f"{fields.HAZARD_PREFIX}{family_name}_EAD"] = \
             simpson(family_direct_damages, x=probabilities, axis=1)
 
     #########################################
