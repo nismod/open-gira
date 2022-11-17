@@ -1,5 +1,5 @@
 # Take .osm.pbf files and output .geoparquet files
-rule convert_to_geoparquet:
+rule osm_to_geoparquet:
     conda: "../../../environment.yml"
     input:
         pbf=rules.slice.output.slice_path,

@@ -50,7 +50,7 @@ if __name__ == "__main__":
     box_width_height = float(box_width_height)
     grid, ncols, nrows = create_global_grid(box_width_height)
 
-    countries = geopandas.read_file(admin_data_path, layer=0) \
+    countries = geopandas.read_parquet(admin_data_path) \
         .drop(["NAME_0"], axis="columns") \
         .rename({"GID_0": "code"}, axis="columns")
 
@@ -82,4 +82,4 @@ if __name__ == "__main__":
         }
         json.dump(info, filejson, indent=2, sort_keys=True)
 
-    grid.to_file(global_boxes_path, driver="GPKG")
+    grid.to_parquet(global_boxes_path)

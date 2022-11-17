@@ -15,7 +15,7 @@ def adjacent_box_nodes(wildcards):
     box_id = int(wildcards.BOX)
     neighbour_box_ids = adj(box_id, num_cols, tot_boxes)
     nodes = [
-        f"{output_dir}/processed/power/{b}/nodes_{b}.parquet"
+        f"{output_dir}/processed/power/{b}/nodes_{b}.geoparquet"
         for b in neighbour_box_ids
     ]
     return nodes
@@ -24,8 +24,8 @@ rule process_connector:
     conda: "../../../environment.yml"
     input:
         adjacent_nodes=adjacent_box_nodes,
-        edges="{OUTPUT_DIR}/processed/power/{BOX}/edges_{BOX}.parquet",
-        nodes="{OUTPUT_DIR}/processed/power/{BOX}/nodes_{BOX}.parquet",
+        edges="{OUTPUT_DIR}/processed/power/{BOX}/edges_{BOX}.geoparquet",
+        nodes="{OUTPUT_DIR}/processed/power/{BOX}/nodes_{BOX}.geoparquet",
         global_metadata=rules.world_splitter.output.global_metadata,
     output:
         connector="{OUTPUT_DIR}/processed/power/{BOX}/connector_{BOX}.json",
