@@ -68,7 +68,6 @@ CONNECTOR_OUT = (
 
 STORM_BASINS = config["storm_basins"]
 if len(STORM_BASINS) == 0:
-    print("Inputting all storm basins")
     # east pacific, north atlantic, north indian, south india, south pacific, west pacific
     STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
 
