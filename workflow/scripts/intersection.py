@@ -147,8 +147,8 @@ if __name__ == "__main__":
         i, j = get_cell_indicies_of_midpoint(geometry, raster_height, raster_width, raster_transform)
 
         # die if we're out of bounds somehow
-        assert 0 < i < raster_height
-        assert 0 < j < raster_width
+        assert 0 <= i < raster_height
+        assert 0 <= j < raster_width
 
         # return a series with labels so we can unpack neatly into two dataframe columns
         return pandas.Series(index=(fields.RASTER_I, fields.RASTER_J), data=[i, j])

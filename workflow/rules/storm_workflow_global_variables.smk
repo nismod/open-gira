@@ -41,7 +41,7 @@ def all_box_ids() -> List[int]:
     if len(config["specific_boxes"]) != 0:
         return config["specific_boxes"]
 
-    max_i = int(360 * 180 / float(config["box_width_height"]) ** 2)
+    max_i = int(360 * 180 / float(config["box_deg"]) ** 2)
     return range(0, max_i)
 
 

@@ -36,7 +36,7 @@ def create_global_grid(box_width_height):
 if __name__ == "__main__":
     try:
         admin_data_path = snakemake.input["admin_data"]  # type: ignore
-        box_width_height = snakemake.config["box_width_height"]  # type: ignore
+        box_width_height = snakemake.config["box_deg"]  # type: ignore
         output_dir = snakemake.config["output_dir"]  # type: ignore
         global_metadata_path = snakemake.output["global_metadata"]  # type: ignore
         global_boxes_path = snakemake.output["global_boxes"]  # type: ignore

@@ -13,6 +13,9 @@ if __name__ == "__main__":
     boxes = geopandas.read_parquet(global_boxes_path) \
         .set_index("box_id")
     box = boxes.loc[[f"box_{box_id}"], :]
+
     gridfinder = geopandas.read_parquet(gridfinder_path).reset_index(names="source_id")
-    gridfinder_box = gridfinder.sjoin(box).rename(columns={"index_right": "box_id"})
+
+    gridfinder_box = gridfinder.clip(box)
+    gridfinder_box["box_id"] = f"box_{box_id}"
     gridfinder_box.to_parquet(output_path)

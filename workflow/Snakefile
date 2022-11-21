@@ -41,6 +41,15 @@ for network, file_path in config['network_filters'].items():
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
 
+# check requested grid for power/storms pipeline
+assert config["box_deg"] >= config["wind_deg"]
+# N.B. modulo by a decimal leads to floating point errors
+# do division then modulo by 1 instead
+# check box_deg is a factor of 180
+assert (180 / config["box_deg"]) % 1 == 0
+# check wind_deg is a factor of box_deg
+assert (config["box_deg"] / config["wind_deg"]) % 1 == 0
+
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
 
@@ -109,7 +118,6 @@ include: "rules/preprocess/split-gridfinder.smk"
 include: "rules/preprocess/targets.smk"
 include: "rules/preprocess/join_data.smk"
 include: "rules/preprocess/osm_to_geoparquet.smk"
-include: "rules/preprocess/convert_filetype.smk"
 include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
