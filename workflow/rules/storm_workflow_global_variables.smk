@@ -93,7 +93,7 @@ STORM_RETURN_PERIODS_CURRENT = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "fixed",
         "constant",
         "STORM_FIXED_RETURN_PERIODS_constant_{storm_rp}_YR_RP.tif",
@@ -105,7 +105,7 @@ STORM_RETURN_PERIODS_FUTURE = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "fixed",
         "{storm_gcm}",
         "STORM_FIXED_RETURN_PERIODS_{storm_gcm}_{storm_rp}_YR_RP.tif",
@@ -120,7 +120,7 @@ STORM_EVENTS_CURRENT = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "events",
         "constant",
         "{storm_basin}",
@@ -134,7 +134,7 @@ STORM_EVENTS_FUTURE = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "events",
         "{storm_gcm}",
         "{storm_basin}",
@@ -164,9 +164,9 @@ def get_storm_file(wildcards):
     - SAMPLE (0-9)
     """
     if wildcards.STORM_MODEL == "constant":
-        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
+        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
     else:
-        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
+        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
     return fname
 
 # these files are written by the storm intersection script on finishing

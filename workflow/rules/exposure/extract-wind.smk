@@ -13,7 +13,7 @@ checkpoint intersect_winds_indiv:
         storm_files = STORM_EVENTS,  # TODO limited to specific storms if any
         # Do we want ws output files per group of storms? (basin/model/sample)
         # TODO deal with inconsistency in present vs future filename patterns
-        # storm_file="{OUTPUT_DIR}/input/storm-ibtracs/events/{STORM_MODEL}/{STORM_BASIN}/STORM_DATA_{STORM_GCM_OR_IBTRACS}_{STORM_BASIN}_1000_YEARS_{SAMPLE_IBTRACSDELTA}.txt",
+        # storm_file="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/{STORM_BASIN}/STORM_DATA_{STORM_GCM_OR_IBTRACS}_{STORM_BASIN}_1000_YEARS_{SAMPLE_IBTRACSDELTA}.txt",
     output:
         # TODO figure out if this should be per storm or per sample?
         # TODO BASIN and BOX is redundant - can we skip BASIN? would do some lookup function thing
