@@ -47,7 +47,7 @@ Test with:
 snakemake -c1 results/input/STORM/events/HadGEM-GC31-HM/archive.zip
 """
 
-rule extract_storm_events:
+rule extract_storm_event:
     """
     Unzip a storm file for a basin we are interested in
     """
@@ -74,6 +74,29 @@ rule extract_storm_events:
 Test with:
 snakemake -c1 results/input/STORM/events/constant/NA/STORM_DATA_IBTRACS_NA_1000_YEARS_0.txt
 snakemake -c1 results/input/STORM/events/HadGEM3-GC31-HM/NA/STORM_DATA_HadGEM3-GC31-HM_NA_1000_YEARS_0_IBTRACSDELTA.txt
+"""
+
+
+rule extract_all_storm_events:
+    """
+    Unzip all the storm files for a given model. Rename to appropriate file extension (CSV).
+    """
+    input:
+        "{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/archive.zip"
+    output:
+        directory("{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw")
+    shell:
+        """
+        MODEL_DIR={wildcards.OUTPUT_DIR}/input/STORM/events/{wildcards.STORM_MODEL}
+        unzip -j -d $MODEL_DIR/raw {input}
+        for FILE in $MODEL_DIR/raw/*.txt; do
+            mv -- $FILE ${{FILE%.txt}}.csv
+        done
+        """
+
+"""
+Test with:
+snakemake -c1 results/input/STORM/events/constant/raw/
 """
 
 
