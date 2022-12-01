@@ -123,6 +123,7 @@ include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
 include: "rules/preprocess/IBTrACS.smk"
+include: "rules/preprocess/STORM.smk"
 
 include: "rules/exposure/join_data.smk"
 include: "rules/exposure/network_raster.smk"

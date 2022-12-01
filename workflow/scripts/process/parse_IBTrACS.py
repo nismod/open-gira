@@ -1,7 +1,7 @@
 """
 Parse and clean IBTrACS historic storm CSV records into geoparquet
 
-Schema should match STORM synthetic tracks
+The output schema is a superset of the STORM synthetic track data
 """
 
 import os
@@ -9,6 +9,8 @@ import os
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+
+from open_gira.io import STORM_CSV_SCHEMA
 
 
 def saffir_simpson_classifier(wind_speed_ms: float) -> int:
@@ -123,23 +125,14 @@ if __name__ == "__main__":
     df = df.drop(columns=WIND_COLS + RMW_COLS + PRESSURE_COLS + ["time_utc"])
 
     # reorder columns to match STORM dataset (except track_id and name, which are additional)
-    # TODO: move this list elsewhere and use both here and for reading STORM data
-    STORM_columns = [
-        "year",
-        "month",
-        "tc_number",
-        "timestep",
-        "basin_id",
-        "lat",
-        "lon",
-        "min_pressure_hpa",
-        "max_wind_speed_ms",
-        "radius_to_max_winds_km",
-        "category",
-        "landfall",
-        "distance_to_land_km",
-    ]
-    df = df.loc[:, STORM_columns + ["track_id", "name"]]
+    df = df.loc[:, list(STORM_CSV_SCHEMA.keys()) + ["track_id", "name"]]
+
+    # construct geometry from lat and long
+    df = gpd.GeoDataFrame(
+        data=df,
+        geometry=gpd.points_from_xy(df["lon"], df["lat"], crs=4326)
+    )
+    df = df.drop(columns=["lon", "lat"])
 
     # write to disk
     os.makedirs(os.path.dirname(ibtracs_parquet_path), exist_ok=True)

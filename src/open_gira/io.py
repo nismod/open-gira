@@ -18,6 +18,25 @@ from open_gira.utils import natural_sort
 NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
 WGS84_EPSG = 4326
 
+# column names and dtypes for STORM synthetic tropical cyclone tracks
+STORM_CSV_SCHEMA = {
+    "year": int,
+    "month": int,
+    "tc_number": int,
+    "timestep": int,
+    "basin_id": int,
+    "lat": float,
+    "lon": float,
+    "min_pressure_hpa": float,
+    "max_wind_speed_ms": float,
+    "radius_to_max_winds_km": float,
+    "category": int,
+    "landfall": bool,  # actually {0|1} in the file
+    "distance_to_land_km": float,
+}
+# basins are serialized as integers in data, 0 -> "EP", 2 -> "NI" etc.
+STORM_BASIN_IDS = ("EP", "NA", "NI", "SI", "SP", "WP")
+
 
 def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
     """
