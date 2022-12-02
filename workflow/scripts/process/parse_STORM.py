@@ -6,6 +6,7 @@ Output format shares columns with IBTrACS.
 """
 
 import os
+import re
 from glob import glob
 
 import numpy as np
@@ -23,10 +24,15 @@ if __name__ == "__main__":
 
     data = []
     for path in natural_sort(glob(f"{csv_dir}/*.csv")):
-        sample = int(path.split(".csv")[0].split("_")[-1])
+
         df = pd.read_csv(path, names=schema.keys(), dtype=schema)
 
-        df["sample"] = sample
+        # example paths containing sample number:
+        # STORM_DATA_HadGEM3-GC31-HM_WP_1000_YEARS_9_IBTRACSDELTA.csv
+        # STORM_DATA_IBTRACS_EP_1000_YEARS_0.csv
+        sample, = re.search(r"1000_YEARS_([\d])", os.path.basename(path)).groups()
+
+        df["sample"] = int(sample)
 
         # different track_id format for STORM vs. IBTrACS, ensures no collisions
         df["track_id"] = (
