@@ -125,9 +125,18 @@ if __name__ == "__main__":
         )
         # add to collection
         for s in splits:
-            new_row = core_edges.iloc[i].copy()
-            new_row.geometry = s
-            core_splits.append(new_row)
+            # splitting sometimes returns zero-length linestrings on edge of raster
+            # see below for example linestring on eastern (lon=70W) extent of box
+            # (Pdb) geometry.coords.xy
+            # (array('d', [-70.0, -70.0]), array('d', [18.445832920952196, 18.445832920952196]))
+            # this split geometry has: j = raster_width
+            # however j should be in range: 0 <= j < raster_width
+            # as a hacky workaround, drop any splits with length 0
+            # do we need a nudge off a cell boundary somewhere when performing the splits in snail?
+            if not s.length == 0:
+                new_row = core_edges.iloc[i].copy()
+                new_row.geometry = s
+                core_splits.append(new_row)
 
     core_splits = geopandas.GeoDataFrame(core_splits)
 
