@@ -17,11 +17,11 @@ rule slice_storm:
         global_tracks=rules.parse_storm.output.parquet,
         global_boxes=rules.world_splitter.output.global_boxes,
     output:
-        sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_MODEL}/STORM.geoparquet",
+        sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_MODEL}.geoparquet",
     script:
         "../../scripts/process/slice_storm_tracks.py"
 
 """
 To test:
-snakemake -c1 results/power/slice/1030/storms/constant/STORM.geoparquet
+snakemake -c1 results/power/slice/1030/storms/constant.geoparquet
 """

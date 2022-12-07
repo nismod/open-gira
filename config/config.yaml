@@ -122,6 +122,9 @@ box_deg: 5
 # wind speed is constant within a square area of sides wind_deg
 wind_deg: 0.1
 
+# whether to plot maximum wind fields and storm track animations for each storm
+plot_wind_fields: True
+
 # List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957].
 # Note that this must be known for the box_width_height value entered above.
 # use an empty list to evaluate globally

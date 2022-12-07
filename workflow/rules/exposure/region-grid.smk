@@ -40,11 +40,11 @@ rule rasterise_network:
     params:
         copy_raster_values=False,
     output:
-        geoparquet="{OUTPUT_DIR}/power/slice/{BOX}/network/edges_split_{BOX}.geoparquet",
+        geoparquet="{OUTPUT_DIR}/power/slice/{BOX}/exposure/edges_split_{BOX}.geoparquet",
     script:
         "../../scripts/intersection.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/slice/1030/network/edges_split_1030.geoparquet
+snakemake --cores 1 results/power/slice/1030/exposure/edges_split_1030.geoparquet
 """
