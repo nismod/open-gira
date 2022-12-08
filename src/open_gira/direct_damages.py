@@ -217,7 +217,7 @@ def holland_wind_model(
 
     f = np.abs(1.45842300e-4 * np.sin(np.radians(lat_degrees)))
 
-    # case where (pressure_env_hpa == pressure_hpa) so p_drop is zero will raise ZeroDivisionError
+    # case where (pressure_env_hpa == pressure_hpa) so delta_p is zero will raise ZeroDivisionError
     delta_p = (pressure_env_hpa - pressure_hpa) * 100
 
     B = (
