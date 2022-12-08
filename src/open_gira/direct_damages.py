@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 import re
 from typing import Union
 
+import numpy as np
+
 from open_gira.utils import natural_sort
 
 
@@ -184,6 +186,55 @@ class AqueductFlood(ReturnPeriodMap):
         split_name = self.name.split("_")
         split_name.pop(4)  # index of return period element for river and coastal map names
         return "_".join(split_name)
+
+
+def holland_wind_model(
+    radius_to_max_winds_m: float,
+    wind_speed_ms: float,
+    pressure_hpa: float,
+    pressure_env_hpa: float,
+    distance_m: np.ndarray,
+    lat_degrees: float,
+) -> np.ndarray:
+    """
+    Calculate wind speed at points some distance from a cyclone eye location.
+
+    See in particular Section 3.2 in Lin and Chavas (2012).
+
+    References
+    ----------
+    - Lin and Chavas (2012)
+      https://www.sbafla.com/method/portals/methodology/FloodJournalArticles/Lin_Chavas_JGR12_ParametricWind.pdf
+    - Holland (1980)
+      https://doi.org/10.1175/1520-0493(1980)108%3C1212:AAMOTW%3E2.0.CO;2
+    """
+
+    rho = 1.10
+    f = np.abs(1.45842300e-4 * np.sin(np.radians(lat_degrees)))
+
+    delta_p = (pressure_env_hpa - pressure_hpa) * 100
+    # case where (pressure_env_hpa == pressure_hpa) so p_drop is zero will raise ZeroDivisionError
+
+    B = (
+        np.power(wind_speed_ms, 2) * np.e * rho
+        + f * wind_speed_ms * radius_to_max_winds_m * np.e * rho
+    ) / delta_p
+
+    Vg = (
+        np.sqrt(
+            # case where distance_m is zero will raise ZeroDivisionError
+            (
+                np.power(radius_to_max_winds_m / distance_m, B)
+                * B
+                * delta_p
+                * np.exp(0 - (radius_to_max_winds_m / distance_m) ** B)
+            )
+            + (np.power(radius_to_max_winds_m, 2) * np.power(f, 2) / 4)
+        )
+        - (f * radius_to_max_winds_m) / 2
+    )
+
+    return Vg  # , B, delta_p, f
 
 
 def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:
