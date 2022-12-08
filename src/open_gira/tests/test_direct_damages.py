@@ -1,6 +1,10 @@
 import pytest
 
-from open_gira.direct_damages import ReturnPeriodMap, AqueductFlood
+import numpy as np
+
+from open_gira.direct_damages import (
+    ReturnPeriodMap, AqueductFlood, holland_wind_model
+)
 
 
 class TestReturnPeriodMap:
@@ -50,3 +54,35 @@ class TestAqueductFlood:
         assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_05").slr_percentile == 5.0
         assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_50").slr_percentile == 50.0
         assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0").slr_percentile == 95.0
+
+
+class TestHollandWindModel:
+
+    def test_delta_P_zero(self):
+        """No pressure drop, not really a storm..."""
+        args = [1_000, 50, 1000, 1000, np.array([10_000]), 30]
+        expected_result = np.array([np.nan])
+        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+
+    def test_radius_zero(self):
+        """Winds at the centre of the eye"""
+        args = [1_000, 50, 980, 1010, np.array([0]), 30]
+        expected_result = np.array([np.nan])
+        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+
+    def test_1D(self):
+        """1D array of distances to calculate wind speeds for"""
+        args = [1_000, 50, 980, 1010, np.linspace(10, 10_000, 4), 30]
+        expected_result = np.array([0., 18.71107154, 8.03531942, 4.84727295])
+        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+
+    def test_2D(self):
+        """2D array of distances to calculate wind speeds for"""
+        X, Y = np.meshgrid(np.linspace(10, 10_000, 3), np.linspace(10, 10_000, 3))
+        args = [1_000, 50, 980, 1010, np.sqrt(X**2 + Y**2), 30]
+        expected_result = np.array([
+            [ 0.        , 11.46051876,  4.84726991],
+            [11.46051876,  7.46335345,  4.21324874],
+            [ 4.84726991,  4.21324874,  3.13583246]
+        ])
+        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
