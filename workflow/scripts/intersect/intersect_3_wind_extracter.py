@@ -15,6 +15,8 @@ from shapely.geometry.point import Point
 from tqdm import tqdm
 import xarray as xr
 
+from open_gira.direct_damages import holland_wind_model
+
 
 def main():
     edges_split_path = snakemake.input.edges_split  # type: ignore
@@ -195,60 +197,14 @@ def interpolate_track(track: gpd.GeoDataFrame, substeps: int = 5) -> gpd.GeoData
     return gpd.GeoDataFrame(interpolated_track).drop(columns=["x", "y"])
 
 
-def holland_wind_field(
-    radius_to_max_winds_km: float,
-    wind_speed_ms: float,
-    pressure_hpa: float,
-    pressure_env_hpa: float,
-    distance_m: np.ndarray,
-    lat_degrees: float,
-) -> np.ndarray:
-    """
-    Calculate wind speed at points some distance from a cyclone track point.
-
-    See in particular Section 3.2 in Lin and Chavas (2012).
-
-    References
-    ----------
-    - Lin and Chavas (2012)
-      https://www.sbafla.com/method/portals/methodology/FloodJournalArticles/Lin_Chavas_JGR12_ParametricWind.pdf
-    - Holland (1980)
-      https://doi.org/10.1175/1520-0493(1980)108%3C1212:AAMOTW%3E2.0.CO;2
-    """
-
-    radius_to_max_winds_m = radius_to_max_winds_km * 1000
-    rho = 1.10
-    f = np.abs(1.45842300e-4 * np.sin(np.radians(lat_degrees)))
-    e = 2.71828182846
-    delta_p = (pressure_env_hpa - pressure_hpa) * 100
-    # case where (pressure_env_hpa == pressure_hpa) so p_drop is zero will raise ZeroDivisionError
-    B = (
-        np.power(wind_speed_ms, 2) * e * rho
-        + f * wind_speed_ms * radius_to_max_winds_m * e * rho
-    ) / delta_p
-    Vg = (
-        np.sqrt(
-            # case where distance_m is zero will raise ZeroDivisionError
-            (
-                np.power(radius_to_max_winds_m / distance_m, B)
-                * B
-                * delta_p
-                * np.exp(0 - (radius_to_max_winds_m / distance_m) ** B)
-            )
-            + (np.power(radius_to_max_winds_m, 2) * np.power(f, 2) / 4)
-        )
-        - (f * radius_to_max_winds_m) / 2
-    )
-    return Vg  # , B, delta_p, f
-
-
-def wind_field_for_track(track: gpd.GeoDataFrame, wind_grid_path: str, pressure_env_hpa: float) -> np.ndarray:
+def wind_field_for_track(track: gpd.GeoDataFrame, grid_definition_path: str, pressure_env_hpa: float) -> np.ndarray:
     """
     Evaluate wind speed at each timestep on a grid of points given a storm track.
 
     Arguments:
         track (gpd.GeoDataFrame): Table of storm track information
-        wind_grid_path (str): Raster file path defining a grid to evaluate on
+        grid_definition_path (str): Raster file path defining a grid to
+            evaluate on, should have coordinates 'x' and 'y'.
         pressure_env_hpa (float): Background pressure for this region in hPa
 
     Returns:
@@ -256,36 +212,32 @@ def wind_field_for_track(track: gpd.GeoDataFrame, wind_grid_path: str, pressure_
             rank=3, shape=(timesteps, x, y)
     """
 
-    raster_grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+    raster_grid: xr.DataArray = rioxarray.open_rasterio(grid_definition_path)
+    X, Y = np.meshgrid(raster_grid.x, raster_grid.y)
+
     raster_shape: tuple[int, int] = (len(raster_grid.x), len(raster_grid.y))
-
-    grid_midpoints: list[Point] = []
-    for x in raster_grid.x:
-        for y in raster_grid.y:
-            grid_midpoints.append(Point(x, y))
-    grid = gpd.GeoSeries(grid_midpoints)
-
     wind_speeds: np.ndarray = np.zeros((len(track), *raster_shape))
+
     geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
 
     for track_i, track_point in enumerate(track.itertuples()):
         # distances from track to evaluation points
         # https://pyproj4.github.io/pyproj/dev/api/geod.html#pyproj.Geod.inv
         _, _, distance_m = geod_wgs84.inv(
-            np.full(len(grid), track_point.geometry.x),
-            np.full(len(grid), track_point.geometry.y),
-            grid.geometry.x,
-            grid.geometry.y,
+            np.full(len(X.ravel()), track_point.geometry.x),
+            np.full(len(Y.ravel()), track_point.geometry.y),
+            X.ravel(),
+            Y.ravel(),
         )
 
-        wind_speeds[track_i]: np.ndarray = holland_wind_field(
-            track_point.radius_to_max_winds_km,
+        wind_speeds[track_i]: np.ndarray = holland_wind_model(
+            track_point.radius_to_max_winds_km * 1_000,  # convert to meters
             track_point.max_wind_speed_ms,
             track_point.min_pressure_hpa,
             pressure_env_hpa,
-            distance_m,
+            distance_m.reshape(raster_shape),  # (x, y)
             track_point.geometry.y,
-        ).reshape(raster_shape, order="F")  # (x, y)
+        )
 
     return wind_speeds
 
