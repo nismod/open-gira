@@ -189,17 +189,15 @@ class AqueductFlood(ReturnPeriodMap):
 
 
 def holland_wind_model(
-    radius_to_max_winds_m: float,
-    wind_speed_ms: float,
-    pressure_hpa: float,
-    pressure_env_hpa: float,
-    distance_m: np.ndarray,
-    lat_degrees: float,
+    RMW_m: float,
+    V_max_ms: float,
+    p_pa: float,
+    p_env_pa: float,
+    r_m: np.ndarray,
+    psi_deg: float,
 ) -> np.ndarray:
     """
     Calculate wind speed at points some distance from a cyclone eye location.
-
-    See in particular Section 3.2 in Lin and Chavas (2012).
 
     References
     ----------
@@ -207,39 +205,52 @@ def holland_wind_model(
       https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2011JD017126
     - Holland (1980)
       https://doi.org/10.1175/1520-0493(1980)108%3C1212:AAMOTW%3E2.0.CO;2
+
+    See in particular Section 3.2 in Lin and Chavas (2012).
+
+    Args:
+        RMW_m (float): Radius to max wind speeds in meters
+        V_max_ms (float): Maximum wind speed in meters per second
+        p_pa (float): Pressure of eye in Pascals
+        p_env_pa (float): 'Background' atmospheric pressure in Pascals
+        r_m (np.ndarray): Radii to calculate wind speeds for
+        phi_deg (float): Latitude of eye in degrees
+
+    Returns:
+        np.ndarray: Wind speeds given other params for each radii in input r_m
     """
 
     M = 0.02897  # molar mass of (dry) air, kg/mol
     R = 8.314  # gas constant, J/K/mol
     T = 293  # temperature estimate, K
-    p = pressure_hpa * 100  # pressure, Pa
-    rho = (p * M) / (R * T)  # kg/m^3
+    rho = (p_pa * M) / (R * T)  # kg/m^3
 
-    f = np.abs(1.45842300e-4 * np.sin(np.radians(lat_degrees)))
+    Omega = 7.292E-5
+    f = np.abs(2 * Omega * np.sin(np.radians(psi_deg)))  # Coriolis parameter
 
-    # case where (pressure_env_hpa == pressure_hpa) so delta_p is zero will raise ZeroDivisionError
-    delta_p = (pressure_env_hpa - pressure_hpa) * 100
+    # case where (pressure_env_hpa == pressure_hpa) so Delta_P is zero will raise ZeroDivisionError
+    Delta_P = p_env_pa - p_pa
 
     B = (
-        np.power(wind_speed_ms, 2) * np.e * rho
-        + f * wind_speed_ms * radius_to_max_winds_m * np.e * rho
-    ) / delta_p
+        np.power(V_max_ms, 2) * np.e * rho
+        + f * V_max_ms * RMW_m * np.e * rho
+    ) / Delta_P
 
     Vg = (
         np.sqrt(
-            # case where distance_m is zero will raise ZeroDivisionError
+            # case where r_m is zero will raise ZeroDivisionError
             (
-                np.power(radius_to_max_winds_m / distance_m, B)
+                np.power(RMW_m / r_m, B)
                 * B
-                * delta_p
-                * np.exp(0 - (radius_to_max_winds_m / distance_m) ** B)
+                * Delta_P
+                * np.exp(0 - (RMW_m / r_m) ** B)
             )
-            + (np.power(radius_to_max_winds_m, 2) * np.power(f, 2) / 4)
+            + (np.power(RMW_m, 2) * np.power(f, 2) / 4)
         )
-        - (f * radius_to_max_winds_m) / 2
+        - (f * RMW_m) / 2
     )
 
-    return Vg  # , B, delta_p, f
+    return Vg  # , B, Delta_P, f
 
 
 def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:

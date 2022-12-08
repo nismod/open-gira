@@ -60,31 +60,31 @@ class TestHollandWindModel:
 
     def test_delta_P_zero(self):
         """No pressure drop, not really a storm..."""
-        args = [1_000, 50, 1000, 1000, np.array([10_000]), 30]
+        args = [1_000, 50, 100000, 100000, np.array([10_000]), 30]
         expected_result = np.array([np.nan])
-        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+        np.testing.assert_allclose(holland_wind_model(*args), expected_result)
 
     def test_radius_zero(self):
         """Winds at the centre of the eye"""
-        args = [1_000, 50, 980, 1010, np.array([0]), 30]
+        args = [1_000, 50, 98000, 101000, np.array([0]), 30]
         expected_result = np.array([np.nan])
-        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+        np.testing.assert_allclose(holland_wind_model(*args), expected_result)
 
     def test_1D(self):
         """1D array of distances to calculate wind speeds for"""
-        args = [1_000, 50, 980, 1010, np.linspace(10, 10_000, 4), 30]
+        args = [1_000, 50, 98000, 101000, np.linspace(10, 10_000, 4), 30]
         expected_result = np.array(
             [ 0.       , 17.6795253,  7.1879278,  4.2025169]
         )
-        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+        np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)
 
     def test_2D(self):
         """2D array of distances to calculate wind speeds for"""
         X, Y = np.meshgrid(np.linspace(10, 10_000, 3), np.linspace(10, 10_000, 3))
-        args = [1_000, 50, 980, 1010, np.sqrt(X**2 + Y**2), 30]
+        args = [1_000, 50, 98000, 101000, np.sqrt(X**2 + Y**2), 30]
         expected_result = np.array([
             [ 0.       , 10.4840598,  4.2025141],
             [10.4840598,  6.6456522,  3.6213658],
             [ 4.2025141,  3.6213658,  2.6464645]
         ])
-        np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
+        np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)

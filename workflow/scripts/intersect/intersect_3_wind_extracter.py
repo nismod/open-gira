@@ -233,8 +233,8 @@ def wind_field_for_track(track: gpd.GeoDataFrame, grid_definition_path: str, pre
         wind_speeds[track_i]: np.ndarray = holland_wind_model(
             track_point.radius_to_max_winds_km * 1_000,  # convert to meters
             track_point.max_wind_speed_ms,
-            track_point.min_pressure_hpa,
-            pressure_env_hpa,
+            track_point.min_pressure_hpa * 100,  # Pascals
+            pressure_env_hpa * 100,  # Pascals
             distance_m.reshape(raster_shape),  # (x, y)
             track_point.geometry.y,
         )
