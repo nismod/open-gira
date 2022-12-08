@@ -73,7 +73,9 @@ class TestHollandWindModel:
     def test_1D(self):
         """1D array of distances to calculate wind speeds for"""
         args = [1_000, 50, 980, 1010, np.linspace(10, 10_000, 4), 30]
-        expected_result = np.array([0., 18.71107154, 8.03531942, 4.84727295])
+        expected_result = np.array(
+            [ 0.       , 17.6795253,  7.1879278,  4.2025169]
+        )
         np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)
 
     def test_2D(self):
@@ -81,8 +83,8 @@ class TestHollandWindModel:
         X, Y = np.meshgrid(np.linspace(10, 10_000, 3), np.linspace(10, 10_000, 3))
         args = [1_000, 50, 980, 1010, np.sqrt(X**2 + Y**2), 30]
         expected_result = np.array([
-            [ 0.        , 11.46051876,  4.84726991],
-            [11.46051876,  7.46335345,  4.21324874],
-            [ 4.84726991,  4.21324874,  3.13583246]
+            [ 0.       , 10.4840598,  4.2025141],
+            [10.4840598,  6.6456522,  3.6213658],
+            [ 4.2025141,  3.6213658,  2.6464645]
         ])
         np.testing.assert_almost_equal(holland_wind_model(*args), expected_result)

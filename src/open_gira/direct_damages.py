@@ -204,16 +204,21 @@ def holland_wind_model(
     References
     ----------
     - Lin and Chavas (2012)
-      https://www.sbafla.com/method/portals/methodology/FloodJournalArticles/Lin_Chavas_JGR12_ParametricWind.pdf
+      https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2011JD017126
     - Holland (1980)
       https://doi.org/10.1175/1520-0493(1980)108%3C1212:AAMOTW%3E2.0.CO;2
     """
 
-    rho = 1.10
+    M = 0.02897  # molar mass of (dry) air, kg/mol
+    R = 8.314  # gas constant, J/K/mol
+    T = 293  # temperature estimate, K
+    p = pressure_hpa * 100  # pressure, Pa
+    rho = (p * M) / (R * T)  # kg/m^3
+
     f = np.abs(1.45842300e-4 * np.sin(np.radians(lat_degrees)))
 
-    delta_p = (pressure_env_hpa - pressure_hpa) * 100
     # case where (pressure_env_hpa == pressure_hpa) so p_drop is zero will raise ZeroDivisionError
+    delta_p = (pressure_env_hpa - pressure_hpa) * 100
 
     B = (
         np.power(wind_speed_ms, 2) * np.e * rho
