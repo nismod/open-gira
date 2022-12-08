@@ -213,7 +213,7 @@ def holland_wind_model(
         V_max_ms (float): Maximum wind speed in meters per second
         p_pa (float): Pressure of eye in Pascals
         p_env_pa (float): 'Background' atmospheric pressure in Pascals
-        r_m (np.ndarray): Radii to calculate wind speeds for
+        r_m (np.ndarray): Radii in meters to calculate wind speeds for
         phi_deg (float): Latitude of eye in degrees
 
     Returns:
@@ -236,21 +236,24 @@ def holland_wind_model(
         + f * V_max_ms * RMW_m * np.e * rho
     ) / Delta_P
 
-    Vg = (
+    V = (
         np.sqrt(
-            # case where r_m is zero will raise ZeroDivisionError
             (
-                np.power(RMW_m / r_m, B)
-                * B
-                * Delta_P
-                * np.exp(0 - (RMW_m / r_m) ** B)
+                # case where r_m is zero will raise ZeroDivisionError
+                (
+                    np.power(RMW_m / r_m, B)
+                    * B
+                    * Delta_P
+                    * np.exp(0 - (RMW_m / r_m) ** B)
+                )
+                + (np.power(r_m, 2) * np.power(f, 2) / 4)
             )
-            + (np.power(RMW_m, 2) * np.power(f, 2) / 4)
+            / rho
         )
-        - (f * RMW_m) / 2
+        - (f * r_m) / 2
     )
 
-    return Vg  # , B, Delta_P, f
+    return V
 
 
 def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:

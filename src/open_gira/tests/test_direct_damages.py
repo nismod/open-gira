@@ -59,13 +59,19 @@ class TestAqueductFlood:
 class TestHollandWindModel:
 
     def test_delta_P_zero(self):
-        """No pressure drop, not really a storm..."""
+        """
+        No pressure drop, not really a storm...
+        With no pressure drop, we have a divide by zero and therefore NaN wind speed
+        """
         args = [1_000, 50, 100000, 100000, np.array([10_000]), 30]
         expected_result = np.array([np.nan])
         np.testing.assert_allclose(holland_wind_model(*args), expected_result)
 
     def test_radius_zero(self):
-        """Winds at the centre of the eye"""
+        """
+        Winds at the centre of the eye
+        Radius zero results in a divide by zero and therefore NaN wind speed
+        """
         args = [1_000, 50, 98000, 101000, np.array([0]), 30]
         expected_result = np.array([np.nan])
         np.testing.assert_allclose(holland_wind_model(*args), expected_result)
@@ -74,7 +80,7 @@ class TestHollandWindModel:
         """1D array of distances to calculate wind speeds for"""
         args = [1_000, 50, 98000, 101000, np.linspace(10, 10_000, 4), 30]
         expected_result = np.array(
-            [ 0.       , 17.6795253,  7.1879278,  4.2025169]
+            [-2.687112e-05,  1.628889e+01,  6.452466e+00,  3.576317e+00]
         )
         np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)
 
@@ -83,8 +89,8 @@ class TestHollandWindModel:
         X, Y = np.meshgrid(np.linspace(10, 10_000, 3), np.linspace(10, 10_000, 3))
         args = [1_000, 50, 98000, 101000, np.sqrt(X**2 + Y**2), 30]
         expected_result = np.array([
-            [ 0.       , 10.4840598,  4.2025141],
-            [10.4840598,  6.6456522,  3.6213658],
-            [ 4.2025141,  3.6213658,  2.6464645]
+            [-3.800150e-05,  9.564080e+00,  3.576314e+00],
+            [ 9.564080e+00,  5.936093e+00,  3.001343e+00],
+            [ 3.576314e+00,  3.001343e+00,  2.014825e+00]
         ])
         np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)
