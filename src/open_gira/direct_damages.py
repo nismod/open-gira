@@ -253,7 +253,7 @@ def holland_wind_model(
         - (f * r_m) / 2
     )
 
-    return V
+    return np.clip(V, 0, None)  # clip negative values to zero
 
 
 def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:
