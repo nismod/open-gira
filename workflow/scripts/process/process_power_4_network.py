@@ -33,6 +33,9 @@ if __name__ == "__main__":
     target_nodes = targets[["id", "type", "geometry"]].copy()
     target_nodes.geometry = target_nodes.geometry.centroid
 
+    # should not actually reproject, but CRS metadata must match exactly for concat
+    target_nodes = target_nodes.to_crs(plants.crs)
+
     nodes = geopandas.GeoDataFrame(
         pandas.concat([plants, target_nodes.to_crs(plants.crs)], ignore_index=True),
         crs=plants.crs)
