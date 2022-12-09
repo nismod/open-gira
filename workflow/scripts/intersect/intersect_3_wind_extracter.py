@@ -55,10 +55,14 @@ def main():
 
         interpolated_track = interpolate_track(track)
 
-        # shape=(timesteps, x, y)
+        # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells
+        raster_grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+
+        # return shape = (timesteps, x, y)
         wind_field: np.ndarray = wind_field_for_track(
             interpolated_track,
-            wind_grid_path,
+            raster_grid.x,
+            raster_grid.y,
             environmental_pressure[basin]
         )
 
@@ -197,14 +201,19 @@ def interpolate_track(track: gpd.GeoDataFrame, substeps: int = 5) -> gpd.GeoData
     return gpd.GeoDataFrame(interpolated_track).drop(columns=["x", "y"])
 
 
-def wind_field_for_track(track: gpd.GeoDataFrame, grid_definition_path: str, pressure_env_hpa: float) -> np.ndarray:
+def wind_field_for_track(
+    track: gpd.GeoDataFrame,
+    x_coords: np.ndarray,
+    y_coords: np.ndarray,
+    pressure_env_hpa: float
+) -> np.ndarray:
     """
     Evaluate wind speed at each timestep on a grid of points given a storm track.
 
     Arguments:
         track (gpd.GeoDataFrame): Table of storm track information
-        grid_definition_path (str): Raster file path defining a grid to
-            evaluate on, should have coordinates 'x' and 'y'.
+        x_coords (np.ndarray): Longitude values to construct evaluation grid
+        y_coords (np.ndarray): Latitude values to construct evaluation grid
         pressure_env_hpa (float): Background pressure for this region in hPa
 
     Returns:
@@ -212,10 +221,9 @@ def wind_field_for_track(track: gpd.GeoDataFrame, grid_definition_path: str, pre
             rank=3, shape=(timesteps, x, y)
     """
 
-    raster_grid: xr.DataArray = rioxarray.open_rasterio(grid_definition_path)
-    X, Y = np.meshgrid(raster_grid.x, raster_grid.y)
+    X, Y = np.meshgrid(x_coords, y_coords)
 
-    raster_shape: tuple[int, int] = (len(raster_grid.x), len(raster_grid.y))
+    raster_shape: tuple[int, int] = X.shape  # or Y.shape
     wind_speeds: np.ndarray = np.zeros((len(track), *raster_shape))
 
     geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
@@ -233,8 +241,8 @@ def wind_field_for_track(track: gpd.GeoDataFrame, grid_definition_path: str, pre
         wind_speeds[track_i]: np.ndarray = holland_wind_model(
             track_point.radius_to_max_winds_km * 1_000,  # convert to meters
             track_point.max_wind_speed_ms,
-            track_point.min_pressure_hpa * 100,  # Pascals
-            pressure_env_hpa * 100,  # Pascals
+            track_point.min_pressure_hpa * 100,  # convert to Pascals
+            pressure_env_hpa * 100,  # convert to Pascals
             distance_m.reshape(raster_shape),  # (x, y)
             track_point.geometry.y,
         )
