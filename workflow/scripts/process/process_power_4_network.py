@@ -37,8 +37,9 @@ if __name__ == "__main__":
     target_nodes = target_nodes.to_crs(plants.crs)
 
     nodes = geopandas.GeoDataFrame(
-        pandas.concat([plants, target_nodes.to_crs(plants.crs)], ignore_index=True),
-        crs=plants.crs)
+        pandas.concat([plants, target_nodes], ignore_index=True),
+        crs=plants.crs
+    )
 
     # Edges
     edges = geopandas.read_parquet(gridfinder_path)
