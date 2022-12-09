@@ -9,7 +9,8 @@ https://gridfinder.org/
 rule download_gridfinder:
     conda: "../../../environment.yml"
     output:
-        electricity_grid_global = os.path.join(config["output_dir"], "input", "gridfinder", "grid.gpkg")
+        electricity_grid_global = "{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
+        electricity_targets_global = "{OUTPUT_DIR}/input/gridfinder/targets.tif",
     shell:
         f"""
         mkdir -p {config['output_dir']}/input/gridfinder
@@ -25,7 +26,7 @@ snakemake --cores 1 results/input/gridfinder/grid.gpkg
 
 rule gridfinder_to_geoparquet:
     input:
-        geopackage = "{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
+        geopackage = rules.download_gridfinder.output.electricity_grid_global,
     output:
         geoparquet = "{OUTPUT_DIR}/input/gridfinder/grid.geoparquet",
     run:
