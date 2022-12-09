@@ -18,6 +18,11 @@ import xarray as xr
 from open_gira.direct_damages import holland_wind_model
 
 
+WIND_CMAP = "turbo"
+MAX_SPEED = 80  # clip wind speeds above this value when plotting
+WIND_PLOT_SIZE = 8  # inches width, height
+
+
 def main():
     edges_split_path = snakemake.input.edges_split  # type: ignore
     # TODO filter for relevance or replace with single file for (basin/model/sample)
@@ -78,7 +83,7 @@ def main():
                 interpolated_track,
                 os.path.join(plot_dir_path, f"{track_id}.gif")
             )
-            plot_field(
+            plot_wind_field(
                 wind_field_maximum,
                 f"{track_id} max wind speed",
                 "Wind speed [m/s]",
@@ -90,16 +95,24 @@ def main():
 #    network_with_speeds.to_parquet(output_path)
 
 
-def plot_field(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
-    """Plot a numpy array of a 2D field and save to disk."""
-
-    fig, ax = plt.subplots(figsize=(6,6))
+def plot_wind_field(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
+    """Plot a numpy array of a 2D field wind field and save to disk."""
 
     # origin lower so latitude indicies increasing northwards
-    img = ax.imshow(field, vmin=0, vmax=field.max(), origin="lower")
+    origin = "lower"
+
+    fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
+
+    img = ax.imshow(field, vmin=0, vmax=MAX_SPEED, origin=origin, cmap=WIND_CMAP)
+
+    levels = np.linspace(0, MAX_SPEED, int((MAX_SPEED - 0) / 10) + 1)
+    contour = ax.contour(field, levels, origin=origin, colors='w')
+
+    ax.clabel(contour, fmt='%2.1f', colors='w')
 
     fig.colorbar(img, ax=ax, location="right", label=colorbar_label, shrink=0.81)
-    ax.set_title(title)
+    stats_str = f"min: {field.min():.2f}, max: {field.max():.2f}, $\sigma:$ {field.std():.2f}"
+    ax.set_title(title + "\n" + stats_str)
 
     fig.savefig(file_path)
     plt.close(fig)
@@ -111,10 +124,10 @@ def animate_track(wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: st
     track_name, = set(track["track_id"])
     track_length, _, _ = wind_field.shape
 
-    fig, ax = plt.subplots(figsize=(6,6))
+    fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
     # origin lower so latitude indicies increasing northwards
-    img = ax.imshow(np.zeros_like(wind_field[0]), vmin=0, vmax=wind_field.max(), origin="lower")
+    img = ax.imshow(np.zeros_like(wind_field[0]), vmin=0, vmax=MAX_SPEED, origin="lower", cmap=WIND_CMAP)
     fig.colorbar(img, ax=ax, location="right", label="Wind speed [m/s]", shrink=0.81)
 
     def init():
