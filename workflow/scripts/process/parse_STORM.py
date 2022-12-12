@@ -17,6 +17,13 @@ from open_gira.io import STORM_BASIN_IDS
 from open_gira.io import STORM_CSV_SCHEMA as schema
 from open_gira.utils import natural_sort
 
+
+# divide by this factor to 'convert' STORM's 10-minutely sustained winds to
+# 1-minutely sustained wind speeds, noting the vagueries of this process as
+# explained here: https://library.wmo.int/doc_num.php?explnum_id=290
+STORM_1MIN_WIND_FACTOR = 0.88
+
+
 if __name__ == "__main__":
 
     csv_dir = snakemake.input.csv_dir
@@ -55,6 +62,9 @@ if __name__ == "__main__":
         data.append(df)
 
     df = pd.concat(data).reset_index(drop=True)
+
+    # rescale winds to 1-minutely
+    df.max_wind_speed_ms /= STORM_1MIN_WIND_FACTOR
 
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(

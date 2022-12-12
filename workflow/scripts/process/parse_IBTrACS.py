@@ -5,6 +5,7 @@ The output schema is a superset of the STORM synthetic track data
 """
 
 import os
+from typing import Union
 
 import geopandas as gpd
 import numpy as np
@@ -13,9 +14,40 @@ import pandas as pd
 from open_gira.io import STORM_CSV_SCHEMA
 
 
-def saffir_simpson_classifier(wind_speed_ms: float) -> int:
+"""
+Wind scale and shift values taken from CLIMADA: climada.hazard.tc_tracks
+
+We use these to 'convert' between the agencies' reporting periods and a
+1-minutely period.
+
+From Table 1 in: Knapp, K.R., Kruk, M.C. (2010): Quantifying Interagency
+Differences in Tropical Cyclone Best-Track Wind Speed Estimates.
+Monthly Weather Review 138(4): 1459–1473.
+https://library.wmo.int/index.php?lvl=notice_display&id=135
+"""
+IBTRACS_AGENCY_1MIN_WIND_FACTOR = {
+    "USA": [1.0, 0.0],
+    "TOKYO": [0.60, 23.3],
+    "NEWDELHI": [1.0, 0.0],
+    "REUNION": [0.88, 0.0],
+    "BOM": [0.88, 0.0],
+    "NADI": [0.88, 0.0],
+    "WELLINGTON": [0.88, 0.0],
+    "CMA": [0.871, 0.0],
+    "HKO": [0.9, 0.0],
+    "DS824": [1.0, 0.0],
+    "TD9636": [1.0, 0.0],
+    "TD9635": [1.0, 0.0],
+    "NEUMANN": [0.88, 0.0],
+    "MLC": [1.0, 0.0],
+}
+
+
+def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:
     """
     Identify the Saffir-Simpson storm category given a wind speed in m/s.
+
+    The input wind speed should be a 1-minute sustained measurement
     """
 
     if not isinstance(wind_speed_ms, (float, int)):
@@ -23,8 +55,12 @@ def saffir_simpson_classifier(wind_speed_ms: float) -> int:
 
     if wind_speed_ms < 0:
         raise ValueError(f"{wind_speed_ms=} should be positive-valued")
-    elif wind_speed_ms < 33 or np.isnan(wind_speed_ms):
-        return 0
+    elif np.isnan(wind_speed_ms):
+        return np.nan
+    elif wind_speed_ms < 18:
+        return -1  # Tropical Disturbance
+    elif wind_speed_ms < 33:
+        return 0  # Tropical Storm
     elif wind_speed_ms < 43:
         return 1
     elif wind_speed_ms < 50:
@@ -85,9 +121,11 @@ if __name__ == "__main__":
         }
     )
 
+    for agency, (scale, shift) in IBTRACS_AGENCY_1MIN_WIND_FACTOR.items():
+        df[f'{agency}_WIND'] -= shift
+        df[f'{agency}_WIND'] /= scale
+
     # average wind columns from various agencies
-    # note, some agencies report with a different averaging period (e.g. 1 vs. 5 minutely winds)
-    # this is not accounted for in this averaging and is a source of error
     METERS_PER_SECOND_PER_KNOT = 0.5144
     df["max_wind_speed_ms"] = df.loc[:, WIND_COLS].apply(np.nanmean, axis="columns") * METERS_PER_SECOND_PER_KNOT
     # there are some tens of negative valued wind observations
