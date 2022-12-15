@@ -4,6 +4,7 @@ each storm.
 """
 
 import os
+import multiprocessing
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -48,31 +49,33 @@ def main():
     # TODO check config to restrict analysis
     # snakemake.config.specific_storm_analysis
 
-    if plot_wind_fields:
-        # directory required (snakemake output)
-        os.makedirs(plot_dir_path, exist_ok=True)
+    # directory required (snakemake output)
+    os.makedirs(plot_dir_path, exist_ok=True)
 
     # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
-    raster_grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+    grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
 
-    max_wind_speeds_by_storm: dict[str, np.array] = {}
-    tracks: pd.core.groupby.generic.DataFrameGroupBy = gpd.read_parquet(storm_file_path).groupby("track_id")
+    tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
 
-    for track_id, track in tqdm(tracks):
-        if len(track) > 1:
-            max_wind_speeds_by_storm[track_id] = max_wind_speed_field(track, raster_grid.x, raster_grid.y, plot_wind_fields)
+    max_wind_speeds: list[str, np.ndarray] = []
+    with multiprocessing.Pool() as pool:
+        # track is a tuple of track_id and the tracks subset, we only want the latter
+        args = [(track[1], grid.x, grid.y, plot_dir_path) for track in tracks]
+        max_wind_speeds = pool.starmap(max_wind_speed_field, args)
+
+    track_ids, fields = zip(*max_wind_speeds)
 
     # write to disk as netCDF with CRS
     # TODO: write the appropriate metadata for QGIS to read this successfully
     # as it is, the lat/long values are being ignored
     # you can of course use ncview or xarray to inspect instead...
     da = xr.DataArray(
-        data=np.stack(list(max_wind_speeds_by_storm.values())),
+        data=np.stack(fields),
         dims=("event_id", "lat", "long"),
         coords=(
-            ("event_id", list(max_wind_speeds_by_storm.keys())),
-            ("long", raster_grid.x.values),
-            ("lat", raster_grid.y.values),
+            ("event_id", list(track_ids)),
+            ("long", grid.x.values),
+            ("lat", grid.y.values),
         ),
         attrs=dict(
             description="Maximum estimated wind speed during event",
@@ -86,7 +89,7 @@ def main():
     return
 
 
-def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plot=False) -> np.ndarray:
+def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plot_dir=None) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
     fields, sum them and take the maximum of the wind vector magnitude across
@@ -99,10 +102,19 @@ def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plo
             `radius_to_max_winds_km`.
         longitude (np.ndarray): Longitude values to construct evaluation grid
         latitude (np.ndarray): Latitude values to construct evaluation grid
+        plot_dir (Optional[str]): Where to save optional plots. Only plot if
+            this argument is given.
 
     Returns:
+        str: Track identifier
         np.ndarray: 2D array of maximum wind speed experienced at each grid pixel
     """
+
+    track_id, = set(track.track_id)
+
+    # we can't calculate the advective component without at least two points
+    if len(track) == 1:
+        return track_id, np.zeros((len(longitude), len(latitude)))
 
     # basin of first record for storm track (storm genesis for synthetic tracks)
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
@@ -137,20 +149,20 @@ def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plo
         axis=0
     ).squeeze()  # drop the redundant first axis
 
-    if plot:
+    if plot_dir:
         plot_contours(
             max_wind_speeds,
             f"{track_id} max wind speed",
             "Wind speed [m/s]",
-            os.path.join(plot_dir_path, f"{track_id}_max_contour.png")
+            os.path.join(plot_dir, f"{track_id}_max_contour.png")
         )
         animate_track(
             wind_field,
             interpolated_track,
-            os.path.join(plot_dir_path, f"{track_id}.gif")
+            os.path.join(plot_dir, f"{track_id}.gif")
         )
 
-    return max_wind_speeds
+    return track_id, max_wind_speeds
 
 
 def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
