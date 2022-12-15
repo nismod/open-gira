@@ -5,6 +5,7 @@ each storm.
 
 import os
 import multiprocessing
+from typing import Optional
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -60,8 +61,8 @@ def main():
     max_wind_speeds: list[str, np.ndarray] = []
     with multiprocessing.Pool() as pool:
         # track is a tuple of track_id and the tracks subset, we only want the latter
-        args = [(track[1], grid.x, grid.y, plot_dir_path) for track in tracks]
-        max_wind_speeds = pool.starmap(max_wind_speed_field, args)
+        args = [(track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks]
+        max_wind_speeds = pool.starmap(process_track, args)
 
     track_ids, fields = zip(*max_wind_speeds)
 
@@ -89,7 +90,7 @@ def main():
     return
 
 
-def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plot_dir=None) -> tuple[str, np.ndarray]:
+def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool, plot_dir: Optional[str]) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
     fields, sum them and take the maximum of the wind vector magnitude across
@@ -102,8 +103,8 @@ def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plo
             `radius_to_max_winds_km`.
         longitude (np.ndarray): Longitude values to construct evaluation grid
         latitude (np.ndarray): Latitude values to construct evaluation grid
-        plot_dir (Optional[str]): Where to save optional plots. Only plot if
-            this argument is given.
+        plot (bool): Whether to plot max wind field and wind field evolution.
+        plot_dir (Optional[str]): Where to save optional plots.
 
     Returns:
         str: Track identifier
@@ -149,7 +150,7 @@ def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plo
         axis=0
     ).squeeze()  # drop the redundant first axis
 
-    if plot_dir:
+    if plot:
         plot_contours(
             max_wind_speeds,
             f"{track_id} max wind speed",
