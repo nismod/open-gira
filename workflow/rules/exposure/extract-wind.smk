@@ -12,7 +12,8 @@ rule estimate_wind_fields:
         storm_file = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/tracks.geoparquet",  # TODO limited to specific storms if any
         wind_grid = "{OUTPUT_DIR}/power/slice/{BOX}/storms/wind_grid.tiff",
     output:
-        plot_dir = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/plots/",  # set to empty string to disable plotting
-        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.parquet",
+        # can disable plotting by setting `plot_wind_fields` to false in config
+        plot_dir = directory("{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/plots/"),
+        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
     script:
         "../../scripts/intersect/intersect_3_wind_extracter.py"
