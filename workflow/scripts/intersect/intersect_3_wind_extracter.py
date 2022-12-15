@@ -17,99 +17,50 @@ import xarray as xr
 
 from open_gira.direct_damages import holland_wind_model
 
+
 WIND_CMAP = "turbo"
 MAX_SPEED = 80  # clip wind speeds above this value when plotting
 WIND_PLOT_SIZE = 9  # inches width, height
 
+# Environmental pressure values in hPa / mbar (standard estimate of background
+# pressure away from the cyclone) are taken from the AIR hurricane model, table
+# 3 in Butke (2012).  Available at:
+# https://www.air-worldwide.com/publications/air-currents/2012/
+# the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
+ENV_PRESSURE = {
+    "NI": 1006.5,
+    "SA": 1014.1,
+    "NA": 1014.1,
+    "EP": 1008.8,
+    "SI": 1010.6,
+    "SP": 1008.1,
+    "WP": 1008.3,
+}
+
 
 def main():
-    edges_split_path = snakemake.input.edges_split  # type: ignore
-    # TODO filter for relevance or replace with single file for (basin/model/sample)
-    storm_file_path = snakemake.input.storm_file  # type: ignore
-    wind_grid_path = snakemake.input.wind_grid
+    storm_file_path: str = snakemake.input.storm_file  # type: ignore
+    wind_grid_path: str= snakemake.input.wind_grid
     plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
-    plot_dir_path = snakemake.output.plot_dir
-    output_path = snakemake.output.wind_speeds  # type: ignore
+    plot_dir_path: str= snakemake.output.plot_dir
+    output_path: str = snakemake.output.wind_speeds  # type: ignore
 
     # TODO check config to restrict analysis
     # snakemake.config.specific_storm_analysis
 
-    # Environmental pressure values (standard estimate of background pressure away from the
-    # cyclone) are taken from the AIR hurricane model, table 3 in Butke (2012).
-    # Available at:
-    # https://www.air-worldwide.com/publications/air-currents/2012/the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
-    environmental_pressure = {
-        "NI": 1006.5,
-        "SA": 1014.1,
-        "NA": 1014.1,
-        "EP": 1008.8,
-        "SI": 1010.6,
-        "SP": 1008.1,
-        "WP": 1008.3,
-    }
-
-    max_wind_speeds_by_storm: dict[str, np.array] = {}
-    tracks: pd.core.groupby.generic.DataFrameGroupBy = gpd.read_parquet(storm_file_path).groupby("track_id")
-    for track_id, track in tqdm(tracks):
-
-        if len(track) == 1:
-            # we need two points to calculate an eye speed and therefore an advective wind field
-            continue
-
-        # basin of first record for storm track (storm genesis for synthetic tracks)
-        basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
-
-        # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
-        interpolated_track: gpd.GeoDataFrame = interpolate_track(track)
-
-        # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
-        raster_grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
-
-        # return shape = (timesteps, y, x) for each of advective and rotational components
-        # data values are complex numbers, with i -> x, j -> y
-        adv_field, rot_field = wind_field_for_track(
-            interpolated_track,
-            raster_grid.x,
-            raster_grid.y,
-            environmental_pressure[basin]
-        )
-
-        # sum components of wind field, (timesteps, y, x)
-        wind_field: np.ndarray[complex] = adv_field + rot_field
-
-        # hypotenuse of u,v wind vectors, (timesteps, y, x)
-        wind_speeds: np.ndarray[float] = np.abs(wind_field)
-
-        # find in which timestep the maximum speed values is for each raster pixel
-        timestep_indicies: np.ndarray[int] = np.argmax(wind_speeds, axis=0)
-
-        # take max along timestep axis, giving (y, x)
-        # equivalently, could use timestep_indicies.choose(wind_speeds), but this limited to 32 possible timesteps
-        max_wind_speeds: np.ndarray[float] = np.take_along_axis(
-            wind_speeds,
-            # N.B. take_along_axis indicies must be same rank as choices, so reshape from e.g. (50,50) to (1,50,50)
-            timestep_indicies.reshape(1, *timestep_indicies.shape),
-            axis=0
-        ).squeeze()  # drop the redundant first axis
-
-        # store max wind speeds
-        max_wind_speeds_by_storm[track_id] = max_wind_speeds
-
+    if plot_wind_fields:
         # directory required (snakemake output)
         os.makedirs(plot_dir_path, exist_ok=True)
 
-        if plot_wind_fields:
-            plot_contours(
-                max_wind_speeds,
-                f"{track_id} max wind speed",
-                "Wind speed [m/s]",
-                os.path.join(plot_dir_path, f"{track_id}_max_contour.png")
-            )
-            animate_track(
-                wind_field,
-                interpolated_track,
-                os.path.join(plot_dir_path, f"{track_id}.gif")
-            )
+    # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
+    raster_grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+
+    max_wind_speeds_by_storm: dict[str, np.array] = {}
+    tracks: pd.core.groupby.generic.DataFrameGroupBy = gpd.read_parquet(storm_file_path).groupby("track_id")
+
+    for track_id, track in tqdm(tracks):
+        if len(track) > 1:
+            max_wind_speeds_by_storm[track_id] = max_wind_speed_field(track, raster_grid.x, raster_grid.y, plot_wind_fields)
 
     # write to disk as netCDF with CRS
     # TODO: write the appropriate metadata for QGIS to read this successfully
@@ -133,6 +84,73 @@ def main():
     da.to_netcdf(output_path)
 
     return
+
+
+def max_wind_speed_field(track, longitude: np.ndarray, latitude: np.ndarray, plot=False) -> np.ndarray:
+    """
+    Interpolate a track, reconstruct the advective and rotational vector wind
+    fields, sum them and take the maximum of the wind vector magnitude across
+    time.
+
+    Args:
+        track (pd.core.groupby.generic.DataFrameGroupBy): Subset of DataFrame
+            describing a track. Must have a temporal index and the following
+            fields: `min_pressure_hpa`, `max_wind_speed_ms`,
+            `radius_to_max_winds_km`.
+        longitude (np.ndarray): Longitude values to construct evaluation grid
+        latitude (np.ndarray): Latitude values to construct evaluation grid
+
+    Returns:
+        np.ndarray: 2D array of maximum wind speed experienced at each grid pixel
+    """
+
+    # basin of first record for storm track (storm genesis for synthetic tracks)
+    basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
+
+    # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
+    interpolated_track: gpd.GeoDataFrame = interpolate_track(track)
+
+    # return shape = (timesteps, y, x) for each of advective and rotational components
+    # data values are complex numbers, with i -> x, j -> y
+    adv_field, rot_field = wind_field_components(
+        interpolated_track,
+        longitude,
+        latitude,
+        ENV_PRESSURE[basin]
+    )
+
+    # sum components of wind field, (timesteps, y, x)
+    wind_field: np.ndarray[complex] = adv_field + rot_field
+
+    # hypotenuse of u,v wind vectors, (timesteps, y, x)
+    wind_speeds: np.ndarray[float] = np.abs(wind_field)
+
+    # find in which timestep the maximum speed values is for each raster pixel
+    timestep_indicies: np.ndarray[int] = np.argmax(wind_speeds, axis=0)
+
+    # take max along timestep axis, giving (y, x)
+    # equivalently, could use timestep_indicies.choose(wind_speeds), but this limited to 32 possible timesteps
+    max_wind_speeds: np.ndarray[float] = np.take_along_axis(
+        wind_speeds,
+        # N.B. take_along_axis indicies must be same rank as choices, so reshape from e.g. (50,50) to (1,50,50)
+        timestep_indicies.reshape(1, *timestep_indicies.shape),
+        axis=0
+    ).squeeze()  # drop the redundant first axis
+
+    if plot:
+        plot_contours(
+            max_wind_speeds,
+            f"{track_id} max wind speed",
+            "Wind speed [m/s]",
+            os.path.join(plot_dir_path, f"{track_id}_max_contour.png")
+        )
+        animate_track(
+            wind_field,
+            interpolated_track,
+            os.path.join(plot_dir_path, f"{track_id}.gif")
+        )
+
+    return max_wind_speeds
 
 
 def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
@@ -249,6 +267,11 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H", substeps: 
     else:
         interp_method = "quadratic"
 
+    if isinstance(track.index, pd.DatetimeIndex):
+        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
+    else:
+        raise ValueError("tracks must have a datetime index to interpolate")
+
     track["x"] = track.geometry.x
     track["y"] = track.geometry.y
     track = track.drop(columns="geometry").copy()
@@ -260,15 +283,6 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H", substeps: 
         "x",
         "y",
     ]
-
-    if isinstance(track.index, pd.DatetimeIndex):
-        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
-    else:
-        t0 = track.timestep[0]
-        tn = track.timestep[-1]
-        # e.g. for substeps = 2, [1,2,3] -> [1,1.5,2,2.5,3]
-        interp_index = np.linspace(t0, tn, (tn - t0) * substeps + 1)
-        track = track.set_index("timestep", drop=False)
 
     interp_domain = pd.DataFrame(
         index=interp_index,
@@ -289,12 +303,12 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H", substeps: 
     return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])
 
 
-def wind_field_for_track(
+def wind_field_components(
     track: gpd.GeoDataFrame,
     x_coords: np.ndarray,
     y_coords: np.ndarray,
     pressure_env_hpa: float
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Evaluate wind speed at each timestep on a grid of points given a storm track.
 
