@@ -5,13 +5,15 @@ into a single geoparquet file.
 Output format shares columns with IBTrACS.
 """
 
+from glob import glob
 import os
 import re
-from glob import glob
+from typing import List
 
 import numpy as np
 import geopandas as gpd
 import pandas as pd
+from tqdm import tqdm
 
 from open_gira.io import STORM_BASIN_IDS
 from open_gira.io import STORM_CSV_SCHEMA as schema
@@ -22,6 +24,7 @@ from open_gira.utils import natural_sort
 # 1-minutely sustained wind speeds, noting the vagueries of this process as
 # explained here: https://library.wmo.int/doc_num.php?explnum_id=290
 STORM_1MIN_WIND_FACTOR = 0.88
+STORM_FREQUENCY = "3H"  # temporal frequency of STORM synthetic tracks
 
 
 if __name__ == "__main__":
@@ -30,7 +33,7 @@ if __name__ == "__main__":
     parquet_path = snakemake.output.parquet
 
     data = []
-    for path in natural_sort(glob(f"{csv_dir}/*.csv")):
+    for path in tqdm(natural_sort(glob(f"{csv_dir}/*.csv"))):
 
         df = pd.read_csv(path, names=schema.keys(), dtype=schema)
 
@@ -41,27 +44,37 @@ if __name__ == "__main__":
 
         df["sample"] = int(sample)
 
-        # different track_id format for STORM vs. IBTrACS, ensures no collisions
-        df["track_id"] = (
-            df["sample"].astype(str)
-            + "_"
-            + df["year"].astype(int).astype(str)
-            + "_"
-            + df["tc_number"].astype(int).astype(str)
-        )
-
         # change geometry from 0-360 to -180-180
         df.lon = np.where(df.lon > 180, df.lon - 360, df.lon)
 
         # lookup string basin code from integer representation
         df.basin_id = np.array(STORM_BASIN_IDS)[df.basin_id]
 
+        # different track_id format for STORM vs. IBTrACS, ensures no collisions
+        df["track_id"] = (
+            df["basin_id"] + "_"
+            + df["sample"].astype(str) + "_"
+            + df["year"].astype(int).astype(str) + "_"
+            + df["tc_number"].astype(int).astype(str)
+        )
+
+        # we'll want to interpolate and then measure the speed of tracks later,
+        # this is easiest when we have some temporal index (as in IBTrACS)
+        # so make up an artificial one here based on the STORM reporting frequency
+
+        track_datetimes: List[np.ndarray] = []
+        track_lengths: np.ndarray = df.track_id.apply(hash).value_counts(sort=False).values
+        for length in track_lengths:
+            track_datetimes.append(pd.date_range(start="2000-01-01", periods=length, freq=STORM_FREQUENCY).values)
+
+        df = df.set_index(np.concatenate(track_datetimes))
+
         # reorder columns
         df = df.loc[:, list(schema.keys()) + ["track_id", "sample"]]
 
         data.append(df)
 
-    df = pd.concat(data).reset_index(drop=True)
+    df = pd.concat(data)
 
     # rescale winds to 1-minutely
     df.max_wind_speed_ms /= STORM_1MIN_WIND_FACTOR
