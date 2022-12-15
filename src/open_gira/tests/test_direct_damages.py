@@ -80,7 +80,7 @@ class TestHollandWindModel:
         """1D array of distances to calculate wind speeds for"""
         args = [1_000, 50, 98000, 101000, np.linspace(10, 10_000, 4), 30]
         expected_result = np.array(
-            [-2.687112e-05,  1.628889e+01,  6.452466e+00,  3.576317e+00]
+            [ 0.      , 16.289285,  6.453159,  3.577267]
         )
         np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)
 
@@ -89,8 +89,8 @@ class TestHollandWindModel:
         X, Y = np.meshgrid(np.linspace(10, 10_000, 3), np.linspace(10, 10_000, 3))
         args = [1_000, 50, 98000, 101000, np.sqrt(X**2 + Y**2), 30]
         expected_result = np.array([
-            [-3.800150e-05,  9.564080e+00,  3.576314e+00],
-            [ 9.564080e+00,  5.936093e+00,  3.001343e+00],
-            [ 3.576314e+00,  3.001343e+00,  2.014825e+00]
+            [0.      , 9.564629, 3.577264],
+            [9.564629, 5.936819, 3.002372],
+            [3.577264, 3.002372, 2.01601 ]
         ])
         np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)

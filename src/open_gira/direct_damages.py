@@ -194,7 +194,7 @@ def holland_wind_model(
     p_pa: float,
     p_env_pa: float,
     r_m: np.ndarray,
-    psi_deg: float,
+    phi_deg: float,
 ) -> np.ndarray:
     """
     Calculate wind speed at points some distance from a cyclone eye location.
@@ -210,7 +210,8 @@ def holland_wind_model(
 
     Args:
         RMW_m (float): Radius to max wind speeds in meters
-        V_max_ms (float): Maximum wind speed in meters per second
+        V_max_ms (float): Maximum surface wind speed (minus background flow) in
+            meters per second
         p_pa (float): Pressure of eye in Pascals
         p_env_pa (float): 'Background' atmospheric pressure in Pascals
         r_m (np.ndarray): Radii in meters to calculate wind speeds for
@@ -225,8 +226,8 @@ def holland_wind_model(
     T = 293  # temperature estimate, K
     rho = (p_pa * M) / (R * T)  # kg/m^3
 
-    Omega = 7.292E-5
-    f = np.abs(2 * Omega * np.sin(np.radians(psi_deg)))  # Coriolis parameter
+    Omega = (2 * np.pi) / (24 * 60 * 60)  # rotation speed of the Earth in rad/s
+    f = np.abs(2 * Omega * np.sin(np.radians(phi_deg)))  # Coriolis parameter
 
     # case where (pressure_env_hpa == pressure_hpa) so Delta_P is zero will raise ZeroDivisionError
     Delta_P = p_env_pa - p_pa
