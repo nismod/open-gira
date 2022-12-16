@@ -23,6 +23,8 @@ from open_gira.direct_damages import holland_wind_model
 WIND_CMAP = "turbo"
 MAX_SPEED = 80  # clip wind speeds above this value when plotting
 WIND_PLOT_SIZE = 9  # inches width, height
+# origin lower so latitude indicies increasing northwards
+WIND_PLOT_ORIGIN = "lower"
 
 # Environmental pressure values in hPa / mbar (standard estimate of background
 # pressure away from the cyclone) are taken from the AIR hurricane model, table
@@ -327,15 +329,12 @@ def wind_field_components(
 def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
     """Plot a 2D numpy array of complex numbers as vector field and save to disk."""
 
-    # origin lower so latitude indicies increasing northwards
-    origin = "lower"
-
     fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
     ax.quiver(field.real, field.imag, angles='xy', scale=20, color='white')
 
     mag = np.abs(field)
-    img = ax.imshow(mag, vmin=0, vmax=MAX_SPEED, origin=origin, cmap=WIND_CMAP)
+    img = ax.imshow(mag, vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
     fig.colorbar(img, ax=ax, location="right", label=colorbar_label, shrink=0.81)
 
     stats_str = fr"min: {mag.min():.2f}, max: {mag.max():.2f}, $\sigma:$ {mag.std():.2f}"
@@ -350,15 +349,12 @@ def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: 
 def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
     """Plot a numpy array of a 2D field wind field and save to disk."""
 
-    # origin lower so latitude indicies increasing northwards
-    origin = "lower"
-
     fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
-    img = ax.imshow(field, vmin=0, vmax=MAX_SPEED, origin=origin, cmap=WIND_CMAP)
+    img = ax.imshow(field, vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
 
     levels = np.linspace(0, MAX_SPEED, int((MAX_SPEED - 0) / 10) + 1)
-    contour = ax.contour(field, levels, origin=origin, colors='w')
+    contour = ax.contour(field, levels, origin=WIND_PLOT_ORIGIN, colors='w')
 
     ax.clabel(contour, fmt='%2.1f', colors='w')
 
@@ -381,7 +377,7 @@ def animate_track(wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: st
     fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
     # origin lower so latitude indicies increasing northwards
-    img = ax.imshow(np.zeros_like(np.abs(wind_field[0])), vmin=0, vmax=MAX_SPEED, origin="lower", cmap=WIND_CMAP)
+    img = ax.imshow(np.zeros_like(np.abs(wind_field[0])), vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
     fig.colorbar(img, ax=ax, location="right", label="Wind speed [m/s]", shrink=0.81)
     quiv = ax.quiver(
         np.zeros_like(wind_field[0]),
