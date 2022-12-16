@@ -126,10 +126,9 @@ include: "rules/preprocess/IBTrACS.smk"
 include: "rules/preprocess/STORM.smk"
 
 include: "rules/exposure/join_data.smk"
-include: "rules/exposure/network_raster.smk"
+include: "rules/exposure/network_raster_intersection.smk"
 #include: "rules/exposure/gdp-loss.smk" # TODO: reinstate once we've got intersected windspeeds
-include: "rules/exposure/extract-wind.smk"
-include: "rules/exposure/region-grid.smk"
+include: "rules/exposure/wind_fields.smk"
 include: "rules/exposure/direct_damages.smk"
 include: "rules/exposure/aggregate_to_admin_area.smk"
 

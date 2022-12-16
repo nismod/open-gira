@@ -1,5 +1,5 @@
 """
-Rules for intersecting a power network with a wind speed grid
+Estimate max wind speed at infrastructure asset locations per event
 """
 
 
@@ -33,23 +33,25 @@ snakemake --cores 1 results/power/slice/1030/storms/wind_grid.tiff
 """
 
 
-rule rasterise_network:
+rule estimate_wind_fields:
     """
-    - Split network edges on raster grid
-    - Assign raster indicies to edges
+    Find maximum windspeeds for each storm for each grid cell.
+
+    Optionally plot wind fields and save to disk
     """
     conda: "../../../environment.yml"
     input:
-        network="{OUTPUT_DIR}/power/slice/{BOX}/network/edges_{BOX}.geoparquet",
-        tif_paths=["{OUTPUT_DIR}/power/slice/{BOX}/storms/wind_grid.tiff"],
-    params:
-        copy_raster_values=False,
+        edges_split = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/edges_split_{BOX}.geoparquet",
+        storm_file = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/tracks.geoparquet",  # TODO limited to specific storms if any
+        wind_grid = "{OUTPUT_DIR}/power/slice/{BOX}/storms/wind_grid.tiff",
     output:
-        geoparquet="{OUTPUT_DIR}/power/slice/{BOX}/exposure/edges_split_{BOX}.geoparquet",
+        # can disable plotting by setting `plot_wind_fields` to false in config
+        plot_dir = directory("{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/plots/"),
+        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
     script:
-        "../../scripts/intersection.py"
+        "../../scripts/intersect/estimate_wind_fields.py"
 
 """
-Test with:
-snakemake --cores 1 results/power/slice/1030/exposure/edges_split_1030.geoparquet
+To test:
+snakemake -c1 results/power/slice/1030/exposure/IBTrACS.nc
 """
