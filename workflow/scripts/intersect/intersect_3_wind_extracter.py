@@ -168,7 +168,7 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     return track_id, max_wind_speeds
 
 
-def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H", substeps: int = 3) -> gpd.GeoDataFrame:
+def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
     """
     Interpolate storm track data.
 
@@ -178,8 +178,6 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H", substeps: 
             radius_to_max_winds_km, timestep. Must have a DatetimeIndex.
         frequency (str): If given track with DatetimeIndex, interpolate to
             resolution given by this pandas frequency string
-        substeps (int): If given track without DatetimeIndex, interpolate
-            over track.timestep with substeps per timestep
 
     Returns:
         gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
@@ -315,7 +313,7 @@ def wind_field_components(
             track_point.max_wind_speed_ms - mag_v_a,  # maximum wind speed, less advective component
             track_point.min_pressure_hpa * 100,  # convert to Pascals
             pressure_env_hpa * 100,  # convert to Pascals
-            radius_m.reshape(raster_shape),  # (x, y)
+            radius_m.reshape(raster_shape),  # (y, x)
             track_point.geometry.y,  # latitude in degrees
         )
 
