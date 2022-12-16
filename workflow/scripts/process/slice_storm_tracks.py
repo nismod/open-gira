@@ -7,6 +7,10 @@ import os
 import geopandas as gpd
 
 
+# expand the slice by this many degrees
+TRACK_SLICING_BUFFER_DEG = 1
+
+
 if __name__ == "__main__":
 
     global_tracks_path = snakemake.input.global_tracks
@@ -18,7 +22,11 @@ if __name__ == "__main__":
     box_geom = boxes.loc[f"box_{box_number}", "geometry"]
 
     tracks = gpd.read_parquet(global_tracks_path)
-    tracks = tracks[tracks.intersects(box_geom)]
+
+    # take all storm track points intersecting a buffer of the bounding box
+    # adding the buffer reduces the likelihood we construct wind fields where a
+    # storm suddenly appears well inside the domain
+    tracks = tracks[tracks.intersects(box_geom.buffer(TRACK_SLICING_BUFFER_DEG))]
 
     os.makedirs(os.path.dirname(sliced_tracks_path), exist_ok=True)
     tracks.to_parquet(sliced_tracks_path)
