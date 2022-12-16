@@ -1,12 +1,13 @@
 """
-Intersect power network with a wind speed grid
-
-- Split network edges on raster grid
-- Assign raster indicies to edges
+Rules for intersecting a power network with a wind speed grid
 """
 
 
 rule create_wind_grid:
+    """
+    Create an empty TIFF file for a given box specifying the spatial grid to
+    evaluate wind speed on
+    """
     input:
         box_grid="{OUTPUT_DIR}/power/world_boxes.geoparquet",
     output:
@@ -33,6 +34,10 @@ snakemake --cores 1 results/power/slice/1030/storms/wind_grid.tiff
 
 
 rule rasterise_network:
+    """
+    - Split network edges on raster grid
+    - Assign raster indicies to edges
+    """
     conda: "../../../environment.yml"
     input:
         network="{OUTPUT_DIR}/power/slice/{BOX}/network/edges_{BOX}.geoparquet",
