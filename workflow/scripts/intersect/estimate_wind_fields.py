@@ -67,7 +67,7 @@ def main():
             max_wind_speeds.append(process_track(*arg))
 
     # sort by track_id so we have a reproducible order even after multiprocessing
-    max_wind_speeds = sorted(max_wind_speeds, key=lambda: pair: pair[0])
+    max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
 
     track_ids, fields = zip(*max_wind_speeds)
 
