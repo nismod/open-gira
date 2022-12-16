@@ -41,6 +41,9 @@ def main():
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds  # type: ignore
 
+    # TODO: make configurable if necessary
+    parallel = True
+
     # TODO check config to restrict analysis
     # snakemake.config.specific_storm_analysis
 
@@ -52,11 +55,19 @@ def main():
 
     tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
 
+    # track is a tuple of track_id and the tracks subset, we only want the latter
+    args = [(track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks]
+
     max_wind_speeds: list[str, np.ndarray] = []
-    with multiprocessing.Pool() as pool:
-        # track is a tuple of track_id and the tracks subset, we only want the latter
-        args = [(track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks]
-        max_wind_speeds = pool.starmap(process_track, args)
+    if parallel:
+        with multiprocessing.Pool() as pool:
+            max_wind_speeds = pool.starmap(process_track, args)
+    else:
+        for arg in args:
+            max_wind_speeds.append(process_track(*arg))
+
+    # sort by track_id so we have a reproducible order even after multiprocessing
+    max_wind_speeds = sorted(max_wind_speeds, key=lambda: pair: pair[0])
 
     track_ids, fields = zip(*max_wind_speeds)
 
@@ -88,7 +99,7 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
     fields, sum them and take the maximum of the wind vector magnitude across
-    time.
+    time. Optionally plot the wind fields and save to disk.
 
     Args:
         track (pd.core.groupby.generic.DataFrameGroupBy): Subset of DataFrame
@@ -115,16 +126,58 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
 
     # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
-    interpolated_track: gpd.GeoDataFrame = interpolate_track(track)
+    track: gpd.GeoDataFrame = interpolate_track(track)
 
-    # return shape = (timesteps, y, x) for each of advective and rotational components
-    # data values are complex numbers, with i -> x, j -> y
-    adv_field, rot_field = wind_field_components(
-        interpolated_track,
-        longitude,
-        latitude,
-        ENV_PRESSURE[basin]
+    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
+
+    # forward azimuth angle and distances from track eye to next track eye
+    advection_azimuth_deg, _, eye_step_distance_m = geod_wgs84.inv(
+        track.geometry.x.iloc[:-1],
+        track.geometry.y.iloc[:-1],
+        track.geometry.x.iloc[1:],
+        track.geometry.y.iloc[1:],
     )
+
+    # gapfill last period/distance values with penultimate value
+    period = track.index[1:] - track.index[:-1]
+    period = period.append(period[-1:])
+    eye_step_distance_m = [*eye_step_distance_m, eye_step_distance_m[-1]]
+    track["advection_azimuth_deg"] = [*advection_azimuth_deg, advection_azimuth_deg[-1]]
+
+    # calculate eye speed
+    track["eye_speed_ms"] = eye_step_distance_m / period.seconds.values
+
+    # hemisphere belongs to {-1, 1}
+    track["hemisphere"] = np.sign(track.geometry.y)
+
+    grid_shape: tuple[int, int] = (len(longitude), len(latitude))
+    adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
+    rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
+
+    for track_i, track_point in enumerate(track.itertuples()):
+
+        adv_vector: np.complex128 = advective_vector(
+            track_point.advection_azimuth_deg,
+            track_point.eye_speed_ms,
+            track_point.hemisphere,
+        )
+
+        adv_field[track_i, :] = np.full(grid_shape, adv_vector)
+
+        # maximum wind speed, less advective component
+        # this is the maximum tangential wind speed in the eye's non-rotating reference frame
+        max_wind_speed_relative_to_eye_ms: float = track_point.max_wind_speed_ms - np.abs(adv_vector)
+
+        rot_field[track_i, :] = rotational_field(
+            longitude,  # degrees
+            latitude,  # degrees
+            track_point.geometry.x,  # degrees
+            track_point.geometry.y,  # degrees
+            track_point.radius_to_max_winds_km * 1_000,  # convert to meters
+            max_wind_speed_relative_to_eye_ms,
+            track_point.min_pressure_hpa * 100,  # convert to Pascals
+            ENV_PRESSURE[basin] * 100,  # convert to Pascals
+        )
 
     # sum components of wind field, (timesteps, y, x)
     wind_field: np.ndarray[complex] = adv_field + rot_field
@@ -153,11 +206,101 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
         )
         animate_track(
             wind_field,
-            interpolated_track,
+            track,
             os.path.join(plot_dir, f"{track_id}.gif")
         )
 
     return track_id, max_wind_speeds
+
+
+def advective_vector(
+    eye_heading_deg: float,
+    eye_speed_ms: float,
+    hemisphere: int,
+    alpha: float = 0.56,
+    beta: float = 19.2,
+) -> np.complex128:
+    """
+    Calculate the advective wind vector
+
+    For reconstruction of realistic advective wind component, (and rationale
+    for alpha and beta) see section 2 of: Lin, N., and D. Chavas (2012), On
+    hurricane parametric wind and applications in storm surge modeling, J.
+    Geophys. Res., 117, D09120, doi:10.1029/2011JD017126
+
+    Arguments:
+        eye_heading_deg (float): Heading of eye in degrees clockwise from north
+        eye_speed_ms (float): Speed of eye in metres per second
+        hemisphere (int): +1 for northern, -1 for southern
+        alpha (float): Fractional reduction of advective wind speed from eye speed
+        beta (float): Degrees advective winds tend to rotate past storm track (in direction of rotation)
+
+    Returns:
+        np.ndarray[complex]: Array of shape `grid_shape` full of the same advective wind vector
+    """
+
+    # calculate advective wind field
+    # bearing of advective component (storm track heading with beta correction)
+    phi_a: float = np.radians(eye_heading_deg - hemisphere * beta)
+    mag_v_a: float = eye_speed_ms * alpha
+    v_a: np.complex128 = mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
+
+    return v_a
+
+
+def rotational_field(
+    longitude: np.ndarray,
+    latitude: np.ndarray,
+    eye_long: float,
+    eye_lat: float,
+    radius_to_max_winds_m: float,
+    max_wind_speed_ms: float,
+    min_pressure_pa: float,
+    env_pressure_pa: float,
+) -> np.ndarray:
+    """
+    Calculate the rotational component of a storm's vector wind field
+
+    Args:
+        longitude (np.ndarray[float]): Grid values to evaluate on
+        latitude (np.ndarray[float]): Grid values to evaluate on
+        eye_long (float): Location of eye in degrees
+        eye_lat (float): Location of eye in degrees
+        radius_to_max_winds_m (float): Distance from eye centre to maximum wind speed in metres
+        max_wind_speed_ms (float): Maximum linear wind speed (relative to storm eye)
+        min_pressure_pa (float): Minimum pressure in storm eye in Pascals
+        env_pressure_pa (float): Environmental pressure, typical for this locale, in Pascals
+
+    Returns:
+        np.ndarray[complex]: Grid of wind vectors
+    """
+
+    X, Y = np.meshgrid(longitude, latitude)
+    grid_shape = X.shape  # or Y.shape
+
+    # forward azimuth angle and distances from grid points to track eye
+    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
+    grid_to_eye_azimuth_deg, _, radius_m = geod_wgs84.inv(
+        X.ravel(),
+        Y.ravel(),
+        np.full(len(X.ravel()), eye_long),
+        np.full(len(Y.ravel()), eye_lat),
+    )
+
+    # magnitude of rotational wind component
+    mag_v_r: np.ndarray = holland_wind_model(
+        radius_to_max_winds_m,
+        max_wind_speed_ms,
+        min_pressure_pa,
+        env_pressure_pa,
+        radius_m.reshape(grid_shape),
+        eye_lat
+    )
+
+    # azimuth of rotational component is tangent to radius, with direction set by hemisphere
+    phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
+
+    return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
 
 
 def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
@@ -220,100 +363,6 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
     )
 
     return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])
-
-
-def wind_field_components(
-    track: gpd.GeoDataFrame,
-    x_coords: np.ndarray,
-    y_coords: np.ndarray,
-    pressure_env_hpa: float
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Evaluate wind speed at each timestep on a grid of points given a storm track.
-
-    Arguments:
-        track (gpd.GeoDataFrame): Table of storm track information
-        x_coords (np.ndarray): Longitude values to construct evaluation grid
-        y_coords (np.ndarray): Latitude values to construct evaluation grid
-        pressure_env_hpa (float): Background pressure for this region in hPa
-
-    Returns:
-        tuple(np.ndarray, np.ndarray): Advective and rotational components of
-            wind speed, each field of rank=3 with shape=(timesteps, x, y)
-    """
-
-    # For reconstruction of more realistic advective wind component, see section 2 of:
-    # Lin, N., and D. Chavas (2012), On hurricane parametric wind and applications
-    # in storm surge modeling, J. Geophys.  Res., 117, D09120, doi:10.1029/2011JD017126
-    alpha = 0.56  # fractional reduction of advective wind speed
-    beta = 19.2  # degrees advective winds tend to rotate past storm track (in direction of rotation)
-
-    X, Y = np.meshgrid(x_coords, y_coords)
-
-    raster_shape: tuple[int, int] = X.shape  # or Y.shape
-    adv: np.ndarray = np.zeros((len(track), *raster_shape), dtype=complex)
-    rot: np.ndarray = np.zeros((len(track), *raster_shape), dtype=complex)
-
-    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
-
-    # forward azimuth angle and distances from track eye to next track eye
-    advection_azimuth_deg, _, eye_step_distance_m = geod_wgs84.inv(
-        track.geometry.x.iloc[:-1],
-        track.geometry.y.iloc[:-1],
-        track.geometry.x.iloc[1:],
-        track.geometry.y.iloc[1:],
-    )
-
-    # gapfill last period/distance values with penultimate value
-    period = track.index[1:] - track.index[:-1]
-    period = period.append(period[-1:])
-    eye_step_distance_m = [*eye_step_distance_m, eye_step_distance_m[-1]]
-    track["advection_azimuth_deg"] = [*advection_azimuth_deg, advection_azimuth_deg[-1]]
-
-    # calculate eye speed
-    track["eye_speed_ms"] = eye_step_distance_m / period.seconds.values
-
-    for track_i, track_point in enumerate(track.itertuples()):
-
-        if track_point.geometry.y > 0:
-            hemisphere = 1  # north, hence anticlockwise rotation
-        else:
-            hemisphere = -1  # .. and clockwise south of the equator
-
-        # calculate advective wind field
-        # bearing of advective component (storm track heading with beta correction)
-        phi_a: float = np.radians(track_point.advection_azimuth_deg - hemisphere * beta)
-        mag_v_a: float = track_point.eye_speed_ms * alpha
-        v_a: np.complex128 = mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
-
-        # TODO: should advective field eventually fall off as a function of radius?
-        # otherwise for large domain with a fast moving storm, risk generating
-        # powerful, potentially spurious advective winds far away from the system
-        adv[track_i, :] = np.full(raster_shape, v_a)
-
-        # forward azimuth angle and distances from grid points to track eye
-        grid_to_eye_azimuth_deg, _, radius_m = geod_wgs84.inv(
-            X.ravel(),
-            Y.ravel(),
-            np.full(len(X.ravel()), track_point.geometry.x),
-            np.full(len(Y.ravel()), track_point.geometry.y),
-        )
-
-        # magnitude of rotational wind component
-        mag_v_r: np.ndarray = holland_wind_model(
-            track_point.radius_to_max_winds_km * 1_000,  # convert to meters
-            track_point.max_wind_speed_ms - mag_v_a,  # maximum wind speed, less advective component
-            track_point.min_pressure_hpa * 100,  # convert to Pascals
-            pressure_env_hpa * 100,  # convert to Pascals
-            radius_m.reshape(raster_shape),  # (y, x)
-            track_point.geometry.y,  # latitude in degrees
-        )
-
-        # azimuth of rotational component is tangent to radius, with direction set by hemisphere
-        phi_r: float = np.radians(grid_to_eye_azimuth_deg.reshape(raster_shape) + hemisphere * 90)
-        rot[track_i, :] = mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
-
-    return adv, rot
 
 
 if __name__ == "__main__":
