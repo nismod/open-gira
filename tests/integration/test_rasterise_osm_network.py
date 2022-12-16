@@ -1,9 +1,9 @@
 from . import runner
 
 
-def test_network_raster():
+def test_rasterise_osm_network():
     runner.run_snakemake_test(
-        "network_raster",
+        "rasterise_osm_network",
         (
             "results/splits/djibouti-latest_filter-road/hazard-aqueduct-river/slice-0.geoparquet",
         )
