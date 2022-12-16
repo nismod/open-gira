@@ -17,6 +17,7 @@ from typing import Tuple
 import geopandas as gpd
 import pandas as pd
 import numpy as np
+import xarray as xr
 
 
 def printerr(s: str):
@@ -190,6 +191,12 @@ class OutputChecker:
             expected = read(expected_file)
 
             self.compare_dataframes(generated, expected)
+
+        elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
+            generated = xr.open_dataset(generated_file)
+            expected = xr.open_dataset(expected_file)
+            if not generated.equals(expected):
+                raise AssertionError("NetCDF files do not match")
 
         # JSON
         elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
