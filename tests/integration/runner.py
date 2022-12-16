@@ -238,6 +238,7 @@ class OutputChecker:
 
             # do some basic shape and schema checks
             if len(generated) != len(expected):
+                breakpoint()
                 raise ValueError(
                     f"tables not of same length, {len(generated)=} & {len(expected)=}"
                 )
