@@ -1,6 +1,6 @@
 rule parse_storm:
     input:
-        csv_dir=directory("{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw")
+        csv_dir="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw"
     output:
         parquet="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/processed.parquet"
     script:
