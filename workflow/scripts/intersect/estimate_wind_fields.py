@@ -236,16 +236,17 @@ def advective_vector(
         beta (float): Degrees advective winds tend to rotate past storm track (in direction of rotation)
 
     Returns:
-        np.ndarray[complex]: Array of shape `grid_shape` full of the same advective wind vector
+        np.complex128: Advective wind vector
     """
 
-    # calculate advective wind field
     # bearing of advective component (storm track heading with beta correction)
     phi_a: float = np.radians(eye_heading_deg - hemisphere * beta)
-    mag_v_a: float = eye_speed_ms * alpha
-    v_a: np.complex128 = mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
 
-    return v_a
+    # absolute magnitude of vector is eye speed decreased by alpha factor
+    mag_v_a: float = eye_speed_ms * alpha
+
+    # find components
+    return mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
 
 
 def rotational_field(
@@ -300,6 +301,7 @@ def rotational_field(
     # azimuth of rotational component is tangent to radius, with direction set by hemisphere
     phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
 
+    # find components of vector at each pixel
     return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
 
 
