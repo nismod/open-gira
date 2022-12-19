@@ -1,9 +1,10 @@
 import numpy as np
 
-from open_gira.wind import holland_wind_model
+from open_gira.wind import holland_wind_model, advective_vector, rotational_field
 
 
 class TestHollandWindModel:
+    """Test function which computes the radial profile of storm wind speed"""
 
     def test_delta_P_zero(self):
         """
@@ -41,3 +42,74 @@ class TestHollandWindModel:
             [3.577264, 3.002372, 2.01601 ]
         ])
         np.testing.assert_allclose(holland_wind_model(*args), expected_result, rtol=1E-6)
+
+
+class TestAdvectiveVector:
+    """Test function which computes advective vector from storm velocity"""
+
+    def test_simple_model(self):
+        # alpha=1, beta=0, i.e. advective component _is_ eye velocity
+        np.testing.assert_allclose(
+            advective_vector(0, 10, 1, 1, 0),
+            0 + 10j
+        )
+
+    def test_alpha_scaling(self):
+        np.testing.assert_allclose(
+            advective_vector(0, 10, 1, 0.5, 0),
+            0 + 5j
+        )
+
+    def test_beta_rotation_northern_hemisphere(self):
+        # northern hemisphere, storms rotate anticlockwise
+        # therefore, beta=90 should rotate vector from N to W
+        np.testing.assert_allclose(
+            advective_vector(0, 10, 1, 1, 90),
+            -10 + 0j
+        )
+
+    def test_beta_rotation_southern_hemisphere(self):
+        # southern hemisphere, storms rotate clockwise
+        # therefore, beta=90 should rotate vector from N to E
+        np.testing.assert_allclose(
+            advective_vector(0, 10, -1, 1, 90),
+            10 + 0j
+        )
+
+    def test_default_argument_regression(self):
+        # ensure alpha and beta aren't changed by accident
+        np.testing.assert_allclose(
+            advective_vector(0, 10, 1),
+            -1.84165322 + 5.28850767j
+        )
+
+
+class TestRotationalField:
+    """
+    Test function which computes field of rotational vectors, that is intensity
+    from the Holland model, and rotation direction from hemisphere.
+    """
+
+    def test_rotational_field(self):
+        eye_lon = -30
+        lon_width = 5
+        max_lon = eye_lon + (lon_width - 1) / 2
+        min_lon = eye_lon - (lon_width - 1) / 2
+        lon_arr = np.linspace(min_lon, max_lon, lon_width)
+        eye_lat = 15
+
+        # test for regression
+        north = rotational_field(lon_arr, np.array([eye_lat]), eye_lon, eye_lat, 150_000, 100, 95_000, 100_000)
+        np.testing.assert_allclose(
+            north,
+            np.array([[0.20889488-46.23914882j, 0.01087067 -4.81284318j, np.nan + np.nan * 1j,
+              0.01087067+4.81284318j, 0.20889488+46.23914882j]])
+        )
+
+        # check that the direction of rotation is reversed in the southern hemisphere
+        south = rotational_field(lon_arr, np.array([-eye_lat]), eye_lon, -eye_lat, 150_000, 100, 95_000, 100_000)
+
+        np.testing.assert_allclose(
+            np.angle(north),
+            -1 * np.angle(south)
+        )

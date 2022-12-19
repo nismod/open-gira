@@ -14,7 +14,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.wind import holland_wind_model
+from open_gira.wind import holland_wind_model, advective_vector, rotational_field
 from plot_wind_fields import plot_contours, animate_track
 
 
@@ -211,98 +211,6 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
         )
 
     return track_id, max_wind_speeds
-
-
-def advective_vector(
-    eye_heading_deg: float,
-    eye_speed_ms: float,
-    hemisphere: int,
-    alpha: float = 0.56,
-    beta: float = 19.2,
-) -> np.complex128:
-    """
-    Calculate the advective wind vector
-
-    For reconstruction of realistic advective wind component, (and rationale
-    for alpha and beta) see section 2 of: Lin, N., and D. Chavas (2012), On
-    hurricane parametric wind and applications in storm surge modeling, J.
-    Geophys. Res., 117, D09120, doi:10.1029/2011JD017126
-
-    Arguments:
-        eye_heading_deg (float): Heading of eye in degrees clockwise from north
-        eye_speed_ms (float): Speed of eye in metres per second
-        hemisphere (int): +1 for northern, -1 for southern
-        alpha (float): Fractional reduction of advective wind speed from eye speed
-        beta (float): Degrees advective winds tend to rotate past storm track (in direction of rotation)
-
-    Returns:
-        np.complex128: Advective wind vector
-    """
-
-    # bearing of advective component (storm track heading with beta correction)
-    phi_a: float = np.radians(eye_heading_deg - hemisphere * beta)
-
-    # absolute magnitude of vector is eye speed decreased by alpha factor
-    mag_v_a: float = eye_speed_ms * alpha
-
-    # find components
-    return mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
-
-
-def rotational_field(
-    longitude: np.ndarray,
-    latitude: np.ndarray,
-    eye_long: float,
-    eye_lat: float,
-    radius_to_max_winds_m: float,
-    max_wind_speed_ms: float,
-    min_pressure_pa: float,
-    env_pressure_pa: float,
-) -> np.ndarray:
-    """
-    Calculate the rotational component of a storm's vector wind field
-
-    Args:
-        longitude (np.ndarray[float]): Grid values to evaluate on
-        latitude (np.ndarray[float]): Grid values to evaluate on
-        eye_long (float): Location of eye in degrees
-        eye_lat (float): Location of eye in degrees
-        radius_to_max_winds_m (float): Distance from eye centre to maximum wind speed in metres
-        max_wind_speed_ms (float): Maximum linear wind speed (relative to storm eye)
-        min_pressure_pa (float): Minimum pressure in storm eye in Pascals
-        env_pressure_pa (float): Environmental pressure, typical for this locale, in Pascals
-
-    Returns:
-        np.ndarray[complex]: Grid of wind vectors
-    """
-
-    X, Y = np.meshgrid(longitude, latitude)
-    grid_shape = X.shape  # or Y.shape
-
-    # forward azimuth angle and distances from grid points to track eye
-    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
-    grid_to_eye_azimuth_deg, _, radius_m = geod_wgs84.inv(
-        X.ravel(),
-        Y.ravel(),
-        np.full(len(X.ravel()), eye_long),
-        np.full(len(Y.ravel()), eye_lat),
-    )
-
-    # magnitude of rotational wind component
-    mag_v_r: np.ndarray = holland_wind_model(
-        radius_to_max_winds_m,
-        max_wind_speed_ms,
-        min_pressure_pa,
-        env_pressure_pa,
-        radius_m.reshape(grid_shape),
-        eye_lat
-    )
-
-    # azimuth of rotational component is tangent to radius, with direction set by hemisphere
-    phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
-
-    # find components of vector at each pixel
-    return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
 
 
 def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
