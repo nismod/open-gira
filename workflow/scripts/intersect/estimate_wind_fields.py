@@ -14,7 +14,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.direct_damages import holland_wind_model
+from open_gira.wind import holland_wind_model
 from plot_wind_fields import plot_contours, animate_track
 
 
