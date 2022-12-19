@@ -14,6 +14,7 @@ MAX_SPEED = 80  # clip wind speeds above this value when plotting
 WIND_PLOT_SIZE = 9  # inches width, height
 # origin lower so latitude indicies increasing northwards
 WIND_PLOT_ORIGIN = "lower"
+QUIVER_SCALE=1000
 
 
 def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
@@ -21,7 +22,7 @@ def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: 
 
     fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
-    ax.quiver(field.real, field.imag, angles='xy', scale=20, color='white')
+    ax.quiver(field.real, field.imag, angles='xy', scale=QUIVER_SCALE, color='white')
 
     mag = np.abs(field)
     img = ax.imshow(mag, vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
@@ -62,17 +63,18 @@ def animate_track(wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: st
     """Animate a storm track and save to disk."""
 
     track_name, = set(track[~track["track_id"].isna()].track_id)
-    track_length, _, _ = wind_field.shape
+    track_length, *grid_shape = wind_field.shape
 
     fig, ax = plt.subplots(figsize=(WIND_PLOT_SIZE, WIND_PLOT_SIZE))
 
     # origin lower so latitude indicies increasing northwards
-    img = ax.imshow(np.zeros_like(np.abs(wind_field[0])), vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
+    img = ax.imshow(np.zeros(grid_shape), vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
     fig.colorbar(img, ax=ax, location="right", label="Wind speed [m/s]", shrink=0.81)
     quiv = ax.quiver(
-        np.zeros_like(wind_field[0]),
-        np.zeros_like(wind_field[0]),
+        np.zeros(grid_shape),
+        np.zeros(grid_shape),
         angles='xy',
+        scale=QUIVER_SCALE,
         color='white'
     )
 
