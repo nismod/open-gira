@@ -23,22 +23,30 @@ from tqdm import tqdm
 from open_gira import fields
 
 
-def associate_raster(df, fname, band_number=1) -> pandas.Series:
+def associate_raster(df, fname, band_number=1) -> pd.Series:
     """
     For each split geometry, lookup the relevant raster value. Cell indicies
     must have been previously calculated and stored as fields.RASTER_{I,J}.
 
-    N.B. This will store no data values in the returned dataframe.
+    N.B. This will pass through no data values from the raster (no filtering).
+
+    Args:
+        df (pd.DataFrame): Table of features, each with cell indicies pertaining
+            to relevant raster pixel. Indicies must be stored under columns with
+            names referenced by fields.RASTER_I and fields.RASTER_J
+        fname (str): Filename of raster file to read data from
+        band_number (int): Which band of the raster file to read
+
+    Returns:
+        pd.Series: Series of raster values, with same row indexing as df.
     """
+
     with rasterio.open(fname) as dataset:
 
         band_data: np.ndarray = dataset.read(band_number)
 
         # 2D numpy indexing is j, i (i.e. row, column)
-        return df.apply(
-            lambda row: band_data[row[fields.RASTER_J], row[fields.RASTER_I]],
-            axis="columns"
-        )
+        return pd.Series(index=df.index, data=band_data[df[fields.RASTER_J], df[fields.RASTER_I]])
 
 
 def write_empty_files(columns, outputs_path):
