@@ -49,6 +49,16 @@ to the instructions there. Tests run with versions:
 - osmium-tool v1.14.0
 - libosmium v2.18.0
 
+### GDAL
+
+The workflow leans heavily on the GDAL toolset. To install using APT:
+`sudo apt install gdal-bin`
+
+### jq
+
+jq is used to parse JSON files. To install using APT:
+`sudo apt install jq`
+
 ## Running tests
 
 Workflow steps are tested using a small sample dataset. Run:

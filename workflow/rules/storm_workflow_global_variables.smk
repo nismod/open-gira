@@ -41,7 +41,7 @@ def all_box_ids() -> List[int]:
     if len(config["specific_boxes"]) != 0:
         return config["specific_boxes"]
 
-    max_i = int(360 * 180 / float(config["box_width_height"]) ** 2)
+    max_i = int(360 * 180 / float(config["box_deg"]) ** 2)
     return range(0, max_i)
 
 
@@ -68,7 +68,6 @@ CONNECTOR_OUT = (
 
 STORM_BASINS = config["storm_basins"]
 if len(STORM_BASINS) == 0:
-    print("Inputting all storm basins")
     # east pacific, north atlantic, north indian, south india, south pacific, west pacific
     STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
 
@@ -88,12 +87,13 @@ STORM_RPS = (
 )
 
 STORM_GCMS = ("CMCC-CM2-VHR4", "CNRM-CM6-1-HR", "EC-Earth3P-HR", "HadGEM3-GC31-HM")
+STORM_MODELS = STORM_GCMS + ("constant", )
 
 STORM_RETURN_PERIODS_CURRENT = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "fixed",
         "constant",
         "STORM_FIXED_RETURN_PERIODS_constant_{storm_rp}_YR_RP.tif",
@@ -105,7 +105,7 @@ STORM_RETURN_PERIODS_FUTURE = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "fixed",
         "{storm_gcm}",
         "STORM_FIXED_RETURN_PERIODS_{storm_gcm}_{storm_rp}_YR_RP.tif",
@@ -120,7 +120,7 @@ STORM_EVENTS_CURRENT = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "events",
         "constant",
         "{storm_basin}",
@@ -134,7 +134,7 @@ STORM_EVENTS_FUTURE = expand(
     os.path.join(
         config["output_dir"],
         "input",
-        "storm-ibtracs",
+        "STORM",
         "events",
         "{storm_gcm}",
         "{storm_basin}",
@@ -164,19 +164,10 @@ def get_storm_file(wildcards):
     - SAMPLE (0-9)
     """
     if wildcards.STORM_MODEL == "constant":
-        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
+        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
     else:
-        fname = f"{wildcards.OUTPUT_DIR}/input/storm-ibtracs/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
+        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
     return fname
-
-# check wind speed thresholds for damage are correctly ordered
-assert config["central_threshold"] >= config["minimum_threshold"]
-assert config["central_threshold"] <= config["maximum_threshold"]
-WIND_SPEED_THRESHOLDS_MS = [
-    config["central_threshold"],
-    config["minimum_threshold"],
-    config["maximum_threshold"],
-]
 
 # these files are written by the storm intersection script on finishing
 # they are essentially a flag indicating successful completion
@@ -193,52 +184,3 @@ COMPLETION_FLAG_FILES = expand(
     sample=SAMPLES,
     storm_basin=STORM_BASINS,
 )
-
-STORM_STATS_BY_THRESHOLD = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "combined_storm_statistics_{thrval}.csv",
-    ),
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-STORM_STATS_BY_REGION_SAMPLE_THRESHOLD = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_output",
-        "statistics",
-        "{storm_basin}",
-        "{sample}",
-        "combined_storm_statistics_{storm_basin}_{sample}_{thrval}.csv",
-    ),
-    storm_basin=STORM_BASINS,
-    sample=SAMPLES,
-    thrval=WIND_SPEED_THRESHOLDS_MS,
-)
-
-STORM_IMPACT_STATISTICS_DIR = os.path.join(config["output_dir"], "power_output", "statistics")
-
-# variables to analyse for each storm
-STORM_ANALYSIS_METRICS = [
-    "GDP losses",
-    "targets with no power (f=0)",
-    "population affected",
-    "population with no power (f=0)",
-    "effective population affected",
-    "reconstruction cost",
-]
-
-# variables to analyse for targets (electricity consumers)
-TARGET_ANALYSIS_METRICS = [
-    "population_without_power",
-    "effective_population",
-    "affected_population",
-    "mw_loss_storm",
-    "f_value",
-    "gdp_damage",
-]
-
-# bastardised string version of boolean: 'T' or 'F'
-SORT_BY_INCREASING_SEVERITY = 'T' if (config["increased_severity_sort"] == True) else 'F'

@@ -36,7 +36,7 @@ jobs:
         mkdir build
         cd build
         cmake ..
-        make
+        make -j
         cd ../..
 
     - name: Test with pytest
@@ -44,6 +44,12 @@ jobs:
       shell: bash -l {0}
       # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
       run: |
+        # as of ~December 2022, osmium has been failing when the executable is restored from the build cache
+        # the GitHub Actions runner seems to be missing (or not locating) the (dynamically linked) boost lib
+        # we could change the osmium compilation to statically link against libboost, avoiding this problem
+        # instead, I have installed libboost here, immediately prior to running osmium and the tests
+        sudo apt update && sudo apt install libboost-program-options-dev
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
+
         python -m pytest -n auto tests/

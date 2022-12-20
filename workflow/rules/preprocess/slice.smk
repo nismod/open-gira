@@ -1,7 +1,7 @@
 # Use osmium to cut a .osm.pbf file into several .osm.pbf files as defined by bounding boxes
 rule slice:
     input:
-        data="{OUTPUT_DIR}/input/{DATASET}_{FILTER_SLUG}.osm.pbf",
+        data="{OUTPUT_DIR}/input/OSM/{DATASET}_{FILTER_SLUG}.osm.pbf",
         extracts_config="{OUTPUT_DIR}/json/{DATASET}_extracts/{SLICE_SLUG}.geojson",
     output:
         slice_path="{OUTPUT_DIR}/slices/{DATASET}_{FILTER_SLUG}/{SLICE_SLUG}.osm.pbf",

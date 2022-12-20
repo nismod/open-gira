@@ -9,6 +9,7 @@ src/snkit
 # Data
 data/*
 results/*
+*.bak
 
 # snakemake
 .snakemake/

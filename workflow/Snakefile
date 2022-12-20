@@ -41,6 +41,15 @@ for network, file_path in config['network_filters'].items():
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
 
+# check requested grid for power/storms pipeline
+assert config["box_deg"] >= config["wind_deg"]
+# N.B. modulo by a decimal leads to floating point errors
+# do division then modulo by 1 instead
+# check box_deg is a factor of 180
+assert (180 / config["box_deg"]) % 1 == 0
+# check wind_deg is a factor of box_deg
+assert (config["box_deg"] / config["wind_deg"]) % 1 == 0
+
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
 
@@ -85,7 +94,8 @@ include: "rules/storm_workflow_global_variables.smk"
 ##### load rules #####
 include: "rules/download/coastlines.smk"
 include: "rules/download/natural-earth.smk"
-include: "rules/download/storm-ibtracs.smk"
+include: "rules/download/STORM.smk"
+include: "rules/download/IBTrACS.smk"
 include: "rules/download/gadm.smk"
 include: "rules/download/gridfinder.smk"
 include: "rules/download/worldpop-population.smk"
@@ -108,39 +118,23 @@ include: "rules/preprocess/network.smk"
 include: "rules/preprocess/split-gridfinder.smk"
 include: "rules/preprocess/targets.smk"
 include: "rules/preprocess/join_data.smk"
-include: "rules/preprocess/convert_to_geoparquet.smk"
+include: "rules/preprocess/osm_to_geoparquet.smk"
 include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
+include: "rules/preprocess/IBTrACS.smk"
+include: "rules/preprocess/STORM.smk"
 
 include: "rules/exposure/join_data.smk"
-include: "rules/exposure/network_raster.smk"
-include: "rules/exposure/gdp-loss.smk"
-include: "rules/exposure/intersect-overview.smk"
-include: "rules/exposure/extract-wind.smk"
-include: "rules/exposure/region-boxes.smk"
-include: "rules/exposure/region-grid.smk"
-include: "rules/exposure/power_intersect_all.smk"
+include: "rules/exposure/network_raster_intersection.smk"
+#include: "rules/exposure/gdp-loss.smk" # TODO: reinstate once we've got intersected windspeeds
+include: "rules/exposure/wind_fields.smk"
 include: "rules/exposure/direct_damages.smk"
 include: "rules/exposure/aggregate_to_admin_area.smk"
 
-include: "rules/analyse/aggregate_levels.smk"
 include: "rules/analyse/network_components.smk"
-include: "rules/analyse/empirical_distribution.smk"
-include: "rules/analyse/country_pair_matrix.smk"
-include: "rules/analyse/transmission_aggregate.smk"
-include: "rules/analyse/extract_percentile.smk"
-include: "rules/analyse/target_analysis.smk"
-include: "rules/analyse/plot/fig_initial.smk"
-include: "rules/analyse/plot/fig_cross_correlation.smk"
 include: "rules/analyse/plot/make_exposure_tif.smk"
-include: "rules/analyse/plot/fig_EACA.smk"
 include: "rules/analyse/plot/make_exposure_img.smk"
-include: "rules/analyse/plot/fig_CDFs.smk"
-include: "rules/analyse/plot/fig_EAD_EACA.smk"
-include: "rules/analyse/plot/fig_EAD.smk"
-include: "rules/analyse/plot/fig_master.smk"
-include: "rules/analyse/power_analyse_all.smk"
 
 ##### target rules #####
 

@@ -16,6 +16,8 @@ from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
+import numpy as np
+import xarray as xr
 
 
 def printerr(s: str):
@@ -257,6 +259,11 @@ class OutputChecker:
 
             for col in mismatch_cols:
 
+                # is the column numeric?
+                if np.issubdtype(expected[col].values.dtype, np.number):
+                    if np.allclose(generated[col].values, expected[col].values):
+                        continue  # numbers are within floating point vagueness, skip to next col
+
                 # do the discrepancies occur only where there are null values (NaN & None)?
                 unequal_only_where_null = all(expected[col].isna() == (expected[col].values != generated[col].values))
                 if not unequal_only_where_null:
@@ -271,6 +278,7 @@ class OutputChecker:
                         if gen_str != exp_str:
                             failures += 1
                             if failures > MAX_FAILURES_TO_PRINT:
+                                printerr(f"Failures truncated after {MAX_FAILURES_TO_PRINT}")
                                 continue
                             else:
                                 printerr(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}")

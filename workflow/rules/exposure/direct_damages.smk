@@ -1,11 +1,13 @@
-# estimate damage fraction for exposed assets
-# damage fraction is a function of hazard intensity (expressed as damage curves)
+"""
+Estimate damage fraction for exposed assets
+Damage fraction is a function of hazard intensity (expressed as damage curves)
+"""
 
 
 rule direct_damages:
     input:
         unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
-        exposure = rules.network_raster.output.geoparquet
+        exposure = rules.rasterise_osm_network.output.geoparquet
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction_per_RP/{SLICE_SLUG}.geoparquet",
         damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost_per_RP/{SLICE_SLUG}.geoparquet",
@@ -18,7 +20,6 @@ rule direct_damages:
         hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
     script:
         "../../scripts/direct_damages.py"
-
 
 """
 Test with:
@@ -33,7 +34,6 @@ rule plot_damage_distributions:
         plots = directory("{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/damage_fraction_plots")
     script:
         "../../scripts/plot_damage_distributions.py"
-
 
 """
 Test with:

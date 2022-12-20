@@ -11,7 +11,7 @@ if __name__ == "__main__":
     global_boxes_path = snakemake.input.global_boxes  # type: ignore
     box_id = snakemake.wildcards.BOX  # type: ignore
 
-    boxes = geopandas.read_file(global_boxes_path) \
+    boxes = geopandas.read_parquet(global_boxes_path) \
         .set_index("box_id")
     box = boxes.loc[[f"box_{box_id}"], :]
     box = box.set_crs("epsg:4326")

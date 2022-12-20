@@ -33,18 +33,20 @@ if __name__ == "__main__":
     target_nodes = targets[["id", "type", "geometry"]].copy()
     target_nodes.geometry = target_nodes.geometry.centroid
 
+    # should not actually reproject, but CRS metadata must match exactly for concat
+    target_nodes = target_nodes.to_crs(plants.crs)
+
     nodes = geopandas.GeoDataFrame(
         pandas.concat([plants, target_nodes], ignore_index=True),
-        crs=plants.crs)
+        crs=plants.crs
+    )
 
     # Edges
     edges = geopandas.read_parquet(gridfinder_path)
 
     edges["type"] = "transmission"
-    edges["id"] = edges.reset_index()["index"].apply(
-        lambda i: f"edge_{i}_{box_id}"
-    )
-    edges = edges[["id", "source_id", "type", "geometry", "source"]]
+
+    edges = edges[["source_id", "type", "geometry", "source"]]
 
     # Process network
     network = snkit.network.Network(nodes, edges)
@@ -96,6 +98,7 @@ if __name__ == "__main__":
             )
 
     # Add nodes at line endpoints
+    # including where edges have been clipped to slice bbox
     network = snkit.network.add_endpoints(network)
 
     network.nodes.loc[network.nodes.id.isnull(), "type"] = "intermediate"
@@ -106,6 +109,8 @@ if __name__ == "__main__":
         else row.id,
         axis=1,
     )
+
+    network.edges["id"] = [f"edge_{i}_{box_id}" for i in range(len(network.edges))]
 
     # Add from/to ids
     network = snkit.network.add_topology(network, id_col="id")
