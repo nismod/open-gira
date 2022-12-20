@@ -44,6 +44,9 @@ jobs:
       shell: bash -l {0}
       # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
       run: |
+        # osmium has been failing when using the build cache
+        # test if it's failing because the boost library wasn't available (it's dynamic)
+        sudo apt update && sudo apt install libboost-program-options-dev
         export PATH="$PATH:$(pwd)/osmium-tool/build"
         osmium --version
         python -m pytest -n auto tests/
