@@ -182,20 +182,8 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # sum components of wind field, (timesteps, y, x)
     wind_field: np.ndarray[complex] = adv_field + rot_field
 
-    # hypotenuse of u,v wind vectors, (timesteps, y, x)
-    wind_speeds: np.ndarray[float] = np.abs(wind_field)
-
-    # find in which timestep the maximum speed values is for each raster pixel
-    timestep_indicies: np.ndarray[int] = np.argmax(wind_speeds, axis=0)
-
-    # take max along timestep axis, giving (y, x)
-    # equivalently, could use timestep_indicies.choose(wind_speeds), but this limited to 32 possible timesteps
-    max_wind_speeds: np.ndarray[float] = np.take_along_axis(
-        wind_speeds,
-        # N.B. take_along_axis indicies must be same rank as choices, so reshape from e.g. (50,50) to (1,50,50)
-        timestep_indicies.reshape(1, *timestep_indicies.shape),
-        axis=0
-    ).squeeze()  # drop the redundant first axis
+    # find vector magnitude, then take max along timestep axis, giving (y, x)
+    max_wind_speeds: np.ndarray[float] = np.max(np.abs(wind_field), axis=0)
 
     if plot:
         plot_contours(
