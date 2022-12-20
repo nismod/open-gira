@@ -10,9 +10,9 @@ import os
 import re
 import sys
 
-import geopandas
+import geopandas as gpd
 import numpy as np
-import pandas
+import pandas as pd
 import rasterio
 import pyproj
 from pyproj import Geod
@@ -51,7 +51,7 @@ def associate_raster(df, fname, band_number=1) -> pd.Series:
 
 def write_empty_files(columns, outputs_path):
     try:
-        empty_geodf = geopandas.GeoDataFrame(
+        empty_geodf = gpd.GeoDataFrame(
             columns=columns,
             geometry="geometry",
             crs=pyproj.CRS.from_user_input(4326)
@@ -62,7 +62,7 @@ def write_empty_files(columns, outputs_path):
     logging.info("Write data")
     empty_geodf.to_parquet(outputs_path)
     logging.info("Write data without geometry")
-    pandas.DataFrame(empty_geodf.drop(columns=["geometry"])).to_parquet(
+    pd.DataFrame(empty_geodf.drop(columns=["geometry"])).to_parquet(
         re.sub("\\.geoparquet$", ".parquet", outputs_path, re.IGNORECASE)
     )
 
@@ -90,10 +90,10 @@ if __name__ == "__main__":
 
     # Read network edges
     logging.info("Read edges")
-    core_edges = geopandas.read_parquet(network_edges_path)
+    core_edges = gpd.read_parquet(network_edges_path)
     if core_edges.empty:
         logging.info("No data in geometry column, writing empty files.")
-        columns = pandas.read_parquet(network_edges_path).columns
+        columns = pd.read_parquet(network_edges_path).columns
         write_empty_files(columns, output_path)
         sys.exit(0)
 
@@ -146,13 +146,13 @@ if __name__ == "__main__":
                 new_row.geometry = s
                 core_splits.append(new_row)
 
-    core_splits = geopandas.GeoDataFrame(core_splits)
+    core_splits = gpd.GeoDataFrame(core_splits)
 
     logging.info("Split %d edges into %d pieces", len(core_edges), len(core_splits))
 
     logging.info("Find indices")
 
-    def cell_indicies_of_split_geometry(geometry, *args, **kwargs) -> pandas.Series:
+    def cell_indicies_of_split_geometry(geometry, *args, **kwargs) -> pd.Series:
         """
         Given a geometry, find the cell index (i, j) of its midpoint for the
         enclosing raster parameters.
@@ -168,9 +168,9 @@ if __name__ == "__main__":
         assert 0 <= j < raster_width
 
         # return a series with labels so we can unpack neatly into two dataframe columns
-        return pandas.Series(index=(fields.RASTER_I, fields.RASTER_J), data=[i, j])
+        return pd.Series(index=(fields.RASTER_I, fields.RASTER_J), data=[i, j])
 
-    core_splits = pandas.concat(
+    core_splits = pd.concat(
         [
             core_splits,
             core_splits.geometry.progress_apply(
@@ -194,20 +194,20 @@ if __name__ == "__main__":
 
         # to prevent a fragmented dataframe (and a memory explosion), add series to a dict
         # and then concat afterwards -- do not append to an existing dataframe
-        raster_data: dict[str, pandas.Series] = {}
+        raster_data: dict[str, pd.Series] = {}
 
         for i in tqdm(range(len(raster_paths))):
             raster_data[f"{fields.HAZARD_PREFIX}{raster_basenames[i]}"] = associate_raster(core_splits, raster_paths[i])
 
-        raster_data = pandas.DataFrame(raster_data)
-        core_splits = pandas.concat([core_splits, raster_data], axis="columns")
+        raster_data = pd.DataFrame(raster_data)
+        core_splits = pd.concat([core_splits, raster_data], axis="columns")
         assert len(raster_data) == len(core_splits)
 
     logging.info(f"Write data {core_splits.shape=}")
     core_splits.to_parquet(output_path)
 
     logging.info("Write data without geometry")
-    pandas.DataFrame(core_splits.drop(columns=["geometry"])).to_parquet(
+    pd.DataFrame(core_splits.drop(columns=["geometry"])).to_parquet(
         re.sub("\\.geoparquet$", ".parquet", output_path, re.IGNORECASE)
     )
 
