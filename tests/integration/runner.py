@@ -192,12 +192,6 @@ class OutputChecker:
 
             self.compare_dataframes(generated, expected)
 
-        elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
-            generated = xr.open_dataset(generated_file)
-            expected = xr.open_dataset(expected_file)
-            if not generated.equals(expected):
-                raise AssertionError("NetCDF files do not match")
-
         # JSON
         elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
             with open(generated_file, 'r') as fp:
