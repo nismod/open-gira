@@ -46,7 +46,7 @@ rule estimate_wind_fields:
     output:
         # can disable plotting by setting `plot_wind_fields` to false in config
         plot_dir = directory("{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/plots/"),
-        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
+        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
