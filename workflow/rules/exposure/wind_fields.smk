@@ -52,5 +52,5 @@ rule estimate_wind_fields:
 
 """
 To test:
-snakemake -c1 results/power/slice/1030/exposure/IBTrACS.nc
+snakemake -c1 results/power/slice/1030/storms/IBTrACS/max_wind_field.nc
 """
