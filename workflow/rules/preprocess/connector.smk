@@ -25,10 +25,10 @@ rule process_connector:
     conda: "../../../environment.yml"
     input:
         adjacent_nodes=adjacent_box_nodes,
-        edges="{OUTPUT_DIR}/power/slice/{BOX}/network/edges_{BOX}.geoparquet",
-        nodes="{OUTPUT_DIR}/power/slice/{BOX}/network/nodes_{BOX}.geoparquet",
+        edges="{OUTPUT_DIR}/power/slice/{BOX}/network/edges.geoparquet",
+        nodes="{OUTPUT_DIR}/power/slice/{BOX}/network/nodes.geoparquet",
         global_metadata=rules.world_splitter.output.global_metadata,
     output:
-        connector="{OUTPUT_DIR}/power/slice/{BOX}/network/connector_{BOX}.json",
+        connector="{OUTPUT_DIR}/power/slice/{BOX}/network/connector.json",
     script:
         "../../scripts/process/process_power_5_connector.py"
