@@ -32,6 +32,7 @@ if __name__ == "__main__":
     ).rename(
         columns={
             "gppd_idnr": "source_id",
+            "capacity_mw": "power_mw"
         }
     )
     powerplants["asset_type"] = "source"
