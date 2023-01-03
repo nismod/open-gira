@@ -25,12 +25,12 @@ if __name__ == "__main__":
     targets = geopandas.read_parquet(targets_path)
 
     plants["id"] = [f"source_{i}_{box_id}" for i in range(len(plants))]
-    plants = plants[["id", "source_id", "capacity_mw", "type", "geometry"]]
+    plants = plants[["id", "source_id", "capacity_mw", "asset_type", "geometry"]]
 
     targets["id"] = [f"target_{i}_{box_id}" for i in range(len(targets))]
     target_cols = list(targets.columns)
 
-    target_nodes = targets[["id", "type", "geometry"]].copy()
+    target_nodes = targets[["id", "asset_type", "geometry"]].copy()
     target_nodes.geometry = target_nodes.geometry.centroid
 
     # should not actually reproject, but CRS metadata must match exactly for concat
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     # Edges
     edges = geopandas.read_parquet(gridfinder_path)
 
-    edges["type"] = "transmission"
+    edges["asset_type"] = "transmission"
 
-    edges = edges[["source_id", "type", "geometry", "source"]]
+    edges = edges[["source_id", "asset_type", "geometry", "source"]]
 
     # Process network
     network = snkit.network.Network(nodes, edges)
@@ -67,11 +67,11 @@ if __name__ == "__main__":
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
                 lambda node, edge: (
-                    (node.type == "source")
+                    (node.asset_type == "source")
                     and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
                 )
             )
-            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
+            network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 
             network.nodes["id"] = network.nodes.reset_index().apply(
                 lambda row: f"conn_source_{row['index']}_{box_id}"
@@ -84,11 +84,11 @@ if __name__ == "__main__":
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
                 lambda node, edge: (
-                    (node.type == "target")
+                    (node.asset_type == "target")
                     and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
                 )
             )
-            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
+            network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_target"
 
             network.nodes["id"] = network.nodes.reset_index().apply(
                 lambda row: f"conn_target_{row['index']}_{box_id}"
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     # including where edges have been clipped to slice bbox
     network = snkit.network.add_endpoints(network)
 
-    network.nodes.loc[network.nodes.id.isnull(), "type"] = "intermediate"
+    network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "intermediate"
 
     network.nodes["id"] = network.nodes.reset_index().apply(
         lambda row: f"intermediate_{row['index']}_{box_id}"
@@ -117,6 +117,8 @@ if __name__ == "__main__":
 
     network.edges["box_id"] = box_id
     network.nodes["box_id"] = box_id
+
+    breakpoint()
 
     network.edges.to_parquet(edges_path)
     network.nodes.to_parquet(nodes_path)

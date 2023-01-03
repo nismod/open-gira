@@ -30,9 +30,11 @@ if __name__ == "__main__":
             "latitude",
         )
     ).rename(
-        columns={"gppd_idnr": "source_id"}
+        columns={
+            "gppd_idnr": "source_id",
+        }
     )
-    powerplants["type"] = "source"
+    powerplants["asset_type"] = "source"
     powerplants["geometry"] = pygeos.points(powerplants.longitude, powerplants.latitude)
     powerplants = geopandas.GeoDataFrame(powerplants.drop(columns=["longitude","latitude"]))
     powerplants = powerplants.set_crs("epsg:4326")

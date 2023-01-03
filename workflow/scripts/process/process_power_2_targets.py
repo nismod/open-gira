@@ -94,7 +94,7 @@ if __name__ == '__main__':
     box_geom = boxes.loc[f"box_{box_id}", "geometry"]
 
     targets = get_target_areas(targets_file, box_geom)
-    targets["type"] = "target"
+    targets["asset_type"] = "target"
     if len(targets):
         targets["population"] = get_population(targets, population_file)
         targets["gdp_pc"] = get_gdp_pc(targets, gdp_file)
