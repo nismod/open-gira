@@ -3,6 +3,7 @@ For each maximum wind field associated with a storm:
     1) Fail edge segments who experience a wind speed greater than given threshold
     2) Attempt to allocate power from sources to sinks over degraded network
     3) Calculate ratio of nominal power to degraded power, the 'supply factor'
+    4) Estimate number of customers affected
 """
 
 import logging
@@ -138,9 +139,8 @@ if __name__ == "__main__":
     # sort into ascending order; if no damage at a given threshold,
     # more resilient thresholds are guaranteed to be safe
     speed_thresholds: list[float] = sorted(snakemake.config["transmission_windspeed_failure"])
+    parallel: bool = snakemake.config["parallelise_by_storm"]
     damages_path: str = snakemake.output.damages
-
-    parallel = True
 
     logging.info("Loading network data")
 
