@@ -178,5 +178,6 @@ percentile: 99
 # Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
 aggregate_level: 1
 
-# Specific storms to analyse in analyse_all workflow. In form of list of strings [#_#_#, #_#_#,... ]. Write None to include all
-specific_storm_analysis: ['99_2017_0']
+# specific storm IDs to use in grid_disruption.py and subsequently
+#specific_storms: ['2017242N16333', '2017260N12310']  # Maria and Irma
+specific_storms: []

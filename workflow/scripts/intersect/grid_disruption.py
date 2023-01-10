@@ -109,7 +109,7 @@ def degrade_grid_with_storm(
         c_surviving = len(set(surviving_network.nodes.component_id))
 
         fraction_failed: float = n_failed / len(survival_mask)
-        failure_str = "{:s} -> {:>6.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
+        failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
         logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
         # reallocate generating capacity by GDP within components
@@ -142,8 +142,21 @@ if __name__ == "__main__":
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
+    specific_storms: list[str] = snakemake.config["specific_storms"]
     parallel: bool = snakemake.config["parallelise_by_storm"]
     damages_path: str = snakemake.output.damages
+
+    logging.info("Loading wind speed data")
+    wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
+    if specific_storms:
+        logging.info("Filtering storm data by specific_storms config")
+        try:
+            wind_fields = wind_fields.sel(dict(event_id=specific_storms))
+        except KeyError:
+            # none of the storms requested are present in the wind file
+            # write out an empty file
+            xr.Dataset().to_netcdf(damages_path)
+    logging.info(wind_fields.max_wind_speed)  # use xarray repr
 
     logging.info("Loading network data")
     network = snkit.network.Network(
@@ -153,10 +166,6 @@ if __name__ == "__main__":
     splits: pd.DataFrame = pd.read_parquet(splits_path)
     logging.info(f"{len(network.edges)} network edges")
     logging.info(f"{len(network.nodes)} network nodes")
-
-    logging.info("Loading wind speed data")
-    wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
-    logging.info(wind_fields.max_wind_speed)  # use xarray repr
 
     logging.info(f"Using damage thresholds: {speed_thresholds} [m/s]")
 
