@@ -16,7 +16,6 @@ import pandas as pd
 import xarray as xr
 
 from open_gira import fields
-from open_gira.grid import allocate_power_to_targets
 import snkit
 
 
@@ -112,18 +111,38 @@ def degrade_grid_with_storm(
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
         logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
-        # reallocate generating capacity by GDP within components
         nodes = surviving_network.nodes
+
+        # for new network configuration
+        # calculate the total generation capacity for each component
+        component_total_supply = nodes.loc[
+            nodes.asset_type == "source",
+            ["power_mw", "component_id"]
+        ].groupby("component_id").sum().reset_index()
+
+        # subset nodes to only targets
+        targets = nodes[nodes.asset_type == "target"]
+
+        # calculate the total of gdp for each component
+        weight = "gdp"
+        component_total_weight = targets.loc[:, [weight, "component_id"]].groupby("component_id").sum().reset_index()
+
+        # merge in the component totals for power supply and gdp weight
+        targets = targets.merge(component_total_supply.rename(columns={"power_mw": "component_capacity_mw"}), how="left", on="component_id")
+        targets = targets.merge(component_total_weight.rename(columns={weight: "component_weight"}), how="left", on="component_id")
+        # ensure every target has a non-nan capacity
+        targets.component_capacity_mw = targets.component_capacity_mw.fillna(0)
+
         # about to mutate power_mw column, make a copy first
-        nodes["power_nominal_mw"] = nodes["power_mw"]
-        # for new network configuration, allocate source generation capacity to targets, weighted by GDP
-        nodes = allocate_power_to_targets(nodes, "gdp")
+        targets["power_nominal_mw"] = targets["power_mw"].copy()
+        # reallocate generating capacity by GDP within components
+        targets.loc[:, "power_mw"] = -1 * targets.component_capacity_mw * targets.loc[:, weight] / targets.component_weight
 
         # calculate ratio of degraded power supply to nominal power supply
-        targets = nodes[nodes.asset_type == "target"].copy()
         targets["supply_factor"] = targets.power_mw / targets.power_nominal_mw
 
-        # supply factor can be > 1, so clip to zero to prevent negative customers_affected in areas with 'oversupply'
+        # calculate the number of customers affect in each target
+        # N.B. supply factor can be > 1, so clip to zero to prevent negative customers_affected in areas with 'oversupply'
         targets["customers_affected"] = np.clip(1 - targets.supply_factor, 0, None) * targets.population
 
         # assign data to dataset
