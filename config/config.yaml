@@ -179,5 +179,6 @@ percentile: 99
 aggregate_level: 1
 
 # specific storm IDs to use in grid_disruption.py and subsequently
+# use an empty list to process all available storms
 #specific_storms: ['2017242N16333', '2017260N12310']  # Maria and Irma
 specific_storms: []

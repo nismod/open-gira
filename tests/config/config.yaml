@@ -97,9 +97,13 @@ exposure_tifs:
 
 ## STORM Power Network Analysis
 
+# for any given spatial domain, use multiprocessing to parallelise by storm
+# works for estimate_wind_fields.py and grid_disruption.py
+parallelise_by_storm: False
+
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [20, 35, 50]
+transmission_windspeed_failure: [35]
 
 # width and height of a square cell or 'box' for power/storms workflow
 # dataset-splitting -- must be a factor of 180
@@ -161,5 +165,6 @@ percentile: 99
 # Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
 aggregate_level: 1
 
-# Specific storms to analyse in analyse_all workflow. In form of list of strings [#_#_#, #_#_#,... ]. Write None to include all
-specific_storm_analysis: ['99_2017_0']
+# specific storm IDs to use in grid_disruption.py and subsequently
+# use an empty list to process all available storms
+specific_storms: ['2017242N16333']  # Maria
