@@ -8,6 +8,7 @@ For each maximum wind field associated with a storm:
 
 import logging
 import multiprocessing
+from typing import Optional
 
 import geopandas as gpd
 import numpy as np
@@ -30,7 +31,7 @@ def degrade_grid_with_storm(
     splits: pd.DataFrame,
     speed_thresholds: list,
     network: snkit.network.Network
-) -> xr.Dataset:
+) -> Optional[xr.Dataset]:
     """
     Use a maximum wind speed field and a electricity grid representation,
     degrade the network for a set of damage speed thresholds. Estimate the
@@ -49,11 +50,9 @@ def degrade_grid_with_storm(
 
     Returns:
         Dataset containing supply_factor and customers_affected variables on
-            event_id, threshold and target dimensions.
+            event_id, threshold and target dimensions. In the case where the
+            network is not damaged at any threshold, return `None`.
     """
-
-    storm_id_str = str(storm_id.values)  # coerce singleton array into str
-    logging.info(storm_id_str)
 
     # rank 1, length of splits DataFrame
     # N.B. to index at points rather than the cross-product of indicies, index with DataArrays
@@ -81,14 +80,20 @@ def degrade_grid_with_storm(
         )
     )
 
-    for threshold in speed_thresholds:
+    # sort into ascending order; if no damage at a given threshold,
+    # more resilient thresholds are guaranteed to be safe
+    for threshold in sorted(speed_thresholds):
         survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas()
 
         try:
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
-            # network is intact, short circuit
-            return exposure
+            # at the lowest threshold there is no damage, return None
+            if threshold == min(speed_thresholds):
+                return None
+            # some damage has occured, but not at this threshold, return exposure as it stands
+            else:
+                return exposure
 
         surviving_edge_ids = set(splits.loc[survival_mask, "id"])
         surviving_edges: pd.DataFrame = network.edges.loc[network.edges.id.isin(surviving_edge_ids), :]
@@ -105,7 +110,7 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:>6.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(failure_str.format(storm_id_str, 100 * fraction_failed, threshold, c_nominal, c_surviving))
+        logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
         # reallocate generating capacity by GDP within components
         nodes = surviving_network.nodes
@@ -136,35 +141,28 @@ if __name__ == "__main__":
     nodes_path: str = snakemake.input.grid_nodes
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
-    # sort into ascending order; if no damage at a given threshold,
-    # more resilient thresholds are guaranteed to be safe
-    speed_thresholds: list[float] = sorted(snakemake.config["transmission_windspeed_failure"])
+    speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
     parallel: bool = snakemake.config["parallelise_by_storm"]
     damages_path: str = snakemake.output.damages
 
     logging.info("Loading network data")
-
     network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path),
         nodes=gpd.read_parquet(nodes_path)
     )
+    splits: pd.DataFrame = pd.read_parquet(splits_path)
     logging.info(f"{len(network.edges)} network edges")
     logging.info(f"{len(network.nodes)} network nodes")
 
-    splits: pd.DataFrame = pd.read_parquet(splits_path)
-
     logging.info("Loading wind speed data")
-
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
     logging.info(wind_fields.max_wind_speed)  # use xarray repr
 
     logging.info(f"Using damage thresholds: {speed_thresholds} [m/s]")
 
     logging.info("Simulating electricity network failure due to wind damage...")
-
     args = ((storm_id, wind_fields.max_wind_speed, splits, speed_thresholds, network) for storm_id in wind_fields.event_id)
-
-    exposure_by_storm: list[xr.Dataset] = []
+    exposure_by_storm: list[Optional[xr.Dataset]] = []
     if parallel:
         with multiprocessing.Pool() as pool:
             exposure_by_storm = pool.starmap(degrade_grid_with_storm, args)
@@ -172,4 +170,6 @@ if __name__ == "__main__":
         for arg in args:
             exposure_by_storm.append(degrade_grid_with_storm(*arg))
 
-    exposure = xr.merge(exposure_by_storm).to_netcdf(damages_path)
+    # filter out storms that haven't impinged upon the network at all
+    exposure = xr.merge(filter(lambda x: x is not None, exposure_by_storm))
+    exposure.to_netcdf(damages_path)
