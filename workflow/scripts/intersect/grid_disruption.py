@@ -102,7 +102,6 @@ def degrade_grid_with_storm(
         )
 
         # check topology of degraded network
-        surviving_network = snkit.network.add_topology(surviving_network, id_col="id")
         surviving_network = snkit.network.add_component_ids(surviving_network)
         c_nominal = len(set(network.nodes.component_id))
         c_surviving = len(set(surviving_network.nodes.component_id))
