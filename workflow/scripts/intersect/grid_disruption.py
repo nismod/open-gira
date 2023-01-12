@@ -198,5 +198,5 @@ if __name__ == "__main__":
             exposure_by_storm.append(degrade_grid_with_storm(*arg))
 
     # filter out storms that haven't impinged upon the network at all
-    exposure = xr.merge(filter(lambda x: x is not None, exposure_by_storm))
+    exposure = xr.concat(filter(lambda x: x is not None, exposure_by_storm), "event_id")
     exposure.to_netcdf(damages_path)
