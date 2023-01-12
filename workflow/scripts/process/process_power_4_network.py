@@ -113,7 +113,12 @@ if __name__ == "__main__":
         axis=1,
     )
 
-    network.edges["id"] = [f"edge_{i}_{box_id}" for i in range(len(network.edges))]
+    # join econometric and demographic data to network nodes dataframe
+    network.nodes = pd.merge(network.nodes, targets[["id", "gdp", "population"]], on="id", how="outer")
+
+    # overwrite ids to int type (grid_disruption.py needs fast pandas isin ops)
+    network.nodes["id"] = range(len(network.nodes))
+    network.edges["id"] = range(len(network.edges))
 
     # Add from/to ids
     network = snkit.network.add_topology(network, id_col="id")
@@ -124,13 +129,10 @@ if __name__ == "__main__":
     if "component_id" not in network.nodes.columns:
         network = snkit.network.add_component_ids(network)
 
-    # join econometric and demographic data to network nodes dataframe
-    nodes = pd.merge(network.nodes, targets[["id", "gdp", "population"]], on="id", how="outer")
-
-    network.nodes = allocate_power_to_targets(nodes, "gdp")
+    network.nodes = allocate_power_to_targets(network.nodes, "gdp")
 
     # check power has been allocated appropriately
-    assert nodes["power_mw"].sum() < 1E-6
+    assert network.nodes["power_mw"].sum() < 1E-6
 
     network.edges.to_parquet(edges_path)
     network.nodes.to_parquet(nodes_path)
