@@ -124,7 +124,7 @@ box_deg: 5
 # wind_deg defines another grid which nests inside the above
 # this value must be a factor of box_deg
 # wind speed is constant within a square area of sides wind_deg
-wind_deg: 0.1  # approx 1km latitude
+wind_deg: 0.1  # approx 11km latitude
 
 # whether to plot maximum wind fields and storm track animations for each storm
 # WARNING: this is very slow.. you probably only ever want it for historic tracks
