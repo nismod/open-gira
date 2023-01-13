@@ -2,13 +2,13 @@ rule parse_storm:
     input:
         csv_dir="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw"
     output:
-        parquet="{OUTPUT_DIR}/input/STORM/events/STORM-{STORM_MODEL}/processed.parquet"
+        parquet="{OUTPUT_DIR}/input/STORM/events/STORM-{STORM_MODEL}/processed.geoparquet"
     script:
         "../../scripts/process/parse_STORM.py"
 
 """
 Test with:
-snakemake -c1 results/input/STORM/events/STORM-constant/processed.parquet
+snakemake -c1 results/input/STORM/events/STORM-constant/processed.geoparquet
 """
 
 
