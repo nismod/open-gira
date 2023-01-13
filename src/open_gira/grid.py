@@ -1,45 +1,64 @@
-import geopandas as gpd
+import pandas as pd
 
 
-def allocate_power_to_targets(nodes: gpd.GeoDataFrame, weighting: str) -> gpd.GeoDataFrame:
+def weighted_allocation(
+    nodes: pd.DataFrame,
+    *,
+    variable_col: str,
+    weight_col: str,
+    component_col: str,
+    asset_col: str,
+    source_name: str,
+    sink_name: str,
+) -> pd.DataFrame:
     """
-    For each network component, allocate total generating capacity of sources
-    to targets (consuming nodes), weighted by some feature of the targets'.
-
-    Here's some returned `nodes` weighted by `gdp`. This function has mutated
-    the `power_mw` cells for target `asset_types`:
-                        id   source_id asset_type  component_id          gdp  power_mw
-    37      source_37_1030  WRI1028006     source             6          NaN  6.000000
-    956    target_914_1030         NaN     target             6 8.256908e+07 -4.848396
-    993    target_951_1030         NaN     target             6 1.441001e+06 -0.084615
-    994    target_952_1030         NaN     target             6 2.087217e+06 -0.122560
-    1000   target_958_1030         NaN     target             6 2.353413e+06 -0.138191
-    1001   target_959_1030         NaN     target             6 1.342598e+07 -0.788364
-    1009   target_967_1030         NaN     target             6 3.044258e+05 -0.017876
+    For each network component, allocate total variable capacity of sources
+    to sinks (consuming nodes), weighted by some feature of the sinks. The sum
+    of the variable for all sources and sinks in a component should equal zero.
 
     Args:
-        nodes: Should contain `id`, `component_id`, `power_mw`, `asset_type`
-            and column referenced by `weighting`
-        weighting: Name of column in `nodes` to weight targets by
+        nodes: Should contain, `variable_col`, `weight_col`, `asset_col` and `component_col`
+        variable_col: Name of column in `nodes` to distribute from `source` to `sink`
+        weight_col: Name of column in `nodes` to weight allocation to sinks by
+        component_col: Name of column in `nodes` to group sources and sinks by
+        asset_col: Name of column in `nodes` to differentiate sources and sinks by
+        source_name: Categorical for sources in `nodes[asset_col]`
+        sink_name: Categorical for sinks in `nodes[asset_col]`
 
     Returns:
-        Nodes with generating capacity allocated to consuming nodes by weighting
+        Sink nodes with variable allocated from source nodes by weight
     """
 
-    power = "power_mw"
+    # find the sum of variable for each component
+    c_variable_sum = nodes.loc[
+        nodes[asset_col] == source_name,
+        [variable_col, component_col]
+    ].groupby(component_col).sum().reset_index()
 
-    # for each component, allocate generation weighted by GDP of targets
-    for c_id in set(nodes.component_id):
+    # subset to sinks
+    sinks = nodes[nodes[asset_col] == sink_name]
 
-        c_mask: pd.Series = nodes.component_id == c_id
+    # find the sum of weights for each component
+    c_weight_sum = sinks.loc[:, [weight_col, component_col]].groupby(component_col).sum().reset_index()
 
-        c_total_capacity: float = nodes.loc[(nodes.asset_type == "source") & c_mask, power].sum()
+    # merge in the component sums for variable and weight
+    c_variable_col = f"_component_{variable_col}"
+    sinks = sinks.merge(
+        c_variable_sum.rename(columns={variable_col: c_variable_col}),
+        how="left",
+        on=component_col
+    )
+    c_weight_col = f"_component_{weight_col}"
+    sinks = sinks.merge(
+        c_weight_sum.rename(columns={weight_col: c_weight_col}),
+        how="left",
+        on=component_col
+    )
 
-        c_target_mask: pd.Series = (nodes.asset_type == "target") & c_mask
+    # ensure every sink has a numeric (non-NaN) entry for the component sum of variable
+    sinks[c_variable_col] = sinks[c_variable_col].fillna(0)
 
-        c_total_weight: float = nodes.loc[c_target_mask, weighting].sum()
+    # reallocate variable to sinks, by weight within components
+    sinks.loc[:, variable_col] = -1 * sinks[c_variable_col] * sinks.loc[:, weight_col] / sinks[c_weight_col]
 
-        nodes.loc[c_target_mask, power] = \
-            -1 * c_total_capacity * (nodes.loc[c_target_mask, weighting] / c_total_weight)
-
-    return nodes
+    return sinks

@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 
-from open_gira.grid import allocate_power_to_targets
+from open_gira.grid import weighted_allocation
 
 
 class Test_allocate_power_to_targets:
 
-    def test_allocate_power_to_targets(self):
+    def test_weighted_allocation(self):
         df = pd.DataFrame(
             index=range(5),
             data={
@@ -17,6 +17,16 @@ class Test_allocate_power_to_targets:
             }
         )
 
-        generated = allocate_power_to_targets(df, "gdp")
+        generated = weighted_allocation(
+            df,
+            variable_col="power_mw",
+            weight_col="gdp",
+            component_col="component_id",
+            asset_col="asset_type",
+            source_name="source",
+            sink_name="target",
+        )
 
-        assert all(pd.Series([20, -15, -5, -10, 10]) == generated.power_mw)
+        assert all(pd.Series([-15, -5, -10]) == generated["power_mw"])
+        assert all(pd.Series([20, 20, 10]) == generated["_component_power_mw"])
+        assert all(pd.Series([4, 4, 1]) == generated["_component_gdp"])

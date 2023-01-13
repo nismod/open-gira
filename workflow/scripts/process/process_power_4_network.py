@@ -11,7 +11,7 @@ import snkit.network
 from pyproj import Geod
 from shapely.errors import ShapelyDeprecationWarning
 
-from open_gira.grid import allocate_power_to_targets
+from open_gira.grid import weighted_allocation
 
 
 if __name__ == "__main__":
@@ -129,7 +129,21 @@ if __name__ == "__main__":
     if "component_id" not in network.nodes.columns:
         network = snkit.network.add_component_ids(network)
 
-    network.nodes = allocate_power_to_targets(network.nodes, "gdp")
+    targets: pd.DataFrame = weighted_allocation(
+        network.nodes,
+        variable_col="power_mw",
+        weight_col="gdp",
+        component_col="component_id",
+        asset_col="asset_type",
+        source_name="source",
+        sink_name="target",
+    )
+
+    # merge the target power allocation back into the nodes table
+    # first get the target power in a table of the same length as network.nodes
+    target_power = network.nodes[["id", "power_mw"]].merge(targets[["id", "power_mw"]], how="left", on="id", suffixes=["_x", ""])
+    # then use combine_first to overwrite the NaN target power values in network.nodes
+    network.nodes = network.nodes.combine_first(target_power[["id", "power_mw"]])
 
     # check power has been allocated appropriately
     assert network.nodes["power_mw"].sum() < 1E-6

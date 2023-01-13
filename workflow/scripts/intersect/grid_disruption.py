@@ -16,6 +16,7 @@ import pandas as pd
 import xarray as xr
 
 from open_gira import fields
+from open_gira.grid import weighted_allocation
 import snkit
 
 
@@ -110,32 +111,19 @@ def degrade_grid_with_storm(
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
         logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
-        nodes = surviving_network.nodes
-
-        # for new network configuration
-        # calculate the total generation capacity for each component
-        component_total_supply = nodes.loc[
-            nodes.asset_type == "source",
-            ["power_mw", "component_id"]
-        ].groupby("component_id").sum().reset_index()
-
-        # subset nodes to only targets
-        targets = nodes[nodes.asset_type == "target"]
-
-        # calculate the total of gdp for each component
-        weight = "gdp"
-        component_total_weight = targets.loc[:, [weight, "component_id"]].groupby("component_id").sum().reset_index()
-
-        # merge in the component totals for power supply and gdp weight
-        targets = targets.merge(component_total_supply.rename(columns={"power_mw": "component_capacity_mw"}), how="left", on="component_id")
-        targets = targets.merge(component_total_weight.rename(columns={weight: "component_weight"}), how="left", on="component_id")
-        # ensure every target has a non-nan capacity
-        targets.component_capacity_mw = targets.component_capacity_mw.fillna(0)
-
         # about to mutate power_mw column, make a copy first
-        targets["power_nominal_mw"] = targets["power_mw"].copy()
-        # reallocate generating capacity by GDP within components
-        targets.loc[:, "power_mw"] = -1 * targets.component_capacity_mw * targets.loc[:, weight] / targets.component_weight
+        surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes["power_mw"]
+
+        # allocate power within components, from sources to targets, weighted by gdp of targets
+        targets: pd.DataFrame = weighted_allocation(
+            surviving_network.nodes,
+            variable_col="power_mw",
+            weight_col="gdp",
+            component_col="component_id",
+            asset_col="asset_type",
+            source_name="source",
+            sink_name="target",
+        )
 
         # calculate ratio of degraded power supply to nominal power supply
         targets["supply_factor"] = targets.power_mw / targets.power_nominal_mw
