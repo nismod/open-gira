@@ -22,7 +22,7 @@ import snkit
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
-DIM_NAMES = ["event_id", "threshold", "target"]
+DIM_NAMES = ("event_id", "threshold", "target")
 
 
 def degrade_grid_with_storm(
@@ -187,4 +187,5 @@ if __name__ == "__main__":
 
     # filter out storms that haven't impinged upon the network at all
     exposure = xr.concat(filter(lambda x: x is not None, exposure_by_storm), "event_id")
-    exposure.to_netcdf(damages_path)
+    encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
+    exposure.to_netcdf(damages_path, encoding=encoding)

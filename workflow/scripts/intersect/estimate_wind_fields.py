@@ -262,4 +262,5 @@ if __name__ == "__main__":
         name="max_wind_speed",
     )
     da = da.rio.write_crs("epsg:4326")
-    da.to_netcdf(output_path)
+    encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
+    da.to_netcdf(output_path, encoding=encoding)
