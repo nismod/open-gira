@@ -15,7 +15,7 @@ snakemake -c1 results/input/STORM/events/STORM-constant/processed.geoparquet
 rule slice_storm:
     input:
         global_tracks=rules.parse_storm.output.parquet,
-        global_boxes=rules.world_splitter.output.global_boxes,
+        grid_bbox="{OUTPUT_DIR}/power/slice/{BOX}/network/bbox.geojson"
     output:
         sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/STORM-{STORM_MODEL}/tracks.geoparquet",
     script:

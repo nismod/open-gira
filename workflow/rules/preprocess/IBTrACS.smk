@@ -15,7 +15,7 @@ snakemake -c1 results/input/IBTrACS/processed/v4.geoparquet
 rule slice_ibtracs:
     input:
         global_tracks=rules.parse_ibtracs.output.ibtracs_parquet,
-        global_boxes=rules.world_splitter.output.global_boxes,
+        grid_bbox="{OUTPUT_DIR}/power/slice/{BOX}/network/bbox.geojson"
     output:
         sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/IBTrACS/tracks.geoparquet",
     script:

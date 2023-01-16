@@ -5,6 +5,7 @@ Subset IBTrACS (historic) or STORM (synthetic) storm tracks to a slicing box.
 import os
 
 import geopandas as gpd
+import shapely
 
 
 # expand the slice by this many degrees
@@ -14,12 +15,13 @@ TRACK_SLICING_BUFFER_DEG = 1
 if __name__ == "__main__":
 
     global_tracks_path = snakemake.input.global_tracks
-    global_boxes_path = snakemake.input.global_boxes
+    grid_bbox_path = snakemake.input.grid_bbox
     sliced_tracks_path = snakemake.output.sliced_tracks
     box_number = snakemake.wildcards.BOX
 
-    boxes = gpd.read_parquet(global_boxes_path).set_index("box_id")
-    box_geom = boxes.loc[f"box_{box_number}", "geometry"]
+    with open(grid_bbox_path, "r") as fp:
+        bbox_dict = fp.read()
+    box_geom = shapely.geometry.polygon.Polygon(bbox_dict)
 
     tracks = gpd.read_parquet(global_tracks_path)
 

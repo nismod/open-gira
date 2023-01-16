@@ -1,15 +1,44 @@
+rule polygonise_targets:
+    """
+    Process raster of target locations into set of polygons
+    """
+    input:
+        targets=rules.download_gridfinder.output.electricity_targets_global,
+    output:
+        targets="{OUTPUT_DIR}/power/target_polygons.geoparquet",
+    run:
+        from open_gira.grid import polygonise_targets
+
+        import shapely
+        from shapely.geometry.polygon import Polygon
+        from shapely.geometry import box
+
+        # do not process polar regions
+        bbox: Polygon = shapely.geometry.box(-180, -60, 180, 60)
+        targets = polygonise_targets(input.targets, bbox)
+        targets.to_parquet(output.targets)
+
 """
-Process targets to estimate population and GDP
+Test with:
+snakemake -c1 results/power/target_polygons.geoparquet
 """
 
-rule process_target_box:
+
+rule annotate_targets:
+    """
+    Annotate targets (electricity consuming areas) with population and GDP data
+    """
     conda: "../../../environment.yml"
     input:
         population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2022A_54009_1000_V1_0.tif",
-        targets=rules.download_gridfinder.output.electricity_targets_global,
+        targets=rules.polygonise_targets.output.targets,
         gdp="{OUTPUT_DIR}/input/GDP/GDP_per_capita_PPP_1990_2015_v2.nc",
-        global_boxes=rules.world_splitter.output.global_boxes,
     output:
-        targets="{OUTPUT_DIR}/power/slice/{BOX}/network/targets.geoparquet",
+        targets="{OUTPUT_DIR}/power/targets.geoparquet",
     script:
-        "../../scripts/preprocess/process_power_2_targets.py"
+        "../../scripts/preprocess/annotate_targets.py"
+
+"""
+Test with:
+snakemake -c1 results/power/targets.geoparquet
+"""

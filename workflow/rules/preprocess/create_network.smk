@@ -2,28 +2,31 @@
 Network creation routines
 """
 
-
 rule create_power_network:
-    """Combine power plant, consumer and transmission data for each slice"""
+    """
+    Combine power plant, consumer and transmission data for globe
+    """
     conda: "../../../environment.yml"
     input:
-        plants="{OUTPUT_DIR}/power/slice/{BOX}/network/powerplants.geoparquet",
-        targets="{OUTPUT_DIR}/power/slice/{BOX}/network/targets.geoparquet",
-        gridfinder="{OUTPUT_DIR}/power/slice/{BOX}/network/gridfinder.geoparquet",
+        plants="{OUTPUT_DIR}/power/powerplants.geoparquet",
+        targets="{OUTPUT_DIR}/power/targets.geoparquet",
+        gridfinder="{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
     output:
-        edges="{OUTPUT_DIR}/power/slice/{BOX}/network/edges.geoparquet",
-        nodes="{OUTPUT_DIR}/power/slice/{BOX}/network/nodes.geoparquet",
+        edges="{OUTPUT_DIR}/power/edges.geoparquet",
+        nodes="{OUTPUT_DIR}/power/nodes.geoparquet",
     script:
-        "../../scripts/preprocess/process_power_4_network.py"
+        "../../scripts/preprocess/create_electricity_network.py"
 
 """
 Test with:
-snakemake -c1 results/power/slice/1030/network/edges.geoparquet
+snakemake -c1 results/power/edges.geoparquet
 """
 
 
 rule create_transport_network:
-    """Take .geoparquet OSM files and output files of cleaned network nodes and edges"""
+    """
+    Take .geoparquet OSM files and output files of cleaned network nodes and edges
+    """
     conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",

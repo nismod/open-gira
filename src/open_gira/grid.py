@@ -1,4 +1,58 @@
+import logging
+
+import geopandas as gpd
 import pandas as pd
+from pyproj import Geod
+import rasterio
+import rasterio.features
+import rasterio.mask
+import shapely
+
+
+def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon) -> gpd.GeoDataFrame:
+    """
+    Take a raster of electricity consuming 'targets' and a geometry extent and
+    return a set of target polygons with computed areas.
+
+    Args:
+        targets_path: Path to raster file containing targets
+        extent: Shape to mask targets by
+
+    Returns:
+        Table of target geometries and areas
+    """
+
+    geod = Geod(ellps="WGS84")
+    geoms = []
+    areas_km2 = []
+
+    # Targets: Binary raster showing locations predicted to be connected to distribution grid.
+    with rasterio.open(targets_path) as dataset:
+        crs = dataset.crs.data
+
+        # Read the dataset's valid data mask as a ndarray.
+        try:
+            box_dataset, box_transform = rasterio.mask.mask(dataset, [extent], crop=True)
+
+            # Extract feature shapes and values from the array.
+            for geom, val in rasterio.features.shapes(box_dataset, transform=box_transform):
+                if val > 0:
+                    feature = shapely.geometry.shape(geom)
+                    geoms.append(feature)
+                    area_m2, _ = geod.geometry_area_perimeter(feature)
+                    areas_km2.append(abs(area_m2 / 1e6))
+        except ValueError as ex:
+            # could be that extent does not overlap dataset
+            logging.info("Extent may not overlap targets", ex)
+            pass
+
+    return gpd.GeoDataFrame(
+        data={
+            "area_km2": areas_km2,
+            "geometry": geoms
+        },
+        crs=crs
+    )
 
 
 def weighted_allocation(
