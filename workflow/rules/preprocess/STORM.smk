@@ -4,7 +4,7 @@ rule parse_storm:
     output:
         parquet="{OUTPUT_DIR}/input/STORM/events/STORM-{STORM_MODEL}/processed.geoparquet"
     script:
-        "../../scripts/process/parse_STORM.py"
+        "../../scripts/preprocess/parse_STORM.py"
 
 """
 Test with:
@@ -19,7 +19,7 @@ rule slice_storm:
     output:
         sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/STORM-{STORM_MODEL}/tracks.geoparquet",
     script:
-        "../../scripts/process/slice_storm_tracks.py"
+        "../../scripts/preprocess/slice_storm_tracks.py"
 
 """
 To test:

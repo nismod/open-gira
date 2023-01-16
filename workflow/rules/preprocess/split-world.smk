@@ -11,4 +11,4 @@ rule world_splitter:
         global_metadata = "{OUTPUT_DIR}/power/world_boxes_metadata.json",
         global_boxes = "{OUTPUT_DIR}/power/world_boxes.geoparquet",
     script:
-        "../../scripts/process/world_split.py"
+        "../../scripts/preprocess/world_split.py"

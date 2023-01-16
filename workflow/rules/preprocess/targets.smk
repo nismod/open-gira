@@ -12,4 +12,4 @@ rule process_target_box:
     output:
         targets="{OUTPUT_DIR}/power/slice/{BOX}/network/targets.geoparquet",
     script:
-        "../../scripts/process/process_power_2_targets.py"
+        "../../scripts/preprocess/process_power_2_targets.py"

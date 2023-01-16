@@ -11,4 +11,4 @@ rule process_powerplants:
     output:
         powerplants="{OUTPUT_DIR}/power/slice/{BOX}/network/powerplants.geoparquet",
     script:
-        "../../scripts/process/process_power_1_powerplants.py"
+        "../../scripts/preprocess/process_power_1_powerplants.py"

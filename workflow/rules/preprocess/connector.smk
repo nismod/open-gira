@@ -31,4 +31,4 @@ rule process_connector:
     output:
         connector="{OUTPUT_DIR}/power/slice/{BOX}/network/connector.json",
     script:
-        "../../scripts/process/process_power_5_connector.py"
+        "../../scripts/preprocess/process_power_5_connector.py"

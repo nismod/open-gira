@@ -4,7 +4,7 @@ rule parse_ibtracs:
     output:
         ibtracs_parquet = "results/input/IBTrACS/processed/v4.geoparquet"
     script:
-        "../../scripts/process/parse_IBTrACS.py"
+        "../../scripts/preprocess/parse_IBTrACS.py"
 
 """
 To test:
@@ -19,7 +19,7 @@ rule slice_ibtracs:
     output:
         sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/IBTrACS/tracks.geoparquet",
     script:
-        "../../scripts/process/slice_storm_tracks.py"
+        "../../scripts/preprocess/slice_storm_tracks.py"
 
 """
 To test:

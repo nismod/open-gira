@@ -11,4 +11,4 @@ rule process_gridfinder:
     output:
         gridfinder="{OUTPUT_DIR}/power/slice/{BOX}/network/gridfinder.geoparquet",
     script:
-       "../../scripts/process/process_power_3_gridfinder.py"
+       "../../scripts/preprocess/process_power_3_gridfinder.py"

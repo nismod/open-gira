@@ -14,7 +14,7 @@ rule create_power_network:
         edges="{OUTPUT_DIR}/power/slice/{BOX}/network/edges.geoparquet",
         nodes="{OUTPUT_DIR}/power/slice/{BOX}/network/nodes.geoparquet",
     script:
-        "../../scripts/process/process_power_4_network.py"
+        "../../scripts/preprocess/process_power_4_network.py"
 
 """
 Test with:
