@@ -1,14 +1,11 @@
 """
-Creates the network from the plants and targets data
+Create a network from plants, targets and gridfinder line data
 """
 
 import logging
-import multiprocessing
-import os
-from typing import Callable, Tuple
+from typing import Callable
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import snkit
 import snkit.network
@@ -18,68 +15,43 @@ from shapely.geometry import Point, LineString
 from open_gira.grid import weighted_allocation
 
 
-def link_node(node, network: snkit.network.Network, condition: Callable) -> Tuple[Point, LineString] | Tuple[None, None]:
+MAX_LINK_DISTANCE = 20_000
+
+
+def node_to_edge_distance(node: Point, edge: LineString, geoid: Geod = Geod(ellps="WGS84")) -> float:
+    """
+    Calculate the great circle distance from node to nearest point on edge,
+    given a geoid.
     """
 
+    # find the location, p, on the linestring nearest the node
+    p: Point = edge.interpolate(edge.project(node))
+
+    _, _, distance = geoid.inv(node.x, node.y, p.x, p.y)
+
+    return distance
+
+
+def get_proximity_condition(asset_type: str, edge_limit: float | int) -> Callable:
     """
-
-    # TODO: type hint node in signature
-    logging.info(type(node))
-
-    # for each node, check if nearest edge satisfies condition
-    edge = snkit.network.nearest_edge(node.geometry, network.edges)
-    if condition is not None and not condition(node, edge):
-        return None, None
-
-    # add nodes at points-nearest
-    point = snkit.network.nearest_point_on_line(node.geometry, edge.geometry)
-
-    if point != node.geometry:
-        # add edges linking
-        line = LineString([node.geometry, point])
-        return point, line
-    else:
-        return None, None
-
-
-def link_nodes_to_nearest_edge(network: snkit.network.Network, condition: None | Callable = None) -> snkit.network.Network:
-    """
-    Link `network` nodes to nearest edge, subject to `condition`. Parallel
-    version of snkit.network.link_nodes_to_nearest_edge
+    Return a closure (enclosed function) to check if some node and asset
+    pair satisfy a proximity condition.
 
     Args:
-        network: Network to operate on
-        condition: An optional function which takes arguments of node and edge
-            and evaluates to a boolean. If true, link node.
+        asset_type: Assets to check
+        edge_limit: Maximum distance from node to edge
 
     Returns:
-        Network with any new features after linking.
+        Closure function
     """
 
-    # build input argument list
-    chunk_size: int = np.ceil(len(network.nodes) / os.cpu_count()).astype(int)
-    args = [
-        (network.nodes.iloc[i: i + chunk_size, :].copy(), network, condition)
-        for i in range(0, len(network.nodes), chunk_size)
-    ]
+    geoid = Geod(ellps="WGS84")
 
-    new_features = []
-    with multiprocessing.Pool() as pool:
-        new_features = pool.starmap(link_node, args)
+    def closure(node: pd.Series, edge: pd.Series) -> bool:
+        """Return true if node is a target and within distance limit."""
+        return (node.asset_type == asset_type) and (node_to_edge_distance(node.geometry, edge.geometry, geoid) < edge_limit)
 
-    # unpack generated features
-    new_node_geoms, new_edge_geoms = zip(*new_features)
-
-    new_nodes = snkit.network.matching_gdf_from_geoms(network.nodes, filter(lambda x: x is not None, new_node_geoms))
-    all_nodes = snkit.network.concat_dedup([network.nodes, new_nodes])
-
-    new_edges = snkit.network.matching_gdf_from_geoms(network.edges, filter(lambda x: x is not None, new_edge_geoms))
-    all_edges = snkit.network.concat_dedup([network.edges, new_edges])
-
-    # split edges as necessary after new node creation
-    unsplit = snkit.network.Network(nodes=all_nodes, edges=all_edges)
-
-    return snkit.network.split_edges_at_nodes(unsplit)
+    return closure
 
 
 if __name__ == "__main__":
@@ -109,7 +81,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Read edge data (transmission and distribution lines)")
-    edges = gpd.read_file(gridfinder_path).reset_index(names="source_id")
+    edges = gpd.read_parquet(gridfinder_path).reset_index(names="source_id")
     edges["asset_type"] = "transmission"
     edges = edges[["source_id", "asset_type", "geometry", "source"]]
 
@@ -121,40 +93,21 @@ if __name__ == "__main__":
     logging.info("Split multilinestrings")
     network = snkit.network.split_multilinestrings(network)
 
-    geod = Geod(ellps="WGS84")
-    edge_limit = 20_000  # meters - TODO test limit
-
-    def node_to_edge_distance(point, line, geod):
-        b = line.interpolate(line.project(point))
-        _, _, distance = geod.inv(point.x, point.y, b.x, b.y)
-        return distance
-
-    if parallel:
-        link_function = link_nodes_to_nearest_edge
-    else:
-        link_function = snkit.network.link_nodes_to_nearest_edge
-
     # Connect targets
     logging.info("Connect targets to grid")
     network.nodes["id"] = range(len(network.nodes))
-    network = link_function(
+    network = snkit.network.link_nodes_to_nearest_edge(
         network,
-        lambda node, edge: (
-            (node.asset_type == "target")
-            and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
-        )
+        get_proximity_condition("target", MAX_LINK_DISTANCE)
     )
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_target"
 
     # Connect power plants
     logging.info("Connect power plants to grid")
     network.nodes["id"] = range(len(network.nodes))
-    network = link_function(
+    network = snkit.network.link_nodes_to_nearest_edge(
         network,
-        lambda node, edge: (
-            (node.asset_type == "source")
-            and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
-        )
+        get_proximity_condition("source", MAX_LINK_DISTANCE)
     )
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 

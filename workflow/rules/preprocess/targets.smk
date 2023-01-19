@@ -1,6 +1,8 @@
 rule polygonise_targets:
     """
     Process raster of target locations into set of polygons
+
+    Running time: ~5min
     """
     input:
         targets=rules.download_gridfinder.output.electricity_targets_global,

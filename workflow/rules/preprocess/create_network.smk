@@ -10,7 +10,7 @@ rule create_power_network:
     input:
         plants="{OUTPUT_DIR}/power/powerplants.geoparquet",
         targets="{OUTPUT_DIR}/power/targets.geoparquet",
-        gridfinder="{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
+        gridfinder="{OUTPUT_DIR}/input/gridfinder/grid.geoparquet",
     output:
         edges="{OUTPUT_DIR}/power/edges.geoparquet",
         nodes="{OUTPUT_DIR}/power/nodes.geoparquet",
