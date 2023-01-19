@@ -70,13 +70,12 @@ if __name__ == "__main__":
     plants = plants[["source_id", "power_mw", "asset_type", "geometry"]]
 
     targets = gpd.read_parquet(targets_path)
-    target_nodes = targets[["asset_type", "geometry"]].copy()
-    target_nodes.geometry = target_nodes.geometry.centroid
+    targets.geometry = targets.geometry.centroid
     # should not actually reproject, but CRS metadata must match exactly for concat
-    target_nodes = target_nodes.to_crs(plants.crs)
+    targets = targets.to_crs(plants.crs)
 
     nodes = gpd.GeoDataFrame(
-        pd.concat([plants, target_nodes], ignore_index=True),
+        pd.concat([plants, targets], ignore_index=True),
         crs=plants.crs
     )
 
@@ -119,9 +118,6 @@ if __name__ == "__main__":
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "intermediate"
 
     logging.info(f"Cleaned network contains: {len(network.nodes)} nodes and {len(network.edges)} edges")
-
-    # join econometric and demographic data to network nodes dataframe
-    network.nodes = pd.merge(network.nodes, targets[["id", "gdp", "population"]], on="id", how="outer")
 
     # overwrite ids to int type (grid_disruption.py needs integer ids for fast pandas isin ops)
     network.nodes["id"] = range(len(network.nodes))
