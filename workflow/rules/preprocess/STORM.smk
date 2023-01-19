@@ -15,13 +15,13 @@ snakemake -c1 results/input/STORM/events/STORM-constant/processed.geoparquet
 rule slice_storm:
     input:
         global_tracks=rules.parse_storm.output.parquet,
-        grid_bbox="{OUTPUT_DIR}/power/slice/{BOX}/network/bbox.geojson"
+        grid_hull="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/convex_hull.json"
     output:
-        sliced_tracks="{OUTPUT_DIR}/power/slice/{BOX}/storms/STORM-{STORM_MODEL}/tracks.geoparquet",
+        sliced_tracks="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/STORM-{STORM_MODEL}/tracks.geoparquet",
     script:
         "../../scripts/preprocess/slice_storm_tracks.py"
 
 """
 To test:
-snakemake -c1 results/power/slice/1030/storms/STORM-constant/tracks.geoparquet
+snakemake -c1 results/power/country/PRI/storms/STORM-constant/tracks.geoparquet
 """

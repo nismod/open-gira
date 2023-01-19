@@ -62,6 +62,7 @@ if __name__ == "__main__":
     gridfinder_path: str = snakemake.input.gridfinder
     nodes_path: str = snakemake.output.nodes
     edges_path: str = snakemake.output.edges
+    grid_hull_path: str = snakemake.output.grid_hull
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
@@ -155,3 +156,7 @@ if __name__ == "__main__":
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_path)
     network.nodes.to_parquet(nodes_path)
+
+    logging.info("Writing network's convex hull to disk")
+    grid_hull = gpd.GeoDataFrame({"geometry": [network.edges.geometry.unary_union.convex_hull]})
+    grid_hull.to_file(grid_hull_path)

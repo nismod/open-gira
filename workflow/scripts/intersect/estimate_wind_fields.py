@@ -94,7 +94,7 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # hemisphere belongs to {-1, 1}
     track["hemisphere"] = np.sign(track.geometry.y)
 
-    grid_shape: tuple[int, int] = (len(longitude), len(latitude))
+    grid_shape: tuple[int, int] = (len(latitude), len(longitude))
     adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
     rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
@@ -216,20 +216,28 @@ if __name__ == "__main__":
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds  # type: ignore
 
-    # TODO check config to restrict analysis
-    # snakemake.config.specific_storm_analysis
+    storm_filter: set[str] = set(snakemake.config["specific_storms"])
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
 
     # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
+    logging.info("Reading wind evaluation grid")
     grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+    logging.info(f"\n{grid}")
 
-    tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
+    logging.info("Reading tracks")
+    tracks = gpd.read_parquet(storm_file_path)
+    if storm_filter:
+        logging.info(f"Filtering as per config to: {storm_filter}")
+        tracks = tracks[tracks.track_id.isin(storm_filter)]
+    logging.info(f"\n{tracks}")
+    grouped_tracks = tracks.groupby("track_id")
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
-    args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks)
+    args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in grouped_tracks)
 
+    logging.info("Estimating wind fields for each storm track")
     max_wind_speeds: list[str, np.ndarray] = []
     if parallel:
         with multiprocessing.Pool() as pool:
@@ -241,6 +249,7 @@ if __name__ == "__main__":
     # sort by track_id so we have a reproducible order even after multiprocessing
     max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
 
+    logging.info("Saving maximum wind speeds to disk")
     track_ids, fields = zip(*max_wind_speeds)
 
     # write to disk as netCDF with CRS
@@ -252,8 +261,8 @@ if __name__ == "__main__":
         dims=("event_id", "lat", "long"),
         coords=(
             ("event_id", list(track_ids)),
-            ("long", grid.x.values),
             ("lat", grid.y.values),
+            ("long", grid.x.values),
         ),
         attrs=dict(
             description="Maximum estimated wind speed during event",
@@ -264,3 +273,5 @@ if __name__ == "__main__":
     da = da.rio.write_crs("epsg:4326")
     encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
     da.to_netcdf(output_path, encoding=encoding)
+
+    logging.info("Done estimating wind fields")

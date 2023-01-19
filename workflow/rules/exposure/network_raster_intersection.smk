@@ -35,16 +35,16 @@ rule rasterise_electricity_grid:
     """
     conda: "../../../environment.yml"
     input:
-        network="{OUTPUT_DIR}/power/slice/{BOX}/network/edges.geoparquet",
-        tif_paths=["{OUTPUT_DIR}/power/slice/{BOX}/storms/wind_grid.tiff"],
+        network="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
+        tif_paths=["{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff"],
     params:
         copy_raster_values=False,
     output:
-        geoparquet="{OUTPUT_DIR}/power/slice/{BOX}/exposure/edges_split.geoparquet",
+        geoparquet="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/exposure/edges_split.geoparquet",
     script:
         "../../scripts/intersection.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/slice/1030/exposure/edges_split.geoparquet
+snakemake --cores 1 results/power/country/PRI/exposure/edges_split.geoparquet
 """

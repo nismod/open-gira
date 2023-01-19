@@ -56,6 +56,7 @@ rule create_power_network:
     output:
         edges="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
         nodes="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/nodes.geoparquet",
+        grid_hull="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/convex_hull.json",
     script:
         "../../scripts/preprocess/create_electricity_network.py"
 

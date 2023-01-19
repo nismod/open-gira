@@ -48,11 +48,11 @@ rule electricity_grid_damages:
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     output:
-        damages = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
+        damages = "{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/exposure/{STORM_DATASET}.nc",
     script:
         "../../scripts/intersect/grid_disruption.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/slice/1030/exposure/IBTrACS.nc
+snakemake --cores 1 results/power/country/PRI/exposure/IBTrACS.nc
 """
