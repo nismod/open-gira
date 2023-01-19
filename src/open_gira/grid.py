@@ -113,6 +113,6 @@ def weighted_allocation(
     sinks[c_variable_col] = sinks[c_variable_col].fillna(0)
 
     # reallocate variable to sinks, by weight within components
-    sinks.loc[:, variable_col] = -1 * sinks[c_variable_col] * sinks.loc[:, weight_col] / sinks[c_weight_col]
+    sinks[variable_col] = -1 * sinks[c_variable_col] * sinks[weight_col] / sinks[c_weight_col]
 
     return sinks
