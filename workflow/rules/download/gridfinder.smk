@@ -28,7 +28,7 @@ rule gridfinder_to_geoparquet:
     input:
         geopackage = rules.download_gridfinder.output.electricity_grid_global,
     output:
-        geoparquet = "{OUTPUT_DIR}/input/gridfinder/grid.geoparquet",
+        geoparquet = "{OUTPUT_DIR}/power/gridfinder.geoparquet",
     run:
         import geopandas as gpd
         gpd.read_file(input.geopackage).to_parquet(output.geoparquet)
