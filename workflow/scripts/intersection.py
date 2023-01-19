@@ -103,6 +103,7 @@ if __name__ == "__main__":
         raster_width = dataset.width
         raster_height = dataset.height
         raster_transform = list(dataset.transform)
+    logging.info(f"{raster_width=} {raster_height=}")
 
     if len(raster_paths) > 1:
         # Check all raster files use the same grid
@@ -164,8 +165,8 @@ if __name__ == "__main__":
         i, j = get_cell_indicies_of_midpoint(geometry, raster_height, raster_width, raster_transform)
 
         # die if we're out of bounds somehow
-        assert 0 <= i < raster_height
-        assert 0 <= j < raster_width
+        assert 0 <= i < raster_width
+        assert 0 <= j < raster_height
 
         # return a series with labels so we can unpack neatly into two dataframe columns
         return pd.Series(index=(fields.RASTER_I, fields.RASTER_J), data=[i, j])
