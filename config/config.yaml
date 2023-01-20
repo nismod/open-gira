@@ -106,14 +106,18 @@ exposure_tifs:
 ### STORM / ENERGY WORKFLOW ###
 ###############################
 
+# sets of storm ids to process for potentially many country networks
+storm_sets:
+    maria_2017: 'config/storm_sets/maria.json'
+    black_marble_validation: 'config/storm_sets/20230120_black_marble.json'
+
 # some of the rules are parallelised with multiprocessing
-# this is useful when running only a single area, but against many storms
 # works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
 process_parallelism: True
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [25, 40]
+transmission_windspeed_failure: [25, 35, 45]
 
 # wind speed is constant within a square area of sides wind_deg
 wind_deg: 0.1  # approx 11km latitude
@@ -126,5 +130,4 @@ plot_wind:
 
 # specific storm IDs to use in grid_disruption.py and subsequently
 # use an empty list to process all available storms
-#specific_storms: ['2017242N16333', '2017260N12310']  # Maria and Irma
 specific_storms: []
