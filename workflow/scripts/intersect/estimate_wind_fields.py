@@ -137,19 +137,21 @@ def process_track(
     # find vector magnitude, then take max along timestep axis, giving (y, x)
     max_wind_speeds: np.ndarray[float] = np.max(np.abs(wind_field), axis=0)
 
-    if plot_max_wind:
-        plot_contours(
-            max_wind_speeds,
-            f"{track_id} max wind speed",
-            "Wind speed [m/s]",
-            os.path.join(plot_dir, f"{track_id}_max_contour.png")
-        )
-    if plot_animation:
-        animate_track(
-            wind_field,
-            track,
-            os.path.join(plot_dir, f"{track_id}.gif")
-        )
+    if 1 not in grid_shape:
+        # any dimensions with a single cell will break the plotting routines
+        if plot_max_wind:
+            plot_contours(
+                max_wind_speeds,
+                f"{track_id} max wind speed",
+                "Wind speed [m/s]",
+                os.path.join(plot_dir, f"{track_id}_max_contour.png")
+            )
+        if plot_animation:
+            animate_track(
+                wind_field,
+                track,
+                os.path.join(plot_dir, f"{track_id}.gif")
+            )
 
     return track_id, max_wind_speeds
 
