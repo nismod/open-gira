@@ -37,21 +37,28 @@ ENV_PRESSURE = {
 }
 
 
-def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool, plot_dir: Optional[str]) -> tuple[str, np.ndarray]:
+def process_track(
+    track: pd.core.groupby.generic.DataFrameGroupBy,
+    longitude: np.ndarray,
+    latitude: np.ndarray,
+    plot_max_wind: bool,
+    plot_animation: bool,
+    plot_dir: Optional[str]
+) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
     fields, sum them and take the maximum of the wind vector magnitude across
     time. Optionally plot the wind fields and save to disk.
 
     Args:
-        track (pd.core.groupby.generic.DataFrameGroupBy): Subset of DataFrame
-            describing a track. Must have a temporal index and the following
-            fields: `min_pressure_hpa`, `max_wind_speed_ms`,
-            `radius_to_max_winds_km`.
-        longitude (np.ndarray): Longitude values to construct evaluation grid
-        latitude (np.ndarray): Latitude values to construct evaluation grid
-        plot (bool): Whether to plot max wind field and wind field evolution.
-        plot_dir (Optional[str]): Where to save optional plots.
+        track: Subset of DataFrame describing a track. Must have a temporal
+            index and the following fields: `min_pressure_hpa`,
+            `max_wind_speed_ms`, `radius_to_max_winds_km`.
+        longitude: Longitude values to construct evaluation grid
+        latitude: Latitude values to construct evaluation grid
+        plot_max_wind: Whether to plot max wind fields
+        plot_animation: Whether to plot wind field evolution
+        plot_dir: Where to save optional plots.
 
     Returns:
         str: Track identifier
@@ -130,13 +137,14 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # find vector magnitude, then take max along timestep axis, giving (y, x)
     max_wind_speeds: np.ndarray[float] = np.max(np.abs(wind_field), axis=0)
 
-    if plot:
+    if plot_max_wind:
         plot_contours(
             max_wind_speeds,
             f"{track_id} max wind speed",
             "Wind speed [m/s]",
             os.path.join(plot_dir, f"{track_id}_max_contour.png")
         )
+    if plot_animation:
         animate_track(
             wind_field,
             track,
@@ -212,7 +220,8 @@ if __name__ == "__main__":
 
     storm_file_path: str = snakemake.input.storm_file  # type: ignore
     wind_grid_path: str = snakemake.input.wind_grid
-    plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
+    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
+    plot_animation: bool = snakemake.config["plot_wind"]["animation"]
     parallel: bool = snakemake.config["process_parallelism"]
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds  # type: ignore
@@ -230,13 +239,13 @@ if __name__ == "__main__":
     logging.info("Reading tracks")
     tracks = gpd.read_parquet(storm_file_path)
     if storm_filter:
-        logging.info(f"Filtering as per config to: {storm_filter}")
+        logging.info(f"Filtering as per config by: {storm_filter}")
         tracks = tracks[tracks.track_id.isin(storm_filter)]
     logging.info(f"\n{tracks}")
     grouped_tracks = tracks.groupby("track_id")
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
-    args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in grouped_tracks)
+    args = ((track[1], grid.x, grid.y, plot_max_wind, plot_animation, plot_dir_path) for track in grouped_tracks)
 
     logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
