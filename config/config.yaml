@@ -117,11 +117,8 @@ process_parallelism: True
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [20, 35, 50]
+transmission_windspeed_failure: [25, 40]
 
-# width and height of a square cell or 'box' for power/storms workflow
-# dataset-splitting -- must be a factor of 180
-box_deg: 5
 # wind_deg defines another grid which nests inside the above
 # this value must be a factor of box_deg
 # wind speed is constant within a square area of sides wind_deg
@@ -138,26 +135,6 @@ reconstruction_cost_high: 400000
 
 # Direct damage cost per km (USD) for low and medium voltage lines. XXX 000USD suggestion for upper limit
 reconstruction_cost_lowmedium: 200000
-
-# Further Configuration #
-# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
-storm_batches: 900
-
-# If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
-wind_rerun: True
-
-# Analysis #
-# Percentage of storms to select for geospatial analysis and visualisation. Set to 100 for all
-top_select: 100
-
-# Set increasing severity for top_select. True means top_select is the first top_select% of storms in increasing severity (i.e. first one is the least damaging storm). False means the top top_select% worst storms are analysed (i.e. first on is the most damaging storm)
-increased_severity_sort: True
-
-# Percentile select
-percentile: 99
-
-# Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
-aggregate_level: 1
 
 # specific storm IDs to use in grid_disruption.py and subsequently
 # use an empty list to process all available storms
