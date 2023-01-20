@@ -62,9 +62,11 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
 
     logging.info(track_id)
 
+    grid_shape: tuple[int, int] = (len(latitude), len(longitude))
+
     # we can't calculate the advective component without at least two points
     if len(track) == 1:
-        return track_id, np.zeros((len(longitude), len(latitude)))
+        return track_id, np.zeros(grid_shape)
 
     # basin of first record for storm track (storm genesis for synthetic tracks)
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
@@ -94,7 +96,6 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # hemisphere belongs to {-1, 1}
     track["hemisphere"] = np.sign(track.geometry.y)
 
-    grid_shape: tuple[int, int] = (len(latitude), len(longitude))
     adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
     rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
@@ -237,7 +238,7 @@ if __name__ == "__main__":
     # track is a tuple of track_id and the tracks subset, we only want the latter
     args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in grouped_tracks)
 
-    logging.info("Estimating wind fields for each storm track")
+    logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
     if parallel:
         with multiprocessing.Pool() as pool:
