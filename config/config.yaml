@@ -6,7 +6,6 @@ output_dir: 'results'
 ### FLOODING / TRANSPORT WORKFLOW ###
 #####################################
 
-
 ## Aqueduct Analysis ##
 # This should be a named list of files that specify hazard raster files
 # to retrieve using wget -i
@@ -87,12 +86,6 @@ direct_damages:
   # per asset type, per hazard (flood, storm, etc.)
   curves_dir: 'bundled_data/damage_curves/'
 
-
-###############################
-### STORM / ENERGY WORKFLOW ###
-###############################
-
-
 # Options for exposure tif file generation
 exposure_tifs:
   # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
@@ -108,7 +101,10 @@ exposure_tifs:
       # Colour mapping to use for raster data
       cmap: 'Reds'
 
-## STORM Power Network Analysis
+
+###############################
+### STORM / ENERGY WORKFLOW ###
+###############################
 
 # some of the rules are parallelised with multiprocessing
 # this is useful when running only a single area, but against many storms
@@ -119,8 +115,6 @@ process_parallelism: True
 # are expected to fail based on available literature.
 transmission_windspeed_failure: [25, 40]
 
-# wind_deg defines another grid which nests inside the above
-# this value must be a factor of box_deg
 # wind speed is constant within a square area of sides wind_deg
 wind_deg: 0.1  # approx 11km latitude
 
@@ -129,12 +123,6 @@ plot_wind:
     max_speed: True
     # WARNING: plotting the animation is slow.. you probably only ever want it for historic tracks
     animation: False
-
-# Direct damage cost per km (USD) for high voltage lines. 400 000USD suggestion for upper limit
-reconstruction_cost_high: 400000
-
-# Direct damage cost per km (USD) for low and medium voltage lines. XXX 000USD suggestion for upper limit
-reconstruction_cost_lowmedium: 200000
 
 # specific storm IDs to use in grid_disruption.py and subsequently
 # use an empty list to process all available storms
