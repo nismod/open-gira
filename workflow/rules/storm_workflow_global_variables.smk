@@ -27,54 +27,10 @@ def country_codes() -> List[str]:
     return [row["iso3"] for row in r.json()["data"]]
 
 
-def all_boxes() -> List[str]:
-    """
-    Generate a list of box IDs for the cyclones workflow
-
-    Returns:
-        list[str]
-    """
-    return [f"box_{num}" for num in all_box_ids()]
-
-
-def all_box_ids() -> List[int]:
-    if len(config["specific_boxes"]) != 0:
-        return config["specific_boxes"]
-
-    max_i = int(360 * 180 / float(config["box_deg"]) ** 2)
-    return range(0, max_i)
-
-
 #### POWER/STORMS WORKFLOW ####
 
 # list of ISO A3 country codes
 COUNTRY_CODES = country_codes()
-
-# list of IDs of form "box_<int>"
-ALL_BOXES = all_boxes()
-
-CONNECTOR_OUT = (
-    expand(
-        os.path.join(
-            config["output_dir"],
-            "processed",
-            "power",
-            "{box_id}",
-            "connector_{box_id}.json",
-        ),
-        box_id=all_box_ids(),
-    )
-)
-
-STORM_BASINS = config["storm_basins"]
-if len(STORM_BASINS) == 0:
-    # east pacific, north atlantic, north indian, south india, south pacific, west pacific
-    STORM_BASINS =  ("EP", "NA", "NI", "SI", "SP", "WP")
-
-SAMPLES = config["storm_files_sample_set"]
-if not SAMPLES:
-    # empty list interpreted as 'run with all available samples'
-    SAMPLES = list(range(0, 10))
 
 STORM_RPS = (
     list(range(10, 100, 10))
@@ -111,72 +67,3 @@ STORM_RETURN_PERIODS_FUTURE = expand(
 )
 
 STORM_RETURN_PERIODS = STORM_RETURN_PERIODS_CURRENT + STORM_RETURN_PERIODS_FUTURE
-
-STORM_EVENTS_CURRENT = expand(
-    os.path.join(
-        config["output_dir"],
-        "input",
-        "STORM",
-        "events",
-        "constant",
-        "{storm_basin}",
-        "STORM_DATA_IBTRACS_{storm_basin}_1000_YEARS_{num}.txt",
-    ),
-    storm_basin=STORM_BASINS,
-    num=SAMPLES,
-)
-
-STORM_EVENTS_FUTURE = expand(
-    os.path.join(
-        config["output_dir"],
-        "input",
-        "STORM",
-        "events",
-        "{storm_gcm}",
-        "{storm_basin}",
-        "STORM_DATA_{storm_gcm}_{storm_basin}_1000_YEARS_{num}_IBTRACSDELTA.txt",
-    ),
-    storm_gcm=STORM_GCMS,
-    storm_basin=STORM_BASINS,
-    num=SAMPLES,
-)
-
-STORM_EVENTS = STORM_EVENTS_CURRENT + STORM_EVENTS_FUTURE
-
-try:
-    STORM_BATCH_SIZE = int(config["storm_batches"])
-    assert STORM_BATCH_SIZE > 0
-except:
-    raise RuntimeError("storm_batches incorrectly specified in config.yaml file")
-
-WIND_RERUN_BOOL = config["wind_rerun"]
-assert WIND_RERUN_BOOL in [True, False]
-
-def get_storm_file(wildcards):
-    """Helper to get storm events file, given:
-    - OUTPUT_DIR
-    - STORM_BASIN
-    - STORM_MODEL (global climate model)
-    - SAMPLE (0-9)
-    """
-    if wildcards.STORM_MODEL == "constant":
-        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/constant/{wildcards.STORM_BASIN}/STORM_DATA_IBTRACS_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}.txt"
-    else:
-        fname = f"{wildcards.OUTPUT_DIR}/input/STORM/events/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/STORM_DATA_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_1000_YEARS_{wildcards.SAMPLE}_IBTRACSDELTA.txt"
-    return fname
-
-# these files are written by the storm intersection script on finishing
-# they are essentially a flag indicating successful completion
-COMPLETION_FLAG_FILES = expand(
-    os.path.join(
-        config["output_dir"],
-        "power_intersection",
-        "storm_data",
-        "all_winds",
-        "{storm_basin}",
-        "{sample}",
-        "completed.txt",
-    ),
-    sample=SAMPLES,
-    storm_basin=STORM_BASINS,
-)

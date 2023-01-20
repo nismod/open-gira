@@ -41,15 +41,6 @@ for network, file_path in config['network_filters'].items():
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
 
-# check requested grid for power/storms pipeline
-assert config["box_deg"] >= config["wind_deg"]
-# N.B. modulo by a decimal leads to floating point errors
-# do division then modulo by 1 instead
-# check box_deg is a factor of 180
-assert (180 / config["box_deg"]) % 1 == 0
-# check wind_deg is a factor of box_deg
-assert (config["box_deg"] / config["wind_deg"]) % 1 == 0
-
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
 
@@ -104,7 +95,6 @@ include: "rules/download/hazards.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download/osm.smk"
-include: "rules/download/power_download_all.smk"
 
 include: "rules/preprocess/gadm.smk"
 include: "rules/preprocess/filter_osm_data.smk"
