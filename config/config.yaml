@@ -110,9 +110,10 @@ exposure_tifs:
 
 ## STORM Power Network Analysis
 
-# for any given spatial domain, use multiprocessing to parallelise by storm
-# works for estimate_wind_fields.py and grid_disruption.py
-parallelise_by_storm: True
+# some of the rules are parallelised with multiprocessing
+# this is useful when running only a single area, but against many storms
+# works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
+process_parallelism: True
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.

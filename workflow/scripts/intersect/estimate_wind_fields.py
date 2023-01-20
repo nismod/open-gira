@@ -212,7 +212,7 @@ if __name__ == "__main__":
     storm_file_path: str = snakemake.input.storm_file  # type: ignore
     wind_grid_path: str = snakemake.input.wind_grid
     plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
-    parallel: bool = snakemake.config["parallelise_by_storm"]
+    parallel: bool = snakemake.config["process_parallelism"]
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds  # type: ignore
 

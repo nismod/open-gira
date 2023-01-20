@@ -75,7 +75,7 @@ if __name__ == '__main__':
     gdp_path: str = snakemake.input.gdp
     targets_path: str = snakemake.input.targets
     output_path: str = snakemake.output.targets
-    parallel: bool = snakemake.config["parallelise_by_storm"]
+    parallel: bool = snakemake.config["process_parallelism"]
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 

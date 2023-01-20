@@ -149,7 +149,7 @@ if __name__ == "__main__":
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
     specific_storms: list[str] = snakemake.config["specific_storms"]
-    parallel: bool = snakemake.config["parallelise_by_storm"]
+    parallel: bool = snakemake.config["process_parallelism"]
     damages_path: str = snakemake.output.damages
 
     logging.info("Loading wind speed data")
