@@ -9,6 +9,7 @@ For each maximum wind field associated with a storm:
 import logging
 import multiprocessing
 from typing import Optional
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -148,20 +149,16 @@ if __name__ == "__main__":
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    specific_storms: list[str] = snakemake.config["specific_storms"]
     parallel: bool = snakemake.config["process_parallelism"]
     damages_path: str = snakemake.output.damages
 
     logging.info("Loading wind speed data")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
-    if specific_storms:
-        logging.info("Filtering storm data by specific_storms config")
-        try:
-            wind_fields = wind_fields.sel(dict(event_id=specific_storms))
-        except KeyError:
-            # none of the storms requested are present in the wind file
-            # write out an empty file
-            xr.Dataset().to_netcdf(damages_path)
+    if len(wind_fields.variables) == 0:
+        logging.info("Empty wind speed file, writing empty files to disk.")
+        xr.Dataset().to_netcdf(damages_path)
+        sys.exit(0)
+
     logging.info(wind_fields.max_wind_speed)  # use xarray repr
 
     logging.info("Loading network data")
@@ -186,6 +183,11 @@ if __name__ == "__main__":
             exposure_by_storm.append(degrade_grid_with_storm(*arg))
 
     # filter out storms that haven't impinged upon the network at all
-    exposure = xr.concat(filter(lambda x: x is not None, exposure_by_storm), "event_id")
-    encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
-    exposure.to_netcdf(damages_path, encoding=encoding)
+    valid_results = list(filter(lambda x: x is not None, exposure_by_storm))
+    if len(valid_results) == 0:
+        logging.info("No disruption, writing empty file.")
+        xr.Dataset().to_netcdf(damages_path)
+    else:
+        exposure = xr.concat(valid_results, "event_id")
+        encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
+        exposure.to_netcdf(damages_path, encoding=encoding)

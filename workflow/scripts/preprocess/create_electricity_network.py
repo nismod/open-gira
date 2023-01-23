@@ -4,6 +4,7 @@ Create a network from plants, targets and gridfinder line data
 
 import logging
 from typing import Callable
+import sys
 
 import geopandas as gpd
 import pandas as pd
@@ -86,6 +87,18 @@ if __name__ == "__main__":
 
     network = snkit.network.Network(nodes, edges)
     logging.info(f"Raw network contains: {len(nodes)} nodes and {len(edges)} edges")
+
+    if len(nodes) == 0 or len(edges) == 0:
+        logging.info("No viable network, writing empty files to disk")
+        logging.info("Writing network to disk")
+        empty_gdf = gpd.GeoDataFrame({"geometry": []}, crs=4326)
+        empty_gdf.to_parquet(edges_path)
+        empty_gdf.to_parquet(nodes_path)
+
+        logging.info("Writing network's convex hull to disk")
+        empty_gdf.to_file(grid_hull_path)
+
+        sys.exit(0)
 
     logging.info("Cleaning network")
 

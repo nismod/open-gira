@@ -7,6 +7,7 @@ import os
 import multiprocessing
 import logging
 from typing import Optional
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -220,31 +221,44 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
 
 if __name__ == "__main__":
 
-    storm_file_path: str = snakemake.input.storm_file  # type: ignore
+    storm_file_path: str = snakemake.input.storm_file
     wind_grid_path: str = snakemake.input.wind_grid
+    storm_set: set[str] = set(snakemake.params.storm_set)
     plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
     plot_animation: bool = snakemake.config["plot_wind"]["animation"]
     parallel: bool = snakemake.config["process_parallelism"]
     plot_dir_path: str = snakemake.output.plot_dir
-    output_path: str = snakemake.output.wind_speeds  # type: ignore
-
-    storm_filter: set[str] = set(snakemake.config["specific_storms"])
+    output_path: str = snakemake.output.wind_speeds
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
+
+    logging.info("Reading tracks")
+    tracks = gpd.read_parquet(storm_file_path)
+    if tracks.empty:
+        logging.info("No intersection between network and tracks, writing empty file.")
+        # no tracks, write empty wind speeds file and exit
+        xr.Dataset().to_netcdf(output_path)
+        sys.exit(0)
+
+    if storm_set:
+        # if we have a storm_set, only keep the matching track_ids
+        logging.info(f"Filtering as per storm set")
+        tracks = tracks[tracks.track_id.isin(storm_set)]
+
+    if tracks.empty:
+        logging.info("No intersection between network and tracks, writing empty file.")
+        # no tracks, write empty wind speeds file and exit
+        xr.Dataset().to_netcdf(output_path)
+        sys.exit(0)
+
+    logging.info(f"\n{tracks}")
+    grouped_tracks = tracks.groupby("track_id")
 
     # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
     logging.info("Reading wind evaluation grid")
     grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
     logging.info(f"\n{grid}")
-
-    logging.info("Reading tracks")
-    tracks = gpd.read_parquet(storm_file_path)
-    if storm_filter:
-        logging.info(f"Filtering as per config by: {storm_filter}")
-        tracks = tracks[tracks.track_id.isin(storm_filter)]
-    logging.info(f"\n{tracks}")
-    grouped_tracks = tracks.groupby("track_id")
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
     args = ((track[1], grid.x, grid.y, plot_max_wind, plot_animation, plot_dir_path) for track in grouped_tracks)

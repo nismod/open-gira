@@ -16,6 +16,8 @@ rule subset_grid_inputs_by_country:
         gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         powerplants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
+    resources:
+        mem_mb=8192
     run:
         import os
 

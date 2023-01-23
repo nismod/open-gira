@@ -48,7 +48,7 @@ rule electricity_grid_damages:
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     output:
-        damages = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_DATASET}.nc",
+        damages = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}.nc",
     script:
         "../../scripts/intersect/grid_disruption.py"
 
@@ -75,7 +75,7 @@ checkpoint countries_intersecting_storm_set:
         import geopandas as gpd
 
         # check for country intersections within some radius of track points
-        POINT_BUFFER_DEG = 2
+        point_buffer_deg: float = config["max_track_search_radius_deg"]
 
         # read in track points
         ibtracs = gpd.read_parquet(input.ibtracs)
@@ -88,7 +88,7 @@ checkpoint countries_intersecting_storm_set:
         # subset points to the storm set of interest
         ibtracs_subset = ibtracs[ibtracs["track_id"].isin(storm_set)]
         danger_zone = ibtracs_subset.copy()
-        danger_zone.geometry = ibtracs_subset.geometry.buffer(POINT_BUFFER_DEG)
+        danger_zone.geometry = ibtracs_subset.geometry.buffer(point_buffer_deg)
 
         countries = gpd.read_parquet(input.admin_bounds).rename(columns={"GID_0": "iso_a3"})
 
@@ -122,8 +122,9 @@ def at_risk_countries(wildcards):
         country_set = json.load(fp)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/IBTrACS.nc",
-        COUNTRY_ISO_A3=country_set
+        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}.nc",
+        COUNTRY_ISO_A3=country_set,
+        STORM_SET=wildcards.STORM_SET
     )
 
 
@@ -131,16 +132,18 @@ rule storm_set_damages:
     """
     A target rule for storm sets, expanding to calculate exposure for all
     affected countries.
+
+    To indicate completion, copy storm set JSON file to results directory.
     """
     input:
         at_risk_countries
     params:
-        storm_set_config = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
+        storm_set_path = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
     output:
         completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json"
     shell:
         """
-        cp {params.storm_set_config} {output.completion_flag}
+        cp {params.storm_set_path} {output.completion_flag}
         """
 
 """

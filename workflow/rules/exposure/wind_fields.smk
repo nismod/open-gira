@@ -15,6 +15,7 @@ rule create_wind_grid:
     run:
         import os
         import json
+        import sys
 
         import shapely
         import numpy as np
@@ -46,7 +47,14 @@ rule create_wind_grid:
         # read hull shape from disk
         with open(input.network_hull, "r") as fp:
             data = json.load(fp)
-        shape_dict, = data["features"]
+
+        try:
+            shape_dict, = data["features"]
+        except ValueError:
+            # no grid, touch empty file and exit
+            os.system(f"touch {output.wind_grid}")
+            return
+
         hull = shapely.geometry.shape(shape_dict["geometry"])
 
         minx, miny, maxx, maxy = hull.bounds
@@ -67,6 +75,26 @@ snakemake --cores 1 results/power/by_country/PRI/storms/wind_grid.tiff
 """
 
 
+def storm_dataset(wildcards) -> str:
+    """Return path to storm tracks"""
+    # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
+    storm_dataset = wildcards.STORM_SET.split("_")[0]
+    return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/tracks.geoparquet"
+
+
+def read_storm_set(wildcards) -> list[str]:
+    """
+    Read file containing a list of storm IDs that constitute the storm set.
+
+    N.B. An empty file (and set) will be interpreted as process all storms in
+    the dataset.
+    """
+    storm_set_path = config["storm_sets"][wildcards.STORM_SET]
+    with open(storm_set_path, "r") as fp:
+        storm_set = json.load(fp)
+    return storm_set
+
+
 rule estimate_wind_fields:
     """
     Find maximum windspeeds for each storm for each grid cell.
@@ -75,13 +103,14 @@ rule estimate_wind_fields:
     """
     conda: "../../../environment.yml"
     input:
-        # TODO limited to specific storms if any
-        storm_file = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/tracks.geoparquet",
-        wind_grid = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
+        storm_file=storm_dataset,
+        wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
+    params:
+        storm_set=read_storm_set
     output:
-        # N.B. can disable plotting by setting `plot_wind_fields` to false in config
-        plot_dir = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/plots/"),
-        wind_speeds = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/max_wind_field.nc",
+        # enable or disable plotting in the config file
+        plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),
+        wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 

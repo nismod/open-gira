@@ -73,6 +73,7 @@ wildcard_constraints:
     STORM_RP="[0-9]+",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
+    STORM_SET="(?:IBTrACS|STORM)[^\/]*",
     EVENTS_OR_FIXED="events|fixed",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     SAMPLE="\d+",
