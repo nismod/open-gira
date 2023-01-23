@@ -13,9 +13,9 @@ rule subset_grid_inputs_by_country:
         powerplants="{OUTPUT_DIR}/power/powerplants.geoparquet",
         admin_bounds="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet"
     output:
-        gridfinder="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
-        targets="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
-        powerplants="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
+        gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
+        targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
+        powerplants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
     run:
         import os
 
@@ -40,7 +40,7 @@ rule subset_grid_inputs_by_country:
 
 """
 Test with:
-snakemake -c1 results/power/country/HTI/grid.geoparquet
+snakemake -c1 results/power/by_country/HTI/grid.geoparquet
 """
 
 
@@ -50,13 +50,13 @@ rule create_power_network:
     """
     conda: "../../../environment.yml"
     input:
-        plants="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
-        targets="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
-        gridfinder="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
+        plants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
+        targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
+        gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
     output:
-        edges="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
-        nodes="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/nodes.geoparquet",
-        grid_hull="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/convex_hull.json",
+        edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
+        nodes="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/nodes.geoparquet",
+        grid_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json",
     script:
         "../../scripts/preprocess/create_electricity_network.py"
 

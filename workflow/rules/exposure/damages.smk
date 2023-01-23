@@ -48,13 +48,13 @@ rule electricity_grid_damages:
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     output:
-        damages = "{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/exposure/{STORM_DATASET}.nc",
+        damages = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_DATASET}.nc",
     script:
         "../../scripts/intersect/grid_disruption.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/country/PRI/exposure/IBTrACS.nc
+snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS.nc
 """
 
 
@@ -67,15 +67,15 @@ checkpoint countries_intersecting_storm_set:
         ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet",
         admin_bounds = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
     output:
-        country_set = "{OUTPUT_DIR}/power/storm_set/{STORM_SET}/countries_hit.json"
+        country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_hit.json"
     run:
         import json
 
         import pandas as pd
         import geopandas as gpd
 
-        # check for country intersections within 4 degrees of track points
-        POINT_BUFFER_DEG = 4
+        # check for country intersections within some radius of track points
+        POINT_BUFFER_DEG = 2
 
         # read in track points
         ibtracs = gpd.read_parquet(input.ibtracs)
@@ -103,11 +103,11 @@ checkpoint countries_intersecting_storm_set:
         hit_iso_a3: list[str] = list(set(hit[~hit.isna()].values))
 
         with open(output.country_set, "w") as fp:
-            json.dump(hit_iso_a3, fp, indent=2)
+            json.dump(sorted(hit_iso_a3), fp, indent=2)
 
 """
 Test with:
-snakemake -c1 results/power/storm_set/black_marble_validation/countries_hit.json
+snakemake -c1 results/power/by_storm_set/black_marble_validation/countries_hit.json
 """
 
 
@@ -122,7 +122,7 @@ def at_risk_countries(wildcards):
         country_set = json.load(fp)
 
     return expand(
-        "results/power/country/{COUNTRY_ISO_A3}/exposure/IBTrACS.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/IBTrACS.nc",
         COUNTRY_ISO_A3=country_set
     )
 
@@ -134,14 +134,16 @@ rule storm_set_damages:
     """
     input:
         at_risk_countries
+    params:
+        storm_set_config = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
     output:
-        flag = "{OUTPUT_DIR}/power/storm_set/{STORM_SET}/completed.txt"
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json"
     shell:
         """
-        touch {output.flag}
+        cp {params.storm_set_config} {output.completion_flag}
         """
 
 """
 Test with:
-snakemake -c1 results/power/storm_set/black_marble_validation/completed.txt
+snakemake -c1 results/power/by_storm_set/black_marble_validation/storm_set.json
 """

@@ -9,9 +9,9 @@ rule create_wind_grid:
     evaluate wind speed on
     """
     input:
-        network_hull="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/network/convex_hull.json",
+        network_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json",
     output:
-        wind_grid="{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
+        wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     run:
         import os
         import json
@@ -63,7 +63,7 @@ rule create_wind_grid:
 
 """
 Test with:
-snakemake --cores 1 results/power/country/PRI/storms/wind_grid.tiff
+snakemake --cores 1 results/power/by_country/PRI/storms/wind_grid.tiff
 """
 
 
@@ -76,16 +76,16 @@ rule estimate_wind_fields:
     conda: "../../../environment.yml"
     input:
         # TODO limited to specific storms if any
-        storm_file = "{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/tracks.geoparquet",
-        wind_grid = "{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
+        storm_file = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/tracks.geoparquet",
+        wind_grid = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     output:
         # N.B. can disable plotting by setting `plot_wind_fields` to false in config
-        plot_dir = directory("{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/plots/"),
-        wind_speeds = "{OUTPUT_DIR}/power/country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/max_wind_field.nc",
+        plot_dir = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/plots/"),
+        wind_speeds = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_DATASET}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
 """
 To test:
-snakemake -c1 results/power/country/PRI/storms/IBTrACS/max_wind_field.nc
+snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/max_wind_field.nc
 """
