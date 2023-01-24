@@ -124,7 +124,6 @@ if __name__ == "__main__":
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 
     # Add nodes at line endpoints
-    # TODO: is this necessary?
     logging.info("Add nodes at edge ends")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.add_endpoints(network)
@@ -163,7 +162,26 @@ if __name__ == "__main__":
     network.nodes = network.nodes.combine_first(target_power[["id", "power_mw"]])
 
     # check power has been allocated appropriately
-    assert network.nodes["power_mw"].sum() < 1E-6
+    for c_id, c_nodes in network.nodes.groupby(network.nodes.component_id):
+
+        power_balance: float = c_nodes.power_mw.sum()
+        if power_balance > 1E-6:
+
+            # in the case where there is a generator in a component
+            # but no targets, the power balance will be positive
+            target_mask: pd.Series = c_nodes.asset_type == "target"
+            n_targets: int = len(c_nodes[target_mask])
+            if n_targets != 0:
+
+                # sometimes targets don't have population, in which case they won't be allocated power
+                population: float = c_nodes[target_mask].population.sum()
+                if population != 0:
+
+                    raise ValueError(
+                        f"Network component {c_id} has {n_targets} targets, \n"
+                        f"positive {population} population but a non-zero \n"
+                        f"({power_balance} MW) power balance"
+                    )
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_path)
