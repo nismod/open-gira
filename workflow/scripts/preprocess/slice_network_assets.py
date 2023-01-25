@@ -46,14 +46,23 @@ if __name__ == "__main__":
     country = countries[countries.iso_a3 == country_iso_a3]
     country = country[["iso_a3", "geometry"]].copy()
 
-    # create a sea layer
+    # create an approximate sea layer
     low_res_countries = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
     land: shapely.MultiPolygon = low_res_countries.geometry.unary_union
     globe: shapely.Polygon = shapely.geometry.box(*land.bounds)
     sea: shapely.MultiPolygon = shapely.difference(globe, land)
 
+    # if a large country, use a coarser boundary to accelerate subsetting
+    area_threshold_sq_deg = 100
+    country_geom, = country.geometry.values
+    if country_geom.area > area_threshold_sq_deg:
+        logging.info(f"Large geometry ({country_geom.area:.2f} sq. deg), using simplified country polygon")
+        low_res_country = low_res_countries[low_res_countries.iso_a3 == country_iso_a3]
+        low_res_country = low_res_country[["iso_a3", "geometry"]].copy()
+        country = low_res_country
+
     # set country geometry to be some inland buffer from the shore
-    country.geometry = shapely.intersection(sea.buffer(shore_buffer), country.geometry)
+    country.geometry: gpd.GeoSeries = shapely.intersection(sea.buffer(shore_buffer), country.geometry)
 
     os.makedirs(os.path.dirname(gridfinder_out_path), exist_ok=True)
 
