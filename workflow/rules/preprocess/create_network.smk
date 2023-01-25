@@ -18,27 +18,8 @@ rule subset_grid_inputs_by_country:
         powerplants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
     resources:
         mem_mb=8192
-    run:
-        import os
-
-        import geopandas as gpd
-
-        gridfinder = gpd.read_parquet(input.gridfinder)
-        targets = gpd.read_parquet(input.targets)
-        powerplants = gpd.read_parquet(input.powerplants)
-
-        countries = gpd.read_parquet(input.admin_bounds).rename(columns={"GID_0": "iso_a3"})
-        country = countries[countries.iso_a3 == wildcards.COUNTRY_ISO_A3]
-        country = country[["iso_a3", "geometry"]]
-
-        os.makedirs(os.path.dirname(output.gridfinder), exist_ok=True)
-
-        country_grid = gridfinder.sjoin(country, how="inner")
-        country_grid[gridfinder.columns].to_parquet(output.gridfinder)
-        country_targets = targets.sjoin(country, how="inner")
-        country_targets[targets.columns].to_parquet(output.targets)
-        country_powerplants = powerplants.sjoin(country, how="inner")
-        country_powerplants[powerplants.columns].to_parquet(output.powerplants)
+    script:
+        "../../scripts/preprocess/slice_network_assets.py"
 
 """
 Test with:
