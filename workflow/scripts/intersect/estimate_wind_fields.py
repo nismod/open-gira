@@ -20,7 +20,7 @@ from open_gira.wind import holland_wind_model, advective_vector, rotational_fiel
 from plot_wind_fields import plot_contours, animate_track
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
 # Environmental pressure values in hPa / mbar (standard estimate of background
 # pressure away from the cyclone) are taken from the AIR hurricane model, table

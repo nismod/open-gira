@@ -64,7 +64,7 @@ if __name__ == "__main__":
     edges_path: str = snakemake.output.edges
     grid_hull_path: str = snakemake.output.grid_hull
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Read node data (plants and targets)")
     plants = gpd.read_parquet(plants_path)

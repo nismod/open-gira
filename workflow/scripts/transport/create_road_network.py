@@ -406,7 +406,7 @@ if __name__ == "__main__":
     slice_number = int(slice_number)
     osm_epsg = int(osm_epsg)
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.

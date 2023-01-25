@@ -77,7 +77,7 @@ if __name__ == '__main__':
     output_path: str = snakemake.output.targets
     parallel: bool = snakemake.config["process_parallelism"]
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Reading targets file")
     targets = gpd.read_parquet(targets_path)

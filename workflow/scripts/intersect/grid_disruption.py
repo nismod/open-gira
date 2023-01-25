@@ -21,7 +21,7 @@ from open_gira.grid import weighted_allocation
 import snkit
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
 DIM_NAMES = ("event_id", "threshold", "target")
 

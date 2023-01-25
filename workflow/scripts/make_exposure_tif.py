@@ -15,7 +15,7 @@ import rasterio
 from rasterio.enums import Resampling
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
     # move to settings later
     epsg = 3857
     try:

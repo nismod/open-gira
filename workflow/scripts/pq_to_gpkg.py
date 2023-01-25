@@ -38,7 +38,7 @@ def geoparquet_to_geopackage(parquet_path: str) -> str:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     if len(sys.argv) < 2:
         sys.exit(

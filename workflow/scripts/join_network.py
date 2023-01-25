@@ -34,7 +34,7 @@ if __name__ == "__main__":
         # not sure of an elegant way to handle the two lists of input filenames
         sys.exit("please invoke via snakemake")
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 

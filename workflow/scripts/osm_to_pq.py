@@ -221,7 +221,7 @@ if __name__ == "__main__":
         # process comma separated string into list of strings
         keep_tags: list = keep_tags.replace(" ", "").split(",")
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
     logging.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings

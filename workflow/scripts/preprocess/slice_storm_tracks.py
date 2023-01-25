@@ -11,7 +11,7 @@ import geopandas as gpd
 import shapely
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
 
 if __name__ == "__main__":

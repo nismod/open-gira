@@ -28,7 +28,7 @@ if __name__ == "__main__":
     except NameError:
         raise RuntimeError("Must be run via snakemake.")
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     logging.info(f"Reading {len(slice_files)} slice files")

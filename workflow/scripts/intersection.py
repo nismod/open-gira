@@ -68,7 +68,7 @@ def write_empty_files(columns, outputs_path):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
     tqdm.pandas()
     try:
         network_edges_path: str = snakemake.input.network
