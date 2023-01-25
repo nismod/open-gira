@@ -108,26 +108,39 @@ exposure_tifs:
 
 # sets of storm ids to process for potentially many country networks
 storm_sets:
-    maria_2017: 'config/storm_sets/maria.json'
-    black_marble_validation: 'config/storm_sets/20230120_black_marble.json'
+    # files containing empty list, indicating to process all in dataset
+    IBTrACS: 'config/storm_sets/ibtracs.json'
+    STORM-constant: 'config/storm_sets/storm-constant.json'
+    STORM-CMCC-CM2-VHR4: 'config/storm_sets/storm-cmcc-cm2-vhr4.json'
+    STORM-CNRM-CM6-1-HR: 'config/storm_sets/storm-cnrm-cm6-1-hr.json'
+    STORM-EC-Earth3P-HR: 'config/storm_sets/storm-ec-earth3p-hr.json'
+    STORM-HadGEM3-GC31-HM: 'config/storm_sets/storm-hadgem3-gc31-hm.json'
+    # files containing a list of storm id strings that constitute the storm set
+    # key should follow the pattern: <dataset>_<storm_set_reference>
+    # where dataset belongs to:
+    # {IBTrACS, STORM-constant, STORM-CMCC-CM2-VHR4, etc.}
+    IBTrACS_maria-2017: 'config/storm_sets/maria.json'
+    IBTrACS_black-marble-validation: 'config/storm_sets/20230120_black_marble.json'
 
-# some of the rules are parallelised with multiprocessing
-# works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
-process_parallelism: True
+# consider grids at risk of a storm if within this many degrees of any storm track point
+max_track_search_radius_deg: 1  # approx 111km latitude
+
+# only consider electricity grid nodes and edges within this distance from the shore
+max_asset_shore_distance_deg: 3
+
+# wind speed is constant within a square area of sides wind_deg
+wind_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
 transmission_windspeed_failure: [25, 35, 45]
 
-# wind speed is constant within a square area of sides wind_deg
-wind_deg: 0.1  # approx 11km latitude
+# some of the rules are parallelised with multiprocessing
+# works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
+process_parallelism: True
 
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
     max_speed: True
     # WARNING: plotting the animation is slow.. you probably only ever want it for historic tracks
     animation: False
-
-# specific storm IDs to use in grid_disruption.py and subsequently
-# use an empty list to process all available storms
-specific_storms: []
