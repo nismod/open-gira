@@ -226,7 +226,7 @@ if __name__ == "__main__":
     storm_set: set[str] = set(snakemake.params.storm_set)
     plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
     plot_animation: bool = snakemake.config["plot_wind"]["animation"]
-    parallel: bool = snakemake.config["process_parallelism"]
+    n_proc: int = snakemake.config["processes_per_parallel_job"]
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds
 
@@ -265,8 +265,8 @@ if __name__ == "__main__":
 
     logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
-    if parallel:
-        with multiprocessing.Pool() as pool:
+    if n_proc > 1:
+        with multiprocessing.Pool(processes=n_proc) as pool:
             max_wind_speeds = pool.starmap(process_track, args)
     else:
         for arg in args:

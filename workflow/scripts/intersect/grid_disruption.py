@@ -149,7 +149,7 @@ if __name__ == "__main__":
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    parallel: bool = snakemake.config["process_parallelism"]
+    n_proc: int = snakemake.config["processes_per_parallel_job"]
     damages_path: str = snakemake.output.damages
 
     logging.info("Loading wind speed data")
@@ -175,8 +175,8 @@ if __name__ == "__main__":
     logging.info("Simulating electricity network failure due to wind damage...")
     args = ((storm_id, wind_fields.max_wind_speed, splits, speed_thresholds, network) for storm_id in wind_fields.event_id)
     exposure_by_storm: list[Optional[xr.Dataset]] = []
-    if parallel:
-        with multiprocessing.Pool() as pool:
+    if n_proc > 1:
+        with multiprocessing.Pool(processes=n_proc) as pool:
             exposure_by_storm = pool.starmap(degrade_grid_with_storm, args)
     else:
         for arg in args:

@@ -107,6 +107,8 @@ rule estimate_wind_fields:
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     params:
         storm_set=read_storm_set
+    threads:
+        config["processes_per_parallel_job"]
     output:
         # enable or disable plotting in the config file
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),

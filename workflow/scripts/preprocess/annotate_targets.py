@@ -75,7 +75,7 @@ if __name__ == '__main__':
     gdp_path: str = snakemake.input.gdp
     targets_path: str = snakemake.input.targets
     output_path: str = snakemake.output.targets
-    parallel: bool = snakemake.config["process_parallelism"]
+    n_proc: int = snakemake.config["processes_per_parallel_job"]
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
@@ -86,11 +86,11 @@ if __name__ == '__main__':
     logging.info("Extracting population per target")
     # N.B. requires ~200 minutes of CPU time for globe
     targets["id"] = range(len(targets))
-    if parallel:
+    if n_proc > 1:
         chunked_pop = []
         chunk_size: int = np.ceil(len(targets) / os.cpu_count()).astype(int)
         args = [(targets.iloc[i: i + chunk_size, :].copy(), population_path) for i in range(0, len(targets), chunk_size)]
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(processes=n_proc) as pool:
             chunked_pop = pool.starmap(annotate_population, args)
         targets = pd.concat(chunked_pop).sort_values("id")
     else:

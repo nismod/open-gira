@@ -47,6 +47,8 @@ rule electricity_grid_damages:
         wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
+    threads:
+        config["processes_per_parallel_job"]
     output:
         damages = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}.nc",
     script:

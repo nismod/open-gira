@@ -35,6 +35,8 @@ rule annotate_targets:
         population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2022A_54009_1000_V1_0.tif",
         targets=rules.polygonise_targets.output.targets,
         gdp="{OUTPUT_DIR}/input/GDP/GDP_per_capita_PPP_1990_2015_v2.nc",
+    threads:
+        config["processes_per_parallel_job"]
     output:
         targets="{OUTPUT_DIR}/power/targets.geoparquet",
     script:
