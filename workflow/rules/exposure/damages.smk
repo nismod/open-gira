@@ -85,8 +85,13 @@ checkpoint countries_intersecting_storm_set:
         with open(storm_set_path, "r") as fp:
             storm_set = set(json.load(fp))
 
-        # subset points to the storm set of interest
-        ibtracs_subset = ibtracs[ibtracs["track_id"].isin(storm_set)]
+        if storm_set:
+            # subset points to the storm set of interest
+            ibtracs_subset = ibtracs[ibtracs["track_id"].isin(storm_set)]
+        else:
+            # with no list of countries, assume we process all of them
+            ibtracs_subset = ibtracs
+
         danger_zone = ibtracs_subset.copy()
         danger_zone.geometry = ibtracs_subset.geometry.buffer(point_buffer_deg)
 
