@@ -125,6 +125,8 @@ include: "rules/exposure/damages.smk"
 include: "rules/exposure/aggregate_to_admin_area.smk"
 
 include: "rules/analyse/network_components.smk"
+include: "rules/analyse/plot/target_disruption.smk"
+include: "rules/analyse/plot/customers_affected_by_storm.smk"
 include: "rules/analyse/plot/make_exposure_tif.smk"
 include: "rules/analyse/plot/make_exposure_img.smk"
 
