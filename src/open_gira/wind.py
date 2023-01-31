@@ -5,6 +5,9 @@ Functions for reconstructing wind fields from track data.
 import numpy as np
 import pyproj
 
+import geopandas as gpd
+import pandas as pd
+
 
 def holland_wind_model(
     RMW_m: float,
@@ -165,3 +168,65 @@ def rotational_field(
 
     # find components of vector at each pixel
     return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+
+
+def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
+    """
+    Interpolate storm track data.
+
+    Arguments:
+        track (gpd.GeoDataFrame): Storm track with at least the following
+            columns: geometry, min_pressure_hpa, max_wind_speed_ms,
+            radius_to_max_winds_km, timestep. Must have a DatetimeIndex.
+        frequency (str): If given track with DatetimeIndex, interpolate to
+            resolution given by this pandas frequency string
+
+    Returns:
+        gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
+            radius_to_max_winds_km and geometry columns interpolated.
+    """
+
+    if len(track) == 0:
+        raise ValueError("No track data")
+    elif len(track) == 1:
+        # not enough data to interpolate between, short circuit
+        return track
+    elif len(track) == 2:
+        interp_method = "linear"
+    else:
+        interp_method = "quadratic"
+
+    if isinstance(track.index, pd.DatetimeIndex):
+        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
+    else:
+        raise ValueError("tracks must have a datetime index to interpolate")
+
+    track["x"] = track.geometry.x
+    track["y"] = track.geometry.y
+    track = track.drop(columns="geometry").copy()
+
+    interp_cols = [
+        "min_pressure_hpa",
+        "max_wind_speed_ms",
+        "radius_to_max_winds_km",
+        "x",
+        "y",
+    ]
+
+    interp_domain = pd.DataFrame(
+        index=interp_index,
+        data=np.full((len(interp_index), len(track.columns)), np.nan),
+        columns=track.columns,
+    )
+
+    # merge dataframes, on index collision, keep the non-NaN values from track
+    interp_track = track.combine_first(interp_domain).sort_index()
+
+    # interpolate over numeric value of index
+    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
+
+    interp_track["geometry"] = gpd.points_from_xy(
+        interp_track.x, interp_track.y, crs="EPSG:4326"
+    )
+
+    return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])

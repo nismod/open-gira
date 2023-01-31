@@ -16,7 +16,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.wind import holland_wind_model, advective_vector, rotational_field
+from open_gira.wind import advective_vector, rotational_field, interpolate_track
 from plot_wind_fields import plot_contours, animate_track
 
 
@@ -157,68 +157,6 @@ def process_track(
     return track_id, max_wind_speeds
 
 
-def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
-    """
-    Interpolate storm track data.
-
-    Arguments:
-        track (gpd.GeoDataFrame): Storm track with at least the following
-            columns: geometry, min_pressure_hpa, max_wind_speed_ms,
-            radius_to_max_winds_km, timestep. Must have a DatetimeIndex.
-        frequency (str): If given track with DatetimeIndex, interpolate to
-            resolution given by this pandas frequency string
-
-    Returns:
-        gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
-            radius_to_max_winds_km and geometry columns interpolated.
-    """
-
-    if len(track) == 0:
-        raise ValueError("No track data")
-    elif len(track) == 1:
-        # not enough data to interpolate between, short circuit
-        return track
-    elif len(track) == 2:
-        interp_method = "linear"
-    else:
-        interp_method = "quadratic"
-
-    if isinstance(track.index, pd.DatetimeIndex):
-        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
-    else:
-        raise ValueError("tracks must have a datetime index to interpolate")
-
-    track["x"] = track.geometry.x
-    track["y"] = track.geometry.y
-    track = track.drop(columns="geometry").copy()
-
-    interp_cols = [
-        "min_pressure_hpa",
-        "max_wind_speed_ms",
-        "radius_to_max_winds_km",
-        "x",
-        "y",
-    ]
-
-    interp_domain = pd.DataFrame(
-        index=interp_index,
-        data=np.full((len(interp_index), len(track.columns)), np.nan),
-        columns=track.columns,
-    )
-
-    # merge dataframes, on index collision, keep the non-NaN values from track
-    interp_track = track.combine_first(interp_domain).sort_index()
-
-    # interpolate over numeric value of index
-    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
-
-    interp_track["geometry"] = gpd.points_from_xy(
-        interp_track.x, interp_track.y, crs="EPSG:4326"
-    )
-
-    return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])
-
-
 if __name__ == "__main__":
 
     storm_file_path: str = snakemake.input.storm_file
@@ -243,7 +181,7 @@ if __name__ == "__main__":
 
     if storm_set:
         # if we have a storm_set, only keep the matching track_ids
-        logging.info(f"Filtering as per storm set")
+        logging.info("Filtering as per storm set")
         tracks = tracks[tracks.track_id.isin(storm_set)]
 
     if tracks.empty:
