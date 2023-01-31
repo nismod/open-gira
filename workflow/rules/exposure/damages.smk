@@ -157,3 +157,72 @@ rule storm_set_damages:
 Test with:
 snakemake -c1 results/power/by_storm_set/black_marble_validation/storm_set.json
 """
+
+
+rule combine_storm_set_exposure:
+    """
+    Concatenate per-country exposure results and save to disk. Additionally,
+    aggregate to country level and save to disk.
+    """
+    input:
+        per_country_exposure = at_risk_countries
+    output:
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_target.nc",
+        by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc"
+    run:
+        from collections import defaultdict
+
+        import pandas as pd
+        import xarray as xr
+
+
+        # ISO -> country data
+        datasets: dict[str: xr.Dataset] = {
+            path.split("/")[3]:
+            xr.open_dataset(path) for path in input.per_country_exposure
+        }
+
+        # update target ids to make them globally unique
+        # e.g. USA-1173 or PRI-101
+        unique_target_datasets = []
+        for iso, ds in datasets.items():
+            # our empty datasets don't have coordinates
+            if hasattr(ds, "target") and hasattr(ds, "event_id"):
+                unique_target_datasets.append(
+                    ds.assign_coords(
+                        {
+                            "target":
+                            [f"{iso}-{target_id}" for target_id in ds.target.values]
+                        }
+                    )
+                )
+
+        # combine country datasets of targets to pool all targets together in one file
+        # N.B. this is a quite sparse, with every target from every country for every storm in the set
+        # for IBTrACS, there are ~800M values per variable, and both variables are 96% NaN
+        concat = xr.concat(unique_target_datasets, dim="target").sortby("event_id")
+        # write to disk
+        concat.to_netcdf(output.by_target, encoding={var: {"zlib": True, "complevel": 9} for var in concat.keys()})
+
+        # mapping from country to list of target ids in country
+        targets_by_country: dict[str, list[str]] = defaultdict(list)
+        for uid in concat.target.values:
+            targets_by_country[uid.split("-")[0]].append(uid)
+
+        # sum data across targets to country level
+        countries = list(datasets.keys())
+        country_data = []
+        for country in countries:
+            country_data.append(
+                xr.DataArray(
+                    concat.customers_affected.sel(dict(target=targets_by_country[country])).sum(dim="target")
+                )
+            )
+        dims = ["country", "event_id", "threshold"]
+        by_country: xr.DataArray = xr.concat(country_data, dim=pd.Index(list(countries), name="country"))
+        by_country.to_netcdf(output.by_country, encoding={"customers_affected": {"zlib": True, "complevel": 9}})
+
+"""
+Test with:
+snakemake -c1 results/power/by_storm_set/IBTrACS_maria-2017/exposure_by_country.nc"
+"""
