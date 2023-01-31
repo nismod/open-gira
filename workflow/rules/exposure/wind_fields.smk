@@ -41,16 +41,17 @@ rule estimate_wind_fields:
     """
     conda: "../../../environment.yml"
     input:
-        storm_file = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/tracks.geoparquet",  # TODO limited to specific storms if any
+        # TODO limited to specific storms if any
+        storm_file = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/tracks.geoparquet",
         wind_grid = "{OUTPUT_DIR}/power/slice/{BOX}/storms/wind_grid.tiff",
     output:
-        # can disable plotting by setting `plot_wind_fields` to false in config
+        # N.B. can disable plotting by setting `plot_wind_fields` to false in config
         plot_dir = directory("{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/plots/"),
-        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
+        wind_speeds = "{OUTPUT_DIR}/power/slice/{BOX}/storms/{STORM_DATASET}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
 """
 To test:
-snakemake -c1 results/power/slice/1030/exposure/IBTrACS.nc
+snakemake -c1 results/power/slice/1030/storms/IBTrACS/max_wind_field.nc
 """

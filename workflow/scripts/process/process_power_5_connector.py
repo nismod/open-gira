@@ -40,7 +40,7 @@ for neighbour_node_path in adjacent_nodes:
             "edge_id": f"edge_X_{from_box}__{to_box}",
             "source_id": from_source_id,
             "link": f"cb_{from_box}__{to_box}",
-            "type": "transmission",
+            "asset_type": "transmission",
             "from_id": from_idx,  # connection in box_idx
             "to_id": to_ex,  # connection in box next to box_idx
             "geometry": str(LineString([fromto_geom, fromto_geom])),

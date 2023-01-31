@@ -39,3 +39,20 @@ rule plot_damage_distributions:
 Test with:
 snakemake --cores 1 results/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction_plots
 """
+
+
+rule electricity_grid_damages:
+    input:
+        grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
+        wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
+        grid_edges = rules.create_power_network.output.edges,
+        grid_nodes = rules.create_power_network.output.nodes,
+    output:
+        damages = "{OUTPUT_DIR}/power/slice/{BOX}/exposure/{STORM_DATASET}.nc",
+    script:
+        "../../scripts/intersect/grid_disruption.py"
+
+"""
+Test with:
+snakemake --cores 1 results/power/slice/1030/exposure/IBTrACS.nc
+"""

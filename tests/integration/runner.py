@@ -214,6 +214,12 @@ class OutputChecker:
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
                 raise e
 
+        # netCDF
+        elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
+            generated = xr.open_dataset(generated_file)
+            expected = xr.open_dataset(expected_file)
+            assert generated.equals(expected)
+
         # any other file type
         else:
             try:

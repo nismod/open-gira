@@ -1,14 +1,17 @@
 """
 Creates the network from the plants and targets data
 """
+
 import warnings
 
-import geopandas
-import pandas
+import geopandas as gpd
+import pandas as pd
 import snkit
 import snkit.network
 from pyproj import Geod
 from shapely.errors import ShapelyDeprecationWarning
+
+from open_gira.grid import weighted_allocation
 
 
 if __name__ == "__main__":
@@ -21,32 +24,32 @@ if __name__ == "__main__":
     edges_path = snakemake.output.edges  # type: ignore
 
     # Nodes
-    plants = geopandas.read_parquet(plants_path)
-    targets = geopandas.read_parquet(targets_path)
+    plants = gpd.read_parquet(plants_path)
+    targets = gpd.read_parquet(targets_path)
 
     plants["id"] = [f"source_{i}_{box_id}" for i in range(len(plants))]
-    plants = plants[["id", "source_id", "capacity_mw", "type", "geometry"]]
+    plants = plants[["id", "source_id", "power_mw", "asset_type", "geometry"]]
 
     targets["id"] = [f"target_{i}_{box_id}" for i in range(len(targets))]
     target_cols = list(targets.columns)
 
-    target_nodes = targets[["id", "type", "geometry"]].copy()
+    target_nodes = targets[["id", "asset_type", "geometry"]].copy()
     target_nodes.geometry = target_nodes.geometry.centroid
 
     # should not actually reproject, but CRS metadata must match exactly for concat
     target_nodes = target_nodes.to_crs(plants.crs)
 
-    nodes = geopandas.GeoDataFrame(
-        pandas.concat([plants, target_nodes], ignore_index=True),
+    nodes = gpd.GeoDataFrame(
+        pd.concat([plants, target_nodes], ignore_index=True),
         crs=plants.crs
     )
 
     # Edges
-    edges = geopandas.read_parquet(gridfinder_path)
+    edges = gpd.read_parquet(gridfinder_path)
 
-    edges["type"] = "transmission"
+    edges["asset_type"] = "transmission"
 
-    edges = edges[["source_id", "type", "geometry", "source"]]
+    edges = edges[["source_id", "asset_type", "geometry", "source"]]
 
     # Process network
     network = snkit.network.Network(nodes, edges)
@@ -67,11 +70,11 @@ if __name__ == "__main__":
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
                 lambda node, edge: (
-                    (node.type == "source")
+                    (node.asset_type == "source")
                     and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
                 )
             )
-            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_source"
+            network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 
             network.nodes["id"] = network.nodes.reset_index().apply(
                 lambda row: f"conn_source_{row['index']}_{box_id}"
@@ -84,11 +87,11 @@ if __name__ == "__main__":
             network = snkit.network.link_nodes_to_nearest_edge(
                 network,
                 lambda node, edge: (
-                    (node.type == "target")
+                    (node.asset_type == "target")
                     and (node_to_edge_distance(node.geometry, edge.geometry, geod) < edge_limit)
                 )
             )
-            network.nodes.loc[network.nodes.id.isnull(), "type"] = "conn_target"
+            network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_target"
 
             network.nodes["id"] = network.nodes.reset_index().apply(
                 lambda row: f"conn_target_{row['index']}_{box_id}"
@@ -101,7 +104,7 @@ if __name__ == "__main__":
     # including where edges have been clipped to slice bbox
     network = snkit.network.add_endpoints(network)
 
-    network.nodes.loc[network.nodes.id.isnull(), "type"] = "intermediate"
+    network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "intermediate"
 
     network.nodes["id"] = network.nodes.reset_index().apply(
         lambda row: f"intermediate_{row['index']}_{box_id}"
@@ -110,13 +113,40 @@ if __name__ == "__main__":
         axis=1,
     )
 
-    network.edges["id"] = [f"edge_{i}_{box_id}" for i in range(len(network.edges))]
+    # join econometric and demographic data to network nodes dataframe
+    network.nodes = pd.merge(network.nodes, targets[["id", "gdp", "population"]], on="id", how="outer")
+
+    # overwrite ids to int type (grid_disruption.py needs fast pandas isin ops)
+    network.nodes["id"] = range(len(network.nodes))
+    network.edges["id"] = range(len(network.edges))
 
     # Add from/to ids
     network = snkit.network.add_topology(network, id_col="id")
 
     network.edges["box_id"] = box_id
     network.nodes["box_id"] = box_id
+
+    if "component_id" not in network.nodes.columns:
+        network = snkit.network.add_component_ids(network)
+
+    targets: pd.DataFrame = weighted_allocation(
+        network.nodes,
+        variable_col="power_mw",
+        weight_col="gdp",
+        component_col="component_id",
+        asset_col="asset_type",
+        source_name="source",
+        sink_name="target",
+    )
+
+    # merge the target power allocation back into the nodes table
+    # first get the target power in a table of the same length as network.nodes
+    target_power = network.nodes[["id", "power_mw"]].merge(targets[["id", "power_mw"]], how="left", on="id", suffixes=["_x", ""])
+    # then use combine_first to overwrite the NaN target power values in network.nodes
+    network.nodes = network.nodes.combine_first(target_power[["id", "power_mw"]])
+
+    # check power has been allocated appropriately
+    assert network.nodes["power_mw"].sum() < 1E-6
 
     network.edges.to_parquet(edges_path)
     network.nodes.to_parquet(nodes_path)

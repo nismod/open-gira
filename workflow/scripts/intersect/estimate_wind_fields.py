@@ -5,6 +5,7 @@ each storm.
 
 import os
 import multiprocessing
+import logging
 from typing import Optional
 
 import geopandas as gpd
@@ -17,6 +18,8 @@ import xarray as xr
 from open_gira.wind import holland_wind_model, advective_vector, rotational_field
 from plot_wind_fields import plot_contours, animate_track
 
+
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
 # Environmental pressure values in hPa / mbar (standard estimate of background
 # pressure away from the cyclone) are taken from the AIR hurricane model, table
@@ -32,67 +35,6 @@ ENV_PRESSURE = {
     "SP": 1008.1,
     "WP": 1008.3,
 }
-
-
-def main():
-    storm_file_path: str = snakemake.input.storm_file  # type: ignore
-    wind_grid_path: str = snakemake.input.wind_grid
-    plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
-    plot_dir_path: str = snakemake.output.plot_dir
-    output_path: str = snakemake.output.wind_speeds  # type: ignore
-
-    # TODO: make configurable if necessary
-    parallel = True
-
-    # TODO check config to restrict analysis
-    # snakemake.config.specific_storm_analysis
-
-    # directory required (snakemake output)
-    os.makedirs(plot_dir_path, exist_ok=True)
-
-    # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
-    grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
-
-    tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
-
-    # track is a tuple of track_id and the tracks subset, we only want the latter
-    args = [(track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks]
-
-    max_wind_speeds: list[str, np.ndarray] = []
-    if parallel:
-        with multiprocessing.Pool() as pool:
-            max_wind_speeds = pool.starmap(process_track, args)
-    else:
-        for arg in args:
-            max_wind_speeds.append(process_track(*arg))
-
-    # sort by track_id so we have a reproducible order even after multiprocessing
-    max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
-
-    track_ids, fields = zip(*max_wind_speeds)
-
-    # write to disk as netCDF with CRS
-    # TODO: write the appropriate metadata for QGIS to read this successfully
-    # as it is, the lat/long values are being ignored
-    # you can of course use ncview or xarray to inspect instead...
-    da = xr.DataArray(
-        data=np.stack(fields),
-        dims=("event_id", "lat", "long"),
-        coords=(
-            ("event_id", list(track_ids)),
-            ("long", grid.x.values),
-            ("lat", grid.y.values),
-        ),
-        attrs=dict(
-            description="Maximum estimated wind speed during event",
-            units="m s-1",
-        ),
-        name="max_wind_speed",
-    )
-    da = da.rio.write_crs("epsg:4326")
-    da.to_netcdf(output_path)
-
-    return
 
 
 def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool, plot_dir: Optional[str]) -> tuple[str, np.ndarray]:
@@ -117,6 +59,8 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     """
 
     track_id, = set(track.track_id)
+
+    logging.info(track_id)
 
     # we can't calculate the advective component without at least two points
     if len(track) == 1:
@@ -264,4 +208,59 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
 
 
 if __name__ == "__main__":
-    main()
+
+    storm_file_path: str = snakemake.input.storm_file  # type: ignore
+    wind_grid_path: str = snakemake.input.wind_grid
+    plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
+    parallel: bool = snakemake.config["parallelise_by_storm"]
+    plot_dir_path: str = snakemake.output.plot_dir
+    output_path: str = snakemake.output.wind_speeds  # type: ignore
+
+    # TODO check config to restrict analysis
+    # snakemake.config.specific_storm_analysis
+
+    # directory required (snakemake output)
+    os.makedirs(plot_dir_path, exist_ok=True)
+
+    # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
+    grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+
+    tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
+
+    # track is a tuple of track_id and the tracks subset, we only want the latter
+    args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks)
+
+    max_wind_speeds: list[str, np.ndarray] = []
+    if parallel:
+        with multiprocessing.Pool() as pool:
+            max_wind_speeds = pool.starmap(process_track, args)
+    else:
+        for arg in args:
+            max_wind_speeds.append(process_track(*arg))
+
+    # sort by track_id so we have a reproducible order even after multiprocessing
+    max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
+
+    track_ids, fields = zip(*max_wind_speeds)
+
+    # write to disk as netCDF with CRS
+    # TODO: write the appropriate metadata for QGIS to read this successfully
+    # as it is, the lat/long values are being ignored
+    # you can of course use ncview or xarray to inspect instead...
+    da = xr.DataArray(
+        data=np.stack(fields),
+        dims=("event_id", "lat", "long"),
+        coords=(
+            ("event_id", list(track_ids)),
+            ("long", grid.x.values),
+            ("lat", grid.y.values),
+        ),
+        attrs=dict(
+            description="Maximum estimated wind speed during event",
+            units="m s-1",
+        ),
+        name="max_wind_speed",
+    )
+    da = da.rio.write_crs("epsg:4326")
+    encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
+    da.to_netcdf(output_path, encoding=encoding)
