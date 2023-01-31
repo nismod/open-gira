@@ -165,6 +165,9 @@ if __name__ == "__main__":
     # reorder columns to match STORM dataset (except track_id and name, which are additional)
     df = df.loc[:, list(STORM_CSV_SCHEMA.keys()) + ["track_id", "name"]]
 
+    # change geometry from 0-360 to -180-180
+    df.lon = np.where(df.lon > 180, df.lon - 360, df.lon)
+
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(
         data=df,
