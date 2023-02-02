@@ -75,6 +75,8 @@ if __name__ == "__main__":
     # should not actually reproject, but CRS metadata must match exactly for concat
     targets = targets.to_crs(plants.crs)
 
+    targets["target_id"] = targets["id"]
+
     nodes = gpd.GeoDataFrame(
         pd.concat([plants, targets], ignore_index=True),
         crs=plants.crs
@@ -145,7 +147,7 @@ if __name__ == "__main__":
         network = snkit.network.add_component_ids(network)
 
     logging.info("Allocating generating capacity to targets")
-    targets: pd.DataFrame = weighted_allocation(
+    powered_targets: pd.DataFrame = weighted_allocation(
         network.nodes,
         variable_col="power_mw",
         weight_col="gdp",
@@ -157,9 +159,14 @@ if __name__ == "__main__":
 
     # merge the target power allocation back into the nodes table
     # first get the target power in a table of the same length as network.nodes
-    target_power = network.nodes[["id", "power_mw"]].merge(targets[["id", "power_mw"]], how="left", on="id", suffixes=["_x", ""])
+    intermediate = network.nodes[["id", "power_mw"]].merge(
+        powered_targets[["id", "power_mw"]],
+        how="left",
+        on="id",
+        suffixes=["_x", ""]
+    )
     # then use combine_first to overwrite the NaN target power values in network.nodes
-    network.nodes = network.nodes.combine_first(target_power[["id", "power_mw"]])
+    network.nodes = network.nodes.combine_first(intermediate[["power_mw"]])
 
     # check power has been allocated appropriately
     for c_id, c_nodes in network.nodes.groupby(network.nodes.component_id):

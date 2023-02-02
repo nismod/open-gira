@@ -63,9 +63,13 @@ def degrade_grid_with_storm(
         lat=splits[fields.RASTER_J].to_xarray()
     )
 
-    # object for collating results from each damage threshold
-    target_ids = network.nodes[network.nodes.asset_type == "target"].id.values
+    # build coordinates for results object
+    # N.B. we have a generic node 'id' but also a 'target_id' which should only
+    # be set for target nodes -- it is globally unique and corresponds to the
+    # global targets file (which contains their vector geometry)
+    target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.values
     return_shape = (1, len(speed_thresholds), len(target_ids))
+    # object for collating results from each damage threshold
     exposure = xr.Dataset(
         data_vars=dict(
             supply_factor=(DIM_NAMES, np.full(return_shape, np.nan)),
@@ -133,7 +137,7 @@ def degrade_grid_with_storm(
         targets["customers_affected"] = np.clip(1 - targets.supply_factor, 0, None) * targets.population
 
         # assign data to dataset
-        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.id.values)
+        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.target_id.values)
         exposure.supply_factor.loc[indicies] = targets.supply_factor
         exposure.customers_affected.loc[indicies] = targets.customers_affected
 
