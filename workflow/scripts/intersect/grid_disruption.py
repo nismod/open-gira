@@ -75,8 +75,8 @@ def degrade_grid_with_storm(
             # scalar dimensions result in ValueError, use atleast_1d as workaround
             # https://stackoverflow.com/a/58858160
             event_id=np.atleast_1d(storm_id),
-            threshold=speed_thresholds,
-            target=target_ids
+            threshold=np.atleast_1d(speed_thresholds),
+            target=np.atleast_1d(target_ids)
         )
     )
 
