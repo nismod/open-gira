@@ -21,9 +21,33 @@ from open_gira.grid import weighted_allocation
 import snkit
 
 
-logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+# coordinates that the exposure variables can be indexed by
+EXPOSURE_COORDS: dict[str, type] = {
+    "event_id": str,
+    "threshold": float,
+    "target": int,
+}
 
-DIM_NAMES = ("event_id", "threshold", "target")
+
+def empty_exposure_ds() -> xr.Dataset:
+    """
+    Return an exposure dataset with a schema but no data.
+
+    N.B. To concatenate xarray datasets, they must all share the same
+    coordinate variables.
+    """
+    empty = np.full((0,) * len(EXPOSURE_COORDS), np.nan)
+    ds = xr.Dataset(
+        data_vars=dict(
+            supply_factor=(EXPOSURE_COORDS.keys(), empty),
+            customers_affected=(EXPOSURE_COORDS.keys(), empty)
+        ),
+        coords={
+            name: np.array([], dtype=dtype)
+            for name, dtype in EXPOSURE_COORDS.items()
+        }
+    )
+    return ds
 
 
 def degrade_grid_with_storm(
@@ -67,13 +91,13 @@ def degrade_grid_with_storm(
     # N.B. we have a generic node 'id' but also a 'target_id' which should only
     # be set for target nodes -- it is globally unique and corresponds to the
     # global targets file (which contains their vector geometry)
-    target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.values
+    target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.astype(int).values
     return_shape = (1, len(speed_thresholds), len(target_ids))
     # object for collating results from each damage threshold
     exposure = xr.Dataset(
         data_vars=dict(
-            supply_factor=(DIM_NAMES, np.full(return_shape, np.nan)),
-            customers_affected=(DIM_NAMES, np.full(return_shape, np.nan))
+            supply_factor=(EXPOSURE_COORDS.keys(), np.full(return_shape, np.nan)),
+            customers_affected=(EXPOSURE_COORDS.keys(), np.full(return_shape, np.nan))
         ),
         coords=dict(
             # scalar dimensions result in ValueError, use atleast_1d as workaround
@@ -137,7 +161,7 @@ def degrade_grid_with_storm(
         targets["customers_affected"] = np.clip(1 - targets.supply_factor, 0, None) * targets.population
 
         # assign data to dataset
-        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.target_id.values)
+        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.target_id.astype(int).values)
         exposure.supply_factor.loc[indicies] = targets.supply_factor
         exposure.customers_affected.loc[indicies] = targets.customers_affected
 
@@ -154,11 +178,13 @@ if __name__ == "__main__":
     n_proc: int = snakemake.config["processes_per_parallel_job"]
     damages_path: str = snakemake.output.damages
 
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
     logging.info("Loading wind speed data")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
     if len(wind_fields.variables) == 0:
         logging.info("Empty wind speed file, writing empty files to disk.")
-        xr.Dataset().to_netcdf(damages_path)
+        empty_exposure_ds().to_netcdf(damages_path)
         sys.exit(0)
 
     logging.info(wind_fields.max_wind_speed)  # use xarray repr
@@ -188,7 +214,7 @@ if __name__ == "__main__":
     valid_results = list(filter(lambda x: x is not None, exposure_by_storm))
     if len(valid_results) == 0:
         logging.info("No disruption, writing empty file.")
-        xr.Dataset().to_netcdf(damages_path)
+        empty_exposure_ds().to_netcdf(damages_path)
     else:
         exposure = xr.concat(valid_results, "event_id")
         encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
