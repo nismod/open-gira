@@ -18,60 +18,53 @@ rule plot_target_supply_factor_distributions:
 
         ds = xr.open_dataset(input.by_target)
 
-        # preprocess the data for plotting
-        data = {}
-        for threshold in ds.threshold.values:
-            # flatten
-            supply_factor = ds.supply_factor.sel(dict(threshold=threshold)).values.ravel()
-            # drop >= 1, and any NaN values
-            supply_factor = supply_factor[~np.isnan(supply_factor)]
-            supply_factor = supply_factor[supply_factor < 1]
-
-            data[threshold] = supply_factor
-
         n_threshold = len(ds.threshold.values)
 
         f, axes = plt.subplots(nrows=1, ncols=n_threshold, sharex=True, figsize=(2 + 2 * n_threshold, 4))
 
-        colours = list(mcolors.BASE_COLORS.values())
-        min_y_all = 1
+        colours: list[tuple[float]] = [
+            matplotlib.colormaps["cubehelix"](i) for i in np.linspace(0, 0.9, n_threshold)
+        ]
+
         max_y_all = 0
-        for i, (threshold, supply_factor) in enumerate(data.items()):
-            axes[i].hist(
-                supply_factor,
-                bins=25,
+        y_cutoff = 1
+        for i, threshold in enumerate(ds.threshold.values):
+
+            # pool values across storms and targets
+            supply = ds.supply_factor.sel(dict(threshold=threshold)).values.ravel()
+            # drop NaN values
+            supply = supply[~np.isnan(supply)]
+            # bin the data
+            freq, edges = np.histogram(supply, bins=np.linspace(0, 1, 11))
+            # set 0 values to 1 (permits log)
+            freq[freq <= 0] = y_cutoff
+            width = edges[1] - edges[0]
+            axes[i].bar(
+                edges[:-1] + width / 2,
+                freq,
+                width=width,
                 label=threshold,
-                alpha=0.5,
-                density=True,
-                color=colours[i % len(colours)]
+                alpha=0.8,
+                color=colours[i]
             )
 
-            min_y, max_y = axes[i].get_ylim()
-            min_y_all = min(min_y, min_y_all)
+            _, max_y = axes[i].get_ylim()
             max_y_all = max(max_y, max_y_all)
 
+            axes[i].set_yscale("log")
             axes[i].set_xlim(0, 1)
             axes[i].grid(which="both", alpha=0.2)
+            axes[i].set_title(threshold)
             if i != 0:
                 axes[i].set_yticklabels([])
 
         for ax in axes:
-            if min_y_all != 0:
-                axes[i].set_yscale("log")
-            ax.set_ylim(0.5 * min_y_all, 1.1 * max_y_all)
+            ax.set_ylim(y_cutoff, 2 * max_y_all)
 
-        f.suptitle("Distribution of supply factor < 1")
+        f.suptitle("Supply factor by damage threshold [ms-1]")
         f.supxlabel("Supply factor")
-        f.supylabel("Density")
+        f.supylabel("Frequency")
 
-        lines_labels = [ax.get_legend_handles_labels() for ax in axes]
-        lines, labels = [sum(ll, []) for ll in zip(*lines_labels)]
-        f.legend(
-            lines,
-            labels,
-            title="Damage threshold [m s-1]"
-        )
-
-        plt.subplots_adjust(bottom=0.15)
+        plt.subplots_adjust(bottom=0.15, top=0.85, left=0.075, right=0.95)
 
         f.savefig(output.pdf)
