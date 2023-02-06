@@ -83,8 +83,8 @@ def degrade_grid_with_storm(
     # N.B. to index at points rather than the cross-product of indicies, index with DataArrays
     # https://docs.xarray.dev/en/stable/user-guide/indexing.html#vectorized-indexing
     max_wind_speeds: xr.DataArray = wind_fields.sel(event_id=storm_id).isel(
-        long=splits[fields.RASTER_I].to_xarray(),
-        lat=splits[fields.RASTER_J].to_xarray()
+        longitude=splits[fields.RASTER_I].to_xarray(),
+        latitude=splits[fields.RASTER_J].to_xarray()
     )
 
     # build coordinates for results object

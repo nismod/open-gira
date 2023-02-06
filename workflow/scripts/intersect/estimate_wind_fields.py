@@ -37,6 +37,31 @@ ENV_PRESSURE = {
     "WP": 1008.3,
 }
 
+# coordinates we have maximum wind speeds for
+WIND_COORDS: dict[str, type] = {
+    "event_id": str,
+    "latitude": float,
+    "longitude": float,
+}
+
+
+def empty_wind_da() -> xr.DataArray:
+    """
+    Return a maxium wind field dataarray with a schema but no data.
+
+    N.B. To concatenate xarray objects, they must all share the same
+    coordinate variables.
+    """
+    da = xr.DataArray(
+        data=np.full((0,) * len(WIND_COORDS), np.nan),
+        coords={
+            name: np.array([], dtype=dtype)
+            for name, dtype in WIND_COORDS.items()
+        },
+        name="max_wind_speed"
+    )
+    return da
+
 
 def process_track(
     track: pd.core.groupby.generic.DataFrameGroupBy,
@@ -176,7 +201,7 @@ if __name__ == "__main__":
     if tracks.empty:
         logging.info("No intersection between network and tracks, writing empty file.")
         # no tracks, write empty wind speeds file and exit
-        xr.Dataset().to_netcdf(output_path)
+        empty_wind_da().to_netcdf(output_path)
         sys.exit(0)
 
     if storm_set:
@@ -187,7 +212,7 @@ if __name__ == "__main__":
     if tracks.empty:
         logging.info("No intersection between network and tracks, writing empty file.")
         # no tracks, write empty wind speeds file and exit
-        xr.Dataset().to_netcdf(output_path)
+        empty_wind_da().to_netcdf(output_path)
         sys.exit(0)
 
     logging.info(f"\n{tracks}")
@@ -217,16 +242,13 @@ if __name__ == "__main__":
     track_ids, fields = zip(*max_wind_speeds)
 
     # write to disk as netCDF with CRS
-    # TODO: write the appropriate metadata for QGIS to read this successfully
-    # as it is, the lat/long values are being ignored
-    # you can of course use ncview or xarray to inspect instead...
     da = xr.DataArray(
         data=np.stack(fields),
-        dims=("event_id", "lat", "long"),
+        dims=WIND_COORDS.keys(),
         coords=(
             ("event_id", list(track_ids)),
-            ("lat", grid.y.values),
-            ("long", grid.x.values),
+            ("latitude", grid.y.values),
+            ("longitude", grid.x.values),
         ),
         attrs=dict(
             description="Maximum estimated wind speed during event",
@@ -234,7 +256,12 @@ if __name__ == "__main__":
         ),
         name="max_wind_speed",
     )
-    da = da.rio.write_crs("epsg:4326")
+    # TODO: write the appropriate metadata for QGIS to read this successfully
+    # as it is, the lat/long values are being ignored
+    # you can of course use ncview or xarray to inspect instead...
+    #spatial_ref_attrs = pyproj.CRS.from_user_input(4326).to_cf()
+    #da["spatial_ref"] = ((), 0, spatial_ref_attrs)
+    da = da.rio.write_crs("EPSG:4326")
     encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
     da.to_netcdf(output_path, encoding=encoding)
 
