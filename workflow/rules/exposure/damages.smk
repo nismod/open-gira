@@ -175,52 +175,32 @@ rule combine_storm_set_exposure:
         import pandas as pd
         import xarray as xr
 
-
-        # ISO -> country data
-        datasets: dict[str: xr.Dataset] = {
-            path.split("/")[3]:
-            xr.open_dataset(path) for path in input.per_country_exposure
+        # country iso to dataset
+        datasets: dict[str, xr.Dataset] = {
+            path.split("/")[3]: xr.open_dataset(path) for path in input.per_country_exposure
         }
-
-        # update target ids to make them globally unique
-        # e.g. USA-1173 or PRI-101
-        unique_target_datasets = []
-        for iso, ds in datasets.items():
-            # our empty datasets don't have coordinates
-            if hasattr(ds, "target") and hasattr(ds, "event_id"):
-                unique_target_datasets.append(
-                    ds.assign_coords(
-                        {
-                            "target":
-                            [f"{iso}-{target_id}" for target_id in ds.target.values]
-                        }
-                    )
-                )
 
         # combine country datasets of targets to pool all targets together in one file
         # N.B. this is a quite sparse, with every target from every country for every storm in the set
         # for IBTrACS, there are ~800M values per variable, and both variables are 96% NaN
-        concat = xr.concat(unique_target_datasets, dim="target").sortby("event_id")
-        # write to disk
-        concat.to_netcdf(output.by_target, encoding={var: {"zlib": True, "complevel": 9} for var in concat.keys()})
+        pooled_targets = xr.concat(datasets.values(), dim="target").sortby("event_id")
 
-        # mapping from country to list of target ids in country
-        targets_by_country: dict[str, list[str]] = defaultdict(list)
-        for uid in concat.target.values:
-            targets_by_country[uid.split("-")[0]].append(uid)
+        # a few targets may have been processed under more than one country, keep the first instance
+        pooled_targets = pooled_targets.drop_duplicates("target")
+
+        # write to disk
+        pooled_targets.to_netcdf(
+            output.by_target,
+            encoding={var: {"zlib": True, "complevel": 9} for var in pooled_targets.keys()}
+        )
 
         # sum data across targets to country level
-        countries = list(datasets.keys())
-        country_data = []
-        for country in countries:
-            country_data.append(
-                xr.DataArray(
-                    concat.customers_affected.sel(dict(target=targets_by_country[country])).sum(dim="target")
-                )
-            )
-        dims = ["country", "event_id", "threshold"]
-        by_country: xr.DataArray = xr.concat(country_data, dim=pd.Index(list(countries), name="country"))
-        by_country.to_netcdf(output.by_country, encoding={"customers_affected": {"zlib": True, "complevel": 9}})
+        country_agg = {iso: ds.customers_affected.sum(dim="target") for iso, ds in datasets.items()}
+        by_country: xr.DataArray = xr.concat(country_agg.values(), dim=pd.Index(list(country_agg.keys()), name="country"))
+        by_country.to_netcdf(
+            output.by_country,
+            encoding={"customers_affected": {"zlib": True, "complevel": 9}}
+        )
 
 """
 Test with:
