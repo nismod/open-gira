@@ -6,8 +6,8 @@ rule plot_top_storms_by_customers_affected:
         by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc",
         ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet"
     output:
-        pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/customers_affected_by_storm.pdf",
-        pickle = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/customers_affected_by_storm.pickle"
+        pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/customers_affected.pdf",
+        pickle = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/customers_affected.pickle"
     run:
         import pickle
 
@@ -178,3 +178,8 @@ rule plot_top_storms_by_customers_affected:
             pickle.dump(f, fp)
 
         f.savefig(output.pdf)
+
+"""
+Test with:
+snakemake -c1 results/power/by_storm_set/IBTrACS-maria_2017/customers_affected.pdf
+"""
