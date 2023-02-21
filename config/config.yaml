@@ -120,6 +120,7 @@ storm_sets:
     # where dataset belongs to:
     # {IBTrACS, STORM-constant, STORM-CMCC-CM2-VHR4, etc.}
     IBTrACS_maria-2017: 'config/storm_sets/maria.json'
+    IBTrACS_irma-2017: 'config/storm_sets/irma.json'
     IBTrACS_black-marble-validation: 'config/storm_sets/20230120_black_marble.json'
 
 # consider grids at risk of a storm if within this many degrees of any storm track point
@@ -133,9 +134,9 @@ wind_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [25, 35, 45]
+transmission_windspeed_failure: [27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
 
-# some of the scrupts and rules are parallelised with multiprocessing
+# some of the scripts and rules are parallelised with multiprocessing
 # works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
 # setting to 1 will run any parallelisable job in serial
 # N.B. snakemake will enforce:
