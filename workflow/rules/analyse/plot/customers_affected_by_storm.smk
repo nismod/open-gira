@@ -97,22 +97,22 @@ rule plot_top_storms_by_customers_affected:
                     hatch=bar_hatching[i % len(bar_hatching)]
                 )
 
-            # store the
+            # store the minor tick locations
             minor_tick_locations.extend(x_loc)
-            ax.bar_label(
-                bars,
-                fmt='%.1G',
-                rotation=-90,
-                padding=3
-            )
+#           ax.bar_label(
+#               bars,
+#               fmt='%.2G',
+#               rotation=-90,
+#               padding=3
+#           )
 
         # axis labels and title
         subset_str = ""
         if len(by_country.event_id.values) > MAX_STORMS:
             subset_str = f" (top {MAX_STORMS} storms by customers affected)"
         ax.set_title(wildcards.STORM_SET + subset_str)
-        ax.set_xlabel("Storm", labelpad=100)
-        ax.set_ylabel("Customers affected")
+        ax.set_xlabel("Storm", labelpad=110)
+        ax.set_ylabel("Customers affected", labelpad=40)
         ax.grid(which="both", alpha=0.2)
 
         # headroom for bar totals
@@ -126,7 +126,7 @@ rule plot_top_storms_by_customers_affected:
         assert len(minor_tick_labels) == len(minor_tick_locations)
         ax.xaxis.set_minor_formatter(FixedFormatter(minor_tick_labels))
         ax.xaxis.set_minor_locator(FixedLocator(minor_tick_locations))
-        ax.xaxis.set_tick_params(which='minor', labelsize=8)
+        ax.xaxis.set_tick_params(which='minor', labelsize=8, rotation=-90)
 
         # draw the x-axis storm ids -- we're using the ticks for thresholds already
         for x_i, storm_id in zip(x, storm_ids):
@@ -137,19 +137,19 @@ rule plot_top_storms_by_customers_affected:
                 name_text = storm_id
             ax.text(
                 x_i - width / len(thresholds),
-                -0.13,  # below xaxis
+                -0.17,  # below xaxis
                 name_text,
-                rotation=-50,
+                rotation=-90,
                 size=8,
                 horizontalalignment='left',
                 verticalalignment='center',
                 # transform: x axis in data units, y axis in fraction of plot
                 transform=ax.get_xaxis_transform()
             )
-        plt.subplots_adjust(bottom=0.2)
+        plt.subplots_adjust(bottom=0.22)
         ax.text(
             0.5,
-            -0.05,
+            -0.085,
             "Wind speed threshold [m s-1]",
             horizontalalignment='center',
             # transform: x axis in data units, y axis in fraction of plot
