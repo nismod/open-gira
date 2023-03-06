@@ -19,7 +19,7 @@ rule plot_top_storms_by_customers_affected:
         from matplotlib.ticker import (FixedLocator, FixedFormatter)
         import xarray as xr
 
-        MAX_STORMS = 15  # plot this many or fewer
+        MAX_STORMS = 20  # plot this many or fewer
 
         # MPL will segfault trying to plot as a snakemake subprocess otherwise
         matplotlib.use('Agg')
@@ -131,7 +131,10 @@ rule plot_top_storms_by_customers_affected:
         # draw the x-axis storm ids -- we're using the ticks for thresholds already
         for x_i, storm_id in zip(x, storm_ids):
             if named_storms:
-                name_str = name_lookup.loc[storm_id, 'name_year']
+                try:
+                    name_str = name_lookup.loc[storm_id, 'name_year']
+                except KeyError:
+                    name_str = "Unknown"
                 name_text = f"{name_str}\n{storm_id}"
             else:
                 name_text = storm_id
