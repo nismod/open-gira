@@ -27,3 +27,5 @@ tester/*
 
 # Rendered documentation
 docs/book/
+
+validation/plots/*
