@@ -118,9 +118,9 @@ snakemake -c1 results/power/by_storm_set/black_marble_validation/countries_hit.j
 """
 
 
-def at_risk_countries(wildcards):
+def countries_endangered_by_storm_set(wildcards):
     """
-    Return list of paths of country exposure files to generate
+    Return list of paths of country exposure directories to generate
     """
     import json
 
@@ -143,7 +143,7 @@ rule storm_set_damages:
     To indicate completion, copy storm set JSON file to results directory.
     """
     input:
-        at_risk_countries
+        countries_endangered_by_storm_set
     params:
         storm_set_path = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
     output:
@@ -165,7 +165,7 @@ rule combine_storm_set_exposure:
     aggregate to country level and save to disk.
     """
     input:
-        per_country_exposure = at_risk_countries
+        per_country_exposure = countries_endangered_by_storm_set
     output:
         by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_target.nc",
         by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc"
