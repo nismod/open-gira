@@ -170,12 +170,15 @@ rule combine_storm_set_exposure:
         by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_target.nc",
         by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc"
     run:
-        from collections import defaultdict
+        import logging
 
         import pandas as pd
         import xarray as xr
 
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
         # country iso to dataset
+        logging.info("Reading per-target, per-country exposure")
         datasets: dict[str, xr.Dataset] = {
             path.split("/")[3]: xr.open_dataset(path) for path in input.per_country_exposure
         }
@@ -183,24 +186,34 @@ rule combine_storm_set_exposure:
         # combine country datasets of targets to pool all targets together in one file
         # N.B. this is a quite sparse, with every target from every country for every storm in the set
         # for IBTrACS, there are ~800M values per variable, and both variables are 96% NaN
+        logging.info("Pooling targets from all country datasets")
         pooled_targets = xr.concat(datasets.values(), dim="target").sortby("event_id")
 
         # a few targets may have been processed under more than one country, keep the first instance
+        logging.info("Dropping duplicates")
         pooled_targets = pooled_targets.drop_duplicates("target")
 
         # write to disk
+        logging.info("Writing pooled per-target exposure to disk")
         pooled_targets.to_netcdf(
             output.by_target,
             encoding={var: {"zlib": True, "complevel": 9} for var in pooled_targets.keys()}
         )
 
         # sum data across targets to country level
+        logging.info("Aggregating customers affected to country level")
         country_agg = {iso: ds.customers_affected.sum(dim="target") for iso, ds in datasets.items()}
+
+        logging.info("Concatenating aggregated country data")
         by_country: xr.DataArray = xr.concat(country_agg.values(), dim=pd.Index(list(country_agg.keys()), name="country"))
+
+        logging.info("Writing aggregated country data to disk")
         by_country.to_netcdf(
             output.by_country,
             encoding={"customers_affected": {"zlib": True, "complevel": 9}}
         )
+
+        logging.info("Done")
 
 """
 Test with:
