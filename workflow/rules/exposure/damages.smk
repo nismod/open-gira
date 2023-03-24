@@ -41,7 +41,7 @@ snakemake --cores 1 results/egypt-latest_filter-road/hazard-aqueduct-river/damag
 """
 
 
-rule electricity_grid_damages:
+checkpoint electricity_grid_damages:
     input:
         grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
         wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
@@ -50,7 +50,7 @@ rule electricity_grid_damages:
     threads:
         config["processes_per_parallel_job"]
     output:
-        damages = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}.nc",
+        damages = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}"),
     script:
         "../../scripts/intersect/grid_disruption.py"
 
@@ -69,11 +69,11 @@ checkpoint countries_intersecting_storm_set:
         ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet",
         admin_bounds = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
     output:
-        country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_hit.json"
+        country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted.json",
+        country_set_by_storm = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted_by_storm.json",
     run:
         import json
 
-        import pandas as pd
         import geopandas as gpd
 
         # check for country intersections within some radius of track points
@@ -94,27 +94,40 @@ checkpoint countries_intersecting_storm_set:
             # with no list of countries, assume we process all of them
             ibtracs_subset = ibtracs
 
-        danger_zone = ibtracs_subset.copy()
-        danger_zone.geometry = ibtracs_subset.geometry.buffer(point_buffer_deg)
+        tracks = ibtracs_subset.copy()
+        tracks.geometry = tracks.geometry.buffer(point_buffer_deg)
 
         countries = gpd.read_parquet(input.admin_bounds).rename(columns={"GID_0": "iso_a3"})
 
-        # join buffered points to countries
-        hit = countries.sjoin(danger_zone[["max_wind_speed_ms", "geometry"]], how="right")
+        # join buffered track points to country IDs
+        intersection = countries.sjoin(
+            tracks[["max_wind_speed_ms", "geometry", "track_id"]],
+            how="right"
+        )
 
         # only retain points where the observed max wind speed is greater than our threshold
         minimum_damage_threshold_ms = min(config["transmission_windspeed_failure"])
-        hit = hit.loc[hit.max_wind_speed_ms > minimum_damage_threshold_ms, "iso_a3"]
+        above_threshold_intersection = intersection.loc[
+            intersection.max_wind_speed_ms > minimum_damage_threshold_ms,
+            ["iso_a3", "track_id"]
+        ]
 
-        # unique ISO A3 country codes of likely affected countries
-        hit_iso_a3: list[str] = list(set(hit[~hit.isna()].values))
+        country_set_by_storm = {}
+        for track_id, df in above_threshold_intersection.groupby("track_id"):
+            # unique ISO A3 country codes of likely affected countries
+            country_set_by_storm[track_id] = list(set(df.loc[~df.iso_a3.isna(), "iso_a3"]))
 
+        with open(output.country_set_by_storm, "w") as fp:
+            json.dump(country_set_by_storm, fp, indent=2)
+
+        # countries from whole storm set
+        country_set = sorted(set().union(*country_set_by_storm.values()))
         with open(output.country_set, "w") as fp:
-            json.dump(sorted(hit_iso_a3), fp, indent=2)
+            json.dump(country_set, fp, indent=2)
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/black_marble_validation/countries_hit.json
+snakemake -c1 results/power/by_storm_set/IBTrACS_irma-2017/countries_impacted_by_storm.json
 """
 
 
@@ -123,16 +136,19 @@ def countries_endangered_by_storm_set(wildcards):
     Return list of paths of country exposure directories to generate
     """
     import json
+    import os
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
     with open(json_file, "r") as fp:
         country_set = json.load(fp)
 
-    return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}.nc",
+    file_paths = expand(
+        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}",
         COUNTRY_ISO_A3=country_set,
         STORM_SET=wildcards.STORM_SET
     )
+
+    return file_paths
 
 
 rule storm_set_damages:
@@ -159,35 +175,99 @@ snakemake -c1 results/power/by_storm_set/black_marble_validation/storm_set.json
 """
 
 
-rule combine_storm_set_exposure:
+# some example nested globs/checkpoints
+#
+#   def aggregate(wildcards):
+#       outputs_i = glob.glob(f"{checkpoints.first.get().output}/*/")
+#       outputs_i = [output.split('/')[-2] for output in outputs_i]
+#       split_files = []
+#       for i in outputs_i:
+#           outputs_j = glob.glob(f"{checkpoints.second.get(i=i).output}/*/")
+#           outputs_j = [output.split('/')[-2] for output in outputs_j]
+#           for j in outputs_j:
+#               split_files.append(f"copy/{i}/{j}/test2.txt")
+#
+#       return split_files
+#
+#   def aggregate_decompress_plass(wildcards):
+#       checkpoint_output = checkpoints.decompress_plass.get(**wildcards).output[0]
+#       file_names = expand(
+#           "outputs/cd-hit95/{mag}.cdhit95.faa.bwt",
+#           mag = glob_wildcards(
+#               os.path.join(
+#                   checkpoint_output,
+#                   "{mag}.fa.cdbg_ids.reads.hardtrim.fa.gz.plass.cdhit.fa.clean.cut.dup"
+#               )
+#           ).mag
+#       )
+#       return file_names
+
+
+# this is a lead, sorta
+# works if you have a checkpoint get call before the (actually useful) glob
+# this delays execution of this function by snakemake until electricity_grid_damages has completed
+# alas electricity_grid_damages needs a COUNTRY_ISO_A3 wildcard to run
+# here we give it a constant (but relevant) one to make it run
+#
+#   def countries_hit_by_storm(wildcards):
+#       """
+#       Return list of paths of per-country exposure files for a given storm.
+#       """
+#       # hack: use checkpoint.get to trigger delayed execution of this function
+#       checkpoints.electricity_grid_damages.get(**wildcards, COUNTRY_ISO_A3="PRI").output.damages
+#
+#       from glob import glob
+#       exposure_paths = glob(f"{wildcards.OUTPUT_DIR}/power/by_country/*/exposure/{wildcards.STORM_SET}/{wildcards.STORM_ID}.nc")
+#
+#       return exposure_paths
+
+# modification of existing input function for storm sets, works in that it generates a list of netCDFs to produce
+# broken in that it doesn't trigger generation of the upstream (electricity_grid_damages does not run as a result)
+# list of countries also the superset of what actually gets produced
+#
+def countries_endangered_by_storm(wildcards):
     """
-    Concatenate per-country exposure results and save to disk. Additionally,
-    aggregate to country level and save to disk.
+    Return list of paths of country exposure directories to generate
+    """
+    import json
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
+    with open(json_file, "r") as fp:
+        country_set_by_storm = json.load(fp)
+
+    file_paths = expand(
+        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+        COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of ISO strs
+        STORM_SET=wildcards.STORM_SET,
+        STORM_ID=wildcards.STORM_ID
+    )
+
+    # some of the countries we thought might be effected are actually unscathed
+    # so output files aren't necessarily created for all the countries we expected
+    # filter out these missing file paths
+    # this is probably dubious snakemake usage, so if there's a better solution, please change!
+    return list(filter(os.path.exists, file_paths))
+
+
+rule concat_countries_of_storm:
+    """
+    Concatenate exposure estimates from all countries a storm hit.
     """
     input:
-        per_country_exposure = countries_endangered_by_storm_set
+        # require grid simulation to have completed first
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json",
+        per_country_exposure = countries_endangered_by_storm
     output:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_target.nc",
-        by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc"
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{STORM_ID}.nc",
     run:
         import logging
 
-        import pandas as pd
         import xarray as xr
 
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-        # country iso to dataset
-        logging.info("Reading per-target, per-country exposure")
-        datasets: dict[str, xr.Dataset] = {
-            path.split("/")[3]: xr.open_dataset(path) for path in input.per_country_exposure
-        }
-
-        # combine country datasets of targets to pool all targets together in one file
-        # N.B. this is a quite sparse, with every target from every country for every storm in the set
-        # for IBTrACS, there are ~800M values per variable, and both variables are 96% NaN
-        logging.info("Pooling targets from all country datasets")
-        pooled_targets = xr.concat(datasets.values(), dim="target").sortby("event_id")
+        logging.info("Reading and pooling targets from all country datasets")
+        pooled_targets = xr.concat([xr.open_dataset(path) for path in input.per_country_exposure], dim="target")
 
         # a few targets may have been processed under more than one country, keep the first instance
         logging.info("Dropping duplicates")
@@ -200,22 +280,39 @@ rule combine_storm_set_exposure:
             encoding={var: {"zlib": True, "complevel": 9} for var in pooled_targets.keys()}
         )
 
-        # sum data across targets to country level
-        logging.info("Aggregating customers affected to country level")
-        country_agg = {iso: ds.customers_affected.sum(dim="target") for iso, ds in datasets.items()}
-
-        logging.info("Concatenating aggregated country data")
-        by_country: xr.DataArray = xr.concat(country_agg.values(), dim=pd.Index(list(country_agg.keys()), name="country"))
-
-        logging.info("Writing aggregated country data to disk")
-        by_country.to_netcdf(
-            output.by_country,
-            encoding={"customers_affected": {"zlib": True, "complevel": 9}}
-        )
-
-        logging.info("Done")
-
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS_maria-2017/exposure_by_country.nc"
+snakemake -c1 results/power/by_storm_set/IBTrACS_maria-2017/2017260N12310.nc"
 """
+
+
+def concat_storm_filepaths(wildcards) -> list[str]:
+    """
+    Return a list of exposure storm file paths.
+    """
+    storm_set_path = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
+    with open(storm_set_path, "r") as fp:
+        storm_ids_of_storm_set = json.load(fp)
+    ret = expand(
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{STORM_ID}.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+        STORM_ID=storm_ids_of_storm_set
+    )
+    print(ret)
+    return ret
+
+
+rule concat_countries_of_storm_set:
+    """
+    Concatenate across countries to individual storm files for all storms in a storm set.
+    """
+
+    input:
+        storm_files = concat_storm_filepaths
+    output:
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/done.txt"
+    shell:
+        """
+        touch {output}
+        """

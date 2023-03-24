@@ -8,6 +8,7 @@ For each maximum wind field associated with a storm:
 
 import logging
 import multiprocessing
+import os
 from typing import Optional
 import sys
 
@@ -29,25 +30,26 @@ EXPOSURE_COORDS: dict[str, type] = {
 }
 
 
-def empty_exposure_ds() -> xr.Dataset:
+def process_storm(
+    storm_id: xr.DataArray,
+    wind_fields: xr.DataArray,
+    splits: pd.DataFrame,
+    speed_thresholds: list,
+    network: snkit.network.Network,
+    damages_dir: str,
+) -> None:
     """
-    Return an exposure dataset with a schema but no data.
+    Wrapper for degrade_grid_with_storm, handles writing files.
+    """
 
-    N.B. To concatenate xarray datasets, they must all share the same
-    coordinate variables.
-    """
-    empty = np.full((0,) * len(EXPOSURE_COORDS), np.nan)
-    ds = xr.Dataset(
-        data_vars=dict(
-            supply_factor=(EXPOSURE_COORDS.keys(), empty),
-            customers_affected=(EXPOSURE_COORDS.keys(), empty)
-        ),
-        coords={
-            name: np.array([], dtype=dtype)
-            for name, dtype in EXPOSURE_COORDS.items()
-        }
-    )
-    return ds
+    exposure = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
+
+    if exposure is not None:
+        filename = f"{str(storm_id.values)}.nc"
+        exposure.to_netcdf(
+            os.path.join(damages_dir, filename),
+            encoding={variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
+        )
 
 
 def degrade_grid_with_storm(
@@ -176,15 +178,15 @@ if __name__ == "__main__":
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
     n_proc: int = snakemake.config["processes_per_parallel_job"]
-    damages_path: str = snakemake.output.damages
+    damages_dir_path: str = snakemake.output.damages
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Loading wind speed data")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
     if len(wind_fields.variables) == 0:
-        logging.info("Empty wind speed file, writing empty files to disk.")
-        empty_exposure_ds().to_netcdf(damages_path)
+        logging.info("Empty wind speed file, writing empty directory to disk.")
+        os.makedirs(damages_dir_path)
         sys.exit(0)
 
     logging.info(wind_fields.max_wind_speed)  # use xarray repr
@@ -201,21 +203,18 @@ if __name__ == "__main__":
     logging.info(f"Using damage thresholds: {speed_thresholds} [m/s]")
 
     logging.info("Simulating electricity network failure due to wind damage...")
-    args = ((storm_id, wind_fields.max_wind_speed, splits, speed_thresholds, network) for storm_id in wind_fields.event_id)
+
+    # directory for per-event output files
+    os.makedirs(damages_dir_path)
+
+    args = (
+        (storm_id, wind_fields.max_wind_speed, splits, speed_thresholds, network, damages_dir_path)
+        for storm_id in wind_fields.event_id
+    )
     exposure_by_storm: list[Optional[xr.Dataset]] = []
     if n_proc > 1:
         with multiprocessing.Pool(processes=n_proc) as pool:
-            exposure_by_storm = pool.starmap(degrade_grid_with_storm, args)
+            exposure_by_storm = pool.starmap(process_storm, args)
     else:
         for arg in args:
-            exposure_by_storm.append(degrade_grid_with_storm(*arg))
-
-    # filter out storms that haven't impinged upon the network at all
-    valid_results = list(filter(lambda x: x is not None, exposure_by_storm))
-    if len(valid_results) == 0:
-        logging.info("No disruption, writing empty file.")
-        empty_exposure_ds().to_netcdf(damages_path)
-    else:
-        exposure = xr.concat(valid_results, "event_id")
-        encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
-        exposure.to_netcdf(damages_path, encoding=encoding)
+            exposure_by_storm.append(process_storm(*arg))
