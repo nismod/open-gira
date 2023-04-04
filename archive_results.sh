@@ -88,6 +88,9 @@ Diff:
 $(git diff)
 EOF
 
+# read only permissions
+chmod -R ugo-w $ARCHIVE_DIR
+
 echo "open-gira results directory (excl. input) archived to $ARCHIVE_DIR"
 
 ##### DONE #####
