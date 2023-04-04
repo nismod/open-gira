@@ -71,7 +71,9 @@ checkpoint countries_intersecting_storm_set:
     output:
         country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted.json",
         country_set_by_storm = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted_by_storm.json",
+        storm_set_by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storms_by_country_impacted.json",
     run:
+        from collections import defaultdict
         import json
 
         import geopandas as gpd
@@ -113,14 +115,25 @@ checkpoint countries_intersecting_storm_set:
         ]
 
         country_set_by_storm = {}
+        storm_set_by_country = defaultdict(list)
         for track_id, df in above_threshold_intersection.groupby("track_id"):
             # unique ISO A3 country codes of likely affected countries
-            country_set_by_storm[track_id] = list(set(df.loc[~df.iso_a3.isna(), "iso_a3"]))
+            if impacted_countries := list(set(df.loc[~df.iso_a3.isna(), "iso_a3"])):
+                country_set_by_storm[track_id] = impacted_countries
 
+                # build inverted map as we go
+                for country in impacted_countries:
+                    storm_set_by_country[country].append(track_id)
+
+        # e.g. "AUS": ["200523501N234", "201201202S234"]
+        with open(output.storm_set_by_country, "w") as fp:
+            json.dump(dict(sorted(storm_set_by_country.items())), fp, indent=2)
+
+        # e.g. "200523501N234": ["AUS", "PNG"]
         with open(output.country_set_by_storm, "w") as fp:
             json.dump(country_set_by_storm, fp, indent=2)
 
-        # countries from whole storm set
+        # e.g. ["AUS", "PNG"]
         country_set = sorted(set().union(*country_set_by_storm.values()))
         with open(output.country_set, "w") as fp:
             json.dump(country_set, fp, indent=2)
