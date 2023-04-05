@@ -124,11 +124,8 @@ storm_sets:
     IBTrACS_irma-and-maria: 'irma_and_maria.json'
     IBTrACS_black-marble-validation: 'config/storm_sets/20230120_black_marble.json'
 
-# consider grids at risk of a storm if within this many degrees of any storm track point
-max_track_search_radius_deg: 3
-
-# only consider electricity grid nodes and edges within this distance from the shore
-max_asset_shore_distance_deg: 45
+# consider countries at risk of a storm if within this many degrees of any storm track point
+max_track_search_radius_deg: 1.5
 
 # wind speed is constant within a square area of sides wind_deg
 wind_deg: 0.1  # approx 11km latitude
