@@ -136,7 +136,7 @@ wind_deg: 0.1  # approx 11km latitude
 transmission_windspeed_failure: [20, 27.5, 35]
 
 # some of the scripts and rules are parallelised with multiprocessing
-# works for annotate_targets.py, estimate_wind_fields.py and grid_disruption.py
+# works for annotate_targets.py and estimate_wind_fields.py
 # setting to 1 will run any parallelisable job in serial
 # N.B. snakemake will enforce:
 # n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
