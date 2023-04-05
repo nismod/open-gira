@@ -147,10 +147,16 @@ if __name__ == "__main__":
         network = snkit.network.add_component_ids(network)
 
     logging.info("Allocating generating capacity to targets")
+    # not all localities have gdp information available, in this case, use population to weight power
+    targets = network.nodes[network.nodes.asset_type == "target"]
+    if not any(targets.gdp.isna()):
+        weighting = "gdp"
+    else:
+        weighting = "population"
     powered_targets: pd.DataFrame = weighted_allocation(
         network.nodes,
         variable_col="power_mw",
-        weight_col="gdp",
+        weight_col=weighting,
         component_col="component_id",
         asset_col="asset_type",
         source_name="source",
