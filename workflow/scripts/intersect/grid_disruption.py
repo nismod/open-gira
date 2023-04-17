@@ -123,12 +123,13 @@ def degrade_grid_with_storm(
     # sort into ascending order; if no damage at a given threshold,
     # more resilient thresholds are guaranteed to be safe
     for threshold in sorted(speed_thresholds):
-        survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas()
+        survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas().loc[:, "max_wind_speed"]
 
         try:
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
             # there is no damage, return early
+            logging.info(f"No damage detected at {threshold} ms-1")
             return exposure
 
         surviving_edge_ids = set(splits.loc[survival_mask, "id"])
@@ -145,7 +146,7 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
+        logging.info(failure_str.format(str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
         # about to mutate power_mw column, make a copy first
         surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes["power_mw"]
