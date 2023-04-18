@@ -75,7 +75,7 @@ snakemake --cores 1 results/power/by_country/PRI/storms/wind_grid.tiff
 """
 
 
-def storm_dataset(wildcards) -> str:
+def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
     storm_dataset = wildcards.STORM_SET.split("_")[0]
@@ -103,7 +103,7 @@ rule estimate_wind_fields:
     """
     conda: "../../../environment.yml"
     input:
-        storm_file=storm_dataset,
+        storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     params:
         storm_set=read_storm_set
@@ -119,4 +119,111 @@ rule estimate_wind_fields:
 """
 To test:
 snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/max_wind_field.nc
+"""
+
+
+def wind_fields_by_country_for_storm(wildcards):
+    """
+    Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
+    affects and return paths to their wind field files.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
+    with open(json_file, "r") as fp:
+        country_set_by_storm = json.load(fp)
+
+    return expand(
+        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+        COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
+        STORM_SET=wildcards.STORM_SET,  # str
+    )
+
+
+rule merge_wind_fields_of_storm:
+    """
+    Merge wind fields generated for each country for a given storm.
+    """
+    input:
+        wind_fields = wind_fields_by_country_for_storm
+    output:
+        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+    run:
+        import logging
+        import os
+
+        import geopandas as gpd
+        import pandas as pd
+        import numpy as np
+        import xarray as xr
+
+        from open_gira.binning import grid_point_data
+
+        # filter out really low wind speeds to constrain the map extent
+        MIN_WIND_SPEED = 10
+
+        # warn if we interpolate more than this % of pixels
+        PERCENTAGE_INTERP_LIMIT = 30
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        logging.info("Reading wind fields for each country")
+        rasters = []
+        for path in input.wind_fields:
+            try:
+                ds = xr.open_dataset(path).sel(event_id=wildcards.STORM_ID)
+                rasters.append(ds.to_dataframe().reset_index()[["latitude", "longitude", "max_wind_speed"]])
+            except KeyError:
+                pass
+
+        data = pd.concat(rasters)
+
+        logging.info(f"Filtering out areas with wind speed < {MIN_WIND_SPEED} ms-1")
+        data = data[data.max_wind_speed > MIN_WIND_SPEED]
+
+        # transform to point data
+        delta = float(config["wind_deg"])
+        logging.info(f"Regridding on harmonised {delta} degree grid.")
+        point_speeds = gpd.GeoDataFrame(
+            {
+                "max_wind_speed": data.max_wind_speed,
+                "geometry": gpd.points_from_xy(data.longitude, data.latitude)
+            }
+        )
+        # rebin on new grid
+        rebinned: gpd.GeoDataFrame = grid_point_data(point_speeds, "max_wind_speed", "max", delta)
+
+        # transform to xarray
+        raster = rebinned
+        raster["longitude"] = raster.geometry.centroid.x
+        raster["latitude"] = raster.geometry.centroid.y
+        raster = raster.drop(columns=["geometry"])
+        raster = raster.set_index(["longitude", "latitude"])
+        raster = raster.to_xarray()
+
+        logging.info("Interpolating gaps in merged dataset...")
+        n_total = len(raster.max_wind_speed.values.ravel())
+        n_data_before = np.isnan(raster.max_wind_speed.values).sum()
+        # 1 dimensional interpolation applied individually to each of lat and long
+        # TODO: ideally this would be 2-dimensional interpolation in a single step
+        raster_interp = (
+            raster
+            .interpolate_na(dim="longitude", method="linear")
+            .interpolate_na(dim="latitude", method="linear")
+        )
+        n_data_after = np.isnan(raster_interp.max_wind_speed.values).sum()
+        n_interpolated = n_data_before - n_data_after
+        percentage_interpolated = 100 * (n_interpolated / n_total)
+        logging.info(f"Interpolated {percentage_interpolated:.2f}% of pixels")
+        if percentage_interpolated > PERCENTAGE_INTERP_LIMIT:
+            raise RuntimeError(f"Interpolated greater than {PERCENTAGE_INTERP_LIMIT}% of pixels!")
+
+        logging.info("Writing merged, interpolated wind field to disk")
+        raster_interp.to_netcdf(
+            output.merged,
+            encoding={var: {"zlib": True, "complevel": 9} for var in raster.keys()}
+        )
+
+"""
+Test with:
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.nc
 """
