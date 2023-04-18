@@ -149,7 +149,7 @@ rule storm_set_damages:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/black_marble_validation/storm_set.json
+snakemake -c1 results/power/by_storm_set/IBTrACS/storm_set.json
 """
 
 

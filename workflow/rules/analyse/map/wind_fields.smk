@@ -1,5 +1,5 @@
 """
-Map the wind fields
+Map wind fields
 """
 
 
