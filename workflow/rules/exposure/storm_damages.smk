@@ -122,7 +122,7 @@ def country_storm_paths_for_storm_set(wildcards):
                 "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
                 COUNTRY_ISO_A3=countries,  # list of str
                 STORM_SET=wildcards.STORM_SET,  # str
-                STORM_ID=storm_id
+                STORM_ID=storm_id  # str
             )
         )
 
@@ -176,8 +176,6 @@ rule merge_countries_of_storm:
     Merge exposure estimates from all countries a storm hit.
     """
     input:
-        # require grid simulation to have completed first
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json",
         exposure = country_storm_paths_for_storm
     output:
         by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}.nc",
