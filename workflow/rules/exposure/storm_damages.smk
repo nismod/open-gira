@@ -178,9 +178,10 @@ rule merge_countries_of_storm:
     input:
         exposure = country_storm_paths_for_storm
     output:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}.nc",
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/exposure_by_target.nc",
     run:
         import logging
+        import os
 
         import xarray as xr
 
@@ -194,6 +195,7 @@ rule merge_countries_of_storm:
         pooled_targets = pooled_targets.drop_duplicates("target")
 
         # write to disk
+        os.makedirs(os.path.dirname(output.by_target), exist_ok=True)
         logging.info("Writing pooled per-target exposure to disk")
         pooled_targets.to_netcdf(
             output.by_target,
@@ -202,5 +204,5 @@ rule merge_countries_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS_maria-2017/by_storm/2017260N12310.nc"
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/exposure_by_target.nc"
 """
