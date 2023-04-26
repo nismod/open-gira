@@ -9,6 +9,32 @@ import geopandas as gpd
 import pandas as pd
 
 
+def power_law_scale_factors(z0: np.ndarray, z1: float, z2: float) -> np.ndarray:
+    """
+    Calculate factors to scale wind speeds from one height to another, given
+    surface roughness information.
+
+    Wieringa 1992, Journal of Wind Engineering and Industrial Aerodynamics
+    Volume 41, Issues 1–3, October 1992, Pages 357-368, Equation 3
+
+    This approach is rudimentary, but requires few inputs. Best for scaling
+    from top of boundary layer (~2km) to a few hundred metres above ground.
+    Logarithmic scaling better suited for 100m -> ground level.
+
+    Args:
+        z0: Surface roughness lengths in metres
+        z1: Height of desired wind speeds above ground in metres
+        z2: Height of wind speeds, v2, above ground in metres
+
+    Returns:
+        Scale factors, f, for v2 = f * v1
+    """
+
+    p: np.ndarray = 1 / np.log(np.sqrt(z1 * z2) / z0)
+
+    return np.power(z1 / z2, p)
+
+
 def holland_wind_model(
     RMW_m: float,
     V_max_ms: float,
@@ -18,7 +44,7 @@ def holland_wind_model(
     phi_deg: float,
 ) -> np.ndarray:
     """
-    Calculate wind speed at points some distance from a cyclone eye location.
+    Calculate gradient-level wind speed at points some distance from a cyclone eye location.
 
     References
     ----------
@@ -50,9 +76,10 @@ def holland_wind_model(
     Omega = (2 * np.pi) / (24 * 60 * 60)  # rotation speed of the Earth in rad/s
     f = np.abs(2 * Omega * np.sin(np.radians(phi_deg)))  # Coriolis parameter
 
-    # case where (pressure_env_hpa == pressure_hpa) so Delta_P is zero will raise ZeroDivisionError
+    # case where Delta_P is zero will raise ZeroDivisionError
     Delta_P = p_env_pa - p_pa
 
+    # beta parameter, how sharp the V(r) profile around the eye wall is
     B = (
         np.power(V_max_ms, 2) * np.e * rho
         + f * V_max_ms * RMW_m * np.e * rho
