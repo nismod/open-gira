@@ -57,8 +57,18 @@ rule create_wind_grid:
 
         hull = shapely.geometry.shape(shape_dict["geometry"])
 
+        # expand grid by buffer_deg, gives us a view of storm intensity over coastal zone
+        # model grid slightly smaller than track search radius, should mean storm
+        # eyes cross boundary rather than appearing unannounced
+        buffer_deg = config["max_track_search_radius_deg"] - 0.5
         minx, miny, maxx, maxy = hull.bounds
-        cell_length = config["wind_deg"]  # cell side length in decimal degrees
+        minx -= buffer_deg
+        miny -= buffer_deg
+        maxx += buffer_deg
+        maxy += buffer_deg
+
+        # cell side length in decimal degrees
+        cell_length = config["wind_deg"]
 
         # determine grid bounding box to fit an integer number of grid cells in each dimension
         i, minx, maxx = harmonise_grid(minx, maxx, cell_length)
