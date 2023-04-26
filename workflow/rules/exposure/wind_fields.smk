@@ -181,6 +181,7 @@ rule estimate_wind_fields:
     input:
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
+        surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
     params:
         storm_set=read_storm_set
     threads:
@@ -189,6 +190,7 @@ rule estimate_wind_fields:
         # enable or disable plotting in the config file
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),
         wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+        downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/downscale_factors.png",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
