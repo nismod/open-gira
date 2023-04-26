@@ -6,7 +6,9 @@ Functions for creating animations and static plots of wind fields.
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
+import xarray as xr
 
 
 WIND_CMAP = "turbo"
@@ -71,17 +73,43 @@ def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: 
 def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
     """Plot a numpy array of a 2D field wind field and save to disk."""
 
-    fig, ax = plt.subplots(figsize=size_plot(*field.shape[::-1]))
+    y, x = field.shape
 
-    img = ax.imshow(field, vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
+    fig, ax = plt.subplots(figsize=size_plot(x, y))
 
-    levels = np.linspace(0, MAX_SPEED, int((MAX_SPEED - 0) / 10) + 1)
-    contour = ax.contour(field, levels, origin=WIND_PLOT_ORIGIN, colors='w')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)
+    ax.axes.set_aspect('equal')
 
-    ax.clabel(contour, fmt='%2.1f', colors='w')
+    da = xr.DataArray(field.T, coords={"i": range(x), "j": range(y)})
 
-    fig.colorbar(img, ax=ax, location="right", label=colorbar_label, shrink=0.81)
-    stats_str = fr"min: {field.min():.2f}, max: {field.max():.2f}, $\sigma:$ {field.std():.2f}"
+    xr.plot.pcolormesh(da, levels=17, x="i", y="j", ax=ax, vmin=0, vmax=MAX_SPEED, cmap=WIND_CMAP, cbar_ax=cax)
+
+    stats_str = fr"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
+    ax.set_title(title + "\n" + stats_str)
+
+    fig.savefig(file_path)
+    plt.close(fig)
+
+    return
+
+
+def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> None:
+    """Plot a numpy array of a 2D field of [0, 1] and save to disk."""
+
+    y, x = field.shape
+
+    fig, ax = plt.subplots(figsize=size_plot(x, y))
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)
+    ax.axes.set_aspect('equal')
+
+    da = xr.DataArray(field.T, coords={"i": range(x), "j": range(y)})
+
+    xr.plot.pcolormesh(da, levels=11, x="i", y="j", ax=ax, vmin=0.5, vmax=1, cmap="inferno", cbar_ax=cax)
+
+    stats_str = fr"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
     ax.set_title(title + "\n" + stats_str)
 
     fig.savefig(file_path)
