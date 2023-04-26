@@ -40,7 +40,7 @@ rule map_wind_field:
         )
         vmin = 21
         vmax = 45
-        levels = (vmax - vmin) / 3 + 1
+        levels = int((vmax - vmin) / 3 + 1)
         xr.plot.pcolormesh(
             ds.max_wind_speed,
             x="longitude",
@@ -51,7 +51,8 @@ rule map_wind_field:
             vmax=vmax,
             levels=levels,
             ax=ax,
-            cbar_ax=cax
+            cbar_ax=cax,
+            alpha=0.7
         )
         cax.set_ylabel("Maximum wind speed [ms-1]", labelpad=10)
         ax.set_xlabel("Longitude")
@@ -66,7 +67,7 @@ rule map_wind_field:
         ax.grid()
 
         borders = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-        borders.plot(ax=ax, facecolor="none", edgecolor="grey", alpha=0.5)
+        borders.plot(ax=ax, facecolor="none", edgecolor="grey", alpha=0.8)
 
         f.savefig(output.plot)
 
