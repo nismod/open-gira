@@ -102,6 +102,7 @@ include: "rules/download/hazards.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download/osm.smk"
+include: "rules/download/land_cover.smk"
 
 include: "rules/preprocess/gadm.smk"
 include: "rules/preprocess/filter_osm_data.smk"

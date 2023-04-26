@@ -75,6 +75,72 @@ snakemake --cores 1 results/power/by_country/PRI/storms/wind_grid.tiff
 """
 
 
+rule cut_land_cover_raster:
+    """
+    Crop global land cover raster to country.
+    """
+    input:
+        global_raster = "{OUTPUT_DIR}/input/land_cover/glob_cover_2009/GLOBCOVER_L4_200901_200912_V2.3.tif",
+        wind_grid = rules.create_wind_grid.output.wind_grid
+    output:
+        local_raster = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/land_cover.tiff",
+    shell:
+        """
+        # the wind grid file may be empty (we couldn't make a network, grid hull file and therefore wind grid)
+        # in that case, gdalinfo will fail, so check the exit status and branch if necessary
+        # must disable snakemake's bash strict mode to permit a non-zero exit code
+        set +e
+        DATA=$(gdalinfo -json {input.wind_grid})
+        if [ "$?" -ne 0 ]
+        then
+            echo "Found empty wind grid file, writing empty land cover raster"
+            touch {output.local_raster}
+            exit 0
+        fi
+        # re-enable strict mode
+        set -e
+
+        # N.B. upper and lower are the reverse of what you'd expect
+        # i.e. the minimum latitude is at the upper corners
+        # and the maximum latitude is at the lower corners
+        # longitude as expected
+        MINX=$(echo $DATA | jq .cornerCoordinates.lowerLeft[0])
+        MINY=$(echo $DATA | jq .cornerCoordinates.upperRight[1])
+        MAXY=$(echo $DATA | jq .cornerCoordinates.lowerLeft[1])
+        MAXX=$(echo $DATA | jq .cornerCoordinates.upperRight[0])
+
+        echo "Cropping to following bounding box..."
+        echo $MINX $MINY $MAXX $MAXY
+        gdalwarp -te $MINX $MINY $MAXX $MAXY {input.global_raster} {output.local_raster}
+        """
+
+"""
+Test with:
+snakemake -c1 results/power/by_country/CUB/storms/land_cover.tiff
+"""
+
+
+rule create_surface_roughness_raster:
+    """
+    1) Load the high resolution (300m) land cover classification
+    2) Lookup surface roughness values
+    3) Downsample to native wind grid
+    """
+    input:
+        land_cover = rules.cut_land_cover_raster.output.local_raster,
+        wind_grid = rules.create_wind_grid.output.wind_grid,
+        land_cover_roughness_mapping = "config/land_use_to_surface_roughness.csv"
+    output:
+        surface_roughness = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/surface_roughness.tiff"
+    script:
+        "../../scripts/intersect/surface_roughness.py"
+
+"""
+Test with:
+snakemake -c1 results/power/by_country/CUB/surface_roughness.tiff
+"""
+
+
 def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
