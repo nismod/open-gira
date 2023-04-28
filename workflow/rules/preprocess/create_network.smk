@@ -124,12 +124,13 @@ rule subset_targets:
     Subset the targets dataset to a country boundary
     """
     input:
-        targets="{OUTPUT_DIR}/power/targets.geoparquet",
+        targets=rules.annotate_targets.output.targets,
         admin_bounds="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet"
     output:
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
     run:
         import geopandas as gpd
+        import spatialpandas
 
         import logging
 
@@ -142,11 +143,33 @@ rule subset_targets:
 
         targets: gpd.GeoDataFrame = gpd.read_parquet(input.targets)
 
-        logging.info(f"Spatially joining targets with {wildcards.COUNTRY_ISO_A3}")
-        targets_subset: gpd.GeoDataFrame = targets.sjoin(country_gp, how="inner")
+        if country_gp.geometry.area.sum() > 10:  # square degrees, not a fair measure at high latitudes
 
-        logging.info(f"Writing targets to {output.targets}")
-        targets_subset[targets.columns].to_parquet(output.targets)
+            logging.info(f"Using spatialpandas point-in-polygon to subset targets for {wildcards.COUNTRY_ISO_A3}")
+            # create a spatialpandas GeoDataFrame for the country
+            # it tends to be faster than geopandas for sjoins, about 3x in Mexico test case
+            country_sp: spatialpandas.GeoDataFrame = spatialpandas.GeoDataFrame(country_gp)
+
+            # spatialpandas sjoin can only do point-in-polygon, not linestring-in-polygon
+            # so make some representative points
+            targets_rep_point = targets.copy()
+            targets_rep_point.geometry = targets_rep_point.geometry.representative_point()
+            targets_rep_point = spatialpandas.GeoDataFrame(targets_rep_point)
+
+            logging.info(f"Spatially joining targets with {wildcards.COUNTRY_ISO_A3}")
+            targets_subset: spatialpandas.GeoDataFrame = spatialpandas.sjoin(targets_rep_point, country_sp, how="inner")
+
+            logging.info(f"Writing targets to {output.targets}")
+            # use the joined index to select from the geopandas linestring geodataframe
+            targets.loc[targets_subset.index, :].to_parquet(output.targets)
+
+        else:
+
+            logging.info(f"Spatially joining targets with {wildcards.COUNTRY_ISO_A3}")
+            targets_subset: gpd.GeoDataFrame = targets.sjoin(country_gp, how="inner")
+
+            logging.info(f"Writing targets to {output.targets}")
+            targets_subset[targets.columns].to_parquet(output.targets)
 
 """
 Test with:
