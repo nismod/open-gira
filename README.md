@@ -199,3 +199,8 @@ Build the docs locally:
     open book/index.html
 
 Or run `mdbook serve` to run a server and rebuild the docs as you make changes.
+
+
+## Acknowledgments
+
+This research received funding from the FCDO Climate Compatible Growth Programme. The views expressed here do not necessarily reflect the UK government's official policies.
