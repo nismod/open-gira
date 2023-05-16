@@ -134,8 +134,7 @@ wind_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-#transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
-transmission_windspeed_failure: [20, 27.5, 35]
+transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
 
 # some of the scripts and rules are parallelised with multiprocessing
 # works for annotate_targets.py and estimate_wind_fields.py
