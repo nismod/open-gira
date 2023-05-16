@@ -2,13 +2,13 @@ rule parse_ibtracs:
     input:
         ibtracs_csv = "results/input/IBTrACS/raw/v4.csv"
     output:
-        ibtracs_parquet = "results/input/IBTrACS/processed/v4.geoparquet"
+        ibtracs_parquet = "results/storm_tracks/IBTrACS/tracks.geoparquet"
     script:
         "../../scripts/preprocess/parse_IBTrACS.py"
 
 """
 To test:
-snakemake -c1 results/input/IBTrACS/processed/v4.geoparquet
+snakemake -c1 results/storm_tracks/IBTrACS/tracks.geoparquet
 """
 
 
