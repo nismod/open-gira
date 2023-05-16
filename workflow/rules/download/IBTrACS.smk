@@ -7,7 +7,6 @@ rule download_IBTrACS:
             https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.ALL.list.v04r00.csv
         """
 
-
 """
 Test with:
 snakemake -c1 results/input/IBTrACS/v4.csv
