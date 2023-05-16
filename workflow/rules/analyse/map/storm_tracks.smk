@@ -4,7 +4,7 @@ rule plot_storm_tracks:
     """
     input:
         storm_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json",
-        ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet"
+        ibtracs = "{OUTPUT_DIR}/storm_tracks/{STORM_SET}/tracks.geoparquet"
     output:
         pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_tracks.pdf",
         pickle = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_tracks.pickle"

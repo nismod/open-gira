@@ -59,9 +59,9 @@ rule map_wind_field:
         ax.set_ylabel("Latitude")
         ax.set_title(wildcards.STORM_ID)
 
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
 
         ax.grid()
@@ -73,5 +73,52 @@ rule map_wind_field:
 
 """
 To test:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.pdf
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.png
+"""
+
+
+def wind_field_map_paths_for_storm_set(wildcards):
+    """
+    Generate list of paths for wind fields in storm set
+    """
+    import json
+    import os
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
+    with open(json_file, "r") as fp:
+        country_set_by_storm = json.load(fp)
+
+    paths = []
+    for storm_id in country_set_by_storm.keys():
+        paths.extend(
+            expand(
+                "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.png",
+                STORM_SET=wildcards.STORM_SET,  # str
+                STORM_ID=storm_id  # str
+            )
+        )
+
+    return paths
+
+
+rule map_storm_set:
+    """
+    Draw maps of all wind fields for storm set and symlink these files into one directory.
+    """
+    input:
+        wind_field_maps = wind_field_map_paths_for_storm_set
+    output:
+        map_dir = directory("{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/wind_field_maps")
+    shell:
+        """
+        mkdir -p {output.map_dir}
+        for FILE in {input.wind_field_maps}; do
+            STORM_ID=$(echo $FILE | cut -d/ -f6)
+            ln -s $FILE {output.map_dir}/${{STORM_ID}}.png
+        done
+        """
+
+"""
+Test with:
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/wind_field_maps
 """
