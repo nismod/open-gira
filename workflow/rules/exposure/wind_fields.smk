@@ -234,12 +234,13 @@ rule merge_wind_fields_of_storm:
         import numpy as np
         import xarray as xr
 
+        from open_gira.wind import empty_wind_da
         from open_gira.binning import grid_point_data
 
         # filter out really low wind speeds to constrain the map extent
         MIN_WIND_SPEED = 10
 
-        # warn if we interpolate more than this % of pixels
+        # quit if we interpolate more than this % of pixels
         PERCENTAGE_INTERP_LIMIT = 30
 
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
@@ -253,7 +254,11 @@ rule merge_wind_fields_of_storm:
             except KeyError:
                 pass
 
-        data = pd.concat(rasters)
+        try:
+            data = pd.concat(rasters)
+        except ValueError:
+            # no data to concatenate
+            empty_wind_da().to_netcdf(output.merged)
 
         logging.info(f"Filtering out areas with wind speed < {MIN_WIND_SPEED} ms-1")
         data = data[data.max_wind_speed > MIN_WIND_SPEED]
@@ -279,21 +284,23 @@ rule merge_wind_fields_of_storm:
         raster = raster.to_xarray()
 
         logging.info("Interpolating gaps in merged dataset...")
+        # limit maximum number of cells to interpolate across
+        CONSECUTIVE_CELL_INTERP_LIMIT = 3
         n_total = len(raster.max_wind_speed.values.ravel())
         n_data_before = np.isnan(raster.max_wind_speed.values).sum()
         # 1 dimensional interpolation applied individually to each of lat and long
         # TODO: ideally this would be 2-dimensional interpolation in a single step
         raster_interp = (
             raster
-            .interpolate_na(dim="longitude", method="linear")
-            .interpolate_na(dim="latitude", method="linear")
+            .interpolate_na(dim="longitude", method="linear", limit=CONSECUTIVE_CELL_INTERP_LIMIT)
+            .interpolate_na(dim="latitude", method="linear", limit=CONSECUTIVE_CELL_INTERP_LIMIT)
         )
         n_data_after = np.isnan(raster_interp.max_wind_speed.values).sum()
         n_interpolated = n_data_before - n_data_after
         percentage_interpolated = 100 * (n_interpolated / n_total)
         logging.info(f"Interpolated {percentage_interpolated:.2f}% of pixels")
         if percentage_interpolated > PERCENTAGE_INTERP_LIMIT:
-            raise RuntimeError(f"Interpolated greater than {PERCENTAGE_INTERP_LIMIT}% of pixels!")
+            raise RuntimeError(f"Interpolated {percentage_interpolated:.2f}% of pixels, which is over the prescribed limit.")
 
         logging.info("Writing merged, interpolated wind field to disk")
         raster_interp.to_netcdf(
