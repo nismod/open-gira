@@ -86,4 +86,5 @@ if __name__ == "__main__":
     )
     df = df.drop(columns=["lon", "lat"])
 
+    os.makedirs(os.path.dirname(parquet_path), exist_ok=True)
     df.to_parquet(parquet_path)
