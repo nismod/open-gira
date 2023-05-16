@@ -15,6 +15,7 @@ dependencies:
     - --editable .        # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
+  - contextily          # basemaps for plots
   - datashader          # plotting large datasets
   - flake8              # linter
   - gdal>=3.3           # command-line tools for spatial data
