@@ -16,55 +16,18 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.wind import advective_vector, rotational_field, interpolate_track, power_law_scale_factors
+from open_gira.wind import (
+    advective_vector, rotational_field, interpolate_track,
+    power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
+)
 from plot_wind_fields import plot_contours, animate_track, plot_downscale_factors
 
 
 logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-# Environmental pressure values in hPa / mbar (standard estimate of background
-# pressure away from the cyclone) are taken from the AIR hurricane model, table
-# 3 in Butke (2012).  Available at:
-# https://www.air-worldwide.com/publications/air-currents/2012/
-# the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
-ENV_PRESSURE = {
-    "NI": 1006.5,
-    "SA": 1014.1,
-    "NA": 1014.1,
-    "EP": 1008.8,
-    "SI": 1010.6,
-    "SP": 1008.1,
-    "WP": 1008.3,
-}
-
-# coordinates we have maximum wind speeds for
-WIND_COORDS: dict[str, type] = {
-    "event_id": str,
-    "latitude": float,
-    "longitude": float,
-}
-
 # wind speed altitudes
 GRADIENT_LEVEL_METRES = 20
 SURFACE_LEVEL_METRES = 10
-
-
-def empty_wind_da() -> xr.DataArray:
-    """
-    Return a maxium wind field dataarray with a schema but no data.
-
-    N.B. To concatenate xarray objects, they must all share the same
-    coordinate variables.
-    """
-    da = xr.DataArray(
-        data=np.full((0,) * len(WIND_COORDS), np.nan),
-        coords={
-            name: np.array([], dtype=dtype)
-            for name, dtype in WIND_COORDS.items()
-        },
-        name="max_wind_speed"
-    )
-    return da
 
 
 def cleanup(output_path: str, downscale_factors_plot_path: str):
