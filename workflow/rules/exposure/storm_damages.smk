@@ -239,7 +239,8 @@ rule exposure_by_storm_for_storm_set:
         completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_files.txt"
     shell:
         """
-        echo {input.exposure} > {output.completion_flag}
+        # one output file per line
+        echo {input.exposure} | tr ' ' '\n' > {output.completion_flag}
         """
 
 """
