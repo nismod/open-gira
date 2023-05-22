@@ -298,3 +298,44 @@ rule merge_wind_fields_of_storm:
 Test with:
 snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.nc
 """
+
+
+def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the storms in the set.
+
+    Return a list of the merged wind_field.nc file paths for every storm in the set.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
+    with open(json_file, "r") as fp:
+        country_set_by_storm = json.load(fp)
+
+    storms = list(country_set_by_storm.keys())
+
+    return expand(
+        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+        STORM_SET=wildcards.STORM_SET,  # str
+        STORM_ID=storms  # list of str
+    )
+
+
+rule merged_wind_fields_for_storm_set:
+    """
+    A target rule to generate the exposure netCDFs for all targets affected
+    (across multiple countries) for each storm.
+    """
+    input:
+        wind_fields = merged_wind_fields_for_all_storms_in_storm_set
+    output:
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/wind_fields.txt"
+    shell:
+        """
+        # one output file per line
+        echo {input.wind_fields} | tr ' ' '\n' > {output.completion_flag}
+        """
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/wind_fields.txt
+"""
