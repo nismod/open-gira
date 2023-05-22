@@ -26,7 +26,12 @@ from plot_wind_fields import plot_contours, animate_track, plot_downscale_factor
 logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
 # wind speed altitudes
-GRADIENT_LEVEL_METRES = 20
+
+# gradient level clearly not realistic, but we vary it to fit our estimated wind
+# speeds to observations (or to better model results)
+# the 18m figure is as a result of minimising pixel-wise errors between this model
+# and that used in Done et al. 2020 with a physical boundary layer
+GRADIENT_LEVEL_METRES = 18
 SURFACE_LEVEL_METRES = 10
 
 
