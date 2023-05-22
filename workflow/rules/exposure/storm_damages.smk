@@ -236,7 +236,7 @@ rule exposure_by_storm_for_storm_set:
     input:
         exposure = exposure_by_target_for_all_storms_in_storm_set
     output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_files.txt"
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure.txt"
     shell:
         """
         # one output file per line
@@ -245,5 +245,5 @@ rule exposure_by_storm_for_storm_set:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/IBTrACS/exposure_files.txt
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/exposure.txt
 """
