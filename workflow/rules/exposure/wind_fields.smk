@@ -240,9 +240,6 @@ rule merge_wind_fields_of_storm:
         # filter out really low wind speeds to constrain the map extent
         MIN_WIND_SPEED = 10
 
-        # quit if we interpolate more than this % of pixels
-        PERCENTAGE_INTERP_LIMIT = 30
-
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
         logging.info("Reading wind fields for each country")
@@ -257,56 +254,45 @@ rule merge_wind_fields_of_storm:
         try:
             data = pd.concat(rasters)
         except ValueError:
-            # no data to concatenate
-            empty_wind_da().to_netcdf(output.merged)
+            # no data in rasters
+            data = pd.DataFrame({"max_wind_speed": []})
 
         logging.info(f"Filtering out areas with wind speed < {MIN_WIND_SPEED} ms-1")
         data = data[data.max_wind_speed > MIN_WIND_SPEED]
 
-        # transform to point data
-        delta = float(config["wind_deg"])
-        logging.info(f"Regridding on harmonised {delta} degree grid.")
-        point_speeds = gpd.GeoDataFrame(
-            {
-                "max_wind_speed": data.max_wind_speed,
-                "geometry": gpd.points_from_xy(data.longitude, data.latitude)
-            }
-        )
-        # rebin on new grid
-        rebinned: gpd.GeoDataFrame = grid_point_data(point_speeds, "max_wind_speed", "max", delta)
+        if len(data) != 0:
+            # transform to point data
+            delta = float(config["wind_deg"])
+            logging.info(f"Regridding on harmonised {delta} degree grid.")
+            point_speeds = gpd.GeoDataFrame(
+                {
+                    "max_wind_speed": data.max_wind_speed,
+                    "geometry": gpd.points_from_xy(data.longitude, data.latitude)
+                }
+            )
+            # rebin on new grid
+            rebinned: gpd.GeoDataFrame = grid_point_data(point_speeds, "max_wind_speed", "max", delta)
 
-        # transform to xarray
-        raster = rebinned
-        raster["longitude"] = raster.geometry.centroid.x
-        raster["latitude"] = raster.geometry.centroid.y
-        raster = raster.drop(columns=["geometry"])
-        raster = raster.set_index(["longitude", "latitude"])
-        raster = raster.to_xarray()
+            # transform to xarray
+            raster = rebinned.copy()
 
-        logging.info("Interpolating gaps in merged dataset...")
-        # limit maximum number of cells to interpolate across
-        CONSECUTIVE_CELL_INTERP_LIMIT = 3
-        n_total = len(raster.max_wind_speed.values.ravel())
-        n_data_before = np.isnan(raster.max_wind_speed.values).sum()
-        # 1 dimensional interpolation applied individually to each of lat and long
-        # TODO: ideally this would be 2-dimensional interpolation in a single step
-        raster_interp = (
-            raster
-            .interpolate_na(dim="longitude", method="linear", limit=CONSECUTIVE_CELL_INTERP_LIMIT)
-            .interpolate_na(dim="latitude", method="linear", limit=CONSECUTIVE_CELL_INTERP_LIMIT)
-        )
-        n_data_after = np.isnan(raster_interp.max_wind_speed.values).sum()
-        n_interpolated = n_data_before - n_data_after
-        percentage_interpolated = 100 * (n_interpolated / n_total)
-        logging.info(f"Interpolated {percentage_interpolated:.2f}% of pixels")
-        if percentage_interpolated > PERCENTAGE_INTERP_LIMIT:
-            raise RuntimeError(f"Interpolated {percentage_interpolated:.2f}% of pixels, which is over the prescribed limit.")
+            # round coordinates to 6 decimal places to remove coordinate gaps arising from floating point (im)precision
+            # this is necessary to remove spurious extra coordinates from appearing in output netCDF
+            raster["longitude"] = raster.geometry.centroid.x.round(6)
+            raster["latitude"] = raster.geometry.centroid.y.round(6)
 
-        logging.info("Writing merged, interpolated wind field to disk")
-        raster_interp.to_netcdf(
-            output.merged,
-            encoding={var: {"zlib": True, "complevel": 9} for var in raster.keys()}
-        )
+            raster = raster.drop(columns=["geometry"])
+            raster: gpd.GeoDataFrame = raster.set_index(["longitude", "latitude"])
+            rebinned_raster: xr.Dataset = raster.to_xarray()
+
+            rebinned_raster.to_netcdf(
+                output.merged,
+                encoding={var: {"zlib": True, "complevel": 9} for var in raster.keys()}
+            )
+
+        else:
+            logging.info(f"No data in rasters, writing empty file.")
+            empty_wind_da().to_netcdf(output.merged)
 
 """
 Test with:
