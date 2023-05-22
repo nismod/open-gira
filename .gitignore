@@ -29,3 +29,5 @@ tester/*
 docs/book/
 
 validation/plots/*
+validation/holland_done_ratio
+validation/wind_model_comparison
