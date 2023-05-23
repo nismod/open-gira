@@ -10,15 +10,7 @@ def storm_tracks(wildcards) -> str:
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
     storm_dataset = wildcards.STORM_SET.split("_")[0]
 
-    # TODO: these folders should really have a more consistent structure
-    # e.g., move all the processed stuff to results/power/events/{storm_dataset}/tracks.geoparquet
-    # then we can remove this conditional
-    if storm_dataset == "IBTrACS":
-        return f"{wildcards.OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet"
-    elif storm_dataset == "STORM-constant":
-        return f"{wildcards.OUTPUT_DIR}/input/STORM/events/STORM-constant/processed.geoparquet"
-    else:
-        raise NotImplementedError(f"Do not recognise {storm_dataset=}, please add to rule if desired.")
+    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_dataset}/tracks.geoparquet"
 
 
 rule animate_electricity_outages:
