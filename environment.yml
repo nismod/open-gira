@@ -23,7 +23,7 @@ dependencies:
   - geopy               # geocoding client
   - ipykernel           # notebook support
   - jupyter             # notebook support
-  - matplotlib==3.5.1   # basic plotting
+  - matplotlib==3.7.1   # basic plotting
   - nb_conda_kernels    # notebook support
   - netCDF4             # NetCDF file format
   - networkx            # networks
