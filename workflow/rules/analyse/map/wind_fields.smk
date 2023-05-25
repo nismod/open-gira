@@ -121,7 +121,7 @@ rule map_storm_set:
         mkdir -p {output.map_dir}
         for FILE in {input.wind_field_maps}; do
             STORM_ID=$(echo $FILE | cut -d/ -f6)
-            ln -s $FILE {output.map_dir}/${{STORM_ID}}.png
+            ln -s $(pwd)/$FILE $(pwd)/{output.map_dir}/${{STORM_ID}}.png
         done
         """
 
