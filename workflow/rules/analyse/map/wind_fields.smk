@@ -25,51 +25,58 @@ rule map_wind_field:
 
         ds = xr.open_dataset(input.wind_field)
 
-        f, ax = plt.subplots(
-            figsize=figure_size(
-                ds.longitude.min(),
-                ds.latitude.min(),
-                ds.longitude.max(),
-                ds.latitude.max()
+        if not ds.max_wind_speed.any():
+            # no data in netCDF
+            f, ax = plt.subplots()
+            ax.set_title(wildcards.STORM_ID)
+            f.savefig(output.plot)
+
+        else:
+            f, ax = plt.subplots(
+                figsize=figure_size(
+                    ds.longitude.min(),
+                    ds.latitude.min(),
+                    ds.longitude.max(),
+                    ds.latitude.max()
+                )
             )
-        )
-        plt.subplots_adjust(left=0.1, right=0.8)
-        cax = f.add_axes(
-            # x_min, y_min, x_delta, y_delta
-            [0.84, 0.11, 0.04, 0.77]
-        )
-        vmin = 21
-        vmax = 45
-        levels = int((vmax - vmin) / 3 + 1)
-        xr.plot.pcolormesh(
-            ds.max_wind_speed,
-            x="longitude",
-            y="latitude",
-            extend="max",
-            cmap="turbo",
-            vmin=vmin,
-            vmax=vmax,
-            levels=levels,
-            ax=ax,
-            cbar_ax=cax,
-            alpha=0.7
-        )
-        cax.set_ylabel("Maximum wind speed [ms-1]", labelpad=10)
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-        ax.set_title(wildcards.STORM_ID)
+            plt.subplots_adjust(left=0.1, right=0.8)
+            cax = f.add_axes(
+                # x_min, y_min, x_delta, y_delta
+                [0.84, 0.11, 0.04, 0.77]
+            )
+            vmin = 21
+            vmax = 45
+            levels = int((vmax - vmin) / 3 + 1)
+            xr.plot.pcolormesh(
+                ds.max_wind_speed,
+                x="longitude",
+                y="latitude",
+                extend="max",
+                cmap="turbo",
+                vmin=vmin,
+                vmax=vmax,
+                levels=levels,
+                ax=ax,
+                cbar_ax=cax,
+                alpha=0.7
+            )
+            cax.set_ylabel("Maximum wind speed [ms-1]", labelpad=10)
+            ax.set_xlabel("Longitude")
+            ax.set_ylabel("Latitude")
+            ax.set_title(wildcards.STORM_ID)
 
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
-        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
-        ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
 
-        ax.grid()
+            ax.grid()
 
-        borders = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-        borders.plot(ax=ax, facecolor="none", edgecolor="grey", alpha=0.8)
+            borders = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+            borders.plot(ax=ax, facecolor="none", edgecolor="grey", alpha=0.8)
 
-        f.savefig(output.plot)
+            f.savefig(output.plot)
 
 """
 To test:
