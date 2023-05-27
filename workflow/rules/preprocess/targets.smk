@@ -32,6 +32,7 @@ rule annotate_targets:
     """
     conda: "../../../environment.yml"
     input:
+        admin="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
         population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2022A_54009_1000_V1_0.tif",
         targets=rules.polygonise_targets.output.targets,
         gdp="{OUTPUT_DIR}/input/GDP/GDP_per_capita_PPP_1990_2015_v2.nc",

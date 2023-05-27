@@ -79,6 +79,7 @@ def annotate_gdp_pc(targets: gpd.GeoDataFrame, gdp_path: str) -> pd.Series:
 
 
 if __name__ == '__main__':
+    admin_path: str = snakemake.input.admin
     population_path: str = snakemake.input.population
     gdp_path: str = snakemake.input.gdp
     targets_path: str = snakemake.input.targets
@@ -89,6 +90,8 @@ if __name__ == '__main__':
 
     logging.info("Reading targets file")
     targets = gpd.read_parquet(targets_path)
+    logging.info(f"Read {len(targets)} targets from disk")
+
     targets["asset_type"] = "target"
 
     logging.info("Extracting population per target")
@@ -107,7 +110,18 @@ if __name__ == '__main__':
     logging.info("Extracting GDP per target")
     # ~3 minutes CPU time for the globe
     targets["gdp_pc"] = annotate_gdp_pc(targets, gdp_path)
+
+    # if we can't find a GDP per capita figure, set it to zero
+    # we require a number for every target, so we can allocate power from sources to sinks
+    nan_gdp_mask = targets["gdp_pc"].isna()
+    logging.info(f"Setting GDP per capita to 0 for {len(targets[nan_gdp_mask])} targets")
+    targets.loc[nan_gdp_mask, "gdp_pc"] = 0
+
     targets["gdp"] = targets.population * targets.gdp_pc
+
+    logging.info("Tagging targets with country ISO alpha-3 code")
+    admin = gpd.read_parquet(admin_path, columns=["GID_0", "geometry"])
+    targets = targets.sjoin(admin).drop(columns=["index_right"]).rename(columns={"GID_0": "iso_a3"})
 
     logging.info("Writing targets to disk")
     targets.to_parquet(output_path)
