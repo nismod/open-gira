@@ -25,9 +25,13 @@ def annotate_population(targets: gpd.GeoDataFrame, population_path: str) -> gpd.
         targets: Table containing geometries to get population for
         population_path: Path to population raster file
     """
+    start = targets.index[0]
+    end = targets.index[-1]
+    logging.info(f"Annotating targets [{start}: {end}] with population")
 
     with rasterio.open(population_path) as dataset:
         crs = dataset.crs.data
+
     stats = gen_zonal_stats(
         targets.to_crs(crs).geometry,  # reprojected for raster
         population_path,
@@ -35,11 +39,15 @@ def annotate_population(targets: gpd.GeoDataFrame, population_path: str) -> gpd.
         add_stats={"nansum": np.nansum},  # count NaN as zero for summation
         all_touched=True,  # possible overestimate, but targets grid is narrower than pop
     )
+
     # fill masked values, in case of nodata
     populations = np.ma.array([d["nansum"] for d in stats]).filled(fill_value=0)
     populations = np.nan_to_num(populations.astype(float))
 
     targets["population"] = populations
+
+    logging.info(f"Completed annotating targets [{start}: {end}] with population")
+
     return targets
 
 
