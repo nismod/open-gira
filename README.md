@@ -59,6 +59,10 @@ The workflow leans heavily on the GDAL toolset. To install using APT:
 jq is used to parse JSON files. To install using APT:
 `sudo apt install jq`
 
+### exactextract
+
+exactextract is used for zonal statistics. Please see installation instructions [here](https://github.com/isciences/exactextract).
+
 ## Running tests
 
 Workflow steps are tested using a small sample dataset. Run:

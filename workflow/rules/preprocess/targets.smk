@@ -32,6 +32,52 @@ snakemake -c1 results/power/target_polygons.geoparquet
 """
 
 
+rule reproject_targets_to_mollweide:
+    """
+    For calculating the population of each target, first transform to population raster CRS.
+    """
+    input:
+        targets=rules.polygonise_targets.output.targets,
+    output:
+        # use gpkg so exactextract (GDAL) can read
+        targets="{OUTPUT_DIR}/power/target_polygons_mollweide.gpkg",
+    run:
+        import geopandas as gpd
+
+        targets = gpd.read_parquet(input.targets)
+        targets.to_crs("+proj=moll").to_file(output.targets)
+
+"""
+Test with:
+snakemake -c1 results/power/target_polygons_mollweide.gpkg
+"""
+
+
+rule calculate_population_of_targets:
+    """
+    Use exactextract to calculate the population sum overlapping with each target polygon.
+    """
+    input:
+        polygons=rules.reproject_targets_to_mollweide.output.targets,
+        raster="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2022A_54009_1000_V1_0.tif",
+    output:
+        population_table="{OUTPUT_DIR}/power/target_population.csv",
+    shell:
+        """
+        exactextract \
+            --polygons {input.polygons} \
+            --raster "population:{input.raster}" \
+            --stat "sum(population)" \
+            --output {output.population_table} \
+            --fid "id"
+        """
+
+"""
+Test with:
+snakemake -c1 results/power/target_population.csv
+"""
+
+
 rule annotate_targets:
     """
     Annotate targets (electricity consuming areas) with population and GDP data
@@ -39,11 +85,9 @@ rule annotate_targets:
     conda: "../../../environment.yml"
     input:
         admin="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
-        population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2022A_54009_1000_V1_0.tif",
+        population=rules.calculate_population_of_targets.output.population_table,
         targets=rules.polygonise_targets.output.targets,
         gdp="{OUTPUT_DIR}/input/GDP/GDP_per_capita_PPP_1990_2015_v2.nc",
-    threads:
-        config["processes_per_parallel_job"]
     output:
         targets="{OUTPUT_DIR}/power/targets.geoparquet",
     script:

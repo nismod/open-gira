@@ -3,52 +3,10 @@ Annotate electricity consuming areas with encompassed GDP and population.
 """
 
 import logging
-import multiprocessing
-import os
 
-import numpy as np
 import geopandas as gpd
 import pandas as pd
-import rasterio
-import rasterio.features
-import rasterio.mask
 import xarray as xr
-from rasterstats import gen_zonal_stats
-
-
-def annotate_population(targets: gpd.GeoDataFrame, population_path: str) -> gpd.GeoDataFrame:
-    """
-    Given a `targets` table with polygonal geometries, lookup population
-    encompassed by each from `population_path`.
-
-    Args:
-        targets: Table containing geometries to get population for
-        population_path: Path to population raster file
-    """
-    start = targets.index[0]
-    end = targets.index[-1]
-    logging.info(f"Annotating targets [{start}: {end}] with population")
-
-    with rasterio.open(population_path) as dataset:
-        crs = dataset.crs.data
-
-    stats = gen_zonal_stats(
-        targets.to_crs(crs).geometry,  # reprojected for raster
-        population_path,
-        stats=[],
-        add_stats={"nansum": np.nansum},  # count NaN as zero for summation
-        all_touched=True,  # possible overestimate, but targets grid is narrower than pop
-    )
-
-    # fill masked values, in case of nodata
-    populations = np.ma.array([d["nansum"] for d in stats]).filled(fill_value=0)
-    populations = np.nan_to_num(populations.astype(float))
-
-    targets["population"] = populations
-
-    logging.info(f"Completed annotating targets [{start}: {end}] with population")
-
-    return targets
 
 
 def annotate_gdp_pc(targets: gpd.GeoDataFrame, gdp_path: str) -> pd.Series:
@@ -84,7 +42,6 @@ if __name__ == '__main__':
     gdp_path: str = snakemake.input.gdp
     targets_path: str = snakemake.input.targets
     output_path: str = snakemake.output.targets
-    n_proc: int = snakemake.config["processes_per_parallel_job"]
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
@@ -92,20 +49,9 @@ if __name__ == '__main__':
     targets = gpd.read_parquet(targets_path)
     logging.info(f"Read {len(targets)} targets from disk")
 
-    targets["asset_type"] = "target"
-
-    logging.info("Extracting population per target")
-    # N.B. requires ~200 minutes of CPU time for globe
-    targets["id"] = range(len(targets))
-    if n_proc > 1:
-        chunked_pop = []
-        chunk_size: int = np.ceil(len(targets) / os.cpu_count()).astype(int)
-        args = [(targets.iloc[i: i + chunk_size, :].copy(), population_path) for i in range(0, len(targets), chunk_size)]
-        with multiprocessing.Pool(processes=n_proc) as pool:
-            chunked_pop = pool.starmap(annotate_population, args)
-        targets = pd.concat(chunked_pop).sort_values("id")
-    else:
-        targets = annotate_population(targets, population_path)
+    logging.info("Annotating population per target")
+    population = pd.read_csv(population_path)
+    targets = targets.merge(population, on="id").rename(columns={"population_sum": "population"})
 
     logging.info("Extracting GDP per target")
     # ~3 minutes CPU time for the globe
