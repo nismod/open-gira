@@ -17,7 +17,13 @@ rule polygonise_targets:
 
         # do not process polar regions
         bbox: Polygon = shapely.geometry.box(-180, -60, 180, 60)
-        targets = polygonise_targets(input.targets, bbox)
+
+        # manually set CRS of raster (and returned targets) using EPSG code
+        # allowing polygonise_targets to infer it from the raster metadata
+        # results in geopandas complaining the CRSs are not equal when their
+        # transforms are in fact equal, but one is a proj string, another an
+        # EPSG code
+        targets = polygonise_targets(input.targets, bbox, 4326)
         targets.to_parquet(output.targets)
 
 """

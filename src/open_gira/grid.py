@@ -9,7 +9,7 @@ import rasterio.mask
 import shapely
 
 
-def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon) -> gpd.GeoDataFrame:
+def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon, crs=None) -> gpd.GeoDataFrame:
     """
     Take a raster of electricity consuming 'targets' and a geometry extent and
     return a set of target polygons with computed areas.
@@ -17,6 +17,9 @@ def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon) -> g
     Args:
         targets_path: Path to raster file containing targets
         extent: Shape to mask targets by
+        crs: CRS of input data. Will lookup CRS from dataset if not provided.
+            May be any type accepted by:
+            https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS.from_user_input
 
     Returns:
         Table of target geometries and areas
@@ -28,7 +31,8 @@ def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon) -> g
 
     # Targets: Binary raster showing locations predicted to be connected to distribution grid.
     with rasterio.open(targets_path) as dataset:
-        crs = dataset.crs.data
+        if not crs:
+            crs = dataset.crs.data
 
         # Read the dataset's valid data mask as a ndarray.
         try:
