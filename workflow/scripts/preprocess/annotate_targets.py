@@ -67,7 +67,23 @@ if __name__ == '__main__':
 
     logging.info("Tagging targets with country ISO alpha-3 code")
     admin = gpd.read_parquet(admin_path, columns=["GID_0", "geometry"])
-    targets = targets.sjoin(admin).drop(columns=["index_right"]).rename(columns={"GID_0": "iso_a3"})
+
+    # a naive targets.sjoin(admin) using polygons and intersects predicate will take ~7 hours
+    # instead, use point-in-polygon, i.e. target representative point _within_ admin polygon
+    # should now take a few seconds
+
+    # create copy of targets with representative points rather than full polygon geometry
+    rep_targets = targets.copy()
+    rep_targets.geometry = targets.geometry.representative_point()
+
+    # do the join to find the containing country (or at least, one of them for border cases)
+    target_country_join = rep_targets.sjoin(admin, predicate="within")
+    target_country_join = target_country_join[["id", "GID_0"]].rename(columns={"GID_0": "iso_a3"})
+
+    # merge the iso_a3 column back into the polygon geodataframe
+    targets = targets.merge(target_country_join, on="id")
+
+    targets["asset_type"] = "target"
 
     logging.info("Writing targets to disk")
     targets.to_parquet(output_path)
