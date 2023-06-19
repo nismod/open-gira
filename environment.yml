@@ -9,7 +9,7 @@ dependencies:
   - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.2.1 # vector-raster intersections
+    - nismod-snail==0.3.1 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit               # spatial network cleaning
     - --editable .        # open_gira helper package
