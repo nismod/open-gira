@@ -46,13 +46,18 @@ def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon) -> g
             logging.info("Extent may not overlap targets", ex)
             pass
 
-    return gpd.GeoDataFrame(
+    targets = gpd.GeoDataFrame(
         data={
             "area_km2": areas_km2,
             "geometry": geoms
         },
         crs=crs
     )
+
+    # this is the globally unique integer id of each target
+    targets["id"] = targets.index
+
+    return targets
 
 
 def weighted_allocation(
