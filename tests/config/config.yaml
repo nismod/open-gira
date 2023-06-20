@@ -95,6 +95,8 @@ exposure_tifs:
 
 # sets of storm ids to process for potentially many country networks
 storm_sets:
+    # files containing empty list, indicating to process all in dataset
+    IBTrACS: 'config/storm_sets/ibtracs.json'
     # files containing a list of storm id strings that constitute the storm set
     # key should follow the pattern: <dataset>_<storm_set_reference>
     # where dataset belongs to:
