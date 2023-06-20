@@ -33,7 +33,7 @@ rule gridfinder_to_geoparquet:
         cat = pd.get_dummies(grid_sp.source)
         cat.gridfinder *= 2
         # openstreetmap = 1, gridfinder = 2
-        grid_sp["source_id"] = cat.sum(axis=1)
+        grid_sp["source_id"] = cat.sum(axis=1).astype(int)
 
         # plot the gridfinder network
         cvs = ds.Canvas(plot_width=1500, plot_height=670)
