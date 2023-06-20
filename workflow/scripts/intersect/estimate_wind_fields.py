@@ -148,7 +148,8 @@ def process_track(
     downscaled_wind_field = downscaling_factors * wind_field
 
     # find vector magnitude, then take max along timestep axis, giving (y, x)
-    max_wind_speeds: np.ndarray[float] = np.max(np.abs(downscaled_wind_field), axis=0)
+    # N.B. np.max([np.nan, 1]) = np.nan, so use np.nanmax
+    max_wind_speeds: np.ndarray[float] = np.nanmax(np.abs(downscaled_wind_field), axis=0)
 
     # any dimensions with a single cell will break the plotting routines
     if 1 not in grid_shape:
