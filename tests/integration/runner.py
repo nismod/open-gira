@@ -125,7 +125,7 @@ class OutputChecker:
         expected_files = set(
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
-            for f in files
+            for f in files if ".snakemake" not in str(f)
         )
         unexpected_files = set()
 
@@ -140,7 +140,7 @@ class OutputChecker:
                     # ignore .snakemake/, foo/bar/.snakemake_timestamp, etc.
                     continue
                 if f in expected_files:
-                    produced_files.append(Path(path) / f)
+                    produced_files.append(self.workdir / f)
                     self.compare_files(self.workdir / f, self.expected_path / f)
                 elif f in input_files:
                     # ignore input files
@@ -151,10 +151,12 @@ class OutputChecker:
             # the loop could exit successfully if no files at all are are
             # found, so check that we've got the right number
             if len(produced_files) != len(expected_files):
+                produced_files = [str(file.relative_to(self.workdir)) for file in produced_files]
+                expected_files = [str(file) for file in expected_files]
                 raise ValueError(
                     f"\n{len(produced_files)=} but {len(expected_files)=}"
-                    f"\n{produced_files=}"
-                    f"\n{expected_files=}"
+                    f"\n{set(produced_files) - set(expected_files)=}"
+                    f"\n{set(expected_files) - set(produced_files)=}"
                 )
 
         if unexpected_files:
