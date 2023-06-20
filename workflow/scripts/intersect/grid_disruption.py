@@ -151,11 +151,18 @@ def degrade_grid_with_storm(
         # about to mutate power_mw column, make a copy first
         surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes["power_mw"]
 
-        # allocate power within components, from sources to targets, weighted by gdp of targets
+        # if there's no gdp data available at all, use the population as a weight
+        # this should have be used when creating the network in create_electricity_network.py
+        if surviving_network.nodes[surviving_network.nodes.asset_type=="target"].gdp.sum() == 0:
+            weight_col="population"
+        else:
+            weight_col="gdp"
+
+        # allocate power within components, from sources to targets, weighted (typically) by gdp of targets
         targets: pd.DataFrame = weighted_allocation(
             surviving_network.nodes,
             variable_col="power_mw",
-            weight_col="gdp",
+            weight_col=weight_col,
             component_col="component_id",
             asset_col="asset_type",
             source_name="source",

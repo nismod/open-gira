@@ -154,10 +154,17 @@ if __name__ == "__main__":
     if any(targets.gdp.isna()):
         raise ValueError("Cannot allocate power without a GDP figure to weight by for every target.")
 
+    # if there's no gdp data available at all, use the population as a weight
+    # this weight must then be used when allocating after failure in grid_disruption.py
+    if targets.gdp.sum() == 0:
+        weight_col="population"
+    else:
+        weight_col="gdp"
+
     powered_targets: pd.DataFrame = weighted_allocation(
         network.nodes,
         variable_col="power_mw",
-        weight_col="gdp",
+        weight_col=weight_col,
         component_col="component_id",
         asset_col="asset_type",
         source_name="source",
