@@ -36,7 +36,7 @@ rule animate_electricity_outages:
         matplotlib.use("Agg")
 
         # read in data
-        targets = gpd.read_parquet(input.targets)
+        global_targets = gpd.read_parquet(input.targets)
         exposure = xr.open_dataset(input.by_target)
         tracks = gpd.read_parquet(input.tracks)
         borders = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
@@ -45,15 +45,19 @@ rule animate_electricity_outages:
         # subset tracks
         track = tracks[tracks.track_id == event_id]
 
-        # find all targets within X degrees of track
-        track_bbox = box(*track.geometry.total_bounds)
-        aoi = track_bbox.buffer(5)
-        aoi_targets = targets[targets.within(aoi)]
+        # select the affected targets
+        targets = exposure.supply_factor.sel(
+            event_id=event_id,
+            threshold=min(exposure.threshold)
+        ).to_pandas()
+        non_null_targets = targets[~targets.isna()]
+        undersupplied_targets = non_null_targets[non_null_targets < 1]
 
-        # shrink AOI to ignore track in the open ocean
-        track_target_aoi = box(*aoi_targets.geometry.centroid.total_bounds)
+        # create a bounding box with a buffer
+        aoi_targets = global_targets[global_targets.id.isin(undersupplied_targets.index.values)]
+        aoi = box(*aoi_targets.geometry.centroid.total_bounds).buffer(3)
 
-        animate_outage_by_threshold(event_id, output.plot, exposure.threshold.values, exposure, track_target_aoi, aoi_targets, borders, track)
+        animate_outage_by_threshold(event_id, output.plot, exposure.threshold.values, exposure, aoi, global_targets, borders, track)
 
 """
 To test:
