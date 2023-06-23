@@ -17,11 +17,6 @@ jobs:
         environment-name: open-gira
         cache-env: true
 
-    - uses: actions/checkout@v2
-
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-
     - name: Test with pytest
       # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
       shell: bash -l {0}
