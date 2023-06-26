@@ -220,7 +220,12 @@ class OutputChecker:
         elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
             generated = xr.open_dataset(generated_file)
             expected = xr.open_dataset(expected_file)
-            assert generated.equals(expected)
+            try:
+                assert generated.equals(expected)
+            except AssertionError as e:
+                print(generated)
+                print(expected)
+                raise e
 
         # any other file type
         else:
