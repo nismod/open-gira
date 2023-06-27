@@ -34,21 +34,18 @@ if not isinstance(config['slice_count'], int) or \
         (math.sqrt(config['slice_count']) % 1 > 0 and config['slice_count'] != 1):
     raise ValueError("""Error in config: slice_count must be an integer, either a square number or 1""")
 
+n_proc = config["processes_per_parallel_job"]
+if not isinstance(n_proc, int) or (n_proc < 1):
+    raise ValueError(
+        f"config.processes_per_parallel_job has type: {type(n_proc)} and value: {n_proc}, but must be a positive integer"
+    )
+
 for network, file_path in config['network_filters'].items():
     if not os.path.exists(file_path):
         raise FileNotFoundError((
             "Error in config: could not locate network_filter at "
             f"{os.path.join(os.getcwd(), file_path)}"
         ))
-
-# check requested grid for power/storms pipeline
-assert config["box_deg"] >= config["wind_deg"]
-# N.B. modulo by a decimal leads to floating point errors
-# do division then modulo by 1 instead
-# check box_deg is a factor of 180
-assert (180 / config["box_deg"]) % 1 == 0
-# check wind_deg is a factor of box_deg
-assert (config["box_deg"] / config["wind_deg"]) % 1 == 0
 
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
@@ -82,6 +79,7 @@ wildcard_constraints:
     STORM_RP="[0-9]+",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
+    STORM_SET="(?:IBTrACS|STORM)[^\/]*",
     EVENTS_OR_FIXED="events|fixed",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     SAMPLE="\d+",
@@ -104,22 +102,18 @@ include: "rules/download/hazards.smk"
 include: "rules/download/dryad-gdp.smk"
 include: "rules/download/wri-powerplants.smk"
 include: "rules/download/osm.smk"
-include: "rules/download/power_download_all.smk"
+include: "rules/download/land_cover.smk"
 
 include: "rules/preprocess/gadm.smk"
 include: "rules/preprocess/filter_osm_data.smk"
 include: "rules/preprocess/trim_hazard_data.smk"
 include: "rules/preprocess/create_bbox_extracts.smk"
-include: "rules/preprocess/create_transport_network.smk"
 include: "rules/preprocess/slice.smk"
 include: "rules/preprocess/join_network.smk"
-include: "rules/preprocess/split-world.smk"
-include: "rules/preprocess/network.smk"
-include: "rules/preprocess/split-gridfinder.smk"
 include: "rules/preprocess/targets.smk"
+include: "rules/preprocess/create_network.smk"
 include: "rules/preprocess/join_data.smk"
 include: "rules/preprocess/osm_to_geoparquet.smk"
-include: "rules/preprocess/connector.smk"
 include: "rules/preprocess/create_overall_bbox.smk"
 include: "rules/preprocess/powerplants.smk"
 include: "rules/preprocess/IBTrACS.smk"
@@ -128,10 +122,16 @@ include: "rules/preprocess/STORM.smk"
 include: "rules/exposure/join_data.smk"
 include: "rules/exposure/network_raster_intersection.smk"
 include: "rules/exposure/wind_fields.smk"
-include: "rules/exposure/damages.smk"
+include: "rules/exposure/flood_damages.smk"
+include: "rules/exposure/storm_damages.smk"
 include: "rules/exposure/aggregate_to_admin_area.smk"
 
 include: "rules/analyse/network_components.smk"
+include: "rules/analyse/map/storm_tracks.smk"
+include: "rules/analyse/map/outages.smk"
+include: "rules/analyse/map/wind_fields.smk"
+include: "rules/analyse/plot/target_disruption.smk"
+include: "rules/analyse/plot/customers_affected_by_storm.smk"
 include: "rules/analyse/plot/make_exposure_tif.smk"
 include: "rules/analyse/plot/make_exposure_img.smk"
 
@@ -162,20 +162,5 @@ rule clean:
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
         rm -rf {config[output_dir]}/direct_damages &&
-        rm -rf {config[output_dir]}/power_processed &&
-        rm -rf {config[output_dir]}/power_intersection
-        """
-
-# Remove everything except the final results
-rule clean_all:
-    shell:
-        """
-        rm -rf {config[output_dir]}/input &&
-        rm -rf {config[output_dir]}/json &&
-        rm -rf {config[output_dir]}/geoparquet &&
-        rm -rf {config[output_dir]}/slices &&
-        rm -rf {config[output_dir]}/splits &&
-        rm -rf {config[output_dir]}/direct_damages &&
-        rm -rf {config[output_dir]}/power_processed &&
-        rm -rf {config[output_dir]}/power_intersection
+        rm -rf {config[output_dir]}/power/by_country
         """

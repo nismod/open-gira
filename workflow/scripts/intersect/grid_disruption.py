@@ -1,5 +1,5 @@
 """
-For each maximum wind field associated with a storm:
+For a given storm (maximum wind speed field):
     1) Fail edge segments who experience a wind speed greater than given threshold
     2) Attempt to allocate power from sources to sinks over degraded network
     3) Calculate ratio of nominal power to degraded power, the 'supply factor'
@@ -7,8 +7,8 @@ For each maximum wind field associated with a storm:
 """
 
 import logging
-import multiprocessing
 from typing import Optional
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -20,9 +20,52 @@ from open_gira.grid import weighted_allocation
 import snkit
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+# coordinates that the exposure variables can be indexed by
+EXPOSURE_COORDS: dict[str, type] = {
+    "event_id": str,
+    "threshold": float,
+    "target": int,
+}
 
-DIM_NAMES = ("event_id", "threshold", "target")
+NETCDF_ENCODING = {variable: {"zlib": True, "complevel": 9} for variable in EXPOSURE_COORDS.keys()}
+
+
+def exposure_dataset(
+    event_id: Optional[list[str]] = None,
+    thresholds: Optional[list[float]] = None,
+    targets: Optional[list[int]] = None,
+) -> xr.Dataset:
+    """
+    Build results object from given coordinate arguments.
+
+    Args:
+        event_id: Storm identifier
+        thresholds: Iterable of wind speed damage thresholds
+        targets: Iterable of globally unique target IDs
+    """
+
+    # if we haven't been passed coords, use empty lists
+    if event_id is None:
+        event_id = []
+    if thresholds is None:
+        thresholds = []
+    if targets is None:
+        targets = []
+
+    shape = (len(event_id), len(thresholds), len(targets))
+    return xr.Dataset(
+        data_vars=dict(
+            supply_factor=(EXPOSURE_COORDS.keys(), np.full(shape, np.nan)),
+            customers_affected=(EXPOSURE_COORDS.keys(), np.full(shape, np.nan))
+        ),
+        coords=dict(
+            # scalar dimensions result in ValueError, use atleast_1d as workaround
+            # https://stackoverflow.com/a/58858160
+            event_id=np.atleast_1d(event_id),
+            threshold=np.atleast_1d(thresholds),
+            target=np.atleast_1d(targets)
+        )
+    )
 
 
 def degrade_grid_with_storm(
@@ -31,7 +74,7 @@ def degrade_grid_with_storm(
     splits: pd.DataFrame,
     speed_thresholds: list,
     network: snkit.network.Network
-) -> Optional[xr.Dataset]:
+) -> xr.Dataset:
     """
     Use a maximum wind speed field and a electricity grid representation,
     degrade the network for a set of damage speed thresholds. Estimate the
@@ -50,50 +93,44 @@ def degrade_grid_with_storm(
 
     Returns:
         Dataset containing supply_factor and customers_affected variables on
-            event_id, threshold and target dimensions. In the case where the
-            network is not damaged at any threshold, return `None`.
+            event_id, threshold and target dimensions.
     """
 
-    # rank 1, length of splits DataFrame
-    # N.B. to index at points rather than the cross-product of indicies, index with DataArrays
-    # https://docs.xarray.dev/en/stable/user-guide/indexing.html#vectorized-indexing
-    max_wind_speeds: xr.DataArray = wind_fields.sel(event_id=storm_id).isel(
-        long=splits[fields.RASTER_I].to_xarray(),
-        lat=splits[fields.RASTER_J].to_xarray()
-    )
+    # N.B. we have a generic node 'id' but also a 'target_id' which should only
+    # be set for target nodes -- it is globally unique and corresponds to the
+    # global targets file (which contains their vector geometry)
+    try:
+        target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.astype(int).values
+    except AttributeError:
+        logging.info("No viable network available, returning null result.")
+        return exposure_dataset(event_id=[storm_id], thresholds=speed_thresholds)
 
-    # object for collating results from each damage threshold
-    target_ids = network.nodes[network.nodes.asset_type == "target"].id.values
-    return_shape = (1, len(speed_thresholds), len(target_ids))
-    empty = np.full(return_shape, np.nan)
-    exposure = xr.Dataset(
-        data_vars=dict(
-            supply_factor=(DIM_NAMES, empty),
-            customers_affected=(DIM_NAMES, empty)
-        ),
-        coords=dict(
-            # scalar dimensions result in ValueError, use atleast_1d as workaround
-            # https://stackoverflow.com/a/58858160
-            event_id=np.atleast_1d(storm_id),
-            threshold=speed_thresholds,
-            target=target_ids
+    # build coordinates for results object
+    exposure = exposure_dataset(event_id=[storm_id], thresholds=speed_thresholds, targets=target_ids)
+
+    try:
+        # rank 1, length of splits DataFrame
+        # N.B. to index at points rather than the cross-product of indicies, index with DataArrays
+        # https://docs.xarray.dev/en/stable/user-guide/indexing.html#vectorized-indexing
+        max_wind_speeds: xr.DataArray = wind_fields.sel(event_id=storm_id).isel(
+            longitude=splits[fields.RASTER_I].to_xarray(),
+            latitude=splits[fields.RASTER_J].to_xarray()
         )
-    )
+    except KeyError:
+        logging.info("No wind field available, returning null result.")
+        return exposure
 
     # sort into ascending order; if no damage at a given threshold,
     # more resilient thresholds are guaranteed to be safe
     for threshold in sorted(speed_thresholds):
-        survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas()
+        survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas().loc[:, "max_wind_speed"]
 
         try:
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
-            # at the lowest threshold there is no damage, return None
-            if threshold == min(speed_thresholds):
-                return None
-            # some damage has occured, but not at this threshold, return exposure as it stands
-            else:
-                return exposure
+            # there is no damage, return early
+            logging.info(f"No damage detected at {threshold} ms-1")
+            return exposure
 
         surviving_edge_ids = set(splits.loc[survival_mask, "id"])
         surviving_edges: pd.DataFrame = network.edges.loc[network.edges.id.isin(surviving_edge_ids), :]
@@ -109,16 +146,23 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(failure_str.format(str(storm_id.values), 100 * fraction_failed, threshold, c_nominal, c_surviving))
+        logging.info(failure_str.format(str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving))
 
         # about to mutate power_mw column, make a copy first
         surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes["power_mw"]
 
-        # allocate power within components, from sources to targets, weighted by gdp of targets
+        # if there's no gdp data available at all, use the population as a weight
+        # this should have be used when creating the network in create_electricity_network.py
+        if surviving_network.nodes[surviving_network.nodes.asset_type=="target"].gdp.sum() == 0:
+            weight_col="population"
+        else:
+            weight_col="gdp"
+
+        # allocate power within components, from sources to targets, weighted (typically) by gdp of targets
         targets: pd.DataFrame = weighted_allocation(
             surviving_network.nodes,
             variable_col="power_mw",
-            weight_col="gdp",
+            weight_col=weight_col,
             component_col="component_id",
             asset_col="asset_type",
             source_name="source",
@@ -129,12 +173,12 @@ def degrade_grid_with_storm(
         targets["supply_factor"] = targets.power_mw / targets.power_nominal_mw
 
         # calculate the number of customers affect in each target
-        # N.B. supply factor can be > 1, so clip to zero to prevent negative customers_affected in areas with 'oversupply'
+        # N.B. supply_factor can be > 1
+        # so clip to zero to prevent negative customers_affected in areas with 'oversupply'
         targets["customers_affected"] = np.clip(1 - targets.supply_factor, 0, None) * targets.population
 
         # assign data to dataset
-        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.id.values)
-
+        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.target_id.astype(int).values)
         exposure.supply_factor.loc[indicies] = targets.supply_factor
         exposure.customers_affected.loc[indicies] = targets.customers_affected
 
@@ -148,20 +192,19 @@ if __name__ == "__main__":
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    specific_storms: list[str] = snakemake.config["specific_storms"]
-    parallel: bool = snakemake.config["parallelise_by_storm"]
-    damages_path: str = snakemake.output.damages
+    storm_id: str = snakemake.wildcards.STORM_ID
+    exposure_path: str = snakemake.output.exposure
+
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Loading wind speed data")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
-    if specific_storms:
-        logging.info("Filtering storm data by specific_storms config")
-        try:
-            wind_fields = wind_fields.sel(dict(event_id=specific_storms))
-        except KeyError:
-            # none of the storms requested are present in the wind file
-            # write out an empty file
-            xr.Dataset().to_netcdf(damages_path)
+    if len(wind_fields.variables) == 0:
+        logging.info("Empty wind speed file, writing null result to disk.")
+        exposure = exposure_dataset(event_id=[storm_id], thresholds=speed_thresholds)
+        exposure.to_netcdf(exposure_path, encoding=NETCDF_ENCODING)
+        sys.exit(0)
+
     logging.info(wind_fields.max_wind_speed)  # use xarray repr
 
     logging.info("Loading network data")
@@ -176,16 +219,7 @@ if __name__ == "__main__":
     logging.info(f"Using damage thresholds: {speed_thresholds} [m/s]")
 
     logging.info("Simulating electricity network failure due to wind damage...")
-    args = ((storm_id, wind_fields.max_wind_speed, splits, speed_thresholds, network) for storm_id in wind_fields.event_id)
-    exposure_by_storm: list[Optional[xr.Dataset]] = []
-    if parallel:
-        with multiprocessing.Pool() as pool:
-            exposure_by_storm = pool.starmap(degrade_grid_with_storm, args)
-    else:
-        for arg in args:
-            exposure_by_storm.append(degrade_grid_with_storm(*arg))
+    exposure = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
 
-    # filter out storms that haven't impinged upon the network at all
-    exposure = xr.concat(filter(lambda x: x is not None, exposure_by_storm), "event_id")
-    encoding = {variable: {"zlib": True, "complevel": 9} for variable in exposure.keys()}
-    exposure.to_netcdf(damages_path, encoding=encoding)
+    logging.info(f"Writing results to disk")
+    exposure.to_netcdf(exposure_path, encoding=NETCDF_ENCODING)

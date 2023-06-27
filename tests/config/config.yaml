@@ -74,12 +74,6 @@ direct_damages:
   # per asset type, per hazard (flood, storm, etc.)
   curves_dir: 'bundled_data/damage_curves/'
 
-
-###############################
-### STORM / ENERGY WORKFLOW ###
-###############################
-
-
 # Options for exposure tif file generation
 exposure_tifs:
   # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
@@ -95,76 +89,41 @@ exposure_tifs:
       # Colour mapping to use for raster data
       cmap: 'Reds'
 
-## STORM Power Network Analysis
+###############################
+### STORM / ENERGY WORKFLOW ###
+###############################
 
-# for any given spatial domain, use multiprocessing to parallelise by storm
-# works for estimate_wind_fields.py and grid_disruption.py
-parallelise_by_storm: False
+# sets of storm ids to process for potentially many country networks
+storm_sets:
+    # files containing empty list, indicating to process all in dataset
+    IBTrACS: 'config/storm_sets/ibtracs.json'
+    # files containing a list of storm id strings that constitute the storm set
+    # key should follow the pattern: <dataset>_<storm_set_reference>
+    # where dataset belongs to:
+    # {IBTrACS, STORM-constant, STORM-CMCC-CM2-VHR4, etc.}
+    IBTrACS_irma-2017: 'config/storm_sets/irma.json'
+
+# consider countries at risk of a storm if within this many degrees of any storm track point
+max_track_search_radius_deg: 2
+
+# wind speed is constant within a square area of sides wind_deg
+# note that for large domains, e.g. USA or CHN, 0.05 deg resolution requires
+# on the order of 4GB RAM per storm wind estimate
+wind_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [35]
+transmission_windspeed_failure: [20., 35]
 
-# width and height of a square cell or 'box' for power/storms workflow
-# dataset-splitting -- must be a factor of 180
-box_deg: 5
-# wind_deg defines another grid which nests inside the above
-# this value must be a factor of box_deg
-# wind speed is constant within a square area of sides wind_deg
-wind_deg: 0.1  # approx 1km latitude
+# some of the scripts and rules are parallelised with multiprocessing
+# works for annotate_targets.py and estimate_wind_fields.py
+# setting to 1 will run any parallelisable job in serial
+# N.B. snakemake will enforce:
+# n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
+processes_per_parallel_job: 1
 
 # whether to plot maximum wind fields and storm track animations for each storm
-# WARNING: this is very slow.. you probably only ever want it for historic tracks
-plot_wind_fields: False
-
-# List of boxes NUMBERS to analyse (only) e.g. [1029, 1028, 1030, 957].
-# Note that this must be known for the box_width_height value entered above.
-# use an empty list to evaluate globally
-specific_boxes: []
-# this contains Puerto Rico (direct hit for Hurricane Maria of 2017)
-# specific_boxes: [1030]
-# box IDs for the Caribbean on a 5 degree grid, east to west, south to north
-# specific_boxes: [1103, 1032, 1030, 1029, 957, 1028, 956, 884, 955, 883]
-
-# STORM BASINS #
-# Tropical cyclone basins to analyse. List of strings.
-# Empty list for global analysis.
-# Options: "EP", "NA", "NI", "SI", "SP", "WP".
-# If `specific_boxes` are selected, this must be coherent with `storm_basins`
-storm_basins: []
-
-# SAMPLES #
-# storm datasets are split into 'samples', each comprising 1,000 years of storm data
-# typically there are 10 samples available for each model
-# to use all available samples, specify an empty list
-storm_files_sample_set: [0]
-
-# Direct damage cost per km (USD) for high voltage lines. 400 000USD suggestion for upper limit
-reconstruction_cost_high: 400000
-
-# Direct damage cost per km (USD) for low and medium voltage lines. XXX 000USD suggestion for upper limit
-reconstruction_cost_lowmedium: 200000
-
-# Further Configuration #
-# Storms will be analysed in batches of this value. Higher value: quicker process. Lower value: better memory. It is recommended to tweak this value dependent on the machine's available memory and/or user requirements (500 is often a good starting value). Note that at below 25, attempts are made to record which files store which data as to only load the relevant wind csv files. This may explain increases/decreases in performance.
-storm_batches: 900
-
-# If set to True then wind_extracter will overwrite existing wind files. It is recommended to keep this as False unless changes are made in the wind configuration files/scripts.
-wind_rerun: True
-
-# Analysis #
-# Percentage of storms to select for geospatial analysis and visualisation. Set to 100 for all
-top_select: 100
-
-# Set increasing severity for top_select. True means top_select is the first top_select% of storms in increasing severity (i.e. first one is the least damaging storm). False means the top top_select% worst storms are analysed (i.e. first on is the most damaging storm)
-increased_severity_sort: True
-
-# Percentile select
-percentile: 99
-
-# Spatial level to aggregate to for geospatial analyses (0 = country and up to 5 inclusive). The higher the number the longer the processing
-aggregate_level: 1
-
-# specific storm IDs to use in grid_disruption.py and subsequently
-# use an empty list to process all available storms
-specific_storms: ['2017242N16333']  # Maria
+plot_wind:
+    max_speed: True
+    # WARNING: plotting the animation is slow.. you probably only ever want it for historic tracks
+    animation: False

@@ -7,6 +7,7 @@ import os
 import multiprocessing
 import logging
 from typing import Optional
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -15,43 +16,59 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.wind import holland_wind_model, advective_vector, rotational_field
-from plot_wind_fields import plot_contours, animate_track
+from open_gira.wind import (
+    advective_vector, rotational_field, interpolate_track,
+    power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
+)
+from plot_wind_fields import plot_contours, animate_track, plot_downscale_factors
 
 
-logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-# Environmental pressure values in hPa / mbar (standard estimate of background
-# pressure away from the cyclone) are taken from the AIR hurricane model, table
-# 3 in Butke (2012).  Available at:
-# https://www.air-worldwide.com/publications/air-currents/2012/
-# the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
-ENV_PRESSURE = {
-    "NI": 1006.5,
-    "SA": 1014.1,
-    "NA": 1014.1,
-    "EP": 1008.8,
-    "SI": 1010.6,
-    "SP": 1008.1,
-    "WP": 1008.3,
-}
+# wind speed altitudes
+
+# gradient level clearly not realistic, but we vary it to fit our estimated wind
+# speeds to observations (or to better model results)
+# the 18m figure is as a result of minimising pixel-wise errors between this model
+# and that used in Done et al. 2020 with a physical boundary layer
+GRADIENT_LEVEL_METRES = 18
+SURFACE_LEVEL_METRES = 10
 
 
-def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool, plot_dir: Optional[str]) -> tuple[str, np.ndarray]:
+def cleanup(output_path: str, downscale_factors_plot_path: str):
+    """
+    If we don't have a network, or tracks and we can't continue, write empty
+    files and quit.
+    """
+    empty_wind_da().to_netcdf(output_path)
+    os.system(f"touch {downscale_factors_plot_path}")
+    sys.exit(0)
+
+
+def process_track(
+    track: pd.core.groupby.generic.DataFrameGroupBy,
+    longitude: np.ndarray,
+    latitude: np.ndarray,
+    downscaling_factors: np.ndarray,
+    plot_max_wind: bool,
+    plot_animation: bool,
+    plot_dir: Optional[str]
+) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
     fields, sum them and take the maximum of the wind vector magnitude across
     time. Optionally plot the wind fields and save to disk.
 
     Args:
-        track (pd.core.groupby.generic.DataFrameGroupBy): Subset of DataFrame
-            describing a track. Must have a temporal index and the following
-            fields: `min_pressure_hpa`, `max_wind_speed_ms`,
-            `radius_to_max_winds_km`.
-        longitude (np.ndarray): Longitude values to construct evaluation grid
-        latitude (np.ndarray): Latitude values to construct evaluation grid
-        plot (bool): Whether to plot max wind field and wind field evolution.
-        plot_dir (Optional[str]): Where to save optional plots.
+        track: Subset of DataFrame describing a track. Must have a temporal
+            index and the following fields: `min_pressure_hpa`,
+            `max_wind_speed_ms`, `radius_to_max_winds_km`.
+        longitude: Longitude values to construct evaluation grid
+        latitude: Latitude values to construct evaluation grid
+        downscaling_factors: Factors to bring gradient-level winds to surface.
+        plot_max_wind: Whether to plot max wind fields
+        plot_animation: Whether to plot wind field evolution
+        plot_dir: Where to save optional plots.
 
     Returns:
         str: Track identifier
@@ -62,9 +79,11 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
 
     logging.info(track_id)
 
+    grid_shape: tuple[int, int] = (len(latitude), len(longitude))
+
     # we can't calculate the advective component without at least two points
     if len(track) == 1:
-        return track_id, np.zeros((len(longitude), len(latitude)))
+        return track_id, np.zeros(grid_shape)
 
     # basin of first record for storm track (storm genesis for synthetic tracks)
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
@@ -94,7 +113,6 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # hemisphere belongs to {-1, 1}
     track["hemisphere"] = np.sign(track.geometry.y)
 
-    grid_shape: tuple[int, int] = (len(longitude), len(latitude))
     adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
     rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
@@ -126,113 +144,104 @@ def process_track(track, longitude: np.ndarray, latitude: np.ndarray, plot: bool
     # sum components of wind field, (timesteps, y, x)
     wind_field: np.ndarray[complex] = adv_field + rot_field
 
-    # find vector magnitude, then take max along timestep axis, giving (y, x)
-    max_wind_speeds: np.ndarray[float] = np.max(np.abs(wind_field), axis=0)
+    # take factors calculated from surface roughness of region and use to downscale speeds
+    downscaled_wind_field = downscaling_factors * wind_field
 
-    if plot:
-        plot_contours(
-            max_wind_speeds,
-            f"{track_id} max wind speed",
-            "Wind speed [m/s]",
-            os.path.join(plot_dir, f"{track_id}_max_contour.png")
-        )
-        animate_track(
-            wind_field,
-            track,
-            os.path.join(plot_dir, f"{track_id}.gif")
-        )
+    # find vector magnitude, then take max along timestep axis, giving (y, x)
+    # N.B. np.max([np.nan, 1]) = np.nan, so use np.nanmax
+    max_wind_speeds: np.ndarray[float] = np.nanmax(np.abs(downscaled_wind_field), axis=0)
+
+    # any dimensions with a single cell will break the plotting routines
+    if 1 not in grid_shape:
+
+        if plot_max_wind:
+            plot_contours(
+                max_wind_speeds,
+                f"{track_id} max wind speed",
+                "Wind speed [m/s]",
+                os.path.join(plot_dir, f"{track_id}_max_contour.png")
+            )
+
+        if plot_animation:
+            animate_track(
+                downscaled_wind_field,
+                track,
+                os.path.join(plot_dir, f"{track_id}.gif")
+            )
 
     return track_id, max_wind_speeds
 
 
-def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
-    """
-    Interpolate storm track data.
-
-    Arguments:
-        track (gpd.GeoDataFrame): Storm track with at least the following
-            columns: geometry, min_pressure_hpa, max_wind_speed_ms,
-            radius_to_max_winds_km, timestep. Must have a DatetimeIndex.
-        frequency (str): If given track with DatetimeIndex, interpolate to
-            resolution given by this pandas frequency string
-
-    Returns:
-        gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
-            radius_to_max_winds_km and geometry columns interpolated.
-    """
-
-    if len(track) == 0:
-        raise ValueError("No track data")
-    elif len(track) == 1:
-        # not enough data to interpolate between, short circuit
-        return track
-    elif len(track) == 2:
-        interp_method = "linear"
-    else:
-        interp_method = "quadratic"
-
-    if isinstance(track.index, pd.DatetimeIndex):
-        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
-    else:
-        raise ValueError("tracks must have a datetime index to interpolate")
-
-    track["x"] = track.geometry.x
-    track["y"] = track.geometry.y
-    track = track.drop(columns="geometry").copy()
-
-    interp_cols = [
-        "min_pressure_hpa",
-        "max_wind_speed_ms",
-        "radius_to_max_winds_km",
-        "x",
-        "y",
-    ]
-
-    interp_domain = pd.DataFrame(
-        index=interp_index,
-        data=np.full((len(interp_index), len(track.columns)), np.nan),
-        columns=track.columns,
-    )
-
-    # merge dataframes, on index collision, keep the non-NaN values from track
-    interp_track = track.combine_first(interp_domain).sort_index()
-
-    # interpolate over numeric value of index
-    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
-
-    interp_track["geometry"] = gpd.points_from_xy(
-        interp_track.x, interp_track.y, crs="EPSG:4326"
-    )
-
-    return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])
-
-
 if __name__ == "__main__":
 
-    storm_file_path: str = snakemake.input.storm_file  # type: ignore
+    storm_file_path: str = snakemake.input.storm_file
     wind_grid_path: str = snakemake.input.wind_grid
-    plot_wind_fields: bool = snakemake.config["plot_wind_fields"]
-    parallel: bool = snakemake.config["parallelise_by_storm"]
+    surface_roughness_path: str = snakemake.input.surface_roughness
+    storm_set: set[str] = set(snakemake.params.storm_set)
+    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
+    plot_animation: bool = snakemake.config["plot_wind"]["animation"]
+    n_proc: int = snakemake.config["processes_per_parallel_job"]
     plot_dir_path: str = snakemake.output.plot_dir
-    output_path: str = snakemake.output.wind_speeds  # type: ignore
-
-    # TODO check config to restrict analysis
-    # snakemake.config.specific_storm_analysis
+    output_path: str = snakemake.output.wind_speeds
+    downscale_factors_plot_path: str = snakemake.output.downscale_factors_plot
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
 
-    # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
-    grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+    logging.info("Reading tracks")
+    tracks = gpd.read_parquet(storm_file_path)
+    if tracks.empty:
+        logging.info("No intersection between network and tracks, writing empty file.")
+        cleanup(output_path, downscale_factors_plot_path)
 
-    tracks = gpd.read_parquet(storm_file_path).groupby("track_id")
+    if storm_set:
+        # if we have a storm_set, only keep the matching track_ids
+        logging.info("Filtering as per storm set")
+        tracks = tracks[tracks.track_id.isin(storm_set)]
+
+    if tracks.empty:
+        logging.info("No intersection between network and tracks, writing empty file.")
+        cleanup(output_path, downscale_factors_plot_path)
+
+    logging.info(f"\n{tracks}")
+    grouped_tracks = tracks.groupby("track_id")
+
+    # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
+    logging.info("Reading wind evaluation grid")
+    grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
+    logging.info(f"\n{grid}")
+
+    logging.info("Calculating downscaling factors from surface roughness raster")
+
+    # surface roughness raster for downscaling winds with
+    surface_roughness_raster: xr.DataArray = rioxarray.open_rasterio(surface_roughness_path)
+
+    # (1, y, x) where 1 is the number of surface roughness bands
+    # select the only value in the band dimension
+    surface_roughness: np.ndarray = surface_roughness_raster[0].values
+
+    # calculate factors to scale wind speeds from gradient-level to surface level,
+    # taking into account surface roughness as defined by the raster
+    downscaling_factors = power_law_scale_factors(
+        surface_roughness,
+        SURFACE_LEVEL_METRES,
+        GRADIENT_LEVEL_METRES
+    )
+
+    logging.info("Mapping downscaling factors and saving to disk")
+    plot_downscale_factors(
+        downscaling_factors,
+        "Wind downscaling factors",
+        downscale_factors_plot_path
+    )
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
-    args = ((track[1], grid.x, grid.y, plot_wind_fields, plot_dir_path) for track in tracks)
+    args = ((track[1], grid.x, grid.y, downscaling_factors, plot_max_wind, plot_animation, plot_dir_path) for track in grouped_tracks)
 
+    logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
-    if parallel:
-        with multiprocessing.Pool() as pool:
+    if n_proc > 1:
+        with multiprocessing.Pool(processes=n_proc) as pool:
             max_wind_speeds = pool.starmap(process_track, args)
     else:
         for arg in args:
@@ -241,19 +250,17 @@ if __name__ == "__main__":
     # sort by track_id so we have a reproducible order even after multiprocessing
     max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
 
+    logging.info("Saving maximum wind speeds to disk")
     track_ids, fields = zip(*max_wind_speeds)
 
     # write to disk as netCDF with CRS
-    # TODO: write the appropriate metadata for QGIS to read this successfully
-    # as it is, the lat/long values are being ignored
-    # you can of course use ncview or xarray to inspect instead...
     da = xr.DataArray(
         data=np.stack(fields),
-        dims=("event_id", "lat", "long"),
+        dims=WIND_COORDS.keys(),
         coords=(
             ("event_id", list(track_ids)),
-            ("long", grid.x.values),
-            ("lat", grid.y.values),
+            ("latitude", grid.y.values),
+            ("longitude", grid.x.values),
         ),
         attrs=dict(
             description="Maximum estimated wind speed during event",
@@ -261,6 +268,14 @@ if __name__ == "__main__":
         ),
         name="max_wind_speed",
     )
-    da = da.rio.write_crs("epsg:4326")
+
+    # TODO: write the appropriate metadata for QGIS to read this successfully
+    # as it is, the lat/long values are being ignored
+    # you can of course use ncview or xarray to inspect instead...
+    # spatial_ref_attrs = pyproj.CRS.from_user_input(4326).to_cf()
+    # da["spatial_ref"] = ((), 0, spatial_ref_attrs)
+    da = da.rio.write_crs("EPSG:4326")
     encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
     da.to_netcdf(output_path, encoding=encoding)
+
+    logging.info("Done estimating wind fields")

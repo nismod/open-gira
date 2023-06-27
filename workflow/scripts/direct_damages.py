@@ -42,7 +42,7 @@ if __name__ == "__main__":
         return_period_and_ead_path
     )
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.

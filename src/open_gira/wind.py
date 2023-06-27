@@ -1,9 +1,80 @@
 """
-Functions for reconstructing wind fields from track data.
+For reconstructing wind fields from track data.
 """
 
 import numpy as np
 import pyproj
+import xarray as xr
+
+import geopandas as gpd
+import pandas as pd
+
+
+# dimensions on which we have maximum wind speeds for
+WIND_COORDS: dict[str, type] = {
+    "event_id": str,
+    "latitude": float,
+    "longitude": float,
+}
+
+# Environmental pressure values in hPa / mbar (standard estimate of background
+# pressure away from the cyclone) are taken from the AIR hurricane model, table
+# 3 in Butke (2012).  Available at:
+# https://www.air-worldwide.com/publications/air-currents/2012/
+# the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
+ENV_PRESSURE = {
+    "NI": 1006.5,
+    "SA": 1014.1,
+    "NA": 1014.1,
+    "EP": 1008.8,
+    "SI": 1010.6,
+    "SP": 1008.1,
+    "WP": 1008.3,
+}
+
+
+def empty_wind_da() -> xr.DataArray:
+    """
+    Return a maxium wind field dataarray with a schema but no data.
+
+    N.B. To concatenate xarray objects, they must all share the same
+    coordinate variables.
+    """
+    da = xr.DataArray(
+        data=np.full((0,) * len(WIND_COORDS), np.nan),
+        coords={
+            name: np.array([], dtype=dtype)
+            for name, dtype in WIND_COORDS.items()
+        },
+        name="max_wind_speed"
+    )
+    return da
+
+
+def power_law_scale_factors(z0: np.ndarray, z1: float, z2: float) -> np.ndarray:
+    """
+    Calculate factors to scale wind speeds from one height to another, given
+    surface roughness information.
+
+    Wieringa 1992, Journal of Wind Engineering and Industrial Aerodynamics
+    Volume 41, Issues 1–3, October 1992, Pages 357-368, Equation 3
+
+    This approach is rudimentary, but requires few inputs. Best for scaling
+    from top of boundary layer (~2km) to a few hundred metres above ground.
+    Logarithmic scaling better suited for 100m -> ground level.
+
+    Args:
+        z0: Surface roughness lengths in metres
+        z1: Height of desired wind speeds above ground in metres
+        z2: Height of wind speeds, v2, above ground in metres
+
+    Returns:
+        Scale factors, f, for v2 = f * v1
+    """
+
+    p: np.ndarray = 1 / np.log(np.sqrt(z1 * z2) / z0)
+
+    return np.power(z1 / z2, p)
 
 
 def holland_wind_model(
@@ -15,7 +86,7 @@ def holland_wind_model(
     phi_deg: float,
 ) -> np.ndarray:
     """
-    Calculate wind speed at points some distance from a cyclone eye location.
+    Calculate gradient-level wind speed at points some distance from a cyclone eye location.
 
     References
     ----------
@@ -47,9 +118,10 @@ def holland_wind_model(
     Omega = (2 * np.pi) / (24 * 60 * 60)  # rotation speed of the Earth in rad/s
     f = np.abs(2 * Omega * np.sin(np.radians(phi_deg)))  # Coriolis parameter
 
-    # case where (pressure_env_hpa == pressure_hpa) so Delta_P is zero will raise ZeroDivisionError
+    # case where Delta_P is zero will raise ZeroDivisionError
     Delta_P = p_env_pa - p_pa
 
+    # beta parameter, how sharp the V(r) profile around the eye wall is
     B = (
         np.power(V_max_ms, 2) * np.e * rho
         + f * V_max_ms * RMW_m * np.e * rho
@@ -165,3 +237,65 @@ def rotational_field(
 
     # find components of vector at each pixel
     return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+
+
+def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
+    """
+    Interpolate storm track data.
+
+    Arguments:
+        track (gpd.GeoDataFrame): Storm track with at least the following
+            columns: geometry, min_pressure_hpa, max_wind_speed_ms,
+            radius_to_max_winds_km, timestep. Must have a DatetimeIndex.
+        frequency (str): If given track with DatetimeIndex, interpolate to
+            resolution given by this pandas frequency string
+
+    Returns:
+        gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
+            radius_to_max_winds_km and geometry columns interpolated.
+    """
+
+    if len(track) == 0:
+        raise ValueError("No track data")
+    elif len(track) == 1:
+        # not enough data to interpolate between, short circuit
+        return track
+    elif len(track) == 2:
+        interp_method = "linear"
+    else:
+        interp_method = "quadratic"
+
+    if isinstance(track.index, pd.DatetimeIndex):
+        interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
+    else:
+        raise ValueError("tracks must have a datetime index to interpolate")
+
+    track["x"] = track.geometry.x
+    track["y"] = track.geometry.y
+    track = track.drop(columns="geometry").copy()
+
+    interp_cols = [
+        "min_pressure_hpa",
+        "max_wind_speed_ms",
+        "radius_to_max_winds_km",
+        "x",
+        "y",
+    ]
+
+    interp_domain = pd.DataFrame(
+        index=interp_index,
+        data=np.full((len(interp_index), len(track.columns)), np.nan),
+        columns=track.columns,
+    )
+
+    # merge dataframes, on index collision, keep the non-NaN values from track
+    interp_track = track.combine_first(interp_domain).sort_index()
+
+    # interpolate over numeric value of index
+    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
+
+    interp_track["geometry"] = gpd.points_from_xy(
+        interp_track.x, interp_track.y, crs="EPSG:4326"
+    )
+
+    return gpd.GeoDataFrame(interp_track).drop(columns=["x", "y"])

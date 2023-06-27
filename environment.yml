@@ -9,12 +9,13 @@ dependencies:
   - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.2.1 # vector-raster intersections
-    - snkit==1.7.2        # spatial network cleaning
+    - nismod-snail==0.3.1 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
+    - snkit               # spatial network cleaning
     - --editable .        # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
+  - contextily          # basemaps for plots
   - datashader          # plotting large datasets
   - flake8              # linter
   - gdal>=3.3           # command-line tools for spatial data
@@ -22,7 +23,7 @@ dependencies:
   - geopy               # geocoding client
   - ipykernel           # notebook support
   - jupyter             # notebook support
-  - matplotlib==3.5.1   # basic plotting
+  - matplotlib==3.7.1   # basic plotting
   - nb_conda_kernels    # notebook support
   - netCDF4             # NetCDF file format
   - networkx            # networks

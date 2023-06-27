@@ -45,7 +45,7 @@ if __name__ == "__main__":
     except NameError:
         raise ValueError("Must be run via snakemake.")
 
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     # N.B. geoparquet spec is not currently stable, and therefore not a suitable format for archiving
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")

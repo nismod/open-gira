@@ -1,0 +1,29 @@
+# Data mostly from the Final Report of the Global Wind Atlas project:
+# https://energiforskning.dk/files/slutrapporter/gwa_64011-0347_finalreport.pdf
+# `water bodes` surface roughness changed from 0 to a value used in WRF
+# `wetlands` surface roughness changed from 11 to 1.1 (presumed error)
+# `no data` added with same roughness as `permanent snow and ice`
+"category_name","glob_cover_2009_id","roughness_length_m"
+"water bodies",210,0.0003
+"no data",230,0.004
+"permanent snow and ice",220,0.004
+"bare areas",200,0.005
+"grassland, savannas or lichens/mosses",140,0.03
+"sparse vegetation",150,0.05
+"croplands",11,0.1
+"croplands",14,0.1
+"shrubland",130,0.1
+"mosaic natural vegetation / cropland",20,0.3
+"mosaic natural vegetation / cropland",30,0.3
+"flooded forest",160,0.5
+"mosaic grassland / forest",120,0.5
+"flooded forest or shrubland",170,0.6
+"urban areas",190,1
+"wetlands",180,1.1
+"forest",40,1.5
+"forest",50,1.5
+"forest",60,1.5
+"forest",70,1.5
+"forest",90,1.5
+"forest",100,1.5
+"forest",110,1.5

@@ -22,18 +22,3 @@ rule download_gridfinder:
 To test:
 snakemake --cores 1 results/input/gridfinder/grid.gpkg
 """
-
-
-rule gridfinder_to_geoparquet:
-    input:
-        geopackage = rules.download_gridfinder.output.electricity_grid_global,
-    output:
-        geoparquet = "{OUTPUT_DIR}/input/gridfinder/grid.geoparquet",
-    run:
-        import geopandas as gpd
-        gpd.read_file(input.geopackage).to_parquet(output.geoparquet)
-
-"""
-To test:
-snakemake --cores 1 results/input/gridfinder/grid.geoparquet
-"""

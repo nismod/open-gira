@@ -16,7 +16,7 @@ import rasterio.plot
 import shapely.geometry as shape
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     try:
         hazard_dir = snakemake.input["hazard_dir"]  # type: ignore
