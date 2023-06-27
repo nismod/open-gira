@@ -44,11 +44,24 @@ conda activate open-gira  # note that you still use `conda` to activate and deac
 
 ## Command-line tools
 
-Install [`osmium`](https://osmcode.org/osmium-tool/manual.html) according to the
-instructions there, or see the
-[`Dockerfile`](https://github.com/nismod/open-gira/blob/main/Dockerfile) for example commands
-to run on Ubuntu.
+### Osmium
 
-Install [`gdal` binaries](https://gdal.org/download.html)
-- via conda/mamba, e.g. `conda install -c conda-forge gdal` should work cross-platform
-- via system package manager, e.g. `sudo apt install gdal-bin` on Ubuntu.
+Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according
+to the instructions there. Tests run with versions:
+- osmium-tool v1.14.0
+- libosmium v2.18.0
+
+### GDAL
+
+The workflow leans heavily on the GDAL toolset. To install using APT:
+`sudo apt install gdal-bin`
+
+### jq
+
+jq is used to parse JSON files. To install using APT:
+`sudo apt install jq`
+
+### exactextract
+
+exactextract is used for zonal statistics. Please see installation instructions [here](https://github.com/isciences/exactextract).
+

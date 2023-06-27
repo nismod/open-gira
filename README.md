@@ -172,17 +172,12 @@ that uses just one OSM dataset, one hazard dataset, and one slice:
 You can remove all intermediate files by running
 
 ```
-snakemake -c1 clean
+snakemake -c1 -R clean
 ```
 
 Note that this will *not* remove the final data files
 `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`,
 nor will it remove the original input files `<output_dir>/input/*`.
-
-You can remove all intermediate data _including_ input files by running
-```
-snakemake -c1 clean_all
-```
 
 Snakemake has utilities to improve the workflow code quality:
 - `snakemake --lint` suggests improvements and fixes for common problems

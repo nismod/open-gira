@@ -162,20 +162,5 @@ rule clean:
         rm -rf {config[output_dir]}/slices &&
         rm -rf {config[output_dir]}/splits &&
         rm -rf {config[output_dir]}/direct_damages &&
-        rm -rf {config[output_dir]}/power_processed &&
-        rm -rf {config[output_dir]}/power_intersection
-        """
-
-# Remove everything except the final results
-rule clean_all:
-    shell:
-        """
-        rm -rf {config[output_dir]}/input &&
-        rm -rf {config[output_dir]}/json &&
-        rm -rf {config[output_dir]}/geoparquet &&
-        rm -rf {config[output_dir]}/slices &&
-        rm -rf {config[output_dir]}/splits &&
-        rm -rf {config[output_dir]}/direct_damages &&
-        rm -rf {config[output_dir]}/power_processed &&
-        rm -rf {config[output_dir]}/power_intersection
+        rm -rf {config[output_dir]}/power/by_country
         """

@@ -123,9 +123,12 @@ def map_outage(
     ax.set_ylabel("Latitude [deg]")
     ax.grid()
 
-    name, = set(track.name)
-    year, = set(track.year)
-    ax.set_title(f"{event_id}: {name}, {year:d} @ {threshold:.1f} $[m s^{{-1}}]$")
+    if ("name" in track.columns) and ("year" in track.columns):
+        name, = set(track.name)
+        year, = set(track.year)
+        ax.set_title(f"{event_id}: {name}, {year:d} @ {threshold:.1f} $[m s^{{-1}}]$")
+    else:
+        ax.set_title(f"{event_id} @ {threshold:.1f} $[m s^{{-1}}]$")
 
     return fig
 

@@ -20,13 +20,23 @@ snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.
 """
 
 
+def storm_tracks_file_from_storm_set(wildcards) -> str:
+    """
+    Return a path to the processed tracks for a stom set.
+
+    Given e.g. IBTrACS_maria-2017, return results/input/storm-tracks/IBTrACS/tracks.geoparquet
+    """
+    storm_dataset = wildcards.STORM_SET.split("_")[0]
+    return f"{wildcards.OUTPUT_DIR}/input/storm_tracks/{storm_dataset}/tracks.geoparquet"
+
+
 checkpoint countries_intersecting_storm_set:
     """
     Find all countries which are likely to be affected by some storm set (as
     defined by a config["storm_sets"] JSON file).
     """
     input:
-        ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet",
+        tracks = storm_tracks_file_from_storm_set,
         admin_bounds = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
     output:
         country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted.json",
@@ -42,7 +52,7 @@ checkpoint countries_intersecting_storm_set:
         point_buffer_deg: float = config["max_track_search_radius_deg"]
 
         # read in track points
-        ibtracs = gpd.read_parquet(input.ibtracs)
+        tracks = gpd.read_parquet(input.tracks)
 
         # load storm ids of interest from file
         storm_set_path = config["storm_sets"][wildcards.STORM_SET]
@@ -51,12 +61,12 @@ checkpoint countries_intersecting_storm_set:
 
         if storm_set:
             # subset points to the storm set of interest
-            ibtracs_subset = ibtracs[ibtracs["track_id"].isin(storm_set)]
+            tracks_subset = tracks[tracks["track_id"].isin(storm_set)]
         else:
             # with no list of countries, assume we process all of them
-            ibtracs_subset = ibtracs
+            tracks_subset = tracks
 
-        tracks = ibtracs_subset.copy()
+        tracks = tracks_subset.copy()
         tracks.geometry = tracks.geometry.buffer(point_buffer_deg)
 
         countries = gpd.read_parquet(input.admin_bounds).rename(columns={"GID_0": "iso_a3"})
@@ -204,7 +214,7 @@ rule merge_countries_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/exposure_by_target.nc"
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/exposure_by_target.nc
 """
 
 
