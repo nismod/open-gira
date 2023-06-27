@@ -18,6 +18,8 @@ rule slice_storm:
         grid_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json"
     output:
         sliced_tracks="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/STORM-{STORM_MODEL}/tracks.geoparquet",
+    resources:
+        mem_mb=10000  # the global tracks file is fairly chunky
     script:
         "../../scripts/preprocess/slice_storm_tracks.py"
 
