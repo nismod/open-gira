@@ -8,7 +8,7 @@ This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/) workfl
 analyse physical climate risks to infrastructure networks using global open data.
 
 The related open-source Python library [snail](https://github.com/nismod/snail) provides
-some of the core functionality.
+some of the core vector-raster intersection functionality.
 
 > Work in Progress
 >
@@ -29,39 +29,49 @@ some of the core functionality.
 
 ### Conda
 
-This repository comes with a `environment.yml` file describing the conda and
-PyPI packages required to run `open-gira`.
+This repository comes with a `environment.yml` file describing the `conda` and
+`PyPI` packages required to run `open-gira`. The `open-gira` developers recommend
+using either [mamba](https://mamba.readthedocs.io/en/latest/index.html) or
+[micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba)
+to install and manage these `conda` packages.
 
-To create the `open-gira` conda environment: `conda env create -f
-environment.yml`
+#### Locally
 
-And to activate it: `conda activate open-gira`
+Having installed one of the suggested package managers, to create the
+`open-gira` conda environment:
+```bash
+micromamba create -f environment.yml -y
+```
 
-If running on a cluster, you could create a seperate orchestrating
-environment containing only snakemake, e.g. `conda env create -n snakemake
-python=3.9 snakemake`. Activate this before requesting targets with
-`snakemake --profile <path_to_cluster_config> <target>`.
+And to activate the environment:
+```bash
+micromamba activate open-gira
+```
 
-### Osmium
+You are now ready to request result files, triggering jobs in the process.
 
-Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according
-to the instructions there. Tests run with versions:
-- osmium-tool v1.14.0
-- libosmium v2.18.0
+#### Cluster
 
-### GDAL
+If installing on a cluster, you can work as above, or, create a seperate
+orchestrating environment containing only snakemake, e.g.
+```bash
+micromamba create -n snakemake python=3.9 snakemake
+```
 
-The workflow leans heavily on the GDAL toolset. To install using APT:
-`sudo apt install gdal-bin`
-
-### jq
-
-jq is used to parse JSON files. To install using APT:
-`sudo apt install jq`
+In this context, `snakemake` itself can manage the other required dependencies,
+creating other environments as necessary. Activate the orchestration
+environment before requesting targets with the following:
+```bash
+micromamba activate snakemake
+snakemake --profile <path_to_cluster_config> -- <target_file>
+```
 
 ### exactextract
 
-exactextract is used for zonal statistics. Please see installation instructions [here](https://github.com/isciences/exactextract).
+`exactextract` is used for zonal statistics in the tropical cyclones /
+electricity grid analysis. It is not available via the `conda` package
+management ecosystem and so must be installed separately. Please see
+installation instructions [here](https://github.com/isciences/exactextract).
 
 ## Running tests
 
@@ -71,46 +81,37 @@ Workflow steps are tested using a small sample dataset. Run:
 python -m pytest tests
 ```
 
-## Downloading datasets
+## Usage
 
-The workflow downloads OpenStreetMap datasets and hazard raster files and combines them.
-The locations of the datasets to download are specified in `config/config.yaml`.
+TODO: General introduction to `snakemake`
 
-## Running the pipeline
-
-The snakemake configuration details are in `config/config.yml`.
-You can edit this to set the target OSM
-infrastructure datasets, number of slices, and hazard datasets. See
+The snakemake configuration details are in `config/config.yml`. You can edit
+this to set the target OSM infrastructure datasets, number of spatial slices, and
+hazard datasets. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
-for details on the configuration variables.
-For new users, the default values should suffice.
+for details on the configuration variables. For new users, the default values should suffice.
 
-You can then run the exposure analysis pipeline automatically using
-snakemake, like so
+### Network creation
 
-```
-snakemake --cores 8
-```
+TODO
 
-Individual configuration parameters can be overridden from the command
-line, for instance
+#### Road
 
-```
-snakemake --cores 1 --config output_dir=output slice_count=8
-```
+TODO
 
-It may be useful to maintain several configuration files. You can
-specify a configuration to be used in place of the default
-`config/config.yml` like so
+#### Rail
 
-```
-snakemake --cores 8 --configfile config/my_other_config.yml
-```
+TODO
 
-Note that pathways in the config file are always relative to the open-gira
-project root, not the location of the config file.
+#### Electricity grid creation
 
-## Step-by-step description of the pipeline
+TODO
+
+### Risk assessment
+
+TODO
+
+#### Transport / flooding
 
 The pipeline starts from a OpenStreetMap dataset (_e.g._
 `europe-latest`) and produces network/flood hazard intersection data,
@@ -167,7 +168,11 @@ This is a directional acyclic graph (DAG) of a simplified version of the workflo
 that uses just one OSM dataset, one hazard dataset, and one slice:
 ![DAG of the Snakefile workflow](docs/src/img/DAG-simple.png)
 
-### Keeping things tidy
+#### Electricity grid / tropical cyclone
+
+TODO
+
+### Cleaning intermediate outputs
 
 You can remove all intermediate files by running
 
@@ -179,27 +184,26 @@ Note that this will *not* remove the final data files
 `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`,
 nor will it remove the original input files `<output_dir>/input/*`.
 
-Snakemake has utilities to improve the workflow code quality:
-- `snakemake --lint` suggests improvements and fixes for common problems
-- `snakefmt .` reformats files according to a code style guide, similar to `black` for Python code.
-
-
 ## Documentation
 
 Documentation is written using the [`mdbook`](https://rust-lang.github.io/mdBook/index.html)
 format, using markdown files in the `./docs` directory.
 
-Follow the [installation instructions](https://rust-lang.github.io/mdBook/guide/installation.html) to get the `mdbook` command-line tool.
+Follow the [installation instructions](https://rust-lang.github.io/mdBook/guide/installation.html)
+to get the `mdbook` command-line tool.
 
 Build the docs locally:
 
-    cd docs
-    mdbook build
-    open book/index.html
+```bash
+cd docs
+mdbook build
+open book/index.html
+```
 
 Or run `mdbook serve` to run a server and rebuild the docs as you make changes.
 
-
 ## Acknowledgments
 
-This research received funding from the FCDO Climate Compatible Growth Programme. The views expressed here do not necessarily reflect the UK government's official policies.
+This research received funding from the FCDO Climate Compatible Growth
+Programme. The views expressed here do not necessarily reflect the UK
+government's official policies.
