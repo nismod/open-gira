@@ -23,12 +23,14 @@ dependencies:
   - geopy               # geocoding client
   - ipykernel           # notebook support
   - jupyter             # notebook support
+  - jq                  # JSON processing tool
   - matplotlib==3.7.1   # basic plotting
   - nb_conda_kernels    # notebook support
   - netCDF4             # NetCDF file format
   - networkx            # networks
   - numpy~=1.22.0       # data arrays
   - openpyxl            # Excel file format
+  - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing
   - pyarrow             # parquet file format, Arrow data exchange
   - aws-sdk-cpp=1.8.186
