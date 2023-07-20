@@ -15,7 +15,6 @@ from tqdm import tqdm
 from open_gira.utils import natural_sort
 
 
-NO_GEOM_ERROR_MSG: str = "No geometry columns are included in the columns"
 WGS84_EPSG = 4326
 
 # column names and dtypes for STORM synthetic tropical cyclone tracks

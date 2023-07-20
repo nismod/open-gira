@@ -201,22 +201,28 @@ class WaySlicer(osmium.SimpleHandler):
         }
 
 
+def empty_gdf() -> geopandas.GeoDataFrame:
+    """
+    Create an return an empty GeoDataFrame. Must explicitly specify columns
+    (despite empty list) to permit saving as geoparquet.
+    """
+    return geopandas.GeoDataFrame([], columns=["geometry"])
+
+
 if __name__ == "__main__":
     try:
         pbf_path = snakemake.input["pbf"]  # type: ignore
         edges_path = snakemake.output["edges"]  # type: ignore
         nodes_path = snakemake.output["nodes"]  # type: ignore
         keep_tags = snakemake.params["keep_tags"]  # type: ignore
-        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
         # command line.
-        pbf_path, edges_path, nodes_path, keep_tags, osm_epsg = sys.argv[1:]
+        pbf_path, edges_path, nodes_path, keep_tags = sys.argv[1:]
         # pbf_path = 'results/slices/tanzania-mini_filter-road/slice-2.osm.pbf'
         # edges_path = 'results/slice-2.geoparquet'
         # nodes_path = 'results/slice-2.geoparquet'
         # keep_tags = 'highway, railway'
-        # osm_epsg = 4326
 
         # process comma separated string into list of strings
         keep_tags: list = keep_tags.replace(" ", "").split(",")
@@ -243,7 +249,12 @@ if __name__ == "__main__":
         tags_to_preserve=keep_tags,
     )
     h.apply_file(pbf_path, locations=True)
-    edges = geopandas.GeoDataFrame(h.output_data)
+
+    if len(h.output_data) != 0:
+        edges = geopandas.GeoDataFrame(h.output_data)
+        edges = edges.set_crs(epsg=4326)
+    else:
+        edges = empty_gdf()
     logging.info(
         f"Complete: {len(h.output_data)} segments from {len(Counter(w['osm_way_id'] for w in h.output_data))} ways."
     )
@@ -252,14 +263,13 @@ if __name__ == "__main__":
         tags_to_preserve=keep_tags,
     )
     n.apply_file(pbf_path, locations=True)
-    nodes = geopandas.GeoDataFrame(n.output_data)
-    logging.info(f"Complete: {len(n.output_data)} nodes.")
+    if len(n.output_data) != 0:
+        nodes = geopandas.GeoDataFrame(n.output_data)
+        nodes = nodes.set_crs(epsg=4326)
+    else:
+        nodes = empty_gdf()
 
-    # can't set a CRS on an empty dataframe, will AttributeError
-    if not edges.empty:
-        edges.set_crs(epsg=osm_epsg, inplace=True)
-    if not nodes.empty:
-        nodes.set_crs(epsg=osm_epsg, inplace=True)
+    logging.info(f"Complete: {len(n.output_data)} nodes.")
 
     # write to disk -- even if empty
     edges.to_parquet(edges_path)

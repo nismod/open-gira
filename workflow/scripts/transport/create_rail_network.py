@@ -14,7 +14,7 @@ import snkit
 
 from utils import annotate_country, get_administrative_data
 from open_gira.assets import RailAssets
-from open_gira.io import write_empty_frames, NO_GEOM_ERROR_MSG
+from open_gira.io import write_empty_frames
 from open_gira.network import create_network
 from open_gira.utils import str_to_bool
 
@@ -98,29 +98,15 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     # read edges
-    try:
-        edges = gpd.read_parquet(osm_edges_path)
-    except ValueError as error:
-        if NO_GEOM_ERROR_MSG in str(error):
-            logging.info("No data in geometry column, writing empty files.")
-            # if the input parquet file does not contain a geometry column, geopandas
-            # will raise a ValueError rather than try to procede
-            write_empty_frames(edges_output_path, nodes_output_path)
-            sys.exit(0)  # exit gracefully so snakemake will continue
-        else:
-            raise error
+    edges = gpd.read_parquet(osm_edges_path)
+    if edges.empty is True:
+        write_empty_frames(edges_output_path, nodes_output_path)
+        sys.exit(0)  # exit gracefully so snakemake will continue
 
     # read nodes
-    try:
-        nodes = gpd.read_parquet(osm_nodes_path)
-    except ValueError as error:
-        if NO_GEOM_ERROR_MSG in str(error):
-            logging.info(f"No nodes from OSM to process")
-            # if the input parquet file does not contain a geometry column, geopandas
-            # will raise a ValueError rather than try to procede
-            nodes = None
-        else:
-            raise error
+    nodes = gpd.read_parquet(osm_nodes_path)
+    if nodes.empty is True:
+        nodes = None
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
