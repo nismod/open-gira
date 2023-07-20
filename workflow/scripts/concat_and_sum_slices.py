@@ -15,7 +15,6 @@ import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
-from open_gira.io import NO_GEOM_ERROR_MSG
 from open_gira.utils import natural_sort
 
 
@@ -38,18 +37,11 @@ if __name__ == "__main__":
     dataframes: list[gpd.GeoDataFrame] = []
     for i, slice_path in tqdm(enumerate(slice_files)):
 
-        try:
-            gdf = gpd.read_parquet(slice_path)
+        gdf = gpd.read_parquet(slice_path)
 
-        except ValueError as error:
-            if NO_GEOM_ERROR_MSG in str(error):
-                # if the input parquet file does not contain a geometry column,
-                # geopandas will raise a ValueError rather than try to procede. we
-                # catch that here, but check the error message - to be more
-                # specific than catching and suppressing any ValueError
-
-                # use an empty geodataframe to append instead
-                gdf = gpd.GeoDataFrame([])
+        if gdf.empty is True:
+            # use an empty geodataframe to append instead
+            gdf = gpd.GeoDataFrame([], columns=["geometry"])
 
         dataframes.append(gdf)
 

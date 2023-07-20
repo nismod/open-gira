@@ -16,7 +16,7 @@ from pyproj import Geod
 
 from utils import annotate_country, cast, get_administrative_data, strip_suffix
 from open_gira.assets import RoadAssets
-from open_gira.io import write_empty_frames, NO_GEOM_ERROR_MSG
+from open_gira.io import write_empty_frames
 from open_gira.network import create_network
 from open_gira.utils import str_to_bool
 
@@ -412,17 +412,11 @@ if __name__ == "__main__":
     # NB though that .geoparquet is not the format to use for archiving.
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    try:
-        edges = gpd.read_parquet(osm_edges_path)
-    except ValueError as error:
-        if NO_GEOM_ERROR_MSG in str(error):
-            logging.info("No data in geometry column, writing empty files.")
-            # if the input parquet file does not contain a geometry column, geopandas
-            # will raise a ValueError rather than try to procede
-            write_empty_frames(edges_output_path, nodes_output_path)
-            sys.exit(0)  # exit gracefully so snakemake will continue
-        else:
-            raise error
+    edges = gpd.read_parquet(osm_edges_path)
+
+    if edges.empty is True:
+        write_empty_frames(edges_output_path, nodes_output_path)
+        sys.exit(0)  # exit gracefully so snakemake will continue
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
