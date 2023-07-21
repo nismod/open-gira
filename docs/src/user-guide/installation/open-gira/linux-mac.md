@@ -3,9 +3,9 @@
 The major installation steps are to:
 1. Download `open-gira`
 1. Set up a Python environment
-1. Install additional command-line tools (in particular, `osmium`)
+1. Install additional command-line tools
 
-## open-gira
+## Clone repository
 
 Install open-gira by cloning the repository:
 
@@ -13,10 +13,10 @@ Install open-gira by cloning the repository:
 git clone https://github.com/nismod/open-gira.git
 ```
 
-## Python environment
+## Software environment
 
-This repository comes with a `environment.yml` file describing the Python packages required to
-run `open-gira`.
+This repository comes with a `environment.yml` file describing almost all of the
+software dependencies required to run `open-gira`.
 
 There are several ways to manage Python versions and install libraries.
 - First tutorial and introduction to [installing Python
@@ -25,41 +25,27 @@ There are several ways to manage Python versions and install libraries.
   and Python libraries and other dependencies.
 - [`mamba`](https://mamba.readthedocs.io/en/latest/) is a replacement for `conda` which aims
   to do the same thing, faster.
+- [`micrombamba`](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba) 
+  another replacement for `conda`, and what the `open-gira` developers use.
 
-The recommended approach for `open-gira` is to [install
-`mamba`](https://mamba.readthedocs.io/en/latest/installation.html) then use it to create and
-manage environments
+The recommended approach for `open-gira` is to install `micromamba` then use it
+to create and manage environments.
 
 Create the `open-gira` conda environment:
 
 ```bash
-mamba env create -f environment.yml
+micromamba create -f environment.yml -y
 ```
 
 and activate it
 
 ```bash
-conda activate open-gira  # note that you still use `conda` to activate and deactivate
+micromamba activate open-gira
 ```
 
-## Command-line tools
+## Other command-line tools
 
-### Osmium
-
-Install [`osmium-tool`](https://osmcode.org/osmium-tool/manual.html) according
-to the instructions there. Tests run with versions:
-- osmium-tool v1.14.0
-- libosmium v2.18.0
-
-### GDAL
-
-The workflow leans heavily on the GDAL toolset. To install using APT:
-`sudo apt install gdal-bin`
-
-### jq
-
-jq is used to parse JSON files. To install using APT:
-`sudo apt install jq`
+The following tools are not available through `conda` and must be installed separately.
 
 ### exactextract
 
