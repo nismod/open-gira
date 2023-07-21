@@ -9,10 +9,10 @@ and outputs, as well as some runtime settings.
 - `output_dir`: Relative or absolute path where the output should be placed. Will be created if it does not exist.
 - `hazard_datasets`: Named list of file paths to `.txt` files containing a list of hazard files.
 Files can be specified (both the `.txt` files and the `.tif` files they point to) either as filenames
-relative to the project root, as absolute file paths, or as remote resources (`http://` or `https://`). 
+relative to the project root, as absolute file paths, or as remote resources (`http://` or `https://`).
 The names in the list should not include `_` or `/` characters.
 Remote resources will be fetched with the `wget` utility.
-- `infrastructure_datasets`: Named list of file paths to `.osm.pbf` files to use as datasets. 
+- `infrastructure_datasets`: Named list of file paths to `.osm.pbf` files to use as datasets.
 These can be local files, specified with absolute file paths or file paths relative to the project root,
 or they can be remote files to fetch with `wget`.
 
@@ -22,19 +22,9 @@ slice boundaries, so too high a number can lead to redundancy.
 - `keep_tags`: Osmium tags to preserve in .geoparquet file.
 - `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
 
-- `exposure_tifs`: Arguments for generating exposure TIF files
-  - `exposure_threshold` height in m above which infrastructure is considered flooded (default 0.5)
-  - `scaling_factor` ratio with which to resample the hazard data (default 0.1 = downsample 10x)
-  - `resampling_mode` resampling method to use. Can be any of `rasterio.enums.Resampling` (default 'bilinear')
-  - `plot` a dictionary of dictionaries specifiying keyword arguments for plotting layers in the exposure images
-    - `raster` keyword arguments for the raster layer
-      - `cmap` (for example) value of the 'cmap' argument to `rasterio.plot.show()`
-    - `coastline` keyword arguments for the coastline layer (passed to `geopandas.GeoDataFrame.plot()`)
-    - `boundary` keyword arguments for the administrative boundary layer (passed to `geopandas.GeoDataFrame.plot()`)
-
-Modifying the configuration file will *not* trigger a re-run of the pipeline by
-snakemake. If you wish to rerun the whole pipeline after altering the
-configuration, use 
+Modifying the configuration file on the whole will *not* trigger a re-run of
+the pipeline by snakemake. If you wish to rerun the whole pipeline after
+altering the configuration, use:
 
 ```
 snakemake --cores all --forceall
