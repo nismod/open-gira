@@ -50,7 +50,7 @@ for network, file_path in config['network_filters'].items():
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
 
-permitted_hazard_types = {"flood", "earthquake", "storm"}
+permitted_hazard_types = {"flood"}
 configured_hazard_types = set(config["hazard_types"].values())
 if not configured_hazard_types.issubset(permitted_hazard_types):
     raise ValueError(f"unsupported hazard types: {permitted_hazard_types - configured_hazard_types}")
