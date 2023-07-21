@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "open_gira"
 version = "0.0.1"
 authors = [
-  { name="Tom Russell", email="tom.russell@ouce.ox.ac.uk" },
+  {name="Tom Russell", email="tom.russell@ouce.ox.ac.uk"},
+  {name="Fred Thomas", email="fred.thomas@eci.ox.ac.uk"}
 ]
 description = "Helper package for open-gira workflow"
 readme = "README.md"

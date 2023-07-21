@@ -4,7 +4,7 @@ When we run snakemake we have to tell it how many CPU cores it can use to do its
 If you have fewer than 4 cores, or wish to use more, substitute an appropriate number for the 4 below:
 
 ```shell
-snakemake --cores 4
+snakemake --cores 4 -- <target_file>
 ```
 
 You should see a lot of text flashing by, and some loading bars.
