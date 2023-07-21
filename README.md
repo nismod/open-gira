@@ -4,30 +4,36 @@
 [![pyTest](https://github.com/nismod/open-gira/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nismod/open-gira/actions/workflows/test.yml)
 [![snakemake workflow](https://img.shields.io/badge/snakemake-open--gira-informational)](https://snakemake.github.io/snakemake-workflow-catalog/?usage=nismod/open-gira)
 
-This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/)
-workflow can be used to analyse physical climate risks to infrastructure
-networks using global open data.
+## Introduction
 
-> Work in Progress
->
-> Goals:
-> - automated pipeline for reproducible analysis anywhere in the world
-> - maps per-country and of larger areas
-> - charts/stats of exposure per admin region, per hazard type, scenario, epoch
-> - consider transport, electricity, water, communications systems
-> - consider river flooding, storm surge coastal flooding, tropical cyclones
-> - estimate direct damages to physical networks
-> - estimate indirect effects of disruption - people affected, economic activity disrupted
->
-> Non-goals:
-> - will not build on closed data sources, which may be appropriate for other projects or use-cases
-> - long-term planning or detailed operational simulation
+This open-source [snakemake](https://snakemake.readthedocs.io/en/stable/)
+workflow can be used to analyse environmental risks to infrastructure
+networks using global open data. It is a work in progress.
+
+Goals:
+- Automated pipeline for reproducible analysis anywhere in the world
+- Maps per-country and of larger areas
+- Charts/stats of exposure per admin region, per hazard type, scenario, epoch
+- Consider transport, electricity, water, communications systems
+- Consider river flooding, storm surge coastal flooding, tropical cyclones
+- Estimate direct damages to physical networks
+- Estimate indirect effects of disruption - people affected, economic activity disrupted
+
+Non-goals:
+- Using closed data, which may be appropriate for other projects or use-cases
+- Detailed operational/engineering level simulation
+- Long-term planning
 
 ## Installation
 
+Install `open-gira` by cloning the repository:
+```bash
+git clone https://github.com/nismod/open-gira.git
+```
+
 ### Conda packages
 
-This repository comes with a `environment.yml` file describing the `conda` and
+The repository comes with a `environment.yml` file describing the `conda` and
 `PyPI` packages required to run `open-gira`. The `open-gira` developers
 recommend using either [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba)
 or [mamba](https://mamba.readthedocs.io/en/latest/index.html) to install and
@@ -48,6 +54,9 @@ micromamba activate open-gira
 
 You are now ready to request result files, triggering analysis jobs in the
 process.
+
+Note that all subsequent commands given in the documentation assume that the
+`open-gira` environment is already activated.
 
 #### Cluster
 
@@ -96,14 +105,17 @@ users have, if any) by applying general rules with pattern matching on file and
 folder names.
 
 A example invocation looks like:
-```
+```bash
 snakemake --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
 ```
 
 Here, we ask `snakemake` to use up to 2 CPUs to produce a target file, in this
-case, the edges of the Welsh road network. To check what work we're going to
-request before commencing, use the `-n` flag:
-```
+case, the edges of the Welsh road network. `snakemake` pattern matches
+`wales-latest` as the OSM dataset name and `filter-road` as the network type we
+want to filter for.
+
+To check what work we're going to request before commencing, use the `-n` flag:
+```bash
 snakemake -n --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
 ```
 
@@ -118,7 +130,7 @@ this to set the target OSM infrastructure datasets, number of spatial slices, an
 hazard datasets. See below and [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
 for more details on the configuration variables.
 
-### Available pipelines
+### Quick start
 
 #### Network creation
 
@@ -161,7 +173,7 @@ To specify a desired network:
       defaults for OSM data gap-filling.
 
 And to create the network, by way of example:
-```
+```bash
 snakemake --cores all -- results/egypt-latest_filter-road/edges.geoparquet
 ```
 
@@ -171,81 +183,122 @@ The process for creating a rail network is essentially the same as for road.
 Please see the road section above for the relevant options that can be configured.
 
 An example network creation call would be:
-```
+```bash
 snakemake --cores all -- results/egypt-latest_filter-rail/edges.geoparquet
 ```
 
 Note that the nodes file, `results/egypt-latest_filter-rail/nodes.geoparquet`
-will by default contain the stations and their names.
+will by default contain the stations and their names as recorded in OSM.
 
 ##### Electricity grid creation
 
-TODO
+To create an electricity grid we rely heavily on [gridfinder](https://gridfinder.rdrn.me/)
+data. This dataset provides transmission and distribution edges with
+substantial global coverage. It also contains a set of 'targets' or electricity
+consuming areas, derived from [Night Time Lights](https://www.earthdata.nasa.gov/learn/backgrounders/nighttime-lights)
+(NTL) satellite imagery. Our other major data source for electricity grid creation is the World Resources Institute's (WRI)
+[powerplants database](https://datasets.wri.org/dataset/globalpowerplantdatabase).
+
+The workflow currently divides network creation by country. One may request one
+country, or several. Note that neighbouring countries' networks are _not_
+connected with one another.
+
+There aren't currently any options to configure when creating an electricity
+grid.
+
+Here's an example grid creation command for Puerto Rico:
+```bash
+snakemake --cores all -- results/power/by_country/PRI/network/edges.geoparquet
+```
+
+The folder name under `by_county` is an [ISO 3166 Alpha-3 country code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements),
+specifying the country in question.
 
 #### Risk assessment
 
-TODO
+`open-gira` is designed to create spatial representations of infrastructure
+networks _and_ to analyse their disruption due to environmental hazards.
+Currently the workflow supports studies of flooding (river, coastal) to road
+and rail networks and also the effect of tropical cyclones on electricity
+grids.
 
 ##### Transport / flooding
 
-The pipeline starts from a OpenStreetMap dataset (_e.g._
-`europe-latest`) and produces network/flood hazard intersection data,
-associating road splits to corresponding flood levels.
+The flooding risk analysis pipeline starts by creating an infrastructure
+network (road or rail) as described above. Please refer to this section to
+configure the network creation.
 
-The pipeline consists in the following steps:
+The hazard component of the analysis is configurable in `config/config.yaml`:
+- `hazard_datasets` contains hazard names pointing to files of hazard layers.
+  These layers are currently flood rasters (inundation depths for a given return
+  period). Add or amend an entry pointing to file containing the rasters you
+  wish to consider.
+- Ensure `hazard_types` contains an identical key referencing the hazard types.
+  This is currently limited to `flood` only.
+- Configure the damage curves:
+    - Check and amend `direct_damages.asset_types` contains any assets you wish
+      to calcuate direct damage costs for. Currently implemented assets are
+      available in `src/open_gira/assets.py` as the classes inheriting from
+      `Assets`.
+    - Ensure `direct_damages.curves_dir` is set to a path containing damages
+      functions per asset type, organised by hazard type. See
+      `bundled_data/damage_curves` for an example.
+    - These damage function files should be named `<asset_type>.csv`, e.g.
+      `road_unpaved.csv`. Their format is exemplified by
+      `bundled_data/damage_curves/flood/road_unpaved.csv`
 
-1. The target OSM datasets are downloaded or copied and saved as
-   `<output_dir>/input/<dataset>.osm.pbf`.
-2. The initial OSM datasets are filtered, keeping only relevant tags for road links
-   (using `osmium tags-filter`). This results in smaller files
-   `<output_dir>/input/<dataset>_filter-<filters>.osm.pbf`, where `<dataset>` is the
-   key name and `<filters>` is the filename of the `osmium_tags_filter` file in the config.
-3. The OSM dataset's headers are examined for a `bbox` property and that is used
-   to determine the bounding box for the whole area (`<output_dir>/json/<dataset>.json`).
-4. The hazard raster files for each hazard datasets are located by reading a list
-   of their locations from the config. Each of these locations is visited and the
-   .tif file downloaded or copied to `<output_dir>/input/hazard-<hazard>/raw/<filename>`
-   where `<hazard>` is the keyname in the config and `<filename>` is the file's
-   base name.
-5. Each hazard raster file is clipped to contain just the hazard data for each dataset.
-   These files are stored in `<output_dir>/input/hazard-<hazard>/<dataset>/<filename>`
-   where `<dataset>` is the OSM dataset whose bounding box is used for clipping.
-6. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
-   according to the `slice_count` config option, and these slices are saved
-   in a json file `<output_dir>/json/<dataset>-extracts.geojson`.
-7. The filtered OSM file is sliced into areas of equal size using the bounding
-   box grid from step 6. The slices are saved to
-   `<output_dir>/slices/<dataset>_filter-<filter>/slice-<N>.osm.pbf`.
-8. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
-   resulting in `<output_dir>/geoparquet/<dataset>_filter-<filters>_slice-<N>.geoparquet`.
-9. Each geoparquet slice is intersected against flood level data from the
-   hazard datasets. The hazard datasets consist of a collection of
-   raster data files. The network/hazard intersection results in data
-   `<output_dir>/splits/<dataset>_filter-<filters>_slice-<N>_hazard-<hazard>.geoparquet`
-   describing roads split according to the raster grid and associated flood level values.
-   A corresponding `parquet` files (without geometries) is also created.
-10. Split data is then joined into a unique dataset describing
-    infrastructure and associated hazard level values for each combination of
-    OSM dataset and hazard dataset. This results in
-    `<output_dir>/<dataset>_filter-<filters>_hazard-<hazard>.geoparquet`.
-11. Each .geoparquet file is processed to produce a .tif raster file showing the length
-    of road affected by flooding greater than a threshold defined in the config.
-    These files are saved as `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/raster/exposure_<hazard_tif_filename>`
-12. Coastline data are downloaded from the NaturalEarthData.com service and saved in
-    `<output_dir>/input/coastlines/ne_10m_ocean`.
-13. Administrative boundary data are downloaded from the NaturalEarthData.com and saved in
-    `<output_dir>/input/admin-boundaries/zip/` and extracted to `<output_dir>/input/admin-boundaries/ne_50m/`
-14. The raster file from step 11 is combined with the coastline and admin boundary data from steps 12 and 13,
-    to produce an overall image showing the raster data in its geographical context, located in
-    `<output_dir>/exposure/<dataset>_filter-<filters>/hazard-<hazard>/img/exposure_<hazard_tif_base_filename>.png`
+To request an evaluation of Expected Annual Damages (EAD) as a function of
+hazard Return Period (RP) for a given `slice`, we can request something like:
+```bash
+snakemake --cores all -- results/direct_damages/<dataset_name>_filter-<network_type>/hazard-<hazard_name>/EAD_and_cost_per_RP/slice-<slice_number>.geoparquet
+```
 
-This is a directional acyclic graph (DAG) of a simplified version of the workflow
-that uses just one OSM dataset, one hazard dataset, and one slice:
-![DAG of the Snakefile workflow](docs/src/img/DAG-simple.png)
+For example (with a `config.slice_count` of 9):
+```bash
+snakemake --cores all -- results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/slice-5.geoparquet
+```
+
+And to compute all the slices for a given domain and then aggregate to country level (admin level 0):
+```bash
+snakemake --cores all -- results/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/agg-sum/admin-level-0.geoparquet
+```
+
+For more possible outputs please refer to the detailed documentation and the
+rules defined in `workflow/rules/`.
 
 ##### Electricity grid / tropical cyclone
 
-TODO
+This analysis intersects electricity grids with tropical cyclone wind speed
+risk. Network creation is described above. The hazards are event-based, as
+opposed to return period maps. We take a storm track, estimate the resulting
+wind field as a function of time, and then take the maximum across time. This
+produces a maximum wind speed field for a given event. For a certain defined
+threshold or set of thresholds, we can then fail grid edges that experience
+wind in excess of the threshold.
+
+To configure the analysis:
+- Review and amend `config/config.yaml`:
+    - `storm_sets` should contain a storm set name, pointing to a JSON file.
+      This JSON file should contain an empty list to process all storms for
+      this storm set, or a list of string storm IDs if only a subset is
+      required.
+    - Specify `transmission_windspeed_failure` as a list of wind speeds in
+      meters per second at which to fail edges.
+
+See comments in the `config/config.yaml` file for other less crucial
+configuration options.
+
+To request an analysis for a given storm-country pair:
+```bash
+snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.nc
+```
+
+Or for all countries affected by a storm:
+```bash
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017242N16333/exposure_by_target.nc
+```
+
+For more possible outputs please see the more detailed documentation.
 
 #### Cleaning intermediate outputs
 
