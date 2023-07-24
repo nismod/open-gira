@@ -74,21 +74,6 @@ direct_damages:
   # per asset type, per hazard (flood, storm, etc.)
   curves_dir: 'bundled_data/damage_curves/'
 
-# Options for exposure tif file generation
-exposure_tifs:
-  # When generating exposure summaries, filter by cells with at >= exposure_threshold m of flooding
-  exposure_threshold: 0.5
-  # Used when scaling raster files, values < 1 will downsample
-  scaling_factor: 0.1
-  # Used to determine how resampling occurs. Valid values are in rasterio.enums.Resampling.
-  resampling_mode: 'bilinear'
-  # Options for plotting
-  plot:
-    # Keyword arguments for raster plotting
-    raster:
-      # Colour mapping to use for raster data
-      cmap: 'Reds'
-
 ###############################
 ### STORM / ENERGY WORKFLOW ###
 ###############################
