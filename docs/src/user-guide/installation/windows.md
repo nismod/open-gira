@@ -1,4 +1,4 @@
-# Windows installation
+# Windows
 
 Native installation on Windows is extremely difficult because of the difficulty building the
 tools that open-gira relies on (binaries are not available for Windows).

@@ -1,4 +1,4 @@
-# Installation via Docker
+# Docker
 
 It is possible to run `open-gira` within a container using Docker. You must have [Docker
 installed](https://docs.docker.com/engine/install/).
