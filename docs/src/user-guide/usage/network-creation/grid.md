@@ -25,7 +25,7 @@ connected with one another.
 There aren't currently any options to configure when creating an electricity
 grid.
 
-## Running
+## Creation
 
 Here's an example grid creation command for Puerto Rico:
 ```bash

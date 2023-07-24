@@ -9,26 +9,15 @@ from nodes and to nodes, describing the connectedness of the network.
 
 ## Description
 
-1. The target OSM datasets are downloaded or copied and saved as
-   `<output_dir>/input/<dataset>.osm.pbf`.
-1. The initial OSM datasets are filtered, keeping only relevant tags
-   (using `osmium tags-filter`). This results in smaller files
-   `<output_dir>/input/<dataset>_filter-road.osm.pbf`, where `<dataset>` is the
-   key name. 
-1. The OSM dataset's headers are examined for a `bbox` property and that is used
-   to determine the bounding box for the whole area (`<output_dir>/json/<dataset>.json`).
-1. The OSM dataset bounding box is sliced into a grid of smaller bounding boxes
-   according to the `slice_count` config option, and these slices are saved
-   in a json file `<output_dir>/json/<dataset>-extracts.geojson`.
-1. The filtered OSM file is sliced into areas of equal size using the bounding
-   box grid. The slices are saved to
-   `<output_dir>/slices/<dataset>_filter-road/slice-<N>.osm.pbf`.
-1. Each filtered OSM dataset slice is then converted to the GeoParquet data format,
-   resulting in `<output_dir>/geoparquet/<dataset>_filter-road/raw/slice-<N>_edges.geoparquet`.
-1. These geoparquet slices are annotated with various attributes and processed into connected networks
-   `<output_dir>/geoparquet/<dataset>_filter-road/processed/slice-<N>_edges.geoparquet`
-1. The slices are joined together into a complete connected network
-   `<output_dir>/<dataset>_filter-road/edges.geoparquet`
+1. Download or copy `.osm.pbf` file to input data directory.
+1. Filter OSM file with `osmium tags-filter` for elements matching the filter file (see configuration, below).
+1. Define a bounding box for the OSM file, write to disk as JSON.
+1. Define a grid partitioning the bounding box into a square number of 'slices' as a series of JSON files, one for each slice.
+1. Cut the OSM file into these slices.
+1. Convert the sliced OSM files into geoparquet, retaining the `keep_tags` as configured.
+1. Clean and annotate features in the geoparquet files (joining additional data such as country, rehabiliation costs, etc.).
+1. Connect features into a network, labelling nodes with IDs and edges with from and to IDs.
+1. Join sliced network components together.
 
 ## Configuration
 
@@ -58,7 +47,7 @@ To specify a desired network:
     - Check and amend the values of `transport.road`, which provide some
       defaults for OSM data gap-filling.
 
-## Running
+## Creation
 
 And to create the network, by way of example:
 ```bash
