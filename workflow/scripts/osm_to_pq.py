@@ -155,7 +155,7 @@ class WaySlicer(osmium.SimpleHandler):
         node_locations: tuple[float, float] = []
         shared_nodes_used: list[dict] = []
         # create parallel data structure to enable lookup by location
-        lon_lat_shared_node_index: dict[float, dict[float, osmium.osm.NodeRef]] = {}
+        nodes_indexed_by_location: dict[float, dict[float, osmium.osm.NodeRef]] = {}
 
         # step through all nodes in way, check if any are shared with other ways
         for node in way.nodes:
@@ -167,11 +167,11 @@ class WaySlicer(osmium.SimpleHandler):
                 # add it to the 'used' shared nodes dict
                 shared_nodes_used.append({"node": node, "point": Point((node.lon, node.lat))})
 
-                # add it to the shared nodes dict indexed by longitude and latitude
-                if node.lon in lon_lat_shared_node_index.keys():
-                    lon_lat_shared_node_index[node.lon][node.lat] = node
-                else:
-                    lon_lat_shared_node_index[node.lon] = {node.lat: node}
+            # add it to the nodes dict indexed by longitude and latitude
+            if node.lon in nodes_indexed_by_location.keys():
+                nodes_indexed_by_location[node.lon][node.lat] = node
+            else:
+                nodes_indexed_by_location[node.lon] = {node.lat: node}
 
         # generate linestring and constrain to bounding box
         way_linestring_cut_to_bbox: Union[Point, LineString, MultiLineString] = \
@@ -201,25 +201,25 @@ class WaySlicer(osmium.SimpleHandler):
         for segment_id, segment in enumerate(way_segments.geoms):
 
             # determine start and end nodes from shared nodes or invent if bbox has clipped way
-            nodes = []
-            for node_index, prefix in ((0, "start_node_"), (-1, "end_node_")):
+            termini = []
+            for terminus_index, prefix in ((0, "start_node_"), (-1, "end_node_")):
 
-                longitude, latitude = segment.coords[node_index]
+                longitude, latitude = segment.coords[terminus_index]
 
                 try:
-                    # an end of this segment is an existing node
-                    node_data = self.get_node_by_coords(longitude, latitude, prefix, lon_lat_shared_node_index)
+                    # an end of this segment is an existing shared node
+                    terminus_data = self.get_node_by_coords(longitude, latitude, prefix, nodes_indexed_by_location)
                 except KeyError:
-                    # an end of this segment is not an existing node -> create one
-                    # we will use these to join sliced ways later
-                    node_data = {
+                    # no record of a node at this location, must be a way clipped by the bounding box
+                    logging.debug(f"Clipped way {way.id} to bounding box at ({longitude:.2f}, {latitude:.2f})")
+                    terminus_data = {
                         f"{prefix}reference": pandas.NA,
                         f"{prefix}longitude": longitude,
                         f"{prefix}latitude": latitude,
                         f"{prefix}degree": 1,
                     }
 
-                nodes.append(node_data)
+                termini.append(terminus_data)
 
             self.output_data.append(
                 {
@@ -227,8 +227,8 @@ class WaySlicer(osmium.SimpleHandler):
                     "osm_way_id": way.id,
                     "segment_id": segment_id,
                     **base_input,
-                    **nodes[0],
-                    **nodes[1],
+                    **termini[0],
+                    **termini[1],
                 }
             )
 
@@ -246,22 +246,25 @@ class WaySlicer(osmium.SimpleHandler):
             longitude: Node longitude.
             latitude: Node latitude.
             prefix: Prefix to use for dictionary keys.
-            nodes_indexed_by_location: Candidate nodes that shared_node might match, indexed by longitude, latitude.
+            nodes_indexed_by_location: Node objects, indexed by longitude, latitude.
+
+        Raises:
+            KeyError: If `nodes_indexed_by_location` does not contain node at
+                `longitude` and `latitude`.
 
         Returns:
             Node reference, longitude, latitude, and degree.
         """
 
-        # potential KeyError caught by parent function
         # note that we're indexing with floats here, which _should_ still be safe
         # given that we don't perform any operations on the floats
         node: osmium.osm.NodeRef = nodes_indexed_by_location[longitude][latitude]
 
-        if node.ref not in self.shared_nodes.keys():
-            # shared_nodes should all have degree > 1
-            raise RuntimeError(f"Node {node.ref} not found in shared_nodes keys.")
-
-        node_degree: int = self.shared_nodes[node.ref]
+        try:
+            node_degree: int = self.shared_nodes[node.ref]
+        except KeyError:
+            # nodes that aren't shared should all have degree 1
+            node_degree: int = 1
 
         return {
             f"{prefix}reference": node.ref,
@@ -285,7 +288,7 @@ if __name__ == "__main__":
     nodes_path: str = snakemake.output["nodes"]
     keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.DEBUG)
     logging.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings
