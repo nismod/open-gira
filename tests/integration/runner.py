@@ -290,7 +290,7 @@ class OutputChecker:
                         exp_str = str(expected[col][row: row + 1].values)
                         if gen_str != exp_str:
                             failures += 1
-                            if failures > MAX_FAILURES_TO_PRINT:
+                            if failures == MAX_FAILURES_TO_PRINT:
                                 printerr(f"Failures truncated after {MAX_FAILURES_TO_PRINT}")
                                 continue
                             else:
