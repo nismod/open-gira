@@ -133,24 +133,6 @@ include: "rules/analyse/map/wind_fields.smk"
 include: "rules/analyse/plot/target_disruption.smk"
 include: "rules/analyse/plot/customers_affected_by_storm.smk"
 
-##### target rules #####
-
-# Require the completed overlay image file to be present for each hazard
-rule all:
-    input:
-        expand(
-            os.path.join(
-                f"{config['output_dir']}",
-                "exposure",
-                f"{{dataset}}_filter-{{network_filter}}",
-                f"hazard-{{hazard}}",
-                "img"
-            ),
-            dataset=config['infrastructure_datasets'].keys(),
-            network_filter=config['network_filters'].keys(),
-            hazard=config['hazard_datasets'].keys()
-        )
-
 # Remove intermediate directories
 rule clean:
     shell:
