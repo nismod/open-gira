@@ -15,7 +15,7 @@ The process is as follows:
 """
 
 import logging
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Union
 
 import geopandas
@@ -162,11 +162,16 @@ class WaySlicer(osmium.SimpleHandler):
         node_locations: tuple[float, float] = []
         shared_nodes_used: list[dict] = []
         # create parallel data structure to enable lookup by location
-        nodes_indexed_by_location: dict[float, dict[float, osmium.osm.NodeRef]] = {}
+        nodes_indexed_by_location: defaultdict[
+            float, dict[float, osmium.osm.NodeRef]
+        ] = defaultdict(dict)
 
         # step through all nodes in way, check if any are shared with other ways
         for node in way.nodes:
             node_locations.append((node.lon, node.lat))
+
+            # add it to the nodes dict indexed by longitude and latitude
+            nodes_indexed_by_location[node.lon][node.lat] = node
 
             # node is shared between this way and another neighbouring way
             if node.ref in self.shared_nodes.keys():
@@ -175,12 +180,6 @@ class WaySlicer(osmium.SimpleHandler):
                 shared_nodes_used.append(
                     {"node": node, "point": Point((node.lon, node.lat))}
                 )
-
-            # add it to the nodes dict indexed by longitude and latitude
-            if node.lon in nodes_indexed_by_location.keys():
-                nodes_indexed_by_location[node.lon][node.lat] = node
-            else:
-                nodes_indexed_by_location[node.lon] = {node.lat: node}
 
         # Generate linestring and constrain to bounding box
         way_linestring_cut_to_bbox: Union[Point, LineString, MultiLineString] = (
