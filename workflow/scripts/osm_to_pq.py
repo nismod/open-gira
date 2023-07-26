@@ -41,7 +41,7 @@ class WayParser(osmium.SimpleHandler):
     def way(self, way: osmium.osm.Way) -> None:
         """
         Add the node references from `way` to `self.node_list`. This method is
-        called from `self.apply_file`.
+        called from `self.apply_file` for each way in the file.
 
         Args:
             way: Way to store node references for.
@@ -55,7 +55,7 @@ class WayParser(osmium.SimpleHandler):
         Args:
             file_path: Path to .osm.pbf file.
             locations: If locations is true, then a location handler will be
-                applied before, which returns the node positions.
+                used in `self.apply_file`, returning the node positions.
 
         Returns:
             Mapping from node ID to node degree for all 'shared_nodes'.
@@ -87,7 +87,8 @@ class NodeParser(osmium.SimpleHandler):
 
     def node(self, node: osmium.osm.Node) -> None:
         """
-        Process an individual node and add it to the output list.
+        Process an individual node and add it to the output list. This method
+        is called from `self.apply_file` for each node in the file.
 
         Args:
             node: Node to process.
@@ -198,6 +199,7 @@ class WaySlicer(osmium.SimpleHandler):
                 way_segments = GeometryCollection([way_linestring_cut_to_bbox])
 
         # loop through segments in way
+        # note that many ways will only have a single segment
         for segment_id, segment in enumerate(way_segments.geoms):
 
             # determine start and end nodes from shared nodes or invent if bbox has clipped way
@@ -208,7 +210,7 @@ class WaySlicer(osmium.SimpleHandler):
 
                 try:
                     # an end of this segment is an existing shared node
-                    terminus_data = self.get_node_by_coords(longitude, latitude, prefix, nodes_indexed_by_location)
+                    terminus_data: dict = self.get_node_by_coords(longitude, latitude, prefix, nodes_indexed_by_location)
                 except KeyError:
                     # no record of a node at this location, must be a way clipped by the bounding box
                     logging.debug(f"Clipped way {way.id} to bounding box at ({longitude:.2f}, {latitude:.2f})")
@@ -221,14 +223,15 @@ class WaySlicer(osmium.SimpleHandler):
 
                 termini.append(terminus_data)
 
+            start, end = termini
             self.output_data.append(
                 {
                     "geometry": segment,
                     "osm_way_id": way.id,
                     "segment_id": segment_id,
                     **base_input,
-                    **termini[0],
-                    **termini[1],
+                    **start,
+                    **end,
                 }
             )
 
@@ -257,7 +260,7 @@ class WaySlicer(osmium.SimpleHandler):
         """
 
         # note that we're indexing with floats here, which _should_ still be safe
-        # given that we don't perform any operations on the floats
+        # given that they're immutable and we don't perform any operations on the floats
         node: osmium.osm.NodeRef = nodes_indexed_by_location[longitude][latitude]
 
         try:
