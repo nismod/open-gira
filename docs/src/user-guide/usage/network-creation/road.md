@@ -4,8 +4,7 @@ We can create a topologically connected road network for a given area from
 [OpenStreetMap](https://www.openstreetmap.org) (OSM) data. The resulting
 network can be annotated with data retrieved from OSM (e.g. highway
 classification, surface type), along with data looked up from user-supplied
-sources (e.g. rehabilitation costs). The network edges will be labelled with
-from nodes and to nodes, describing the connectedness of the network.
+sources (e.g. rehabilitation costs).
 
 ## Description
 
@@ -16,7 +15,6 @@ from nodes and to nodes, describing the connectedness of the network.
 1. Cut the OSM file into these slices.
 1. Convert the sliced OSM files into geoparquet, retaining the `keep_tags` as configured.
 1. Clean and annotate features in the geoparquet files (joining additional data such as country, rehabiliation costs, etc.).
-1. Connect features into a network, labelling nodes with IDs and edges with from and to IDs.
 1. Join sliced network components together.
 
 ## Configuration
