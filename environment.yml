@@ -52,4 +52,5 @@ dependencies:
   - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   # https://github.com/snakemake/snakemake/issues/1891
   - tqdm==4.62.3        # progress bars
+  - wget                # file downloader
   - zenodo_get          # data download client
