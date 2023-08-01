@@ -2,6 +2,8 @@
 Estimate damages to electrical networks due to high wind speeds
 """
 
+from open_gira.io import cached_json_file_read
+
 
 rule electricity_grid_damages:
     input:
@@ -122,8 +124,7 @@ def country_storm_paths_for_storm_set(wildcards):
     import os
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    with open(json_file, "r") as fp:
-        country_set_by_storm = json.load(fp)
+    country_set_by_storm = cached_json_file_read(json_file)
 
     paths = []
     for storm_id, countries in country_set_by_storm.items():
@@ -170,8 +171,7 @@ def country_storm_paths_for_storm(wildcards):
     """
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    with open(json_file, "r") as fp:
-        country_set_by_storm = json.load(fp)
+    country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
         "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
@@ -226,8 +226,7 @@ def exposure_by_target_for_all_storms_in_storm_set(wildcards):
     """
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    with open(json_file, "r") as fp:
-        country_set_by_storm = json.load(fp)
+    country_set_by_storm = cached_json_file_read(json_file)
 
     storms = list(country_set_by_storm.keys())
 
