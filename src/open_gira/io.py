@@ -42,9 +42,13 @@ STORM_BASIN_IDS = ("EP", "NA", "NI", "SI", "SP", "WP")
 @functools.lru_cache(maxsize=128)
 def cached_json_file_read(file_path: str):
     """
-    Read a JSON file and return its parsed contents.
+    Read a JSON file and return its parsed contents. Cached on function argument.
 
-    Least Recently Used (LRU) cache on argument (file path string).
+    Args:
+        file_path: Path to JSON file to read.
+
+    Returns:
+        Parsed contents of `file_path`.
     """
 
     with open(file_path, "r") as fp:
