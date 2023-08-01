@@ -2,8 +2,10 @@
 Common functionality for reading and writing to disk.
 """
 
+import functools
 from glob import glob
 import logging
+import json
 from os.path import splitext, basename, join
 from typing import Optional
 
@@ -35,6 +37,18 @@ STORM_CSV_SCHEMA = {
 }
 # basins are serialized as integers in data, 0 -> "EP", 2 -> "NI" etc.
 STORM_BASIN_IDS = ("EP", "NA", "NI", "SI", "SP", "WP")
+
+
+@functools.lru_cache(maxsize=128)
+def cached_json_file_read(file_path: str):
+    """
+    Read a JSON file and return its parsed contents.
+
+    Least Recently Used (LRU) cache on argument (file path string).
+    """
+
+    with open(file_path, "r") as fp:
+        return json.load(fp)
 
 
 def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
