@@ -139,30 +139,6 @@ def country_storm_paths_for_storm_set(wildcards):
     return paths
 
 
-rule storm_set_damages:
-    """
-    A target rule for storm sets, expanding to calculate exposure for all
-    affected countries.
-
-    To indicate completion, copy storm set JSON file to results directory.
-    """
-    input:
-        country_storm_paths_for_storm_set
-    params:
-        storm_set_path = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
-    output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_set.json"
-    shell:
-        """
-        cp {params.storm_set_path} {output.completion_flag}
-        """
-
-"""
-Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/storm_set.json
-"""
-
-
 def country_storm_paths_for_storm(wildcards):
     """
     Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
