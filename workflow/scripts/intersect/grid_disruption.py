@@ -221,5 +221,9 @@ if __name__ == "__main__":
     logging.info("Simulating electricity network failure due to wind damage...")
     exposure = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
 
+    # drop any coordinates for which the supply factor is approximately nominal
+    # this helps to keep the exposure files to a reasonable size
+    exposure = exposure.where(exposure.supply_factor < 0.95, drop=True)
+
     logging.info(f"Writing results to disk")
     exposure.to_netcdf(exposure_path, encoding=NETCDF_ENCODING)
