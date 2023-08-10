@@ -27,7 +27,7 @@ def storm_tracks_file_from_storm_set(wildcards) -> str:
     Given e.g. IBTrACS_maria-2017, return results/input/storm-tracks/IBTrACS/tracks.geoparquet
     """
     storm_dataset = wildcards.STORM_SET.split("_")[0]
-    return f"{wildcards.OUTPUT_DIR}/input/storm_tracks/{storm_dataset}/tracks.geoparquet"
+    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_dataset}/tracks.geoparquet"
 
 
 checkpoint countries_intersecting_storm_set:
