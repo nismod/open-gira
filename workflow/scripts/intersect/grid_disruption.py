@@ -20,6 +20,11 @@ from open_gira.grid import weighted_allocation
 import snkit
 
 
+# do not store supply_factor values greater than this
+# a value less than 1 limits the targets stored in exposure files to areas
+# negatively affected by storms
+MAX_SUPPLY_FACTOR: float = 0.95
+
 # coordinates that the exposure variables can be indexed by
 EXPOSURE_COORDS: dict[str, type] = {
     "event_id": str,
@@ -32,39 +37,39 @@ NETCDF_ENCODING = {variable: {"zlib": True, "complevel": 9} for variable in EXPO
 
 def exposure_dataset(
     event_id: Optional[list[str]] = None,
-    thresholds: Optional[list[float]] = None,
-    targets: Optional[list[int]] = None,
+    threshold: Optional[list[float]] = None,
+    target: Optional[list[int]] = None,
 ) -> xr.Dataset:
     """
     Build results object from given coordinate arguments.
 
     Args:
-        event_id: Storm identifier
-        thresholds: Iterable of wind speed damage thresholds
-        targets: Iterable of globally unique target IDs
+        event_id: Iterable of storm IDs
+        threshold: Iterable of wind speed damage thresholds
+        target: Iterable of globally unique target IDs
     """
 
     # if we haven't been passed coords, use empty lists
     if event_id is None:
         event_id = []
-    if thresholds is None:
-        thresholds = []
-    if targets is None:
-        targets = []
+    if threshold is None:
+        threshold = []
+    if target is None:
+        target = []
 
-    shape = (len(event_id), len(thresholds), len(targets))
+    shape = (len(event_id), len(threshold), len(target))
     return xr.Dataset(
         data_vars=dict(
             supply_factor=(EXPOSURE_COORDS.keys(), np.full(shape, np.nan)),
             customers_affected=(EXPOSURE_COORDS.keys(), np.full(shape, np.nan))
         ),
-        coords=dict(
+        coords={
             # scalar dimensions result in ValueError, use atleast_1d as workaround
             # https://stackoverflow.com/a/58858160
-            event_id=np.atleast_1d(event_id),
-            threshold=np.atleast_1d(thresholds),
-            target=np.atleast_1d(targets)
-        )
+            "event_id": np.array(np.atleast_1d(event_id), dtype=EXPOSURE_COORDS["event_id"]),
+            "threshold": np.array(np.atleast_1d(threshold), dtype=EXPOSURE_COORDS["threshold"]),
+            "target": np.array(np.atleast_1d(target), dtype=EXPOSURE_COORDS["target"]),
+        }
     )
 
 
@@ -103,10 +108,10 @@ def degrade_grid_with_storm(
         target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.astype(int).values
     except AttributeError:
         logging.info("No viable network available, returning null result.")
-        return exposure_dataset(event_id=[storm_id], thresholds=speed_thresholds)
+        return exposure_dataset(event_id=[storm_id], threshold=speed_thresholds)
 
     # build coordinates for results object
-    exposure = exposure_dataset(event_id=[storm_id], thresholds=speed_thresholds, targets=target_ids)
+    exposure = exposure_dataset(event_id=[storm_id], threshold=speed_thresholds, target=target_ids)
 
     try:
         # rank 1, length of splits DataFrame
@@ -223,7 +228,10 @@ if __name__ == "__main__":
 
     # drop any coordinates for which the supply factor is approximately nominal
     # this helps to keep the exposure files to a reasonable size
-    exposure = exposure.where(exposure.supply_factor < 0.95, drop=True)
+    # in the case where the exposure Dataset is empty, we do not want to expunge the event_id coordinate
+    # so, select the storm event prior to filtering
+    exposure = exposure.sel(event_id=storm_id)
+    exposure = exposure.where(exposure.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
 
     logging.info(f"Writing results to disk")
     exposure.to_netcdf(exposure_path, encoding=NETCDF_ENCODING)
