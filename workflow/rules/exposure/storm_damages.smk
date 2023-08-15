@@ -12,7 +12,8 @@ rule electricity_grid_damages:
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     output:
-        exposure = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc"
+        exposure = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+        disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc"
     script:
         "../../scripts/intersect/grid_disruption.py"
 
@@ -118,7 +119,7 @@ snakemake -c1 results/power/by_storm_set/IBTrACS_irma-2017/countries_impacted_by
 
 def country_storm_paths_for_storm_set(wildcards):
     """
-    Return list of paths of country-storm exposure
+    Return list of paths of country-storm disruption
     """
     import json
     import os
@@ -130,7 +131,7 @@ def country_storm_paths_for_storm_set(wildcards):
     for storm_id, countries in country_set_by_storm.items():
         paths.extend(
             expand(
-                "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+                "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
                 COUNTRY_ISO_A3=countries,  # list of str
                 STORM_SET=wildcards.STORM_SET,  # str
                 STORM_ID=storm_id  # str
@@ -143,14 +144,14 @@ def country_storm_paths_for_storm_set(wildcards):
 def country_storm_paths_for_storm(wildcards):
     """
     Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
-    affects and return paths to their exposure files.
+    affects and return paths to their disruption files.
     """
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
         STORM_ID=wildcards.STORM_ID  # str
@@ -159,12 +160,12 @@ def country_storm_paths_for_storm(wildcards):
 
 rule merge_countries_of_storm:
     """
-    Merge exposure estimates from all countries a storm hit.
+    Merge disruption estimates from all countries a storm hit.
     """
     input:
-        exposure = country_storm_paths_for_storm
+        disruption = country_storm_paths_for_storm
     output:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/exposure_by_target.nc",
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/disruption_by_target.nc",
     run:
         import logging
         import os
@@ -174,7 +175,7 @@ rule merge_countries_of_storm:
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
         logging.info("Reading and pooling targets from all country datasets")
-        pooled_targets = xr.concat([xr.open_dataset(path) for path in input.exposure], dim="target")
+        pooled_targets = xr.concat([xr.open_dataset(path) for path in input.disruption], dim="target")
 
         # a few targets may have been processed under more than one country, keep the first instance
         logging.info("Dropping duplicates")
@@ -182,7 +183,7 @@ rule merge_countries_of_storm:
 
         # write to disk
         os.makedirs(os.path.dirname(output.by_target), exist_ok=True)
-        logging.info("Writing pooled per-target exposure to disk")
+        logging.info("Writing pooled per-target disruption to disk")
         pooled_targets.to_netcdf(
             output.by_target,
             encoding={var: {"zlib": True, "complevel": 9} for var in pooled_targets.keys()}
@@ -190,15 +191,15 @@ rule merge_countries_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/exposure_by_target.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/disruption_by_target.nc
 """
 
 
-def exposure_by_target_for_all_storms_in_storm_set(wildcards):
+def disruption_by_target_for_all_storms_in_storm_set(wildcards):
     """
     Given STORM_SET as a wildcard, lookup the storms in the set.
 
-    Return a list of the exposure_by_target.nc file paths for every storm in the set.
+    Return a list of the disruption_by_target.nc file paths for every storm in the set.
     """
 
     json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
@@ -207,25 +208,25 @@ def exposure_by_target_for_all_storms_in_storm_set(wildcards):
     storms = list(country_set_by_storm.keys())
 
     return expand(
-        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/exposure_by_target.nc",
+        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/disruption_by_target.nc",
         STORM_SET=wildcards.STORM_SET,  # str
         STORM_ID=storms  # list of str
     )
 
 
-rule exposure_by_storm_for_storm_set:
+rule disruption_by_storm_for_storm_set:
     """
-    A target rule to generate the exposure netCDFs for all targets affected
-    (across multiple countries) for each storm.
+    A target rule to generate the exposure and disruption netCDFs for all
+    targets affected (across multiple countries) for each storm.
     """
     input:
-        exposure = exposure_by_target_for_all_storms_in_storm_set
+        disruption = disruption_by_target_for_all_storms_in_storm_set
     output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure.txt"
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption.txt"
     shell:
         """
         # one output file per line
-        echo {input.exposure} | tr ' ' '\n' > {output.completion_flag}
+        echo {input.disruption} | tr ' ' '\n' > {output.completion_flag}
         """
 
 """

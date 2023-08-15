@@ -322,8 +322,8 @@ def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
 
 rule merged_wind_fields_for_storm_set:
     """
-    A target rule to generate the exposure netCDFs for all targets affected
-    (across multiple countries) for each storm.
+    A target rule to generate the wind field netCDFs (across multiple
+    countries) for each storm.
     """
     input:
         wind_fields = merged_wind_fields_for_all_storms_in_storm_set
