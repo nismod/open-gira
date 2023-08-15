@@ -2,6 +2,8 @@
 Network creation routines
 """
 
+from open_gira.io import cached_json_file_read
+
 
 rule gridfinder_to_geoparquet:
     """
@@ -231,6 +233,42 @@ rule create_power_network:
 """
 Test with:
 snakemake -c1 results/power/by_country/HTI/edges.geoparquet
+"""
+
+
+def networks_affected_by_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the countries that a storm set
+    affects and return paths to their network edge files.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    country_set = cached_json_file_read(json_file)
+
+    return expand(
+        "results/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
+        COUNTRY_ISO_A3=country_set,  # list of str
+        STORM_SET=wildcards.STORM_SET  # str
+    )
+
+
+rule create_networks_affected_by_storm_set:
+    """
+    A target rule to create all networks potentially impacted by a storm set.
+    """
+    input:
+        networks = networks_affected_by_storm_set
+    output:
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/networks.txt"
+    shell:
+        """
+        # one output file per line
+        echo {input.networks} | tr ' ' '\n' > {output.completion_flag}
+        """
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/networks.txt
 """
 
 
