@@ -231,5 +231,120 @@ rule disruption_by_storm_for_storm_set:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/IBTrACS/exposure.txt
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/disruption.txt
+"""
+
+
+def exposure_by_storm_for_country_for_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
+
+    Return a list of the relevant exposure netCDF file paths.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
+    storm_set_by_country = cached_json_file_read(json_file)
+
+    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
+
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
+        STORM_SET=wildcards.STORM_SET,  # str
+        STORM_ID=storms  # list of str
+    )
+
+
+rule exposure_by_admin_region:
+    """
+    Calculate expected annual exposure at given admin level.
+    """
+    input:
+        tracks = storm_tracks_file_from_storm_set,
+        exposure = exposure_by_storm_for_country_for_storm_set,
+        admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
+        grid_edges = rules.create_power_network.output.edges,
+    output:
+        total_exposure_by_region = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}.geoparquet",
+        # TODO: per region event distributions
+        # exposure_event_distribution_by_region = dir("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}/")
+    run:
+        import logging
+
+        import geopandas as gpd
+        import pandas as pd
+        from tqdm import tqdm
+        import xarray as xr
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        # load network edges
+        logging.info("Loading edges")
+        edges: gpd.GeoDataFrame = gpd.read_parquet(input.grid_edges)[["id", "geometry"]]
+        edges = edges.rename(columns={"id": "edge"}).set_index("edge")
+        edges = edges.set_crs(epsg=4326)
+        # calculate length of each edge (transmission and distribution lines)
+        edges["nominal_length_m"] = edges.to_crs(edges.estimate_utm_crs()).geometry.length
+
+        # load aggregation regions for level and country in question
+        logging.info("Loading regions")
+        admin: gpd.GeoDataFrame = gpd.read_parquet(input.admin_areas)
+        admin_level = int(wildcards.ADMIN_SLUG.split("-")[-1])
+        regions: gpd.GeoDataFrame = \
+            admin[admin.GID_0 == wildcards.COUNTRY_ISO_A3][[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]]
+
+        # load tracks (we will lookup storm dates from here)
+        logging.info("Loading tracks")
+        tracks: gpd.GeoDataFrame = gpd.read_parquet(input.tracks)
+
+        logging.info("Compiling exposure lengths per edge per storm")
+        exposure_by_edge_by_storm = {}
+        years = []
+        for exposure_path in tqdm(input.exposure):
+            exposure = xr.open_dataset(exposure_path)
+            event_id: str = exposure.event_id.item()
+            event_year, = set(tracks.set_index("track_id").loc[event_id].year)
+            years.append(event_year)
+            df: pd.DataFrame = exposure.length_m.to_pandas().T
+            # N.B. arrow specification requires string column names (but threshold column names are float)
+            df.columns = df.columns.astype(str)
+            exposure_by_edge_by_storm[event_id] = df
+        span_years: int = max(years) - min(years)
+        # storm-edge rows (repeated edges), threshold value columns, values are exposed length in meters for a given storm
+        exposure_all_storms = pd.concat(exposure_by_edge_by_storm.values())
+
+        # create a lookup between edge id and the region to which the edge's representative point lies within
+        logging.info("Creating edge to region mapping")
+        # filter out edges that are never exposed, we don't need to do an expensive sjoin on them
+        edge_rep_points = edges.loc[edges.reset_index().edge.isin(exposure_all_storms.index)].copy()
+        edge_rep_points.geometry = edge_rep_points.geometry.representative_point()
+        edge_to_region_mapping: pd.DataFrame = edge_rep_points.sjoin(regions, how="left").drop(columns=["geometry", "index_right"])
+
+        # TODO: per region event distributions
+
+        logging.info("Aggregating to region level")
+        # edge rows, threshold value columns, values are exposed length in meters as a result of all storms
+        exposure_total = exposure_all_storms.groupby(exposure_all_storms.index).sum()
+        # merge with regions and sum edges across regions
+        exposure_by_region = \
+            edge_to_region_mapping.drop(columns=[f"NAME_{admin_level}"]).merge(exposure_total, on="edge").groupby(f"GID_{admin_level}").sum()
+        # take the exposure lengths and divide by the product of original, undamaged lengths and years passing between first and last storm
+        # this division is aligned on the indicies (both set to edge ids)
+        # we now have an expected annual exposure
+        logging.info("Calculating expected annual exposure")
+        exposure_fraction_by_region = \
+            exposure_by_region.drop(columns=["nominal_length_m"]).divide(exposure_by_region["nominal_length_m"] * span_years, axis=0)
+        # merge geometry and name columns back in
+        exposure_with_geometry = \
+            exposure_fraction_by_region.merge(regions[[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]], on=f"GID_{admin_level}", how="right")
+        # merge nominal lengths by region back in, too
+        exposure_with_length = exposure_with_geometry.merge(exposure_by_region[["nominal_length_m"]], on=f"GID_{admin_level}")
+        # write out to disk
+        logging.info("Writing out with region geometry")
+        gpd.GeoDataFrame(exposure_with_length).to_parquet(output.total_exposure_by_region)
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_country/PRI/exposure/IBTrACS/admin-level-1.geoparquet
 """
