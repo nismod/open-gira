@@ -44,6 +44,10 @@ if __name__ == "__main__":
 
         df["sample"] = int(sample)
 
+        # this gives us 10,000 years of data rather than 10 * 10,000 years
+        # it is necessary when calculating the expected annual exposure/disruption to know the total timespan
+        df["year"] = df["year"].astype(int) + 1000 * int(sample)
+
         # change geometry from 0-360 to -180-180
         df.lon = np.where(df.lon > 180, df.lon - 360, df.lon)
 
