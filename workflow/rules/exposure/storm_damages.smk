@@ -46,6 +46,8 @@ checkpoint countries_intersecting_storm_set:
     input:
         tracks = storm_tracks_file_from_storm_set,
         gadm_path = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
+    resources:
+        mem_mb=60000
     output:
         country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted.json",
         country_set_by_storm = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted_by_storm.json",
