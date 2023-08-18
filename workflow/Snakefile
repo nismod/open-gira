@@ -133,6 +133,8 @@ include: "rules/analyse/map/wind_fields.smk"
 include: "rules/analyse/plot/target_disruption.smk"
 include: "rules/analyse/plot/customers_affected_by_storm.smk"
 
+include: "rules/target/cyclone-grid.smk"
+
 # Remove intermediate directories
 rule clean:
     shell:
