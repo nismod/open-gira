@@ -425,7 +425,7 @@ rule disruption_by_admin_region_for_storm_set:
     input:
         disruption = disruption_summaries_for_storm_set
     output:
-        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/{ADMIN_LEVEL}.geoparquet"
+        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/{ADMIN_LEVEL}.geoparquet"
     run:
         import geopandas as gpd
         import pandas as pd
@@ -434,9 +434,9 @@ rule disruption_by_admin_region_for_storm_set:
         for disruption_file in input.disruption:
             per_country_disruption.append(gpd.read_parquet(disruption_file))
         summary_file = gpd.GeoDataFrame(pd.concat(per_country_disruption)).reset_index(drop=True)
-        summary_file.to_parquet(output.storm_set_exposure)
+        summary_file.to_parquet(output.storm_set_disruption)
 
 """
 Test with:
-snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/admin-level-2.geoparquet
+snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/disruption/admin-level-2.geoparquet
 """
