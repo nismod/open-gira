@@ -75,10 +75,15 @@ def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) ->
             # if we haven't been passed coords, use an empty list
             dim_coords[dim_name] = []
 
-    nan_tensor = np.full(tuple(len(coord) for coord in dim_coords.values()), np.nan)
-
     return xr.Dataset(
-        data_vars={var_name: (dim_type.keys(), nan_tensor) for var_name in var_names},
+        data_vars={
+            var_name:
+            (
+                dim_type.keys(),
+                np.full(tuple(len(coord) for coord in dim_coords.values()), np.nan)
+            )
+            for var_name in var_names
+        },
         coords={
             dim_name: np.array(np.atleast_1d(dim_coords[dim_name]), dtype=dim_type[dim_name])
             for dim_name in dim_type
