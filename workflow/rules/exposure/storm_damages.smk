@@ -331,11 +331,101 @@ rule exposure_by_admin_region_for_storm_set:
     """
     A target rule to generate the exposure and disruption netCDFs for all
     targets affected (across multiple countries) for each storm.
+
+    Concatenates the regional summaries for expected annual exposure together.
     """
     input:
-        disruption = exposure_summaries_for_storm_set
+        exposure = exposure_summaries_for_storm_set
     output:
         storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/{ADMIN_LEVEL}.geoparquet"
+    run:
+        import geopandas as gpd
+        import pandas as pd
+
+        per_country_exposure = []
+        for exposure_file in input.exposure:
+            per_country_exposure.append(gpd.read_parquet(exposure_file))
+        summary_file = gpd.GeoDataFrame(pd.concat(per_country_exposure)).reset_index(drop=True)
+        summary_file.to_parquet(output.storm_set_exposure)
+
+"""
+Test with:
+snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/admin-level-2.geoparquet
+"""
+
+
+def disruption_by_storm_for_country_for_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
+
+    Return a list of the relevant disruption netCDF file paths.
+    """
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
+    storm_set_by_country = cached_json_file_read(json_file)
+
+    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
+
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
+        STORM_SET=wildcards.STORM_SET,  # str
+        STORM_ID=storms  # list of str
+    )
+
+
+rule disruption_by_admin_region:
+    """
+    Calculate expected annual population affected at given admin level.
+    """
+    input:
+        tracks = storm_tracks_file_from_storm_set,
+        disruption = disruption_by_storm_for_country_for_storm_set,
+        targets = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
+        admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
+    threads: 8  # read exposure files in parallel
+    output:
+        total_disruption_by_region = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_SLUG}.geoparquet",
+        # TODO: per region event distributions
+        # disruption_event_distribution_by_region = dir("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_SLUG}/")
+    script:
+        "../../scripts/exposure/grid_disruption_by_admin_region.py"
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_country/PRI/disruption/IBTrACS/admin-level-1.geoparquet
+"""
+
+
+def disruption_summaries_for_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the countries that a storm set
+    affects and return paths to their summary files.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    country_set = cached_json_file_read(json_file)
+
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_LEVEL}.geoparquet",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=country_set,  # list of str
+        STORM_SET=wildcards.STORM_SET,  # str
+        ADMIN_LEVEL=wildcards.ADMIN_LEVEL  # str
+    )
+
+
+rule disruption_by_admin_region_for_storm_set:
+    """
+    A target rule to generate the exposure and disruption netCDFs for all
+    targets affected (across multiple countries) for each storm.
+
+    Concatenates the regional summaries for expected annual population disruption together.
+    """
+    input:
+        disruption = disruption_summaries_for_storm_set
+    output:
+        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/{ADMIN_LEVEL}.geoparquet"
     run:
         import geopandas as gpd
         import pandas as pd
