@@ -11,14 +11,77 @@ length exposed to winds in excess of a threshold).
 
 
 import logging
+import os
 import sys
 
 import geopandas as gpd
+import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import xarray as xr
 
 
-def exposure_by_edge(exposure_path: str) -> tuple[str, pd.DataFrame]:
+def plot_event_distributions(thresholds: list[str], exposure_by_event: pd.DataFrame, plot_dir: str) -> None:
+    """
+    Given exposure data (lengths of edge exposed to wind speed in excess of a
+    given threshold), plot the distribution of events.
+
+    Args:
+        thresholds: Wind speed thresholds for exposure data, used for indexing
+            column from `exposure_by_event`.
+        exposure_by_event: Lengths exposed in meters, with event index, threshold columns.
+        plot_dir: Location to save histograms.
+    """
+    # find extrema and number of bins based on all thresholds, so x-axis is
+    # constant between thresholds
+    x_min_log10 = np.log10(max([1000, 0.1 * min(exposure_by_event.min())]))
+    x_max_log10 = np.log10(max(exposure_by_event.max()))
+    n_bins = max([10, int(np.ceil(np.cbrt(len(exposure_by_event))))])
+    bins = np.logspace(x_min_log10, x_max_log10, n_bins)
+
+    # find y (frequency) maxima across thresholds
+    y_max = 0
+    for threshold in thresholds:
+        frequency, bin_edges = np.histogram(exposure_by_event.loc[:, threshold], bins=bins)
+        y_max = max([y_max, max(frequency)])
+    y_max *= 1.1
+
+    for threshold in thresholds:
+
+        # filter out zero values
+        data = exposure_by_event[threshold].copy()
+        non_zero_data = data[data > 0]
+
+        f, ax = plt.subplots()
+
+        ax.hist(
+            non_zero_data,
+            bins=bins,
+            color="green",
+            alpha=0.5,
+            label="Exposure distribution"
+        )
+        p90 = np.quantile(non_zero_data, 0.9)
+        p95 = np.quantile(non_zero_data, 0.95)
+        p99 = np.quantile(non_zero_data, 0.99)
+        ax.axvline(p90, label=r"$p_{90}$ = " + f"{p90:.2E}", ls="--", color="pink", alpha=0.7)
+        ax.axvline(p95, label=r"$p_{95}$ = " + f"{p95:.2E}", ls="--", color="purple", alpha=0.7)
+        ax.axvline(p99, label=r"$p_{99}$ = " + f"{p99:.2E}", ls="--", color="red", alpha=0.7)
+        ax.set_ylim(0, y_max)
+        ax.set_xlim(10**x_min_log10, 5 * 10**x_max_log10)
+        ax.set_xscale("log")
+        ax.set_xlabel("Region exposure [m]")
+        ax.set_ylabel("Frequency")
+        ax.set_title(f"Exposure event distribution, n={len(exposure_by_event)} events\nExposed edge length @ {threshold} [m s-1] threshold")
+        ax.grid(alpha=0.1)
+        ax.legend()
+
+        f.savefig(os.path.join(plot_dir, threshold.replace(".", "p") + ".png"))
+
+    return
+
+
+def exposure_by_edge(exposure_path: str) -> pd.DataFrame:
     """
     Given an exposure file, read netCDF and transform to pandas dataframe.
 
@@ -28,10 +91,9 @@ def exposure_by_edge(exposure_path: str) -> tuple[str, pd.DataFrame]:
             coordinates.
 
     Returns:
-        Event name
         Exposure dataframe with edge rows and threshold columns for given
-            storm. Values are lengths (m) of edge exposed to wind speeds in
-            excess of threshold speed.
+            storm. Additional column of `event_id`. Values are lengths (m) of edge
+            exposed to wind speeds in excess of threshold speed.
     """
 
     exposure = xr.open_dataset(exposure_path)
@@ -44,7 +106,10 @@ def exposure_by_edge(exposure_path: str) -> tuple[str, pd.DataFrame]:
     # N.B. arrow specification requires string column names (but threshold column names are float)
     df.columns = df.columns.astype(str)
 
-    return event_id, df
+    # repeat the event id for each edge
+    df["event_id"] = event_id
+
+    return df
 
 
 if __name__ == "__main__":
@@ -82,21 +147,19 @@ if __name__ == "__main__":
     if n_proc > 1:
         import multiprocessing
         with multiprocessing.Pool(processes=n_proc) as pool:
-            exposure_by_edge_by_storm: list[tuple[str, pd.DataFrame]] = pool.map(exposure_by_edge, snakemake.input.exposure)
-        exposure_by_edge_by_storm = dict(exposure_by_edge_by_storm)
+            exposure_by_edge_by_storm: list[pd.DataFrame] = pool.map(exposure_by_edge, snakemake.input.exposure)
     else:
-        exposure_by_edge_by_storm = {}
+        exposure_by_edge_by_storm = []
         for exposure_path in snakemake.input.exposure:
-            event_id, exposure = exposure_by_edge(exposure_path)
-            exposure_by_edge_by_storm[event_id] = exposure
-
-    # calculate number of years between first and last storm event, necessary for expected annual exposure
-    event_ids: list[str] = list(exposure_by_edge_by_storm.keys())
-    years: set[int] = set(track_year.loc[event_ids, "year"])
-    span_years: int = max([1, max(years) - min(years)])  # with a minimum of one
+            exposure_by_edge_by_storm.append(exposure_by_edge(exposure_path))
 
     # storm-edge rows (repeated edges), threshold value columns, values are exposed length in meters for a given storm
-    exposure_all_storms: pd.DataFrame = pd.concat(exposure_by_edge_by_storm.values())
+    exposure_all_storms: pd.DataFrame = pd.concat(exposure_by_edge_by_storm)
+
+    # calculate number of years between first and last storm event, necessary for expected annual exposure
+    event_ids: list[str] = list(set(exposure_all_storms.event_id))
+    years: set[int] = set(track_year.loc[event_ids, "year"])
+    span_years: int = max([1, max(years) - min(years)])  # with a minimum of one
 
     # create a lookup between edge id and the region to which the edge's representative point lies within
     logging.info("Creating edge to region mapping")
@@ -105,11 +168,19 @@ if __name__ == "__main__":
     edge_rep_points.geometry = edge_rep_points.geometry.representative_point()
     edge_to_region_mapping: pd.DataFrame = edge_rep_points.sjoin(regions, how="left").drop(columns=["geometry", "index_right"])
 
-    # TODO: per region event distributions
+    # whole country event distributions
+    per_event = exposure_all_storms.groupby("event_id").sum()
+    os.makedirs(snakemake.output.country_event_distributions)
+    plot_event_distributions(list(per_event.columns), per_event, snakemake.output.country_event_distributions)
+
+    # TODO: per region event distributions?
+    #per_event.to_parquet(snakemake.input.per_event_exposure)
+
+    exposure_all_storms = exposure_all_storms.reset_index().drop(columns="event_id").set_index("edge")
 
     logging.info("Aggregating to region level")
     # edge rows, threshold value columns, values are exposed length in meters as a result of all storms
-    exposure_total = exposure_all_storms.groupby(exposure_all_storms.index).sum()
+    exposure_total = exposure_all_storms.groupby("edge").sum()
     # merge with regions and sum edges across regions
     exposure_by_region = \
         edge_to_region_mapping.drop(columns=[f"NAME_{admin_level}"]).merge(exposure_total, on="edge").groupby(f"GID_{admin_level}").sum()

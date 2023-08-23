@@ -298,8 +298,9 @@ rule exposure_by_admin_region:
     threads: 8  # read exposure files in parallel
     output:
         total_exposure_by_region = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}.geoparquet",
-        # TODO: per region event distributions
-        # exposure_event_distribution_by_region = dir("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}/")
+        # all outputs must have same wildcards, so country_event_distributions contains ADMIN_SLUG
+        # despite country_event_distributions being the same for every ADMIN_SLUG
+        country_event_distributions = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}/country_event_distribution/")
     script:
         "../../scripts/exposure/grid_exposure_by_admin_region.py"
 
