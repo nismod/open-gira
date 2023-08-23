@@ -82,7 +82,6 @@ rule annotate_targets:
     """
     Annotate targets (electricity consuming areas) with population and GDP data
     """
-    conda: "../../../environment.yml"
     input:
         admin="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
         population=rules.calculate_population_of_targets.output.population_table,

@@ -12,7 +12,6 @@ AGGREGATE_LEVELS_OUT = os.path.join(
 
 
 rule analyse_aggregate_levels:
-    conda: "../../../environment.yml"
     input:
         os.path.join(
             STORM_IMPACT_STATISTICS_DIR,

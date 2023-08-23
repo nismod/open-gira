@@ -1,6 +1,5 @@
 # Create *-extracts.json file that determines the bounding boxes of the slices
 rule create_bbox_extracts:
-    conda: "../../../environment.yml"
     input:
         "{OUTPUT_DIR}/json/{DATASET}.json",
     params:

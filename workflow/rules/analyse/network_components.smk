@@ -1,5 +1,4 @@
 rule network_components:
-    conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
         edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet",

@@ -218,7 +218,6 @@ rule create_power_network:
     """
     Combine power plant, consumer and transmission data for given area
     """
-    conda: "../../../environment.yml"
     input:
         plants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
@@ -313,7 +312,6 @@ rule create_transport_network:
     """
     Take .geoparquet OSM files and output files of cleaned network nodes and edges
     """
-    conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_edges.geoparquet",

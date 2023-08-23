@@ -7,7 +7,6 @@ rule rasterise_osm_network:
     """
     Intersect an OSM derived network with a stack of raster maps
     """
-    conda: "../../../environment.yml"
     input:
         network="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/processed/{SLICE_SLUG}_edges.geoparquet",
         tif_paths=rules.trim_hazard_data.input.trimmed_rasters,
@@ -33,7 +32,6 @@ rule rasterise_electricity_grid:
     Split electricity network edges on raster grid
     Assign raster indicies to edges
     """
-    conda: "../../../environment.yml"
     input:
         network="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
         tif_paths=["{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff"],

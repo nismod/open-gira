@@ -179,7 +179,6 @@ rule estimate_wind_fields:
 
     Optionally plot wind fields and save to disk
     """
-    conda: "../../../environment.yml"
     input:
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",

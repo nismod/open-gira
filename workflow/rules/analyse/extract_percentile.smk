@@ -11,7 +11,6 @@ PERCENTILE_OUT = directory(
 
 
 rule analyse_percentile:
-    conda: "../../../environment.yml"
     input:
         STORM_STATS_BY_THRESHOLD,
     params:
