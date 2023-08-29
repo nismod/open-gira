@@ -128,10 +128,10 @@ transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40
 # setting to 1 will run any parallelisable job in serial
 # N.B. snakemake will enforce:
 # n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
-processes_per_parallel_job: 4
+processes_per_parallel_job: 16
 
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
-    max_speed: True
+    max_speed: False
     # WARNING: plotting the animation is slow.. you probably only ever want it for historic tracks
     animation: False
