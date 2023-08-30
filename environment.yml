@@ -28,7 +28,7 @@ dependencies:
   - nb_conda_kernels    # notebook support
   - netCDF4             # NetCDF file format
   - networkx            # networks
-  - numpy~=1.22.0       # data arrays
+  - numpy               # data arrays
   - openpyxl            # Excel file format
   - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing
