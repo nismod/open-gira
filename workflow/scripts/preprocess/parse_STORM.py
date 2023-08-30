@@ -15,16 +15,33 @@ import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
-from open_gira.io import STORM_BASIN_IDS
-from open_gira.io import STORM_CSV_SCHEMA as schema
 from open_gira.utils import natural_sort
 
 
+# column names and dtypes for synthetic tropical cyclone tracks
+STORM_CSV_SCHEMA = {
+    "year": int,
+    "month": int,
+    "tc_number": int,
+    "timestep": int,
+    "basin_id": int,
+    "lat": float,
+    "lon": float,
+    "min_pressure_hpa": float,
+    "max_wind_speed_ms": float,
+    "radius_to_max_winds_km": float,
+    "category": int,
+    "landfall": bool,  # actually {0|1} in the file
+    "distance_to_land_km": float,
+}
+# basins are serialized as integers in data, 0 -> "EP", 2 -> "NI" etc.
+STORM_BASIN_IDS = ("EP", "NA", "NI", "SI", "SP", "WP")
 # divide by this factor to 'convert' STORM's 10-minutely sustained winds to
 # 1-minutely sustained wind speeds, noting the vagueries of this process as
 # explained here: https://library.wmo.int/doc_num.php?explnum_id=290
 STORM_1MIN_WIND_FACTOR = 0.88
-STORM_FREQUENCY = "3H"  # temporal frequency of STORM synthetic tracks
+# temporal frequency of STORM synthetic tracks
+STORM_FREQUENCY = "3H"
 
 
 if __name__ == "__main__":
@@ -35,7 +52,7 @@ if __name__ == "__main__":
     data = []
     for path in tqdm(natural_sort(glob(f"{csv_dir}/*.csv"))):
 
-        df = pd.read_csv(path, names=schema.keys(), dtype=schema)
+        df = pd.read_csv(path, names=STORM_CSV_SCHEMA.keys(), dtype=STORM_CSV_SCHEMA)
 
         # example paths containing sample number:
         # STORM_DATA_HadGEM3-GC31-HM_WP_1000_YEARS_9_IBTRACSDELTA.csv
@@ -74,7 +91,7 @@ if __name__ == "__main__":
         df = df.set_index(np.concatenate(track_datetimes))
 
         # reorder columns
-        df = df.loc[:, list(schema.keys()) + ["track_id", "sample"]]
+        df = df.loc[:, list(STORM_CSV_SCHEMA.keys()) + ["track_id", "sample"]]
 
         data.append(df)
 
