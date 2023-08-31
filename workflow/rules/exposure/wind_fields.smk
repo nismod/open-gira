@@ -184,7 +184,10 @@ rule estimate_wind_fields:
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
         surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
     params:
-        storm_set=read_storm_set
+        storm_set=read_storm_set,
+        # include failure_thresholds as a param (despite not using elsewhere in the
+        # rule) to trigger re-runs on change to this configuration option
+        failure_thresholds=config["transmission_windspeed_failure"]
     threads:
         config["processes_per_parallel_job"]
     output:
