@@ -25,7 +25,7 @@ snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.
 
 def storm_tracks_file_from_storm_set(wildcards) -> str:
     """
-    Return a path to the processed tracks for a stom set.
+    Return a path to the processed tracks for a storm set.
 
     Given e.g. IBTrACS_maria-2017, return results/input/storm-tracks/IBTrACS/tracks.geoparquet
     """
