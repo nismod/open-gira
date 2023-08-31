@@ -1,8 +1,8 @@
 rule parse_IRIS:
     input:
-        csv_dir="{OUTPUT_DIR}/input/IRIS/iris-data/event_sets/{SCENARIO}/"
+        csv_dir="{OUTPUT_DIR}/input/IRIS/iris-data/event_sets/{IRIS_SCENARIO}/"
     output:
-        parquet="{OUTPUT_DIR}/storm_tracks/IRIS-{SCENARIO}/tracks.geoparquet"
+        parquet="{OUTPUT_DIR}/storm_tracks/IRIS-{IRIS_SCENARIO}/tracks.geoparquet"
     script:
         "../../scripts/preprocess/parse_IRIS.py"
 
@@ -17,7 +17,7 @@ rule slice_IRIS:
         global_tracks=rules.parse_IRIS.output.parquet,
         grid_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json"
     output:
-        sliced_tracks="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/IRIS-{SCENARIO}/tracks.geoparquet",
+        sliced_tracks="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/IRIS-{IRIS_SCENARIO}/tracks.geoparquet",
     resources:
         mem_mb=10000  # the global tracks file is fairly chunky
     script:
