@@ -102,6 +102,10 @@ storm_sets:
     STORM-CNRM-CM6-1-HR: 'config/storm_sets/storm-cnrm-cm6-1-hr.json'
     STORM-EC-Earth3P-HR: 'config/storm_sets/storm-ec-earth3p-hr.json'
     STORM-HadGEM3-GC31-HM: 'config/storm_sets/storm-hadgem3-gc31-hm.json'
+    IRIS-PRESENT: 'config/storm_sets/iris-present.json'
+    IRIS-SSP1-2050: 'config/storm_sets/iris-ssp1-2050.json'
+    IRIS-SSP2-2050: 'config/storm_sets/iris-ssp2-2050.json'
+    IRIS-SSP5-2050: 'config/storm_sets/iris-ssp5-2050.json'
 
     # files containing a list of storm id strings that constitute the storm set
     # key should follow the pattern: <dataset>_<storm_set_reference>
