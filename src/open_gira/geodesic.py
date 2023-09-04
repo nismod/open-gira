@@ -65,7 +65,10 @@ def bearing_and_great_circle_distance(
     """
 
     # convert to radians
-    λ1, φ1, λ2, φ2 = map(np.radians, [longitude1, latitude1, longitude2, latitude2])
+    λ1 = np.radians(longitude1)
+    φ1 = np.radians(latitude1)
+    λ2 = np.radians(longitude2)
+    φ2 = np.radians(latitude2)
 
     # latitude and longitude ranges
     Δλ = λ2 - λ1
