@@ -36,6 +36,22 @@ def cached_json_file_read(file_path: str):
         return json.load(fp)
 
 
+@functools.lru_cache(maxsize=128)
+def cached_json_file_read(file_path: str):
+    """
+    Read a JSON file and return its parsed contents. Cached on function argument.
+
+    Args:
+        file_path: Path to JSON file to read.
+
+    Returns:
+        Parsed contents of `file_path`.
+    """
+
+    with open(file_path, "r") as fp:
+        return json.load(fp)
+
+
 def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
     """
     Sort list of paths, create GeoDataFrames, concatenate into a single

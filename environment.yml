@@ -32,6 +32,8 @@ dependencies:
   - openpyxl            # Excel file format
   - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing
+  # test_network_components.py fails with 2.1.0, see commit msg
+  - pandas==2.0.3       # tabular data
   - pyarrow             # parquet file format, Arrow data exchange
   - aws-sdk-cpp=1.8.186
   # workaround for a bug in aws-sdk-cpp, which is used by pyarrow
