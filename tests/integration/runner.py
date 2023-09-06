@@ -223,8 +223,8 @@ class OutputChecker:
             try:
                 assert generated.equals(expected)
             except AssertionError as e:
-                print(generated)
-                print(expected)
+                printerr(generated)
+                printerr(expected)
                 raise e
 
         # any other file type
