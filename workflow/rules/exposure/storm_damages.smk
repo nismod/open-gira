@@ -214,10 +214,7 @@ rule merge_countries_of_storm:
         # write to disk
         os.makedirs(os.path.dirname(output.by_target), exist_ok=True)
         logging.info("Writing pooled per-target disruption to disk")
-        pooled_targets.to_netcdf(
-            output.by_target,
-            encoding={var: {"zlib": True, "complevel": 9} for var in pooled_targets.keys()}
-        )
+        pooled_targets.to_netcdf(output.by_target)
 
 """
 Test with:
