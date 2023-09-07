@@ -26,22 +26,6 @@ import snkit
 MAX_SUPPLY_FACTOR: float = 0.95
 
 
-def netcdf_encoding(dataset: xr.Dataset, compression_level=9) -> dict:
-    """
-    Given a dataset, return the per-variable netCDF encoding specification.
-
-    Args:
-        dataset: Dataset to encode.
-        compression_level: Compression level to use. 1 is fastest to read/write, 9 is most compressed.
-            https://unidata.github.io/netcdf4-python/#efficient-compression-of-netcdf-variables
-
-    Returns:
-        Dictionary specifying the compression to use for each variable in the dataset.
-    """
-    assert 1 <= compression_level <= 9
-    return {variable: {"zlib": True, "complevel": compression_level} for variable in dataset.data_vars}
-
-
 def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) -> xr.Dataset:
     """
     Build an empty (NaN filled) xarray Dataset given names, types and coordinate values.
@@ -263,7 +247,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-    logging.info("Loading wind speed data")
+    logging.info("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
     if len(wind_fields.variables) == 0:
         logging.info("Empty wind speed file, writing null result to disk.")
@@ -279,8 +263,8 @@ if __name__ == "__main__":
             event_id=[storm_id],
             threshold=speed_thresholds,
         )
-        exposure.to_netcdf(exposure_path, encoding=netcdf_encoding(exposure))
-        disruption.to_netcdf(disruption_path, encoding=netcdf_encoding(disruption))
+        exposure.to_netcdf(exposure_path)
+        disruption.to_netcdf(disruption_path)
         sys.exit(0)
 
     logging.info(wind_fields.max_wind_speed)
@@ -315,5 +299,5 @@ if __name__ == "__main__":
     logging.info(exposure_summary_str)
 
     logging.info("Writing results to disk")
-    exposure.to_netcdf(exposure_path, encoding=netcdf_encoding(exposure))
-    disruption.to_netcdf(disruption_path, encoding=netcdf_encoding(disruption))
+    exposure.to_netcdf(exposure_path)
+    disruption.to_netcdf(disruption_path)
