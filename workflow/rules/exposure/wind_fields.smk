@@ -191,8 +191,7 @@ rule estimate_wind_fields:
         # include failure_thresholds as a param (despite not using elsewhere in the
         # rule) to trigger re-runs on change to this configuration option
         failure_thresholds=config["transmission_windspeed_failure"]
-    threads:
-        config["processes_per_parallel_job"]
+    threads: threads_for_country
     output:
         # enable or disable plotting in the config file
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),

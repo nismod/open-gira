@@ -127,13 +127,6 @@ wind_grid_resolution_deg: 0.1  # approx 11km latitude
 # are expected to fail based on available literature.
 transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
 
-# some of the scripts and rules are parallelised with multiprocessing
-# works for annotate_targets.py and estimate_wind_fields.py
-# setting to 1 will run any parallelisable job in serial
-# N.B. snakemake will enforce:
-# n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
-processes_per_parallel_job: 16
-
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
     max_speed: False

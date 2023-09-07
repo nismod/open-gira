@@ -34,12 +34,6 @@ if not isinstance(config['slice_count'], int) or \
         (math.sqrt(config['slice_count']) % 1 > 0 and config['slice_count'] != 1):
     raise ValueError("""Error in config: slice_count must be an integer, either a square number or 1""")
 
-n_proc = config["processes_per_parallel_job"]
-if not isinstance(n_proc, int) or (n_proc < 1):
-    raise ValueError(
-        f"config.processes_per_parallel_job has type: {type(n_proc)} and value: {n_proc}, but must be a positive integer"
-    )
-
 for network, file_path in config['network_filters'].items():
     if not os.path.exists(file_path):
         raise FileNotFoundError((

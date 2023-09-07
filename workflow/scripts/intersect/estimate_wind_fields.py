@@ -181,7 +181,7 @@ if __name__ == "__main__":
     storm_set: set[str] = set(snakemake.params.storm_set)
     plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
     plot_animation: bool = snakemake.config["plot_wind"]["animation"]
-    n_proc: int = snakemake.config["processes_per_parallel_job"]
+    n_proc: int = snakemake.threads
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds
     downscale_factors_plot_path: str = snakemake.output.downscale_factors_plot
