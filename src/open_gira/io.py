@@ -7,7 +7,7 @@ from glob import glob
 import logging
 import json
 from os.path import splitext, basename, join
-from typing import Optional
+from typing import Optional, Tuple
 
 import geopandas as gpd
 import pandas as pd
@@ -18,6 +18,33 @@ from open_gira.utils import natural_sort
 
 
 WGS84_EPSG = 4326
+
+
+def scale_factor_and_offset(minimum: float, maximum: float, n_bits: int) -> Tuple[float, float]:
+    """
+    Given (floating point) data within a certain range, find the best scale
+    factor and offset to use to pack as signed integer values, using all the
+    available bits.
+
+    See here for more information:
+    https://docs.xarray.dev/en/stable/user-guide/io.html#scaling-and-type-conversions
+
+    Args:
+        maximum: Maximum value in data to serialise
+        minimum: Minimum value in data to serialise
+        n_bits: Number of available bits
+
+    Returns:
+        Scaling factor and offset
+    """
+
+    # stretch data to available bits
+    scale_factor = (maximum - minimum) / (2 ** n_bits - 1)
+
+    # make symmetric about zero (assumes packing to a signed integer)
+    add_offset = minimum + 2 ** (n_bits - 1) * scale_factor
+
+    return scale_factor, add_offset
 
 
 @functools.lru_cache(maxsize=128)
