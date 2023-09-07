@@ -10,30 +10,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import xarray as xr
 
+from open_gira.curves import logistic_min
+
 
 WIND_CMAP = "turbo"
 MAX_SPEED = 80  # clip wind speeds above this value when plotting
 # origin lower so latitude indicies increasing northwards
 WIND_PLOT_ORIGIN = "lower"
 QUIVER_SCALE = 2_500  # larger values give shorter quiver arrows
-
-
-def logistic_min(x: float | np.ndarray, L: float, m: float, k: float, x_0: float) -> float | np.ndarray:
-    """
-    Logistic function with a minimum value, m.
-
-    Args:
-        x: Input values
-        L: Maximum output value
-        m: Minimum output value
-        k: Steepness parameter
-        x_0: Location of sigmoid centre in x
-
-    Returns:
-        Output values
-    """
-
-    return m + (L - m) / (1 + np.exp(-k * (x - x_0)))
 
 
 def size_plot(i: int, j: int) -> tuple[float, float]:
