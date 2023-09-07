@@ -2,7 +2,10 @@
 Network creation routines
 """
 
+import pandas as pd
+
 from open_gira.io import cached_json_file_read
+from open_gira.curves import logistic_min
 
 
 rule gridfinder_to_geoparquet:
@@ -214,6 +217,41 @@ snakemake -c1 results/power/by_country/HTI/network/powerplants.geoparquet
 """
 
 
+def threads_for_country(wildcards) -> int:
+    """
+    Estimate a sensible number of threads to use for a given country. We rank
+    countries by their number of targets, and then apply a sigmoid (logistic
+    minimum) function to the ranking.
+
+    Args:
+        wildcards: Must include COUNTRY_ISO_A3 to do the country lookup.
+
+    Returns:
+        Thread allocation
+    """
+
+    # must wait for country target ranking file to have been created
+    ranking_file = checkpoints.rank_countries_by_target_count.get(**wildcards).output.lookup_table
+    ranked = pd.read_csv(ranking_file)
+
+    ranked["threads"] = logistic_min(
+        ranked.index,  # input to transform
+        workflow.cores,  # maximum (roughly)
+        -2,  # minimum (roughly)
+        0.02,  # steepness of sigmoid
+        0.8 * len(ranked.index)  # location of sigmoid centre on input axis
+    ).astype(int)
+
+    try:
+        n_threads, = ranked.loc[ranked.iso_a3 == wildcards.COUNTRY_ISO_A3, "threads"]
+    except ValueError:
+        # likely country is missing from table
+        n_threads = 1
+
+    # ensure it's at least one
+    return max([1, n_threads])
+
+
 rule create_power_network:
     """
     Combine power plant, consumer and transmission data for given area
@@ -222,6 +260,7 @@ rule create_power_network:
         plants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
+    threads: threads_for_country
     output:
         edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
         nodes="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/nodes.geoparquet",
