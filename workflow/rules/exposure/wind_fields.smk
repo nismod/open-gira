@@ -288,10 +288,7 @@ rule merge_wind_fields_of_storm:
             raster: gpd.GeoDataFrame = raster.set_index(["longitude", "latitude"])
             rebinned_raster: xr.Dataset = raster.to_xarray()
 
-            rebinned_raster.to_netcdf(
-                output.merged,
-                encoding={var: {"zlib": True, "complevel": 9} for var in raster.keys()}
-            )
+            rebinned_raster.to_netcdf(output.merged)
 
         else:
             logging.info(f"No data in rasters, writing empty file.")
