@@ -12,6 +12,9 @@ rule create_wind_grid:
     """
     input:
         network_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json",
+    params:
+        # include wind_grid_resolution_deg as a param to trigger re-runs on change
+        grid_resolution=config["wind_grid_resolution_deg"]
     output:
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     run:
@@ -70,7 +73,7 @@ rule create_wind_grid:
         maxy += buffer_deg
 
         # cell side length in decimal degrees
-        cell_length = config["wind_deg"]
+        cell_length = config["wind_grid_resolution_deg"]
 
         # determine grid bounding box to fit an integer number of grid cells in each dimension
         i, minx, maxx = harmonise_grid(minx, maxx, cell_length)
@@ -265,7 +268,7 @@ rule merge_wind_fields_of_storm:
 
         if len(data) != 0:
             # transform to point data
-            delta = float(config["wind_deg"])
+            delta = float(config["wind_grid_resolution_deg"])
             logging.info(f"Regridding on harmonised {delta} degree grid.")
             point_speeds = gpd.GeoDataFrame(
                 {

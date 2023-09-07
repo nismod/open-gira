@@ -118,10 +118,10 @@ storm_sets:
 # consider countries at risk of a storm if within this many degrees of any storm track point
 max_track_search_radius_deg: 2
 
-# wind speed is constant within a square area of sides wind_deg
+# wind speed is constant within a square area of sides wind_grid_resolution_deg
 # note that for large domains, e.g. USA or CHN, 0.05 deg resolution requires
 # on the order of 4GB RAM per storm wind estimate
-wind_deg: 0.1  # approx 11km latitude
+wind_grid_resolution_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
