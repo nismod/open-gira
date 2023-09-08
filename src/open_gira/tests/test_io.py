@@ -20,19 +20,25 @@ class TestScaleFactorAndOffset:
             np.array([0.0012207, 40.000610])
         )
 
+
+class TestPackingFloatsAsInts:
+    """
+    Use xarray to round trip floats via netCDF int16.
+    """
+
     def test_round_trip_to_netcdf(self):
-        """
-        Use xarray to round trip via packed int16.
-        """
+
+        # maximum error of 0.3%
+        relative_tolerance = 0.003
 
         arrays_to_test = [
-            np.array([-23.32, -2.2, 0, 24.21, 128.3, 27000]),
-            np.array([-12.2365324, -2.1212, 0, 42.123, 128.6543, 27000.2363]),
+            np.array([-23.32, -2.2, 1, 24.21, 128.3, 243.1245]),
+            np.linspace(0.1, 81.234, 1500),
+            np.linspace(0.138, 978.234, 500),
+            np.linspace(-999.34, 10012.21, 40),
             np.random.rand(100),
-            np.random.rand(100) * 100_000,
-            np.logspace(-2, 4, 10),
-            np.logspace(-2, 9, 10, base=2),
-            np.linspace(-1000, 10000, 40),
+            np.exp(np.random.rand(100)),
+            np.logspace(-2, 20, 10, base=2) + np.random.rand(10),
         ]
 
         for data in arrays_to_test:
@@ -50,7 +56,9 @@ class TestScaleFactorAndOffset:
 
                 from_disk = xr.load_dataset(serialised_path)
 
-                np.allclose(
-                    data,
-                    from_disk.data.values
-                )
+                try:
+                    assert np.allclose(data, from_disk.data.values, rtol=relative_tolerance, atol=0, equal_nan=True)
+                except AssertionError:
+                    ratio = from_disk.data.values / data
+                    error = np.abs(ratio - 1)
+                    raise AssertionError(f"{np.nanmax(error)=:.5f} exceeds {relative_tolerance=:.5f}")
