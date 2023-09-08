@@ -16,7 +16,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.io import scale_factor_and_offset
+from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import (
     advective_vector, rotational_field, interpolate_track,
     power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
@@ -289,9 +289,10 @@ if __name__ == "__main__":
     # _FillValue is a sentinel value required to successfully round-trip NaN values
     # from float (in memory) to int (on disk) to float (in memory)
 
-    # N.B. whatever reads this data must read and employ the scale_factor and add_offset metadata!
+    # N.B. whatever reads this data must read and employ the scale_factor and
+    # add_offset metadata! netCDF4-python and xarray do, ncdump doesn't
 
-    scale_factor, add_offset = scale_factor_and_offset(da.min().item(), da.max().item(), 16)
+    scale_factor, add_offset, fill_value = netcdf_packing_parameters(da.min().item(), da.max().item(), 16)
     da.to_netcdf(
         output_path,
         encoding={
@@ -299,7 +300,7 @@ if __name__ == "__main__":
                 'dtype': 'int16',
                 'scale_factor': scale_factor,
                 'add_offset': add_offset,
-                '_FillValue': -9999
+                '_FillValue': fill_value
             }
         }
     )

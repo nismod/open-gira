@@ -10,6 +10,7 @@ from os.path import splitext, basename, join
 from typing import Optional, Tuple
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 import pyproj
 from tqdm import tqdm
@@ -20,11 +21,11 @@ from open_gira.utils import natural_sort
 WGS84_EPSG = 4326
 
 
-def scale_factor_and_offset(minimum: float, maximum: float, n_bits: int) -> Tuple[float, float]:
+def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tuple[float, float]:
     """
     Given (floating point) data within a certain range, find the best scale
-    factor and offset to use to pack as signed integer values, using all the
-    available bits.
+    factor and offset to use to pack as signed integer values, using most of
+    the available bits.
 
     See here for more information:
     https://docs.xarray.dev/en/stable/user-guide/io.html#scaling-and-type-conversions
@@ -35,16 +36,31 @@ def scale_factor_and_offset(minimum: float, maximum: float, n_bits: int) -> Tupl
         n_bits: Number of available bits
 
     Returns:
-        Scaling factor and offset
+        scale_factor: Used to (de)serialise: decoded = scale_factor * encoded + add_offset
+        add_offset: Used to (de)serialise: decoded = scale_factor * encoded + add_offset
+        fill_value: Sentinel value in integer space used for storing NaN
     """
 
-    # stretch data to available bits
-    scale_factor = (maximum - minimum) / (2 ** n_bits - 1)
+    # need a finite range
+    assert np.isfinite(minimum)
+    assert np.isfinite(maximum)
+    assert maximum - minimum > 0
 
-    # make symmetric about zero (assumes packing to a signed integer)
-    add_offset = minimum + 2 ** (n_bits - 1) * scale_factor
+    # use this fraction of the available `n_bits` space
+    # this leaves room at either end (-2**n_bits or 2**n_bits) for _FillValue
+    occupancy_fraction = 0.99
 
-    return scale_factor, add_offset
+    # factor to rescale data to (almost) the available 2 ** n_bits serialised range
+    scale_factor = (maximum - minimum) / (2 ** (occupancy_fraction * n_bits))
+
+    # offset to center serialised data about 0
+    add_offset = minimum + 2 ** (occupancy_fraction * n_bits - 1) * scale_factor
+
+    # _FillValue used to representing NaN as serialised integer
+    # we have kept room at the ends of the integer bit space to avoid a collision
+    fill_value = -2 ** (n_bits - 1)
+
+    return scale_factor, add_offset, fill_value
 
 
 @functools.lru_cache(maxsize=128)
