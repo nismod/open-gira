@@ -94,18 +94,11 @@ max_track_search_radius_deg: 2
 # wind speed is constant within a square area of sides wind_deg
 # note that for large domains, e.g. USA or CHN, 0.05 deg resolution requires
 # on the order of 4GB RAM per storm wind estimate
-wind_deg: 0.1  # approx 11km latitude
+wind_grid_resolution_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
 transmission_windspeed_failure: [20., 35]
-
-# some of the scripts and rules are parallelised with multiprocessing
-# works for annotate_targets.py and estimate_wind_fields.py
-# setting to 1 will run any parallelisable job in serial
-# N.B. snakemake will enforce:
-# n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
-processes_per_parallel_job: 1
 
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
