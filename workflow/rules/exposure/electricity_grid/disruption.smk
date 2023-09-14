@@ -22,7 +22,7 @@ def country_storm_paths_for_storm_set(wildcards):
     for storm_id, countries in country_set_by_storm.items():
         paths.extend(
             expand(
-                "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
+                "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
                 COUNTRY_ISO_A3=countries,  # list of str
                 STORM_SET=wildcards.STORM_SET,  # str
                 STORM_ID=storm_id  # str
@@ -42,7 +42,7 @@ def country_storm_paths_for_storm(wildcards):
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
         STORM_ID=wildcards.STORM_ID  # str
@@ -135,7 +135,7 @@ def disruption_by_storm_for_country_for_storm_set(wildcards):
     storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{STORM_ID}.nc",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
         STORM_SET=wildcards.STORM_SET,  # str

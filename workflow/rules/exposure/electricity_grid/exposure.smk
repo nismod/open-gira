@@ -21,7 +21,7 @@ def exposure_by_storm_for_country_for_storm_set(wildcards):
     storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{STORM_ID}.nc",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/by_storm/{STORM_ID}.nc",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
         STORM_SET=wildcards.STORM_SET,  # str
