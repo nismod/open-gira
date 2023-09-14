@@ -70,7 +70,7 @@ def plot_event_distributions(
         ax.set_xlabel("Exposed edge length [m]")
         ax.set_ylabel("Frequency")
         ax.set_title(
-            f"{geography_name} for {storm_set}\n"
+            f"{geography_name} with {storm_set}\n"
             f"Exposure distribution, n={len(non_zero_data):,d} events\n"
             f"Exposed edge length @ {threshold} [m s-1] threshold"
         )
