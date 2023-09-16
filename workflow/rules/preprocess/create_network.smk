@@ -15,6 +15,8 @@ rule gridfinder_to_geoparquet:
     """
     input:
         geopackage = rules.download_gridfinder.output.electricity_grid_global,
+    resources:
+        mem_mb = 4096
     output:
         linestring = "{OUTPUT_DIR}/power/gridfinder.geoparquet",
         rep_point = "{OUTPUT_DIR}/power/gridfinder_rep_point.geoparquet",
@@ -131,6 +133,8 @@ rule subset_targets:
     input:
         targets=rules.annotate_targets.output.targets,
         admin_bounds="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet"
+    resources:
+        mem_mb=8192
     output:
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
     run:
