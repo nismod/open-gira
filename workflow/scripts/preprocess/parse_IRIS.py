@@ -20,6 +20,7 @@ from open_gira.utils import natural_sort
 
 # column names and dtypes for IRIS synthetic tropical cyclone tracks
 IRIS_CSV_SCHEMA = {
+    "tcid": str,
     "year": int,
     "tc": int,
     "month": int,
@@ -31,8 +32,6 @@ IRIS_CSV_SCHEMA = {
     "rmw": float,
     "r18": float
 }
-# basins are serialized as integers in data, 0 -> "SI", 2 -> "WP" etc.
-IRIS_BASIN_IDS = ("SI", "SP", "WP", "EP", "NA", "NI")
 # temporal frequency of IRIS
 IRIS_FREQUENCY = "3H"
 
@@ -54,19 +53,16 @@ if __name__ == "__main__":
                 "pmin": "min_pressure_hpa",
             }
         )
-        df = df.drop(columns=["r18"])
+        df = df.drop(columns=["tcid", "r18"])
 
         # example paths containing sample number and basin id:
-        # IRIS_PRESENT_bas0_1000Y_n1.txt
-        # IRIS_2050-SSP1_bas0_1000Y_n6.txt
+        # PRESENT/IRIS_WP_1000Y_n3.txt
+        # SSP5-2050/IRIS_WP_1000Y_n9.txt
         sample, = re.search(r"1000Y_n([\d]).txt", os.path.basename(path)).groups()
-        basin_id, = re.search(r"_bas([\d])_1000Y_", os.path.basename(path)).groups()
+        basin_id, = re.search(r"IRIS_(\w\w)_1000Y_", os.path.basename(path)).groups()
 
         df["sample"] = int(sample)
-        df["basin_id"] = int(basin_id)
-
-        # lookup string basin code from integer representation
-        df.basin_id = np.array(IRIS_BASIN_IDS)[df.basin_id]
+        df["basin_id"] = basin_id
 
         # this gives us 10,000 years of data rather than 10 * 10,000 years
         # it is necessary when calculating the expected annual exposure/disruption to know the total timespan
