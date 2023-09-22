@@ -12,7 +12,7 @@ dependencies:
     - nismod-snail==0.3.1 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
-    - --editable .        # open_gira helper package
+    - .                   # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
   - contextily          # basemaps for plots
