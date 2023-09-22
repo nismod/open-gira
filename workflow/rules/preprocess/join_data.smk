@@ -3,7 +3,6 @@
 
 
 rule join_data:
-    conda: "../../../environment.yml"
     input:
         lambda wildcards: expand(
             os.path.join(

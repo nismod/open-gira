@@ -16,6 +16,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
+from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import (
     advective_vector, rotational_field, interpolate_track,
     power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
@@ -180,7 +181,7 @@ if __name__ == "__main__":
     storm_set: set[str] = set(snakemake.params.storm_set)
     plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
     plot_animation: bool = snakemake.config["plot_wind"]["animation"]
-    n_proc: int = snakemake.config["processes_per_parallel_job"]
+    n_proc: int = snakemake.threads
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds
     downscale_factors_plot_path: str = snakemake.output.downscale_factors_plot
@@ -275,7 +276,33 @@ if __name__ == "__main__":
     # spatial_ref_attrs = pyproj.CRS.from_user_input(4326).to_cf()
     # da["spatial_ref"] = ((), 0, spatial_ref_attrs)
     da = da.rio.write_crs("EPSG:4326")
-    encoding = {"max_wind_speed": {"zlib": True, "complevel": 9}}
-    da.to_netcdf(output_path, encoding=encoding)
+
+    # https://docs.xarray.dev/en/stable/user-guide/io.html#scaling-and-type-conversions
+
+    # we serialise as 16 bit integers to save space compared to standard 64 bit float
+    # we don't need the precision of floats and this is much faster
+    # (and 3x smaller) than using zlib compression
+
+    # deserialised = scale_factor * serialised + add_offset
+    # serialised = (deserialised - add_offset) / scale_factor
+
+    # _FillValue is a sentinel value required to successfully round-trip NaN values
+    # from float (in memory) to int (on disk) to float (in memory)
+
+    # N.B. whatever reads this data must read and employ the scale_factor and
+    # add_offset metadata! netCDF4-python and xarray do, ncdump doesn't
+
+    scale_factor, add_offset, fill_value = netcdf_packing_parameters(da.min().item(), da.max().item(), 16)
+    da.to_netcdf(
+        output_path,
+        encoding={
+            "max_wind_speed": {
+                'dtype': 'int16',
+                'scale_factor': scale_factor,
+                'add_offset': add_offset,
+                '_FillValue': fill_value
+            }
+        }
+    )
 
     logging.info("Done estimating wind fields")

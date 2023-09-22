@@ -2,12 +2,14 @@
 For reconstructing wind fields from track data.
 """
 
+import numba
 import numpy as np
-import pyproj
 import xarray as xr
 
 import geopandas as gpd
 import pandas as pd
+
+from open_gira.geodesic import bearing_and_great_circle_distance
 
 
 # dimensions on which we have maximum wind speeds for
@@ -19,7 +21,7 @@ WIND_COORDS: dict[str, type] = {
 
 # Environmental pressure values in hPa / mbar (standard estimate of background
 # pressure away from the cyclone) are taken from the AIR hurricane model, table
-# 3 in Butke (2012).  Available at:
+# 3 in Butke (2012). Available at:
 # https://www.air-worldwide.com/publications/air-currents/2012/
 # the-pressures-on-increased-realism-in-tropical-cyclone-wind-speeds-through-attention-to-environmental-pressure/
 ENV_PRESSURE = {
@@ -77,6 +79,7 @@ def power_law_scale_factors(z0: np.ndarray, z1: float, z2: float) -> np.ndarray:
     return np.power(z1 / z2, p)
 
 
+@numba.njit(error_model="numpy")  # allow divide by zero
 def holland_wind_model(
     RMW_m: float,
     V_max_ms: float,
@@ -147,6 +150,7 @@ def holland_wind_model(
     return np.clip(V, 0, None)  # clip negative values to zero
 
 
+@numba.njit
 def advective_vector(
     eye_heading_deg: float,
     eye_speed_ms: float,
@@ -214,8 +218,7 @@ def rotational_field(
     grid_shape = X.shape  # or Y.shape
 
     # forward azimuth angle and distances from grid points to track eye
-    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
-    grid_to_eye_azimuth_deg, _, radius_m = geod_wgs84.inv(
+    grid_to_eye_azimuth_deg, radius_m = bearing_and_great_circle_distance(
         X.ravel(),
         Y.ravel(),
         np.full(len(X.ravel()), eye_long),

@@ -1,5 +1,5 @@
 # to install this environment:
-# conda env create -f environment.yml
+# micromamba create -f environment.yml
 name: open-gira
 channels:
   - conda-forge
@@ -11,7 +11,7 @@ dependencies:
   - pip:  # delegate to pip for non-conda packages
     - nismod-snail==0.3.1 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
-    - snkit               # spatial network cleaning
+    - snkit==1.8.1        # spatial network cleaning
     - --editable .        # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
@@ -28,7 +28,7 @@ dependencies:
   - nb_conda_kernels    # notebook support
   - netCDF4             # NetCDF file format
   - networkx            # networks
-  - numpy~=1.22.0       # data arrays
+  - numpy               # data arrays
   - openpyxl            # Excel file format
   - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing

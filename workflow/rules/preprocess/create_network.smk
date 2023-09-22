@@ -2,6 +2,11 @@
 Network creation routines
 """
 
+import pandas as pd
+
+from open_gira.io import cached_json_file_read
+from open_gira.curves import logistic_min
+
 
 rule gridfinder_to_geoparquet:
     """
@@ -10,6 +15,8 @@ rule gridfinder_to_geoparquet:
     """
     input:
         geopackage = rules.download_gridfinder.output.electricity_grid_global,
+    resources:
+        mem_mb = 4096
     output:
         linestring = "{OUTPUT_DIR}/power/gridfinder.geoparquet",
         rep_point = "{OUTPUT_DIR}/power/gridfinder_rep_point.geoparquet",
@@ -126,6 +133,8 @@ rule subset_targets:
     input:
         targets=rules.annotate_targets.output.targets,
         admin_bounds="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet"
+    resources:
+        mem_mb=8192
     output:
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
     run:
@@ -212,15 +221,50 @@ snakemake -c1 results/power/by_country/HTI/network/powerplants.geoparquet
 """
 
 
+def threads_for_country(wildcards) -> int:
+    """
+    Estimate a sensible number of threads to use for a given country. We rank
+    countries by their number of targets, and then apply a sigmoid (logistic
+    minimum) function to the ranking.
+
+    Args:
+        wildcards: Must include COUNTRY_ISO_A3 to do the country lookup.
+
+    Returns:
+        Thread allocation
+    """
+
+    # must wait for country target ranking file to have been created
+    ranking_file = checkpoints.rank_countries_by_target_count.get(**wildcards).output.lookup_table
+    ranked = pd.read_csv(ranking_file)
+
+    ranked["threads"] = logistic_min(
+        ranked.index,  # input to transform
+        workflow.cores,  # maximum (roughly)
+        -2,  # minimum (roughly)
+        0.02,  # steepness of sigmoid
+        0.8 * len(ranked.index)  # location of sigmoid centre on input axis
+    ).astype(int)
+
+    try:
+        n_threads, = ranked.loc[ranked.iso_a3 == wildcards.COUNTRY_ISO_A3, "threads"]
+    except ValueError:
+        # likely country is missing from table
+        n_threads = 1
+
+    # ensure it's at least one
+    return max([1, n_threads])
+
+
 rule create_power_network:
     """
     Combine power plant, consumer and transmission data for given area
     """
-    conda: "../../../environment.yml"
     input:
         plants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
+    threads: threads_for_country
     output:
         edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
         nodes="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/nodes.geoparquet",
@@ -231,6 +275,42 @@ rule create_power_network:
 """
 Test with:
 snakemake -c1 results/power/by_country/HTI/edges.geoparquet
+"""
+
+
+def networks_affected_by_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the countries that a storm set
+    affects and return paths to their network edge files.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    country_set = cached_json_file_read(json_file)
+
+    return expand(
+        "results/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
+        COUNTRY_ISO_A3=country_set,  # list of str
+        STORM_SET=wildcards.STORM_SET  # str
+    )
+
+
+rule create_networks_affected_by_storm_set:
+    """
+    A target rule to create all networks potentially impacted by a storm set.
+    """
+    input:
+        networks = networks_affected_by_storm_set
+    output:
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/networks.txt"
+    shell:
+        """
+        # one output file per line
+        echo {input.networks} | tr ' ' '\n' > {output.completion_flag}
+        """
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/networks.txt
 """
 
 
@@ -275,7 +355,6 @@ rule create_transport_network:
     """
     Take .geoparquet OSM files and output files of cleaned network nodes and edges
     """
-    conda: "../../../environment.yml"
     input:
         nodes="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_nodes.geoparquet",
         edges="{OUTPUT_DIR}/geoparquet/{DATASET}_{FILTER_SLUG}/raw/{SLICE_SLUG}_edges.geoparquet",

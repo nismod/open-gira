@@ -3,7 +3,7 @@ rule plot_target_supply_factor_distributions:
     Plot distributions of supply_factor, from the pool of targets processed for storm_set
     """
     input:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_target.nc",
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption_by_target.nc",
     output:
         pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/supply_factor_distribution.pdf",
     run:

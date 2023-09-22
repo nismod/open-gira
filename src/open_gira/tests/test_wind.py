@@ -98,16 +98,19 @@ class TestRotationalField:
         lon_arr = np.linspace(min_lon, max_lon, lon_width)
         eye_lat = 15
 
+        expected = np.array(
+            [[0.00063 -0.139398j, 0.029922-13.247382j, np.nan + np.nan * 1j, 0.029922+13.247382j, 0.00063  +0.139398j]]
+        )
         # test for regression
-        north = rotational_field(lon_arr, np.array([eye_lat]), eye_lon, eye_lat, 150_000, 100, 95_000, 100_000)
+        north = rotational_field(lon_arr, np.array([eye_lat]), eye_lon, eye_lat, 50_000, 100, 95_000, 100_000)
         np.testing.assert_allclose(
             north,
-            np.array([[0.20889488-46.23914882j, 0.01087067 -4.81284318j, np.nan + np.nan * 1j,
-              0.01087067+4.81284318j, 0.20889488+46.23914882j]])
+            expected,
+            rtol=1E-5
         )
 
         # check that the direction of rotation is reversed in the southern hemisphere
-        south = rotational_field(lon_arr, np.array([-eye_lat]), eye_lon, -eye_lat, 150_000, 100, 95_000, 100_000)
+        south = rotational_field(lon_arr, np.array([-eye_lat]), eye_lon, -eye_lat, 50_000, 100, 95_000, 100_000)
 
         np.testing.assert_allclose(
             np.angle(north),

@@ -7,7 +7,6 @@ https://gridfinder.org/
 
 
 rule download_gridfinder:
-    conda: "../../../environment.yml"
     output:
         electricity_grid_global = "{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
         electricity_targets_global = "{OUTPUT_DIR}/input/gridfinder/targets.tif",

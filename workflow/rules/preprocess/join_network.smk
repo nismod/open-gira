@@ -2,7 +2,6 @@
 # files for transport networks
 
 rule join_network:
-    conda: "../../../environment.yml"
     input:
         nodes = lambda wildcards: expand(
             os.path.join("{OUTPUT_DIR}", "geoparquet", "{DATASET}_{FILTER_SLUG}", "processed", "slice-{i}_nodes.geoparquet"),

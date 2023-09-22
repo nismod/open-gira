@@ -7,13 +7,10 @@ rule plot_storm_tracks:
     params:
         storm_set_path = lambda wildcards: config["storm_sets"][wildcards.STORM_SET]
     output:
-        pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_tracks.pdf",
         png = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_tracks.png",
-        pickle = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/storm_tracks.pickle"
     run:
         import json
         import os
-        import pickle
 
         import geopandas as gpd
         import matplotlib
@@ -108,10 +105,6 @@ rule plot_storm_tracks:
         ax.set_ylabel("Latitude (degrees)")
         ax.set_title(f"{wildcards.STORM_SET} tropical cyclone tracks")
 
-        with open(output.pickle, "wb") as fp:
-            pickle.dump(f, fp)
-
-        f.savefig(output.pdf)
         f.savefig(output.png)
 
 """

@@ -102,6 +102,10 @@ storm_sets:
     STORM-CNRM-CM6-1-HR: 'config/storm_sets/storm-cnrm-cm6-1-hr.json'
     STORM-EC-Earth3P-HR: 'config/storm_sets/storm-ec-earth3p-hr.json'
     STORM-HadGEM3-GC31-HM: 'config/storm_sets/storm-hadgem3-gc31-hm.json'
+    IRIS-PRESENT: 'config/storm_sets/iris-present.json'
+    IRIS-SSP1-2050: 'config/storm_sets/iris-ssp1-2050.json'
+    IRIS-SSP2-2050: 'config/storm_sets/iris-ssp2-2050.json'
+    IRIS-SSP5-2050: 'config/storm_sets/iris-ssp5-2050.json'
 
     # files containing a list of storm id strings that constitute the storm set
     # key should follow the pattern: <dataset>_<storm_set_reference>
@@ -114,24 +118,17 @@ storm_sets:
 # consider countries at risk of a storm if within this many degrees of any storm track point
 max_track_search_radius_deg: 2
 
-# wind speed is constant within a square area of sides wind_deg
+# wind speed is constant within a square area of sides wind_grid_resolution_deg
 # note that for large domains, e.g. USA or CHN, 0.05 deg resolution requires
 # on the order of 4GB RAM per storm wind estimate
-wind_deg: 0.1  # approx 11km latitude
+wind_grid_resolution_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
 transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
 
-# some of the scripts and rules are parallelised with multiprocessing
-# works for annotate_targets.py and estimate_wind_fields.py
-# setting to 1 will run any parallelisable job in serial
-# N.B. snakemake will enforce:
-# n_parallelisable_jobs * processes_per_parallel_job + n_serial_jobs <= the cores execution parameter
-processes_per_parallel_job: 4
-
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
-    max_speed: True
+    max_speed: False
     # WARNING: plotting the animation is slow.. you probably only ever want it for historic tracks
     animation: False

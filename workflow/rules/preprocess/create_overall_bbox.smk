@@ -1,6 +1,5 @@
 # Create .json file that determines the bounding boxes of the complete data
 rule create_overall_bbox:
-    conda: "../../../environment.yml"
     input:
         "{OUTPUT_DIR}/input/OSM/{DATASET}.osm.pbf",
     output:

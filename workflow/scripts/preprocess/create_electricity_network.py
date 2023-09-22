@@ -3,13 +3,12 @@ Create a network from plants, targets and gridfinder line data
 """
 
 import logging
+import os
 from typing import Callable
 import sys
 
 import geopandas as gpd
 import pandas as pd
-import snkit
-import snkit.network
 from pyproj import Geod
 from shapely.geometry import Point, LineString
 
@@ -60,9 +59,16 @@ if __name__ == "__main__":
     plants_path: str = snakemake.input.plants
     targets_path: str = snakemake.input.targets
     gridfinder_path: str = snakemake.input.gridfinder
+    snkit_processes: int = snakemake.threads
     nodes_path: str = snakemake.output.nodes
     edges_path: str = snakemake.output.edges
     grid_hull_path: str = snakemake.output.grid_hull
+
+    # set the environment variable governing how many threads snkit will use for parallel operations
+    os.environ["SNKIT_PROCESSES"] = str(snkit_processes)
+    # delayed import, must wait until environment variable is present
+    import snkit
+    import snkit.network
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 

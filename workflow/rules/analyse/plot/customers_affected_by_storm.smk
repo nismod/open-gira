@@ -3,7 +3,7 @@ rule plot_top_storms_by_customers_affected:
     Plot bar chart of customers affected by each storm, broken down by country
     """
     input:
-        by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure_by_country.nc",
+        by_country = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption_by_country.nc",
         ibtracs = "{OUTPUT_DIR}/input/IBTrACS/processed/v4.geoparquet"
     output:
         pdf = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/customers_affected.pdf",

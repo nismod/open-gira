@@ -12,6 +12,9 @@ rule create_wind_grid:
     """
     input:
         network_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json",
+    params:
+        # include wind_grid_resolution_deg as a param to trigger re-runs on change
+        grid_resolution=config["wind_grid_resolution_deg"]
     output:
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
     run:
@@ -70,7 +73,7 @@ rule create_wind_grid:
         maxy += buffer_deg
 
         # cell side length in decimal degrees
-        cell_length = config["wind_deg"]
+        cell_length = config["wind_grid_resolution_deg"]
 
         # determine grid bounding box to fit an integer number of grid cells in each dimension
         i, minx, maxx = harmonise_grid(minx, maxx, cell_length)
@@ -179,15 +182,16 @@ rule estimate_wind_fields:
 
     Optionally plot wind fields and save to disk
     """
-    conda: "../../../environment.yml"
     input:
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
         surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
     params:
-        storm_set=read_storm_set
-    threads:
-        config["processes_per_parallel_job"]
+        storm_set=read_storm_set,
+        # include failure_thresholds as a param (despite not using elsewhere in the
+        # rule) to trigger re-runs on change to this configuration option
+        failure_thresholds=config["transmission_windspeed_failure"]
+    threads: threads_for_country
     output:
         # enable or disable plotting in the config file
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),
@@ -263,7 +267,7 @@ rule merge_wind_fields_of_storm:
 
         if len(data) != 0:
             # transform to point data
-            delta = float(config["wind_deg"])
+            delta = float(config["wind_grid_resolution_deg"])
             logging.info(f"Regridding on harmonised {delta} degree grid.")
             point_speeds = gpd.GeoDataFrame(
                 {
@@ -286,10 +290,7 @@ rule merge_wind_fields_of_storm:
             raster: gpd.GeoDataFrame = raster.set_index(["longitude", "latitude"])
             rebinned_raster: xr.Dataset = raster.to_xarray()
 
-            rebinned_raster.to_netcdf(
-                output.merged,
-                encoding={var: {"zlib": True, "complevel": 9} for var in raster.keys()}
-            )
+            rebinned_raster.to_netcdf(output.merged)
 
         else:
             logging.info(f"No data in rasters, writing empty file.")
@@ -322,8 +323,8 @@ def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
 
 rule merged_wind_fields_for_storm_set:
     """
-    A target rule to generate the exposure netCDFs for all targets affected
-    (across multiple countries) for each storm.
+    A target rule to generate the wind field netCDFs (across multiple
+    countries) for each storm.
     """
     input:
         wind_fields = merged_wind_fields_for_all_storms_in_storm_set

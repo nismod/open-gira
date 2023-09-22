@@ -82,7 +82,6 @@ rule annotate_targets:
     """
     Annotate targets (electricity consuming areas) with population and GDP data
     """
-    conda: "../../../environment.yml"
     input:
         admin="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
         population=rules.calculate_population_of_targets.output.population_table,
@@ -96,4 +95,30 @@ rule annotate_targets:
 """
 Test with:
 snakemake -c1 results/power/targets.geoparquet
+"""
+
+
+checkpoint rank_countries_by_target_count:
+    """
+    Create a lookup table from ISO alpha-3 country code to number of targets in
+    that state.
+
+    This is used for setting resource limits (cores) for analysis jobs (e.g.
+    wind field estimation).
+    """
+    input:
+        targets = rules.annotate_targets.output.targets
+    output:
+        lookup_table = "{OUTPUT_DIR}/power/target_count_by_country.csv"
+    run:
+        import geopandas as gpd
+
+        targets = gpd.read_parquet(input.targets)
+        target_rank = targets.value_counts("iso_a3", ascending=True).reset_index().rename(columns={"count": "target_count"})
+        target_rank.set_index("iso_a3")
+        target_rank.to_csv(output.lookup_table)
+
+"""
+Test with:
+snakemake -c1 results/power/target_count_by_country.csv
 """

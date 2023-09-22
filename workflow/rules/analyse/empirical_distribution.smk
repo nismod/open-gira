@@ -9,7 +9,6 @@ EMPIRICAL_DISTRIBUTION_OUT = [os.path.join(STORM_IMPACT_STATISTICS_DIR, 'empiric
 
 
 rule analyse_empirical_distribution:
-    conda: "../../../environment.yml"
     input:
         STORM_STATS_BY_THRESHOLD
     params:

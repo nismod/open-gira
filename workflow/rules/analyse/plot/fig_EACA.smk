@@ -32,7 +32,6 @@ out_diff_EACA_file = os.path.join(
 
 
 rule fig_aggregate_EACA:
-    conda: "../../../../environment.yml"
     input:
         in_agg_EACA=[
             os.path.join(
@@ -96,7 +95,6 @@ rule fig_plot_current_EACA:
 
 rule fig_plot_diff_EACA:
     """Plots difference"""
-    conda: "../../../../environment.yml"
     input:
         rules.fig_diff_EACA.output.out_diff_EACA,
     params:
