@@ -9,7 +9,6 @@ rule parse_powerplants:
     run:
         import geopandas as gpd
         import pandas as pd
-        import pygeos
 
         powerplants = pd.read_csv(
             input.powerplants,
@@ -31,9 +30,16 @@ rule parse_powerplants:
             }
         )
         powerplants["asset_type"] = "source"
-        powerplants["geometry"] = pygeos.points(powerplants.longitude, powerplants.latitude)
-        powerplants = gpd.GeoDataFrame(powerplants.drop(columns=["longitude","latitude"]))
-        powerplants = powerplants.set_crs("epsg:4326")
+        powerplants["geometry"] = gpd.points_from_xy(
+            powerplants.longitude,
+            powerplants.latitude,
+            crs="epsg:4326"
+        )
+        powerplants = gpd.GeoDataFrame(
+            powerplants.drop(
+                columns=["longitude","latitude"]
+            )
+        )
         powerplants.to_parquet(output.powerplants)
 
 """
