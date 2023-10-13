@@ -40,9 +40,10 @@ if __name__ == "__main__":
 
     csv_dir = snakemake.input.csv_dir
     parquet_path = snakemake.output.parquet
+    sample = snakemake.wildcards.SAMPLE
 
     data = []
-    for path in tqdm(natural_sort(glob(f"{csv_dir}/*.txt"))):
+    for path in tqdm(natural_sort(glob(f"{csv_dir}/*_1000Y_n{sample}.txt"))):
 
         df = pd.read_csv(path, header=1, sep=r"\s+", names=IRIS_CSV_SCHEMA.keys(), dtype=IRIS_CSV_SCHEMA)
         df = df.rename(

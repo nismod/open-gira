@@ -178,7 +178,7 @@ def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
     storm_dataset = wildcards.STORM_SET.split("_")[0]
-    return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/tracks.geoparquet"
+    return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/{wildcards.SAMPLE}/tracks.geoparquet"
 
 
 def read_storm_set(wildcards) -> list[str]:
@@ -203,24 +203,67 @@ rule estimate_wind_fields:
     input:
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
-        surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
+        downscaling_factors=rules.create_downscaling_factors.output.downscale_factors,
     params:
         storm_set=read_storm_set,
         # include failure_thresholds as a param (despite not using elsewhere in the
         # rule) to trigger re-runs on change to this configuration option
         failure_thresholds=config["transmission_windspeed_failure"]
     threads: threads_for_country
+    resources:
+        # 2GB RAM per CPU
+        mem_mb = lambda wildcards: threads_for_country(wildcards) * 2_000 
     output:
         # enable or disable plotting in the config file
-        plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),
-        wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
-        downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/downscale_factors.png",
+        plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/plots/"),
+        wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
 """
 To test:
-snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/max_wind_field.nc
+snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/0/max_wind_field.nc
+"""
+
+
+def wind_field_paths_all_samples(wildcards) -> list[str]:
+    """
+    Return a list of paths for every sample
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name])
+    )
+
+
+rule concat_wind_fields_over_sample:
+    """
+    Take wind fields expanded over sample and stack them into a single netCDF.
+    """
+    input:
+        sample_paths=wind_field_paths_all_samples
+    output:
+        concat="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+    run:
+        import logging
+
+        import xarray as xr
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        logging.info("Reading wind fields from each sample")
+        all_samples = xr.concat([xr.open_dataset(path) for path in input.sample_paths], dim="event_id")
+
+        logging.info("Writing wind fields (all samples pooled) to disk")
+        all_samples.to_netcdf(output.concat)
+
+"""
+To test:
+snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/max_wind_field.nc
 """
 
 
@@ -234,9 +277,10 @@ def wind_fields_by_country_for_storm(wildcards):
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE  # str
     )
 
 
@@ -247,7 +291,7 @@ rule merge_wind_fields_of_storm:
     input:
         wind_fields = wind_fields_by_country_for_storm
     output:
-        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
     run:
         import logging
         import os
@@ -316,7 +360,7 @@ rule merge_wind_fields_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/0/by_storm/2017260N12310/wind_field.nc
 """
 
 
@@ -333,9 +377,10 @@ def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
     storms = list(country_set_by_storm.keys())
 
     return expand(
-        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+        "results/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
         STORM_SET=wildcards.STORM_SET,  # str
-        STORM_ID=storms  # list of str
+        STORM_ID=storms,  # list of str
+        SAMPLE=wildcards.SAMPLE  # str
     )
 
 
@@ -347,7 +392,7 @@ rule merged_wind_fields_for_storm_set:
     input:
         wind_fields = merged_wind_fields_for_all_storms_in_storm_set
     output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/wind_fields.txt"
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/wind_fields.txt"
     shell:
         """
         # one output file per line
@@ -356,5 +401,5 @@ rule merged_wind_fields_for_storm_set:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/IBTrACS/wind_fields.txt
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/0/wind_fields.txt
 """
