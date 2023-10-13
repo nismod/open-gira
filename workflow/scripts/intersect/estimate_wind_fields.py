@@ -19,9 +19,9 @@ import xarray as xr
 from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import (
     advective_vector, rotational_field, interpolate_track,
-    power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
+    empty_wind_da, WIND_COORDS, ENV_PRESSURE
 )
-from plot_wind_fields import plot_contours, animate_track, plot_downscale_factors
+from open_gira.wind_plotting import plot_contours, animate_track
 
 
 logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
