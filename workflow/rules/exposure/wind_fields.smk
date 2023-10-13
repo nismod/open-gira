@@ -156,6 +156,24 @@ snakemake -c1 results/power/by_country/CUB/surface_roughness.tiff
 """
 
 
+rule create_downscaling_factors:
+    """
+    Use surface roughness values calculate factors for scaling from gradient-level to surface-level winds.
+    """
+    input:
+        surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
+    output:
+        downscale_factors="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.npy",
+        downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.png",
+    script:
+        "../../scripts/intersect/wind_downscaling_factors.py"
+
+"""
+To test:
+snakemake -c1 results/power/by_country/PRI/storms/downscale_factors.npy
+"""
+
+
 def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
