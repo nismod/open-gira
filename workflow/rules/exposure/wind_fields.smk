@@ -212,7 +212,7 @@ rule estimate_wind_fields:
     threads: threads_for_country
     resources:
         # 2GB RAM per CPU
-        mem_mb = lambda wildcards: threads_for_country(wildcards) * 2_000 
+        mem_mb = lambda wildcards: threads_for_country(wildcards) * 2_048
     output:
         # enable or disable plotting in the config file
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/plots/"),
