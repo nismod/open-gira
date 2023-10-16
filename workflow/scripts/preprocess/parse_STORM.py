@@ -48,16 +48,13 @@ if __name__ == "__main__":
 
     csv_dir = snakemake.input.csv_dir
     parquet_path = snakemake.output.parquet
+    sample = snakemake.wildcards.SAMPLE
 
     data = []
-    for path in tqdm(natural_sort(glob(f"{csv_dir}/*.csv"))):
+    # loop over basins for given sample, processing tracks into a common format
+    for path in tqdm(natural_sort(glob(f"{csv_dir}/*_1000_YEARS_{sample}*.csv"))):
 
         df = pd.read_csv(path, names=STORM_CSV_SCHEMA.keys(), dtype=STORM_CSV_SCHEMA)
-
-        # example paths containing sample number:
-        # STORM_DATA_HadGEM3-GC31-HM_WP_1000_YEARS_9_IBTRACSDELTA.csv
-        # STORM_DATA_IBTRACS_EP_1000_YEARS_0.csv
-        sample, = re.search(r"1000_YEARS_([\d])", os.path.basename(path)).groups()
 
         df["sample"] = int(sample)
 

@@ -32,6 +32,13 @@ def country_codes() -> List[str]:
 # list of ISO A3 country codes
 COUNTRY_CODES = country_codes()
 
+# how many samples is each storm track dataset split into?
+SAMPLES_PER_TRACKSET = {
+    "IBTrACS": 1,
+    "STORM": 10,
+    "IRIS": 10,
+}
+
 STORM_RPS = (
     list(range(10, 100, 10))
     + list(range(100, 1000, 100))

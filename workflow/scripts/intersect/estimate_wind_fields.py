@@ -19,30 +19,20 @@ import xarray as xr
 from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import (
     advective_vector, rotational_field, interpolate_track,
-    power_law_scale_factors, empty_wind_da, WIND_COORDS, ENV_PRESSURE
+    empty_wind_da, WIND_COORDS, ENV_PRESSURE
 )
-from plot_wind_fields import plot_contours, animate_track, plot_downscale_factors
+from open_gira.wind_plotting import plot_contours, animate_track
 
 
 logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-# wind speed altitudes
 
-# gradient level clearly not realistic, but we vary it to fit our estimated wind
-# speeds to observations (or to better model results)
-# the 18m figure is as a result of minimising pixel-wise errors between this model
-# and that used in Done et al. 2020 with a physical boundary layer
-GRADIENT_LEVEL_METRES = 18
-SURFACE_LEVEL_METRES = 10
-
-
-def cleanup(output_path: str, downscale_factors_plot_path: str):
+def cleanup(output_path: str):
     """
     If we don't have a network, or tracks and we can't continue, write empty
-    files and quit.
+    file and quit.
     """
     empty_wind_da().to_netcdf(output_path)
-    os.system(f"touch {downscale_factors_plot_path}")
     sys.exit(0)
 
 
@@ -177,14 +167,13 @@ if __name__ == "__main__":
 
     storm_file_path: str = snakemake.input.storm_file
     wind_grid_path: str = snakemake.input.wind_grid
-    surface_roughness_path: str = snakemake.input.surface_roughness
+    downscale_factors_path: str = snakemake.input.downscaling_factors
     storm_set: set[str] = set(snakemake.params.storm_set)
     plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
     plot_animation: bool = snakemake.config["plot_wind"]["animation"]
     n_proc: int = snakemake.threads
     plot_dir_path: str = snakemake.output.plot_dir
     output_path: str = snakemake.output.wind_speeds
-    downscale_factors_plot_path: str = snakemake.output.downscale_factors_plot
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
@@ -193,7 +182,7 @@ if __name__ == "__main__":
     tracks = gpd.read_parquet(storm_file_path)
     if tracks.empty:
         logging.info("No intersection between network and tracks, writing empty file.")
-        cleanup(output_path, downscale_factors_plot_path)
+        cleanup(output_path)
 
     if storm_set:
         # if we have a storm_set, only keep the matching track_ids
@@ -202,7 +191,7 @@ if __name__ == "__main__":
 
     if tracks.empty:
         logging.info("No intersection between network and tracks, writing empty file.")
-        cleanup(output_path, downscale_factors_plot_path)
+        cleanup(output_path)
 
     logging.info(f"\n{tracks}")
     grouped_tracks = tracks.groupby("track_id")
@@ -212,29 +201,8 @@ if __name__ == "__main__":
     grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
     logging.info(f"\n{grid}")
 
-    logging.info("Calculating downscaling factors from surface roughness raster")
-
-    # surface roughness raster for downscaling winds with
-    surface_roughness_raster: xr.DataArray = rioxarray.open_rasterio(surface_roughness_path)
-
-    # (1, y, x) where 1 is the number of surface roughness bands
-    # select the only value in the band dimension
-    surface_roughness: np.ndarray = surface_roughness_raster[0].values
-
-    # calculate factors to scale wind speeds from gradient-level to surface level,
-    # taking into account surface roughness as defined by the raster
-    downscaling_factors = power_law_scale_factors(
-        surface_roughness,
-        SURFACE_LEVEL_METRES,
-        GRADIENT_LEVEL_METRES
-    )
-
-    logging.info("Mapping downscaling factors and saving to disk")
-    plot_downscale_factors(
-        downscaling_factors,
-        "Wind downscaling factors",
-        downscale_factors_plot_path
-    )
+    logging.info("Reading wind downscaling factors")
+    downscaling_factors = np.load(downscale_factors_path)
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
     args = ((track[1], grid.x, grid.y, downscaling_factors, plot_max_wind, plot_animation, plot_dir_path) for track in grouped_tracks)

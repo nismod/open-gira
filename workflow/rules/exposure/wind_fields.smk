@@ -156,11 +156,29 @@ snakemake -c1 results/power/by_country/CUB/surface_roughness.tiff
 """
 
 
+rule create_downscaling_factors:
+    """
+    Use surface roughness values calculate factors for scaling from gradient-level to surface-level winds.
+    """
+    input:
+        surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
+    output:
+        downscale_factors="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.npy",
+        downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.png",
+    script:
+        "../../scripts/intersect/wind_downscaling_factors.py"
+
+"""
+To test:
+snakemake -c1 results/power/by_country/PRI/storms/downscale_factors.npy
+"""
+
+
 def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
     # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
     storm_dataset = wildcards.STORM_SET.split("_")[0]
-    return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/tracks.geoparquet"
+    return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/{wildcards.SAMPLE}/tracks.geoparquet"
 
 
 def read_storm_set(wildcards) -> list[str]:
@@ -185,24 +203,101 @@ rule estimate_wind_fields:
     input:
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
-        surface_roughness=rules.create_surface_roughness_raster.output.surface_roughness,
+        downscaling_factors=rules.create_downscaling_factors.output.downscale_factors,
     params:
         storm_set=read_storm_set,
         # include failure_thresholds as a param (despite not using elsewhere in the
         # rule) to trigger re-runs on change to this configuration option
         failure_thresholds=config["transmission_windspeed_failure"]
     threads: threads_for_country
+    resources:
+        # 2GB RAM per CPU
+        mem_mb = lambda wildcards: threads_for_country(wildcards) * 2_048
     output:
         # enable or disable plotting in the config file
-        plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/plots/"),
-        wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
-        downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/downscale_factors.png",
+        plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/plots/"),
+        wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
     script:
         "../../scripts/intersect/estimate_wind_fields.py"
 
 """
 To test:
-snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/max_wind_field.nc
+snakemake -c1 results/power/by_country/PRI/storms/IBTrACS/0/max_wind_field.nc
+"""
+
+
+def wind_field_paths_all_samples(wildcards) -> list[str]:
+    """
+    Return a list of paths for every sample
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name])
+    )
+
+
+rule concat_wind_fields_over_sample:
+    """
+    Take wind fields expanded over sample and stack them into a single netCDF.
+    """
+    input:
+        sample_paths=wind_field_paths_all_samples
+    output:
+        concat="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+    run:
+        import logging
+
+        import dask
+        import xarray as xr
+
+        from open_gira.io import netcdf_packing_parameters
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        logging.info("Reading wind fields from each sample")
+        # concatenated xarray dataset is chunked by input file
+        # N.B. this is lazily loaded
+        all_samples: xr.Dataset = xr.open_mfdataset(
+            input.sample_paths,
+            chunks={"max_wind_speed": len(input.sample_paths)},
+        )
+
+        logging.info("Computing packing factors for all samples")
+        # we used dask to allow for chunked calculation of data min/max and to stream to disk
+        # use the synchronous scheduler to limit dask to a single process (reducing memory footprint)
+        scheduler = "synchronous"
+
+        # compute packing factors for all data, need global min and max
+        # the implementation below reads all the data chunks twice, once for min and once for max
+        # would be nice to avoid this duplication
+        scale_factor, add_offset, fill_value = netcdf_packing_parameters(
+            all_samples.max_wind_speed.min().compute(scheduler=scheduler).item(),
+            all_samples.max_wind_speed.max().compute(scheduler=scheduler).item(),
+            16
+        )
+
+        logging.info("Writing pooled wind fields to disk")
+        serialisation_task: dask.delayed.Delayed = all_samples.to_netcdf(
+            output.concat,
+            encoding={
+                "max_wind_speed": {
+                    'dtype': 'int16',
+                    'scale_factor': scale_factor,
+                    'add_offset': add_offset,
+                    '_FillValue': fill_value
+                }
+            },
+            compute=False
+        )
+        serialisation_task.compute(scheduler=scheduler)
+
+"""
+To test:
+snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/max_wind_field.nc
 """
 
 
@@ -216,9 +311,10 @@ def wind_fields_by_country_for_storm(wildcards):
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE  # str
     )
 
 
@@ -229,7 +325,7 @@ rule merge_wind_fields_of_storm:
     input:
         wind_fields = wind_fields_by_country_for_storm
     output:
-        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
     run:
         import logging
         import os
@@ -298,7 +394,7 @@ rule merge_wind_fields_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/wind_field.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/0/by_storm/2017260N12310/wind_field.nc
 """
 
 
@@ -315,9 +411,10 @@ def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
     storms = list(country_set_by_storm.keys())
 
     return expand(
-        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/wind_field.nc",
+        "results/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
         STORM_SET=wildcards.STORM_SET,  # str
-        STORM_ID=storms  # list of str
+        STORM_ID=storms,  # list of str
+        SAMPLE=wildcards.SAMPLE  # str
     )
 
 
@@ -329,7 +426,7 @@ rule merged_wind_fields_for_storm_set:
     input:
         wind_fields = merged_wind_fields_for_all_storms_in_storm_set
     output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/wind_fields.txt"
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/wind_fields.txt"
     shell:
         """
         # one output file per line
@@ -338,5 +435,5 @@ rule merged_wind_fields_for_storm_set:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/IBTrACS/wind_fields.txt
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/0/wind_fields.txt
 """

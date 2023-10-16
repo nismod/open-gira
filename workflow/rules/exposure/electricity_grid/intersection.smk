@@ -134,7 +134,7 @@ rule electricity_grid_damages:
     """
     input:
         grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
-        wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
+        wind_speeds = rules.concat_wind_fields_over_sample.output.concat,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     output:

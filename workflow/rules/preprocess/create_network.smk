@@ -240,7 +240,7 @@ def threads_for_country(wildcards) -> int:
 
     ranked["threads"] = logistic_min(
         ranked.index,  # input to transform
-        workflow.cores,  # maximum (roughly)
+        0.8 * workflow.cores,  # maximum (roughly)
         -2,  # minimum (roughly)
         0.02,  # steepness of sigmoid
         0.8 * len(ranked.index)  # location of sigmoid centre on input axis

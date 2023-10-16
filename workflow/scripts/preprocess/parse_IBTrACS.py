@@ -11,7 +11,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-from open_gira.io import STORM_CSV_SCHEMA
+from parse_STORM import STORM_CSV_SCHEMA
 
 
 """
