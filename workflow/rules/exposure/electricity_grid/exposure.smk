@@ -34,12 +34,11 @@ rule concat_exposure_by_event:
     Take per-event exposure files with per-edge rows and concatenate into a single file.
     """
     input:
-        exposure_by_event = exposure_by_storm_for_country_for_storm_set,
-    # read exposure files in parallel
-    # use all available cores to block rest of execution (maximise memory available)
-    threads: workflow.cores
+        exposure_by_event = exposure_by_storm_for_country_for_storm_set
+    params:
+        thresholds = config["transmission_windspeed_failure"]
     output:
-        concatenated = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/exposure_by_event.parquet"
+        concatenated = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/exposure_by_event.parquet")
     script:
         "../../../scripts/exposure/concat_grid_exposure.py"
 
