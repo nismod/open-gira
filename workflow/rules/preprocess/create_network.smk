@@ -234,9 +234,19 @@ def threads_for_country(wildcards) -> int:
         Thread allocation
     """
 
-    # must wait for country target ranking file to have been created
-    ranking_file = checkpoints.rank_countries_by_target_count.get(**wildcards).output.lookup_table
-    ranked = pd.read_csv(ranking_file)
+    # we don't use a checkpoint here, despite depending on this CSV existing
+
+    # from the docs...
+    # You don’t need to use the checkpoint mechanism to determine parameter or
+    # resource values of downstream rules that would be based on the output of
+    # previous rules. In fact, it won’t even work because the checkpoint
+    # mechanism is only considered for input functions. Instead, you can simply
+    # use normal parameter or resource functions that just assume that those
+    # output files are there. Snakemake will evaluate them immediately before
+    # the job is scheduled, when the required files from upstream rules are
+    # already present.
+    # https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#data-dependent-conditional-execution
+    ranked = pd.read_csv(f"{wildcards.OUTPUT_DIR}/power/target_count_by_country.csv")
 
     ranked["threads"] = logistic_min(
         ranked.index,  # input to transform
