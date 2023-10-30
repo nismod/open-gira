@@ -44,7 +44,7 @@ rule concat_exposure_by_event:
 
 """
 Test with:
-snakemake -n --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/exposure_by_event.parquet
+snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/exposure_by_event.parquet
 """
 
 
