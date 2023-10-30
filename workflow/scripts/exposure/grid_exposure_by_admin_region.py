@@ -47,6 +47,10 @@ if __name__ == "__main__":
     logging.info("Reading exposure by storm by edge")
     # storm-edge rows (repeated edges), threshold value columns, values are exposed length in meters for a given storm
     exposure_all_storms: pd.DataFrame = pd.read_parquet(snakemake.input.exposure_by_edge_by_event)
+    if exposure_all_storms.empty is True:
+        logging.info("No exposure data, write out empty exposure")
+        gpd.GeoDataFrame({"geometry": []}, crs=4326).to_parquet(snakemake.output.total_exposure_by_region)
+        sys.exit(0)
 
     # calculate number of years between first and last storm event, necessary for expected annual exposure
     event_ids: list[str] = list(set(exposure_all_storms.event_id))
