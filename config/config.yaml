@@ -125,7 +125,7 @@ wind_grid_resolution_deg: 0.1  # approx 11km latitude
 
 # Failure thresholds m/s. These values are the thresholds at which the network assets
 # are expected to fail based on available literature.
-transmission_windspeed_failure: [20., 22.5, 25.0, 27.5, 30., 32.5, 35., 37.5, 40, 42.5, 45]
+transmission_windspeed_failure: [20., 22.5, 25., 27.5, 30., 32.5, 35., 37.5, 40., 42.5, 45., 47.5, 50., 52.5, 55.]
 
 # whether to plot maximum wind fields and storm track animations for each storm
 plot_wind:
