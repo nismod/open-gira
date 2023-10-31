@@ -34,11 +34,7 @@ dependencies:
   - pathos              # multiprocessing
   # test_network_components.py fails with 2.1.0, see commit msg
   - pandas==2.0.3       # tabular data
-  - pyarrow             # parquet file format, Arrow data exchange
-  - aws-sdk-cpp=1.8.186
-  # workaround for a bug in aws-sdk-cpp, which is used by pyarrow
-  # https://issues.apache.org/jira/browse/ARROW-15141
-  # https://github.com/apache/arrow/pull/14157
+  - pyarrow>=13.0.0     # parquet file format, Arrow data exchange
   - pyogrio             # vectorised geospatial file i/o
   - pyproj>=3.3.1       # geographic projections
   - pyrosm              # python OpenStreetMap network reader
