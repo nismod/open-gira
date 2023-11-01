@@ -234,19 +234,8 @@ def threads_for_country(wildcards) -> int:
         Thread allocation
     """
 
-    # we don't use a checkpoint here, despite depending on this CSV existing
-
-    # from the docs...
-    # You don’t need to use the checkpoint mechanism to determine parameter or
-    # resource values of downstream rules that would be based on the output of
-    # previous rules. In fact, it won’t even work because the checkpoint
-    # mechanism is only considered for input functions. Instead, you can simply
-    # use normal parameter or resource functions that just assume that those
-    # output files are there. Snakemake will evaluate them immediately before
-    # the job is scheduled, when the required files from upstream rules are
-    # already present.
-    # https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#data-dependent-conditional-execution
-    ranked = pd.read_csv(f"{wildcards.OUTPUT_DIR}/power/target_count_by_country.csv")
+    ranking_file = checkpoints.rank_countries_by_target_count.get(**wildcards).output.lookup_table
+    ranked = pd.read_csv(ranking_file)
 
     ranked["threads"] = logistic_min(
         ranked.index,  # input to transform
@@ -266,11 +255,26 @@ def threads_for_country(wildcards) -> int:
     return max([1, n_threads])
 
 
+def country_target_count_path(wildcards) -> str:
+    """
+    We depend on the file (path) returned by this function to allocate
+    resources (number of CPUs and therefore memory) to certain rules. Those
+    rules use `threads_for_country` as a function returning a value for the
+    `threads` parameter. However those rules must also include this function as
+    an `input` function, to ensure the CSV data file is available for
+    `threads_for_country` to execute. Having the checkpoint lookup within
+    `threads_for_country` is not, on its own, sufficient.
+    """
+    return checkpoints.rank_countries_by_target_count.get(**wildcards).output.lookup_table
+
+
 rule create_power_network:
     """
     Combine power plant, consumer and transmission data for given area
     """
     input:
+        # `threads_for_country` will fail unless this CSV is present when resources are set
+        country_target_count=country_target_count_path,
         plants="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/powerplants.geoparquet",
         targets="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         gridfinder="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/gridfinder.geoparquet",
