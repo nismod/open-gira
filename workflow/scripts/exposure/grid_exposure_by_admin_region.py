@@ -10,6 +10,8 @@ length exposed to winds in excess of a threshold).
 import logging
 import sys
 
+import dask
+import dask.dataframe
 import geopandas as gpd
 import pandas as pd
 
@@ -17,6 +19,9 @@ import pandas as pd
 if __name__ == "__main__":
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+    # one chunk at a time
+    dask.config.set(scheduler='single-threaded')
 
     # load network edges
     logging.info("Loading edges")
@@ -46,8 +51,8 @@ if __name__ == "__main__":
 
     logging.info("Reading exposure by storm by edge")
     # storm-edge rows (repeated edges), threshold value columns, values are exposed length in meters for a given storm
-    exposure_all_storms: pd.DataFrame = pd.read_parquet(snakemake.input.exposure_by_edge_by_event)
-    if exposure_all_storms.empty is True:
+    exposure_all_storms = dask.dataframe.read_parquet(snakemake.input.exposure_by_edge_by_event)
+    if len(exposure_all_storms.index) == 0:
         logging.info("No exposure data, write out empty exposure")
         gpd.GeoDataFrame({"geometry": []}, crs=4326).to_parquet(snakemake.output.total_exposure_by_region)
         sys.exit(0)
@@ -62,24 +67,34 @@ if __name__ == "__main__":
     # filter out edges that are never exposed, we don't need to do an expensive sjoin on them
     edge_rep_points: gpd.GeoDataFrame = edges.loc[edges.reset_index().edge.isin(exposure_all_storms.index)].copy()
     edge_rep_points.geometry = edge_rep_points.geometry.representative_point()
-    edge_to_region_mapping: pd.DataFrame = edge_rep_points.sjoin(regions, how="left").drop(columns=["geometry", "index_right"])
+
+    # cast to dask dataframe prior to merge with `exposure_total`
+    edge_to_region_mapping: dask.dataframe = dask.dataframe.from_pandas(
+        edge_rep_points.sjoin(regions, how="left").drop(columns=["geometry", "index_right"]),
+        chunksize=100_000
+    )
 
     # TODO: per region event distributions?
 
-    exposure_all_storms = exposure_all_storms.reset_index().drop(columns="event_id").set_index("edge")
+    exposure_all_storms: dask.dataframe = exposure_all_storms.reset_index(drop=True).drop(columns="event_id").set_index("edge")
 
     logging.info("Aggregating to region level")
     # edge rows, threshold value columns, values are exposed length in meters as a result of all storms
-    exposure_total = exposure_all_storms.groupby("edge").sum()
+    exposure_total: dask.dataframe = exposure_all_storms.groupby("edge").sum()
     # merge with regions and sum edges across regions
     exposure_by_region = \
         edge_to_region_mapping.drop(columns=[f"NAME_{admin_level}"]).merge(exposure_total, on="edge").groupby(f"GID_{admin_level}").sum()
+
+    # collapse the task graph, summing across edges and region
+    exposure_by_region: pd.DataFrame = exposure_by_region.compute()
+
     # take the exposure lengths and divide by the product of original, undamaged lengths and years passing between first and last storm
     # this division is aligned on the indicies (both set to edge ids)
     # we now have an expected annual exposure
     logging.info("Calculating expected annual exposure")
     exposure_fraction_by_region = \
         exposure_by_region.drop(columns=["nominal_length_m"]).divide(exposure_by_region["nominal_length_m"] * span_years, axis=0)
+
     # merge geometry and name columns back in
     exposure_with_geometry = \
         exposure_fraction_by_region.merge(regions[[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]], on=f"GID_{admin_level}", how="right")
