@@ -201,6 +201,8 @@ rule estimate_wind_fields:
     Optionally plot wind fields and save to disk
     """
     input:
+        # `threads_for_country` will fail unless this CSV is present when resources are set
+        country_target_count=country_target_count_path,
         storm_file=storm_tracks_by_country,
         wind_grid="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/wind_grid.tiff",
         downscaling_factors=rules.create_downscaling_factors.output.downscale_factors,
