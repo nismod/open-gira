@@ -26,6 +26,79 @@ import snkit
 MAX_SUPPLY_FACTOR: float = 0.95
 
 
+def subset_network(
+    nominal_network: snkit.network.Network,
+    failed_edge_ids: np.ndarray,
+    surviving_edge_ids: np.ndarray,
+    id_col: str = "component_id"
+) -> snkit.network.Network:
+    """
+    Take `nominal_network`, remove failed edges. Relabel nodes and edges of
+    the resulting network with component ids, in `id_col` column.
+
+    Assumes:
+        - edge IDs are edges' index in the network.edge table
+        - node IDs are nodes' index in the network.node table
+
+    Arguments:
+        nominal_network: Intact network
+        failed_edge_ids: Edges to exclude from a new network
+        surviving_edge_ids: Edges with which to create a new network
+        id_col: Name of column to store component ids
+
+    Returns:
+        Degraded network, labelled with component ids
+    """
+
+    n_edges_nominal = len(failed_edge_ids) + len(surviving_edge_ids)
+    assert n_edges_nominal == len(nominal_network.edges)
+
+    # construct network from what remains
+    degraded = snkit.network.Network(
+        edges=nominal_network.edges.loc[surviving_edge_ids].copy(),
+        nodes=nominal_network.nodes.copy()
+    )
+
+    connected_components: list[set] = list(snkit.network.get_connected_components(degraded))
+
+    edge_component_ids = np.zeros(n_edges_nominal, dtype=int)
+    node_component_ids = np.zeros(len(nominal_network.nodes), dtype=int)
+
+    # record which edges we've already checked, so we can reduce the size of our `isin` query
+    checked_edges = np.full(n_edges_nominal, False)
+
+    # don't want to check any edge that's not in the surviving network
+    checked_edges[failed_edge_ids] = True
+
+    for count, component in enumerate(connected_components):
+
+        component_id = count + 1
+
+        # boolean series of component membership
+        component_edge_mask: pd.Series = network.edges.loc[~checked_edges, "from_id"].isin(component)
+
+        # update our record of which edges we've checked
+        checked_edges[component_edge_mask.index.values] = component_edge_mask.values
+
+        # indicies of all edges in this component
+        component_member_indicies: np.ndarray = component_edge_mask[component_edge_mask].index.values
+
+        # assign the component id
+        edge_component_ids[component_member_indicies] = component_id
+
+        # index into node component ids using the ids from the component, set to component id
+        node_component_ids[np.fromiter(component, int, len(component))] = component_id
+
+    # assign results
+    degraded.edges[id_col] = edge_component_ids[surviving_edge_ids]
+    degraded.nodes[id_col] = node_component_ids
+
+    assert all(degraded.edges[id_col] != 0)
+    assert all(degraded.nodes[id_col] != 0)
+
+    return degraded
+
+
 def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) -> xr.Dataset:
     """
     Build an empty (NaN filled) xarray Dataset given names, types and coordinate values.
@@ -182,20 +255,13 @@ def degrade_grid_with_storm(
         ##############
 
         # edge ids containing a split below wind speed threshold
-        failed_edge_ids = set(splits.loc[~survival_mask, "id"])
-        surviving_edge_ids = network.edges.loc[~network.edges.id.isin(failed_edge_ids), "id"].values
+        failed_edge_ids: np.ndarray = splits.loc[~survival_mask, "id"].unique()
+        surviving_edge_ids: np.ndarray = network.edges.loc[~network.edges.id.isin(failed_edge_ids), "id"].values
 
-        # construct network from what remains
-        surviving_edges: gpd.GeoDataFrame = network.edges.loc[surviving_edge_ids, :]
-        surviving_network = snkit.network.Network(
-            edges=surviving_edges.copy(),
-            nodes=network.nodes.copy()
-        )
-
-        # check topology of degraded network
-        surviving_network = snkit.network.add_component_ids(surviving_network)
-        c_nominal = len(set(network.nodes.component_id))
-        c_surviving = len(set(surviving_network.nodes.component_id))
+        # construct network from what remains, relabel connectedness
+        surviving_network: snkit.network.Network = subset_network(network, failed_edge_ids, surviving_edge_ids)
+        c_nominal: int = len(set(network.nodes.component_id))
+        c_surviving: int = len(set(surviving_network.nodes.component_id))
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
