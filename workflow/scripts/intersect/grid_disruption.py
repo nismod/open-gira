@@ -145,6 +145,9 @@ def degrade_grid_with_storm(
         logging.info("No wind field available, returning null result.")
         return exposure, disruption
 
+    # index and `id` column need to match as we will select rows by indexing with ids
+    assert all(network.edges.index == network.edges.id)
+
     # sort into ascending order; if no damage at a given threshold,
     # more resilient thresholds are guaranteed to be safe
     for threshold in sorted(speed_thresholds):
@@ -161,11 +164,8 @@ def degrade_grid_with_storm(
         # EXPOSURE #
         ############
 
-        # edge ids below wind speed threshold
-        surviving_edge_ids = set(splits.loc[survival_mask, "id"])
-        failed_splits_mask = ~splits.id.isin(surviving_edge_ids)
         # all splits above threshold
-        failed_splits: gpd.GeoDataFrame = splits.set_index("id", drop=True).loc[failed_splits_mask].copy()
+        failed_splits: gpd.GeoDataFrame = splits.set_index("id", drop=True).loc[~survival_mask].copy()
         if failed_splits.empty is True:
             return exposure, disruption
         # label failed splits with length
@@ -181,8 +181,12 @@ def degrade_grid_with_storm(
         # DISRUPTION #
         ##############
 
+        # edge ids containing a split below wind speed threshold
+        failed_edge_ids = set(splits.loc[~survival_mask, "id"])
+        surviving_edge_ids = network.edges.loc[~network.edges.id.isin(failed_edge_ids), "id"].values
+
         # construct network from what remains
-        surviving_edges: gpd.GeoDataFrame = network.edges.loc[network.edges.id.isin(surviving_edge_ids), :]
+        surviving_edges: gpd.GeoDataFrame = network.edges.loc[surviving_edge_ids, :]
         surviving_network = snkit.network.Network(
             edges=surviving_edges.copy(),
             nodes=network.nodes.copy()
