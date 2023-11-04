@@ -33,8 +33,8 @@ def subset_network(
     id_col: str = "component_id"
 ) -> snkit.network.Network:
     """
-    Take `nominal_network`, remove failed edges. Relabel nodes and edges of
-    the resulting network with component ids, in `id_col` column.
+    Take `nominal_network`, remove failed edges. Relabel nodes and edges of the
+    resulting network with component ids, in `id_col` column.
 
     Assumes:
         - edge IDs are edges' index in the network.edge table
@@ -54,15 +54,15 @@ def subset_network(
     assert n_edges_nominal == len(nominal_network.edges)
 
     # construct network from what remains
-    degraded = snkit.network.Network(
+    degraded_network = snkit.network.Network(
         edges=nominal_network.edges.loc[surviving_edge_ids].copy(),
         nodes=nominal_network.nodes.copy()
     )
 
-    connected_components: list[set] = list(snkit.network.get_connected_components(degraded))
+    connected_components: list[set] = list(snkit.network.get_connected_components(degraded_network))
 
-    edge_component_ids = np.zeros(n_edges_nominal, dtype=int)
-    node_component_ids = np.zeros(len(nominal_network.nodes), dtype=int)
+    edge_component_ids: np.ndarray = np.zeros(n_edges_nominal, dtype=int)
+    node_component_ids: np.ndarray = np.zeros(len(nominal_network.nodes), dtype=int)
 
     # record which edges we've already checked, so we can reduce the size of our `isin` query
     checked_edges = np.full(n_edges_nominal, False)
@@ -72,10 +72,10 @@ def subset_network(
 
     for count, component in enumerate(connected_components):
 
-        component_id = count + 1
+        component_id: int = count + 1
 
         # boolean series of component membership
-        component_edge_mask: pd.Series = network.edges.loc[~checked_edges, "from_id"].isin(component)
+        component_edge_mask: pd.Series = nominal_network.edges.loc[~checked_edges, "from_id"].isin(component)
 
         # update our record of which edges we've checked
         checked_edges[component_edge_mask.index.values] = component_edge_mask.values
@@ -90,13 +90,13 @@ def subset_network(
         node_component_ids[np.fromiter(component, int, len(component))] = component_id
 
     # assign results
-    degraded.edges[id_col] = edge_component_ids[surviving_edge_ids]
-    degraded.nodes[id_col] = node_component_ids
+    degraded_network.edges[id_col] = edge_component_ids[surviving_edge_ids]
+    degraded_network.nodes[id_col] = node_component_ids
 
-    assert all(degraded.edges[id_col] != 0)
-    assert all(degraded.nodes[id_col] != 0)
+    assert all(degraded_network.edges[id_col] != 0)
+    assert all(degraded_network.nodes[id_col] != 0)
 
-    return degraded
+    return degraded_network
 
 
 def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) -> xr.Dataset:
