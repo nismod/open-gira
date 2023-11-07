@@ -20,6 +20,29 @@ class TestScaleFactorAndOffset:
             np.array([0.0012207, 40.000610, -2**15])
         )
 
+    def test_all_zeros(self):
+        """
+        Data is all zeros, so min and max are the same. Should return no transformation (1, 0).
+        """
+        scale_factor, offset, fill_value = netcdf_packing_parameters(0, 0, 16)
+
+        np.allclose(
+            np.array([scale_factor, offset, fill_value]),
+            np.array([1, 0, -2**15])
+        )
+
+    def test_all_fill_value(self):
+        """
+        No variance in the data, and all the values are the typical fill_value. How awkward!
+        Should return a fill_value at the other end of the integer range.
+        """
+        scale_factor, offset, fill_value = netcdf_packing_parameters(-2**15, -2**15, 16)
+
+        np.allclose(
+            np.array([scale_factor, offset, fill_value]),
+            np.array([1, 0, 2**15])
+        )
+
 
 class TestPackingFloatsAsInts:
     """
