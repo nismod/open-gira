@@ -137,6 +137,8 @@ rule electricity_grid_damages:
         wind_speeds = rules.concat_wind_fields_over_sample.output.concat,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
+    resources:
+        mem_mb = 1_024 * 3
     output:
         exposure = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/by_storm/{STORM_ID}.nc",
         disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc"
