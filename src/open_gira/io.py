@@ -44,7 +44,19 @@ def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tu
     # need a finite range
     assert np.isfinite(minimum)
     assert np.isfinite(maximum)
-    assert maximum - minimum > 0
+    assert maximum - minimum >= 0
+
+    # _FillValue used to representing NaN as serialised integer
+    # we have kept room at the ends of the integer bit space to avoid a collision
+    fill_value = -2 ** (n_bits - 1)
+
+    # if there is no variance in the data, return unscaled
+    if minimum == maximum:
+        # use a fill value that doesn't collide with the data
+        if minimum == maximum == fill_value:
+            return 1, 0, -1 * fill_value
+        else:
+            return 1, 0, fill_value
 
     # use this fraction of the available `n_bits` space
     # this leaves room at either end (-2**n_bits or 2**n_bits) for _FillValue
@@ -55,10 +67,6 @@ def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tu
 
     # offset to center serialised data about 0
     add_offset = minimum + 2 ** (occupancy_fraction * n_bits - 1) * scale_factor
-
-    # _FillValue used to representing NaN as serialised integer
-    # we have kept room at the ends of the integer bit space to avoid a collision
-    fill_value = -2 ** (n_bits - 1)
 
     return scale_factor, add_offset, fill_value
 
