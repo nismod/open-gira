@@ -51,4 +51,6 @@ dependencies:
   # https://github.com/snakemake/snakemake/issues/1891
   - tqdm==4.62.3        # progress bars
   - wget                # file downloader
+  # pin as 2023.11.0 will duplicate/nisname coords when concatenating
+  - xarray==2023.10.1   # named n-dimensional arrays
   - zenodo_get          # data download client
