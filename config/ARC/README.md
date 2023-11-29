@@ -4,6 +4,9 @@ As open-gira is built using `snakemake`, its use is fairly similar from a
 laptop to a cluster. However there are a few differences, notably using a
 `profile` (discussed here).
 
+All of the discussion below assumes you have a terminal open on one of the ARC
+or HTC login nodes. I suggest using HTC as its hardware is more appropriate.
+
 ## Python environment
 
 ### Micromamba
@@ -14,19 +17,32 @@ into your userspace as a package manager for Python packages (and more).
 
 ### Creating an execution environment
 
-To create an environment on ARC containing the necessary software to run the workflows:
+To create an environment on ARC containing the necessary software to run the
+workflow you will first need to allocate some resources (installing an
+environment cannot be done on the login node). To acquire a terminal on a
+compute node:
+```
+srun -p interactive --pty /bin/bash
+```
+
+This will give you a terminal with 1 CPU and some sufficient memory allocation.
+To install the required environment, navigate to your `open-gira` repository
+(the grandparent directory of this file) and issue:
+
 ```
 micromamba create -f environment.yml -y
 ```
 
-To activate this:
+On successfully installation, you can `exit` the compute node terminal.
+
+To activate the software environment:
 ```
 micromamba activate open-gira
 ```
 
 Your prompt should then change to something like:
 ```
-(open-gira) [cenv0899@arc-login01 ~]$
+(open-gira) [cenv0899@htc-login01 ~]$
 ```
 
 ## Exactextract
@@ -45,7 +61,7 @@ module load GDAL/3.5.0-foss-2022a
 
 I suggest placing these lines in your `~/.bashrc` file so they automatically run on login.
 
-## Session persistence
+## Session persistence with tmux
 
 To persist a terminal over time (and despite dropped SSH connections) consider using `tmux`.
 
@@ -63,8 +79,9 @@ Here's a [friendly guide](https://www.hamvocke.com/blog/a-quick-and-easy-guide-t
 
 ## Invoke workflow
 
-The general pattern to doing work with `open-gira` on `ARC` is to activate the
-environment (see above) and issue a request for a target file:
+The general pattern to doing work with `open-gira` on `ARC` is to start a
+`tmux` session (see above), activate the environment (see above) and issue a request for a
+target file:
 ```
 snakemake --profile config/ARC <target name>
 ```
