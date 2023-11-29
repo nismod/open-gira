@@ -12,6 +12,8 @@ dependencies:
     - nismod-snail==0.3.1 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
+    # required zenodo_get version not available via conda-forge
+    - zenodo_get>=1.5.1   # data download client, zenodo API broken w/ <1.5.1
     - .                   # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
@@ -53,4 +55,3 @@ dependencies:
   - wget                # file downloader
   # pin as 2023.11.0 will duplicate/nisname coords when concatenating
   - xarray==2023.10.1   # named n-dimensional arrays
-  - zenodo_get          # data download client
