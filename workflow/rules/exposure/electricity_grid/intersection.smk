@@ -123,7 +123,7 @@ checkpoint countries_intersecting_storm_set:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS_irma-2017/countries_impacted_by_storm.json
+snakemake -c1 results/power/by_storm_set/IBTrACS/countries_impacted_by_storm.json
 """
 
 
@@ -147,5 +147,5 @@ rule electricity_grid_damages:
 
 """
 Test with:
-snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.nc
+snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/by_storm/2017242N16333.nc
 """
