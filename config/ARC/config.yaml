@@ -1,0 +1,28 @@
+cluster:
+  mkdir -p logs/{rule} &&
+  sbatch
+    --partition={resources.partition}
+    --qos={resources.qos}
+    --cpus-per-task={threads}
+    --mem={resources.mem_mb}
+    --job-name=smk-{rule}-{wildcards}
+    --output=logs/{rule}/{rule}-{wildcards}-%j.out
+    --export=ALL
+    --cluster=htc
+    --mail-type=BEGIN,END,FAIL
+    --mail-user=fred.thomas@eci.ox.ac.uk
+    --parsable
+default-resources:
+  - qos=standard  # {basic, standard, priority} only have credits for standard
+  - partition=short  # {short, medium, long, devel, interactive}
+  - mem_mb=16000
+  - time="01:00:00"  # maximum time for a single job
+max-jobs-per-second: 1
+max-status-checks-per-second: 1
+restart-times: 1  # if a job fails, retry it once
+latency-wait: 15  # seconds to wait for files to appear before failing
+jobs: 4  # max simultaneous jobs
+keep-going: True  # do not stop workflow if job(s) fail
+rerun-incomplete: True
+printshellcmds: True
+scheduler: greedy

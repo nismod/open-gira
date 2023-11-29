@@ -1,69 +1,49 @@
 # Running open-gira on ARC
 
-As open-gira is built with snakemake, its use is remarkably similar from a
-laptop to a cluster. However there are a few differences. They are discussed
-here.
+As open-gira is built using `snakemake`, its use is fairly similar from a
+laptop to a cluster. However there are a few differences, notably using a
+`profile` (discussed here).
 
 ## Python environment
 
-### Initialising our shared conda installation
+### Micromamba
 
-There is a conda install which users may share. This means we don't need to
-create many duplicate environments unnecessarily (snakemake will check to see
-if an equivalent environment has already been created).
+I recommend installing
+[micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html#install-script)
+into your userspace as a package manager for Python packages (and more).
 
-Prior to using the conda install for the first time you must initialise it for
-your shell with the following command:
-```
-/data/ouce-gri-jba/anaconda/condabin/conda init
-```
+### Creating an execution environment
 
-Your `~/.bashrc` should then contain someting like this:
+To create an environment on ARC containing the necessary software to run the workflows:
 ```
-i# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-    __conda_setup="$('/data/ouce-gri-jba/anaconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/data/ouce-gri-jba/anaconda/etc/profile.d/conda.sh" ]; then
-        . "/data/ouce-gri-jba/anaconda/etc/profile.d/conda.sh"
-    else
-        export PATH="/data/ouce-gri-jba/anaconda/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+micromamba create -f environment.yml -y
 ```
 
-### Enabling an environment with snakemake
-
-We use snakemake to create jobs for us. We could use the ARC provided snakemake
-executable from the module load system, but their version is quite old
-(6.10.0). N.B. Versions <7.0.0 may cause the following problem:
-https://github.com/snakemake/snakemake/issues/1392
-
-Instead use a shared conda environment we have created which contains
-snakemake:
+To activate this:
 ```
-conda activate snakemake-7.12.1
+micromamba activate open-gira
 ```
 
 Your prompt should then change to something like:
 ```
-(snakemake-7.12.1) [cenv0899@arc-login01 ~]$
+(open-gira) [cenv0899@arc-login01 ~]$
 ```
 
-## Osmium
+## Exactextract
 
-open-gira jobs which filter Open Street Map datasets may require the use of a
-tool called osmium. This has been compiled on the cluster (with
-`/data/ouce-gri-jba/osmium/build_osmium.sh`). To run osmium, place a symlink
-somewhere on your `$PATH`, pointing to the wrapper script. For example:
+There is one dependency of `open-gira` that is not available via the conda
+(micromamba) ecosystem, `exactextract`. To install this, see
+[here](https://github.com/isciences/exactextract#compiling) and place the
+compiled binary in your `PATH`.
+
+To build (and run) `exactextract` on ARC you will need to use the `module`
+program to load two dependencies:
 ```
-mkdir -p ~/bin
-ln -s /data/ouce-gri-jba/osmium/run_osmium.sh ~/bin/osmium
+module load GEOS/3.10.3-GCC-11.3.0
+module load GDAL/3.5.0-foss-2022a
 ```
+
+I suggest placing these lines in your `~/.bashrc` file so they automatically run on login.
 
 ## Session persistence
 
@@ -81,28 +61,23 @@ Here's a [friendly guide](https://www.hamvocke.com/blog/a-quick-and-easy-guide-t
 
 `tmux attach-session -t <session_id>` to reattach to a session.
 
-## Allocate resources
+## Invoke workflow
 
-Allocate some nodes for use:
+The general pattern to doing work with `open-gira` on `ARC` is to activate the
+environment (see above) and issue a request for a target file:
 ```
-salloc --ntasks-per-node=<max tasks per node> --nodes=<num nodes> --partition=<short|medium|long> --time=01:00:00 --mem=8000
+snakemake --profile config/ARC <target name>
 ```
 
-## Invoke pipeline
-
-Having allocated resources with `salloc` (see above), you can then invoke
-snakemake to dispatch jobs and satisfy your target rule. From the open-gira
-repository call the command you wish to run, using the cluster specific
-profile. For more details on the cluster execution, see the config.yaml file
-in the profile directory. The general pattern is:
-```
-snakemake --profile config/arc_cluster <target name>
-```
+`snakemake` will then identify what work is required, issue job requests to
+`SLURM` and monitor the filesystem to watch for completed results.
 
 To test the pipeline with a short job, try the following:
 ```
-snakemake --profile config/arc_cluster results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img
+snakemake --profile config/ARC results/exposure/tanzania-mini_filter-road/hazard-aqueduct-river/img
 ```
+
+Resource allocation is defined per rule, with defaults in `config/ARC/config.yaml`.
 
 ## Interpreting errors
 
@@ -148,4 +123,5 @@ Traceback (most recent call last):
 FileNotFoundError: [Errno 2] No such file or directory: 'osmium'
 ```
 
-In particular, here, the `FileNotFoundError` says that the job runner couldn't find `osmium`, which is needed to run this rule.
+In particular, here, the `FileNotFoundError` says that the job runner couldn't
+find `osmium`, which is needed to run this rule.
