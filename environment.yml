@@ -21,7 +21,7 @@ dependencies:
   - datashader          # plotting large datasets
   - flake8              # linter
   - gdal>=3.3           # command-line tools for spatial data
-  - geopandas>=0.11.0   # geospatial dataframes
+  - geopandas==0.14.1   # geospatial dataframes
   - geopy               # geocoding client
   - ipykernel           # notebook support
   - jupyter             # notebook support
