@@ -1,9 +1,9 @@
 # to install this environment:
-# micromamba create -f environment.yml
+# micromamba create -f environment.yml -y
 name: open-gira
 channels:
-  - conda-forge
-  - bioconda
+  - conda-forge  # majority of dependencies
+  - bioconda  # snakemake
   - defaults
 dependencies:
   - python=3.10
@@ -34,7 +34,7 @@ dependencies:
   - openpyxl            # Excel file format
   - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing
-  # test_network_components.py fails with 2.1.0, see commit msg
+  # test_network_components.py fails with pandas 2.1.0, see commit msg
   - pandas==2.0.3       # tabular data
   - pyarrow>=13.0.0     # parquet file format, Arrow data exchange
   - pyogrio             # vectorised geospatial file i/o
@@ -49,9 +49,9 @@ dependencies:
   - scipy               # scientific computing library
   - spatialpandas       # plotting large datasets
   - snakemake==7.18.2   # workflow management
-  - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   # https://github.com/snakemake/snakemake/issues/1891
+  - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   - tqdm==4.62.3        # progress bars
   - wget                # file downloader
-  # pin as 2023.11.0 will duplicate/nisname coords when concatenating
+  # pin xarray as suspect 2023.11.0 duplicates/nisnames coords when concatenating
   - xarray==2023.10.1   # named n-dimensional arrays
