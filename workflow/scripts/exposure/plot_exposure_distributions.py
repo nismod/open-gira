@@ -92,7 +92,7 @@ if __name__ == "__main__":
     exposure_all_storms = pd.read_parquet(snakemake.input.exposure_by_event)
 
     logging.info("Aggregating (sum exposure) by event")
-    per_event = exposure_all_storms.groupby("event_id").sum()
+    per_event = exposure_all_storms.drop(columns=["edge"]).groupby("event_id").sum()
 
     logging.info("Plotting event distributions")
     os.makedirs(snakemake.output.country_event_distributions)
