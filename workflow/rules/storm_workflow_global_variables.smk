@@ -5,32 +5,10 @@ If we can eventually do without them entirely, that would be great.
 """
 
 
-import requests
 from typing import List, Tuple
 
 
-def country_codes() -> List[str]:
-    """
-    Get a list of ISO A3 country codes from worldpop.org
-
-    Returns:
-        list[str]
-    """
-
-    # scripted requests are sometimes responded to with 403 permission denied
-    # changing to one from a browser will circumvent the access control and return 200
-    headers = {
-        'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0',
-    }
-    r = requests.get("https://www.worldpop.org/rest/data/pop/cic2020_UNadj_100m", headers=headers)
-
-    return [row["iso3"] for row in r.json()["data"]]
-
-
 #### POWER/STORMS WORKFLOW ####
-
-# list of ISO A3 country codes
-COUNTRY_CODES = country_codes()
 
 # how many samples is each storm track dataset split into?
 SAMPLES_PER_TRACKSET = {
