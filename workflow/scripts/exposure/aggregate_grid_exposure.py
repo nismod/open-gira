@@ -1,5 +1,5 @@
 """
-Concatenate exposure files (per-storm) into a single file.
+Take exposure files (one per storm, with per-edge data) and aggregate into sample per-event total and sample per-edge total.
 """
 
 import logging
@@ -47,7 +47,6 @@ def exposure_by_edge(exposure_path: str, schema: pd.DataFrame) -> pd.DataFrame:
     exposure = xr.open_dataset(exposure_path)
 
     event_id: str = exposure.event_id.item()
-    logging.info(event_id)
 
     df: pd.DataFrame = exposure.length_m.to_pandas().T
 
@@ -89,9 +88,6 @@ if __name__ == "__main__":
         tasks.append(exposure_by_edge(file_path, schema))
     exposure_all_storms = dask.dataframe.from_delayed(tasks)
 
-    # rechunk to minimise disk usage
-    # N.B. `partition_size` is the maximum chunk size _in-memory_, not on disk (this is smaller)
-    exposure_all_storms = exposure_all_storms.repartition(partition_size="100MB")
-
-    # write out to disk as parquet dataset (directory containing chunk files)
-    exposure_all_storms.to_parquet(snakemake.output.concatenated)
+    # write out to disk as parquet
+    exposure_all_storms.drop(columns=["edge"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
+    exposure_all_storms.drop(columns=["event_id"]).groupby("edge").sum().to_parquet(snakemake.output.by_edge)

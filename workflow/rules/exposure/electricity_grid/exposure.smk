@@ -21,50 +21,97 @@ def exposure_by_storm_for_country_for_storm_set(wildcards):
     storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/by_storm/{STORM_ID}.nc",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE,  # str
         STORM_ID=storms  # list of str
     )
 
-
-rule concat_exposure_by_event:
+rule aggregate_exposure_within_sample:
     """
-    Take per-event exposure files with per-edge rows and concatenate into a single file.
+    Take per-event exposure files with per-edge rows and aggregate into a per-edge file and a per-event file.
     """
     input:
         exposure_by_event = exposure_by_storm_for_country_for_storm_set
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:
-        concatenated = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/exposure_by_event.parquet")
+        by_event = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_event.pq"),
+        by_edge = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_edge.pq"),
     script:
-        "../../../scripts/exposure/concat_grid_exposure.py"
+        "../../../scripts/exposure/aggregate_grid_exposure.py"
 
 """
 Test with:
-snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/exposure_by_event.parquet
+snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/0_length_m_by_event.pq
 """
 
 
-rule exposure_by_admin_region:
+def exposure_per_event_sample_files(wildcards) -> list[str]:
     """
-    Calculate expected annual exposure at given admin level.
+    Return a list of paths, one for each sample.
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        rules.aggregate_exposure_within_sample.output.by_event,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+    )
+
+rule aggregate_per_event_exposure_across_samples:
+    """
+    Take the per-sample exposure length files and combine them.
     """
     input:
-        tracks = storm_tracks_file_from_storm_set,
-        exposure_by_edge_by_event = rules.concat_exposure_by_event.output.concatenated,
-        admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
-        grid_edges = rules.create_power_network.output.edges,
+        per_sample = exposure_per_event_sample_files,
     output:
-        total_exposure_by_region = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_SLUG}.geoparquet",
-    script:
-        "../../../scripts/exposure/grid_exposure_by_admin_region.py"
+        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_event.pq",
+    run:
+        import pandas as pd
+
+        df = pd.concat([pd.read_parquet(file_path) for file_path in input.per_sample])
+        df.to_parquet(output.all_samples)
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/exposure/IBTrACS/admin-level-1.geoparquet
+snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/length_m_by_event.pq
+"""
+
+
+def exposure_per_edge_sample_files(wildcards) -> list[str]:
+    """
+    Return a list of paths, one for each sample.
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        rules.aggregate_exposure_within_sample.output.by_edge,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+    )
+
+rule aggregate_per_edge_exposure_across_samples:
+    """
+    Take the per-sample exposure length files and combine them.
+    """
+    input:
+        per_sample = exposure_per_edge_sample_files,
+    output:
+        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_edge.pq",
+    run:
+        import pandas as pd
+
+        df = pd.concat([pd.read_parquet(file_path) for file_path in input.per_sample])
+        df.groupby("edge").sum().to_parquet(output.all_samples)
+
+"""
+Test with:
+snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/length_m_by_edge.pq
 """
 
 
@@ -73,15 +120,36 @@ rule plot_event_exposure_distributions_for_country:
     Plot the exposure distribution (over events) for a given country and storm set.
     """
     input:
-        exposure_by_event = rules.concat_exposure_by_event.output.concatenated
+        exposure_by_event = rules.aggregate_per_event_exposure_across_samples.output.all_samples
     output:
-        country_event_distributions = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/event_distributions/")
+        country_event_distributions = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_event_dist/")
     script:
         "../../../scripts/exposure/plot_exposure_distributions.py"
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/exposure/IBTrACS/country_event_distribution
+snakemake -c1 -- results/power/by_country/PRI/exposure/IBTrACS/length_m_event_dist
+"""
+
+
+rule exposure_by_admin_region:
+    """
+    Calculate expected annual exposure at given admin level.
+    """
+    input:
+        tracks = storm_tracks_file_from_storm_set,  # storm dates (for time span -> expected annual exposure)
+        exposure_by_event = rules.aggregate_per_event_exposure_across_samples.output.all_samples,  # event id list
+        exposure_by_edge = rules.aggregate_per_edge_exposure_across_samples.output.all_samples,  # exposure data
+        admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",  # regions to aggregate to
+        grid_edges = rules.create_power_network.output.edges,  # edge linestrings
+    output:
+        expected_annual_exposure = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/EAE_{ADMIN_SLUG}.gpq",
+    script:
+        "../../../scripts/exposure/grid_exposure_by_admin_region.py"
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_country/PRI/exposure/IBTrACS/EAE_admin-level-1.gpq
 """
 
 
@@ -95,13 +163,12 @@ def exposure_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{ADMIN_LEVEL}.geoparquet",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/EAE_{ADMIN_LEVEL}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
         ADMIN_LEVEL=wildcards.ADMIN_LEVEL  # str
     )
-
 
 rule exposure_by_admin_region_for_storm_set:
     """
@@ -113,7 +180,7 @@ rule exposure_by_admin_region_for_storm_set:
     input:
         exposure = exposure_summaries_for_storm_set
     output:
-        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/{ADMIN_LEVEL}.geoparquet"
+        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_{ADMIN_LEVEL}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd
@@ -126,5 +193,5 @@ rule exposure_by_admin_region_for_storm_set:
 
 """
 Test with:
-snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/admin-level-2.geoparquet
+snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/EAE_admin-level-2.gpq
 """

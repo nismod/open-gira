@@ -123,7 +123,7 @@ checkpoint countries_intersecting_storm_set:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS_irma-2017/countries_impacted_by_storm.json
+snakemake -c1 results/power/by_storm_set/IBTrACS/countries_impacted_by_storm.json
 """
 
 
@@ -134,18 +134,19 @@ rule electricity_grid_damages:
     """
     input:
         grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
-        wind_speeds = rules.concat_wind_fields_over_sample.output.concat,
+        wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
     resources:
+        # TODO: make this a function of country?
         mem_mb = 1_024 * 3
     output:
-        exposure = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/by_storm/{STORM_ID}.nc",
-        disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc"
+        exposure = temp("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc"),
+        disruption = temp("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc"),
     script:
         "../../../scripts/intersect/grid_disruption.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.nc
+snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/0/2017242N16333.nc
 """
