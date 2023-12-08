@@ -41,6 +41,7 @@ if __name__ == "__main__":
     event_ids: list[str] = list(disruption_by_event.index)
     years: set[int] = set(track_year.loc[event_ids, "year"])
     span_years: int = max([1, max(years) - min(years)])  # with a minimum of one
+    logging.info(f"Using {len(event_ids):,d} events, over {span_years:,d} years")
 
     # target rows, threshold value columns, values are population affected summed across all events
     disruption_by_target: pd.DataFrame = pd.read_parquet(snakemake.input.disruption_by_target)
