@@ -23,7 +23,7 @@ import snkit
 # do not store supply_factor values greater than this
 # a value less than 1 limits the targets stored in disruption files to areas
 # negatively affected by storms
-MAX_SUPPLY_FACTOR: float = 0.95
+MAX_SUPPLY_FACTOR: float = 0.90
 
 
 def subset_network(
