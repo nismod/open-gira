@@ -262,13 +262,13 @@ rule disruption_by_admin_region:
         targets = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
     output:
-        expected_annual_disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_{ADMIN_SLUG}.gpq",
+        expected_annual_disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_SLUG}.gpq",
     script:
         "../../../scripts/exposure/grid_disruption_by_admin_region.py"
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/disruption/IBTrACS/pop_affected_admin-level-1.gpq
+snakemake -c1 -- results/power/by_country/PRI/disruption/IBTrACS/EAPA_admin-level-1.gpq
 """
 
 
@@ -282,7 +282,7 @@ def disruption_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_{ADMIN_LEVEL}.gpq",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_LEVEL}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
@@ -292,15 +292,12 @@ def disruption_summaries_for_storm_set(wildcards):
 
 rule disruption_by_admin_region_for_storm_set:
     """
-    A target rule to generate the exposure and disruption netCDFs for all
-    targets affected (across multiple countries) for each storm.
-
-    Concatenates the regional summaries for expected annual population disruption together.
+    Concatenate the regional summaries for expected annual population affected.
     """
     input:
         disruption = disruption_summaries_for_storm_set
     output:
-        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/pop_affected_{ADMIN_LEVEL}.gpq"
+        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_LEVEL}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd
@@ -313,5 +310,5 @@ rule disruption_by_admin_region_for_storm_set:
 
 """
 Test with:
-snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/disruption/pop_affected_admin-level-2.gpq
+snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/disruption/EAPA_admin-level-2.gpq
 """
