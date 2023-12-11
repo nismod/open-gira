@@ -172,26 +172,18 @@ class OutputChecker:
         """
 
         printerr(f">>> Compare files:\n{generated_file}\n{expected_file}")
+        file_ext = str(generated_file).split(".")[-1]
 
         # PARQUET
-        if re.search(r"\.(geo)?parquet$", str(generated_file), re.IGNORECASE):
-            if re.search(r"\.geoparquet$", str(generated_file), re.IGNORECASE):
-                """
-                NOTE: This test will **fail** if the geoparquet file does not contain geography data columns.
-                This can happen where the convert_to_geoparquet job does not find any roads to write.
-                We leave this failure in because it is usually unintentional that you're testing with a
-                dataset where _none_ of the slices have road data, and these tests should be targeted at
-                slices that _do_ have road data.
-                """
-                read = gpd.read_parquet
-            elif re.search(r"\.parquet$", str(generated_file), re.IGNORECASE):
-                read = pd.read_parquet
-            else:
-                raise RuntimeError(f"couldn't identify read function for {generated_file}")
+        if any([ext == file_ext for ext in ("pq", "parq", "parquet")]):
+            generated = pd.read_parquet(generated_file)
+            expected = pd.read_parquet(expected_file)
+            self.compare_dataframes(generated, expected)
 
-            generated = read(generated_file)
-            expected = read(expected_file)
-
+        # GEOPARQUET
+        elif any([ext == file_ext for ext in ("gpq", "geoparq", "geoparquet")]):
+            generated = gpd.read_parquet(generated_file)
+            expected = gpd.read_parquet(expected_file)
             self.compare_dataframes(generated, expected)
 
         # JSON
