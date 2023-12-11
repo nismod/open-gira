@@ -283,21 +283,22 @@ class OutputChecker:
                     printerr(f"{col=} {unequal_only_where_null=}")
 
                     # let's try and find failing rows by converting to str
-                    MAX_FAILURES_TO_PRINT = 5
+                    MAX_FAILURES_TO_PRINT = 20
                     failures = 0
                     for row in range(len(generated)):
                         gen_str = str(generated[col][row: row + 1].values)
                         exp_str = str(expected[col][row: row + 1].values)
                         if gen_str != exp_str:
                             failures += 1
-                            if failures > MAX_FAILURES_TO_PRINT:
-                                printerr(f"Failures truncated after {MAX_FAILURES_TO_PRINT}")
-                                continue
-                            else:
+                            if failures < MAX_FAILURES_TO_PRINT:
                                 printerr(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}")
+                            elif failures == MAX_FAILURES_TO_PRINT:
+                                printerr(f"Failures truncated after {MAX_FAILURES_TO_PRINT}...")
+                            else:
+                                continue
 
                     if failures > 0:
-                        raise ValueError(f"{failures} row mismatch(es) between tables")
+                        raise ValueError(f"Found {failures} row mismatch(es) between tables")
 
                 else:
                     # None != None according to pandas, and this is responsible for the apparent mismatch
