@@ -54,7 +54,7 @@ if __name__ == "__main__":
     exposure_by_edge = dask.dataframe.read_parquet(snakemake.input.exposure_by_edge)
     if len(exposure_by_edge.index) == 0:
         logging.info("No exposure data, write out empty exposure")
-        gpd.GeoDataFrame({"geometry": []}, crs=4326).to_parquet(snakemake.output.expected_annual_exposure)
+        regions.to_parquet(snakemake.output.expected_annual_exposure)
         sys.exit(0)
 
     logging.info("Reading exposure by storm")
@@ -69,8 +69,7 @@ if __name__ == "__main__":
 
     # create a lookup between edge id and the region to which the edge's representative point lies within
     logging.info("Creating edge to region mapping")
-    # filter out edges that are never exposed, we don't need to do an expensive sjoin on them
-    edge_rep_points: gpd.GeoDataFrame = edges.loc[edges.reset_index().edge.isin(exposure_by_edge.index)].copy()
+    edge_rep_points: gpd.GeoDataFrame = edges.copy()
     edge_rep_points.geometry = edge_rep_points.geometry.representative_point()
 
     # cast to dask dataframe prior to merge with `exposure_by_edge`
@@ -81,8 +80,9 @@ if __name__ == "__main__":
 
     logging.info("Aggregating to region level")
     # merge with regions and sum edges across regions
+    # use how="left" to take every region, exposed or not, to give a complete table
     exposure_by_region = \
-        edge_to_region_mapping.drop(columns=[f"NAME_{admin_level}"]).merge(exposure_by_edge, on="edge").groupby(f"GID_{admin_level}").sum()
+        edge_to_region_mapping.drop(columns=[f"NAME_{admin_level}"]).merge(exposure_by_edge, on="edge", how="left").groupby(f"GID_{admin_level}").sum()
 
     # collapse the task graph, summing across edges and region
     exposure_by_region: pd.DataFrame = exposure_by_region.compute()
@@ -96,9 +96,10 @@ if __name__ == "__main__":
 
     # merge geometry and name columns back in
     exposure_with_geometry = \
-        exposure_fraction_by_region.merge(regions[[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]], on=f"GID_{admin_level}", how="right")
+        exposure_fraction_by_region.merge(regions[[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]], on=f"GID_{admin_level}")
     # merge nominal lengths by region back in, too
     exposure_with_length = exposure_with_geometry.merge(exposure_by_region[["nominal_length_m"]], on=f"GID_{admin_level}")
+
     # write out to disk
     logging.info("Writing out with region geometry")
     gpd.GeoDataFrame(exposure_with_length).to_parquet(snakemake.output.expected_annual_exposure)
