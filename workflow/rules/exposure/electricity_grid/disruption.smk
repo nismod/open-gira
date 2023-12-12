@@ -143,26 +143,132 @@ def disruption_by_storm_for_country_for_storm_set(wildcards):
     )
 
 
+def disruption_by_storm_for_country_for_storm_set(wildcards):
+    """
+    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
+
+    Return a list of the relevant disruption netCDF file paths.
+    """
+
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
+    storm_set_by_country = cached_json_file_read(json_file)
+
+    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
+
+    return expand(
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
+        STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE,  # str
+        STORM_ID=storms  # list of str
+    )
+
+rule aggregate_disruption_within_sample:
+    """
+    Take per-event disruption files with per-target rows (for all of a storm set
+    sample) and aggregate into a per-target file and a per-event file.
+    """
+    input:
+        disruption_by_event = disruption_by_storm_for_country_for_storm_set
+    params:
+        thresholds = config["transmission_windspeed_failure"]
+    output:
+        by_event = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_event.pq"),
+        by_target = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_target.pq"),
+    script:
+        "../../../scripts/exposure/aggregate_grid_disruption.py"
+
+"""
+Test with:
+snakemake --cores 1 -- results/power/by_country/PRI/disruption/IBTrACS/0_pop_affected_by_event.pq
+"""
+
+
+def disruption_per_event_sample_files(wildcards) -> list[str]:
+    """
+    Return a list of paths, one for each sample.
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        rules.aggregate_disruption_within_sample.output.by_event,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+    )
+
+rule aggregate_per_event_disruption_across_samples:
+    """
+    Take the per-sample customers affected files and combine them.
+    """
+    input:
+        per_sample = disruption_per_event_sample_files,
+    output:
+        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_event.pq",
+    run:
+        import pandas as pd
+
+        df = pd.concat([pd.read_parquet(file_path) for file_path in input.per_sample])
+        df.to_parquet(output.all_samples)
+
+"""
+Test with:
+snakemake --cores 1 -- results/power/by_country/PRI/disruption/IBTrACS/pop_affected_by_event.pq
+"""
+
+
+def disruption_per_target_sample_files(wildcards) -> list[str]:
+    """
+    Return a list of paths, one for each sample.
+    """
+    dataset_name = wildcards.STORM_SET.split("-")[0]
+    return expand(
+        rules.aggregate_disruption_within_sample.output.by_target,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+    )
+
+rule aggregate_per_target_disruption_across_samples:
+    """
+    Take the per-sample customers affected files and combine them.
+    """
+    input:
+        per_sample = disruption_per_target_sample_files,
+    output:
+        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_target.pq",
+    run:
+        import pandas as pd
+
+        df = pd.concat([pd.read_parquet(file_path) for file_path in input.per_sample])
+        df.groupby("target").sum().to_parquet(output.all_samples)
+
+"""
+Test with:
+snakemake --cores 1 -- results/power/by_country/PRI/disruption/IBTrACS/pop_affected_by_target.pq
+"""
+
+
 rule disruption_by_admin_region:
     """
     Calculate expected annual population affected at given admin level.
     """
     input:
         tracks = storm_tracks_file_from_storm_set,
-        disruption = disruption_by_storm_for_country_for_storm_set,
+        disruption_by_target = rules.aggregate_per_target_disruption_across_samples.output.all_samples,
+        disruption_by_event = rules.aggregate_per_event_disruption_across_samples.output.all_samples,
         targets = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/targets.geoparquet",
         admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
-    threads: 8  # read exposure files in parallel
     output:
-        total_disruption_by_region = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_SLUG}.geoparquet",
-        # TODO: per region event distributions
-        # disruption_event_distribution_by_region = dir("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_SLUG}/")
+        expected_annual_disruption = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_SLUG}.gpq",
     script:
         "../../../scripts/exposure/grid_disruption_by_admin_region.py"
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/disruption/IBTrACS/admin-level-1.geoparquet
+snakemake -c1 -- results/power/by_country/PRI/disruption/IBTrACS/EAPA_admin-level-1.gpq
 """
 
 
@@ -176,7 +282,7 @@ def disruption_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{ADMIN_LEVEL}.geoparquet",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_LEVEL}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
@@ -186,15 +292,12 @@ def disruption_summaries_for_storm_set(wildcards):
 
 rule disruption_by_admin_region_for_storm_set:
     """
-    A target rule to generate the exposure and disruption netCDFs for all
-    targets affected (across multiple countries) for each storm.
-
-    Concatenates the regional summaries for expected annual population disruption together.
+    Concatenate the regional summaries for expected annual population affected.
     """
     input:
         disruption = disruption_summaries_for_storm_set
     output:
-        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/{ADMIN_LEVEL}.geoparquet"
+        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_LEVEL}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd
@@ -207,5 +310,5 @@ rule disruption_by_admin_region_for_storm_set:
 
 """
 Test with:
-snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/disruption/admin-level-2.geoparquet
+snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/disruption/EAPA_admin-level-2.gpq
 """

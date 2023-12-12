@@ -33,7 +33,8 @@ def plot_event_distributions(
     # constant between thresholds
     x_min_log10 = np.log10(max([1000, 0.1 * min(exposure_by_event.min())]))
     x_max_log10 = np.log10(max(exposure_by_event.max()))
-    n_bins = max([10, int(np.ceil(np.cbrt(len(exposure_by_event))))])
+    n_bins = max([10, int(np.ceil(np.sqrt(len(exposure_by_event))))])
+    logging.info(f"Using {n_bins} for {len(exposure_by_event)} events")
     bins = np.logspace(x_min_log10, x_max_log10, n_bins)
 
     # find y (frequency) maxima across thresholds
@@ -41,7 +42,7 @@ def plot_event_distributions(
     for threshold in thresholds:
         frequency, bin_edges = np.histogram(exposure_by_event.loc[:, threshold], bins=bins)
         y_max = max([y_max, max(frequency)])
-    y_max *= 1.1
+    y_max *= 5
 
     for threshold in thresholds:
 
@@ -64,9 +65,10 @@ def plot_event_distributions(
         ax.axvline(p90, label=r"$p_{90}$ = " + f"{p90:.2E}", ls="--", color="pink", alpha=0.7)
         ax.axvline(p95, label=r"$p_{95}$ = " + f"{p95:.2E}", ls="--", color="red", alpha=0.7)
         ax.axvline(p99, label=r"$p_{99}$ = " + f"{p99:.2E}", ls="--", color="purple", alpha=0.7)
-        ax.set_ylim(0, y_max)
+        ax.set_ylim(0.1, y_max)
         ax.set_xlim(10**x_min_log10, 5 * 10**x_max_log10)
         ax.set_xscale("log")
+        ax.set_yscale("log")
         ax.set_xlabel("Exposed edge length [m]")
         ax.set_ylabel("Frequency")
         ax.set_title(
@@ -89,16 +91,13 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Reading exposure data")
-    exposure_all_storms = pd.read_parquet(snakemake.input.exposure_by_event)
-
-    logging.info("Aggregating (sum exposure) by event")
-    per_event = exposure_all_storms.groupby("event_id").sum()
+    exposure_by_event = pd.read_parquet(snakemake.input.exposure_by_event)
 
     logging.info("Plotting event distributions")
     os.makedirs(snakemake.output.country_event_distributions)
     plot_event_distributions(
-        list(per_event.columns),
-        per_event,
+        list(exposure_by_event.columns),
+        exposure_by_event,
         snakemake.output.country_event_distributions,
         snakemake.wildcards.STORM_SET,
         snakemake.wildcards.COUNTRY_ISO_A3

@@ -23,7 +23,8 @@ def forward_azimuth(
     Reference: https://www.movable-type.co.uk/scripts/latlong.html
 
     Args:
-        Δλ: Difference in longitudes (radians) φ1: Start latitudes (radians)
+        Δλ: Difference in longitudes (radians)
+        φ1: Start latitudes (radians)
         φ2: End latitudes (radians)
 
     Returns: Initial headings from start towards end points (radians)

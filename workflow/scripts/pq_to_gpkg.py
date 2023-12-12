@@ -9,9 +9,9 @@ import geopandas as gpd
 import pyogrio
 
 
-GPKG_EXT = ".gpkg"
-PARQUET_EXT = ".parquet"
-GEOPARQUET_EXT = ".geoparquet"
+GPKG_EXT = "gpkg"
+PARQUET_EXT = ("pq", "parq", "parquet")
+GEOPARQUET_EXT = ("gpq", "geoparq", "geoparquet")
 
 
 def geoparquet_to_geopackage(parquet_path: str) -> str:
@@ -29,7 +29,7 @@ def geoparquet_to_geopackage(parquet_path: str) -> str:
     """
     gdf = gpd.read_parquet(parquet_path)
     stem, _ = os.path.splitext(parquet_path)
-    gpkg_path = stem + GPKG_EXT
+    gpkg_path = f"{stem}.{GPKG_EXT}"
 
     # vectorised file io with pyogrio, ~50x faster than gpd.to_file via fiona
     pyogrio.write_dataframe(gdf, gpkg_path)
@@ -48,10 +48,8 @@ if __name__ == "__main__":
     parquet_files: list = sys.argv[1:]
 
     for infile in parquet_files:
-        if not (
-            infile.lower().endswith(PARQUET_EXT)
-            or infile.lower().endswith(GEOPARQUET_EXT)
-        ):
+        file_ext = infile.lower().split(".")[-1]
+        if not (file_ext in PARQUET_EXT or file_ext in GEOPARQUET_EXT):
             raise ValueError("{infile=} does not appear to be geoparquet")
         gpkg_path = geoparquet_to_geopackage(infile)
         logging.info(gpkg_path)
