@@ -1,5 +1,5 @@
 """
-For a given storm (maximum wind speed field):
+For each storm (maximum wind speed field) in storm list:
 - Fail edge segments who experience a wind speed greater than given threshold
 - Record length of edges in exceedence of threshold
 - Attempt to allocate power from sources to sinks over degraded network
@@ -7,7 +7,9 @@ For a given storm (maximum wind speed field):
 - Estimate number of customers affected
 """
 
+import json
 import logging
+import os
 import sys
 
 import geopandas as gpd
@@ -311,30 +313,19 @@ if __name__ == "__main__":
     splits_path: str = snakemake.input.grid_splits
     wind_speeds_path: str = snakemake.input.wind_speeds
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    storm_id: str = snakemake.wildcards.STORM_ID
-    exposure_path: str = snakemake.output.exposure
-    disruption_path: str = snakemake.output.disruption
+    exposure_dir: str = snakemake.output.exposure
+    disruption_dir: str = snakemake.output.disruption
+
+    os.makedirs(exposure_dir)
+    os.makedirs(disruption_dir)
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     logging.info("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
+
     if len(wind_fields.variables) == 0:
-        logging.info("Empty wind speed file, writing null result to disk.")
-        exposure = build_dataset(
-            ("length_m",),
-            {"event_id": str, "threshold": float, "edge": int},
-            event_id=[storm_id],
-            threshold=speed_thresholds,
-        )
-        disruption = build_dataset(
-            ("supply_factor", "customers_affected"),
-            {"event_id": str, "threshold": float, "target": int},
-            event_id=[storm_id],
-            threshold=speed_thresholds,
-        )
-        exposure.to_netcdf(exposure_path)
-        disruption.to_netcdf(disruption_path)
+        logging.info("Empty wind speed file, skipping...")
         sys.exit(0)
 
     logging.info(wind_fields.max_wind_speed)
@@ -350,24 +341,27 @@ if __name__ == "__main__":
 
     logging.info(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
-    logging.info("Calculating exposure and simulating electricity network failure due to wind damage...")
-    exposure, disruption = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
+    for storm_id_coordinate in wind_fields.event_id:
+        storm_id: str = storm_id_coordinate.item()
 
-    # filter out values (and coordinate values) that are not of interest
-    # this helps keep output file sizes manageable (especially for large networks)
-    exposure = exposure.sel(event_id=storm_id)
-    exposure = exposure.where(exposure.length_m > 0, drop=True)
-    disruption = disruption.sel(event_id=storm_id)
-    disruption = disruption.where(disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
+        logging.info(f"Calculating exposure and simulating network failure due to {storm_id}...")
+        exposure, disruption = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
 
-    exposure_summary = exposure.length_m.sum(dim='edge')
-    exposure_summary_str = (
-        "Exposure summary" +
-        "\nThreshold [m s-1], Grid exposed [m]\n" +
-        "\n".join([f"{exposure.threshold:.1f}, {exposure:.2E}" for exposure in exposure_summary])
-    )
-    logging.info(exposure_summary_str)
+        # filter out values (and coordinate values) that are not of interest
+        # this helps keep output file sizes manageable (especially for large networks)
+        exposure = exposure.sel(event_id=storm_id)
+        exposure = exposure.where(exposure.length_m > 0, drop=True)
+        disruption = disruption.sel(event_id=storm_id)
+        disruption = disruption.where(disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
 
-    logging.info("Writing results to disk")
-    exposure.to_netcdf(exposure_path)
-    disruption.to_netcdf(disruption_path)
+        exposure_summary = exposure.length_m.sum(dim='edge')
+        exposure_summary_str = (
+            "Exposure summary" +
+            "\nThreshold [m s-1], Grid exposed [m]\n" +
+            "\n".join([f"{exposure.threshold:.1f}, {exposure:.2E}" for exposure in exposure_summary])
+        )
+        logging.info(exposure_summary_str)
+
+        logging.info("Writing results to disk")
+        exposure.to_netcdf(os.path.join(exposure_dir, f"{storm_id}.nc"))
+        disruption.to_netcdf(os.path.join(disruption_dir, f"{storm_id}.nc"))

@@ -13,7 +13,7 @@ rule aggregate_exposure_within_sample:
     Take per-event exposure files with per-edge rows and aggregate into a per-edge file and a per-event file.
     """
     input:
-        exposure_by_event = exposure_by_storm_for_country_for_storm_set
+        exposure_by_event = rules.electricity_grid_damages.output.exposure
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:

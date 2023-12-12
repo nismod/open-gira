@@ -2,7 +2,6 @@
 Estimate damages to electrical networks due to high wind speeds
 """
 
-
 def storm_tracks_file_from_storm_set(wildcards) -> str:
     """
     Return a path to the processed tracks for a storm set.
@@ -141,12 +140,12 @@ rule electricity_grid_damages:
         # TODO: make this a function of country?
         mem_mb = 1_024 * 3
     output:
-        exposure = temp("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc"),
-        disruption = temp("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc"),
+        exposure = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/")),
+        disruption = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/")),
     script:
         "../../../scripts/intersect/grid_disruption.py"
 
 """
 Test with:
-snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/0/2017242N16333.nc
+snakemake --cores 1 results/power/by_country/PRI/exposure/IBTrACS/0/
 """

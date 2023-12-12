@@ -2,7 +2,9 @@
 Take exposure files (one per storm, with per-edge data) and aggregate into sample per-event total and sample per-edge total.
 """
 
+import glob
 import logging
+import os
 
 import dask
 import dask.dataframe
@@ -76,7 +78,7 @@ if __name__ == "__main__":
     # for 10,000 years of storms impacting Japan, a single thread will take ~7min
     dask.config.set(scheduler='single-threaded')
 
-    # construct a dataframe with no data, but the appropriate columns and dtypes for output
+    # construct a dataframe with no data, but the appropriate columns and dtypes
     # exposure_by_edge will coerce the data to match this schema
     threshold_cols: list[str] = [f"{value:.1f}" for value in snakemake.params.thresholds]
     column_dtypes: dict[str, type] = {"event_id": str, "edge": int, **dict(zip(threshold_cols, [float] * len(threshold_cols)))}
@@ -84,10 +86,18 @@ if __name__ == "__main__":
 
     # create list of data read and transform tasks
     tasks = []
-    for file_path in snakemake.input.exposure_by_event:
+    for file_path in glob.glob(f"{snakemake.input.exposure_by_event}/*.nc"):
         tasks.append(exposure_by_edge(file_path, schema))
-    exposure_all_storms = dask.dataframe.from_delayed(tasks)
 
     # write out to disk as parquet
-    exposure_all_storms.drop(columns=["edge"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
-    exposure_all_storms.drop(columns=["event_id"]).groupby("edge").sum().to_parquet(snakemake.output.by_edge)
+    if tasks:
+        exposure_all_storms = dask.dataframe.from_delayed(tasks)
+        exposure_all_storms.drop(columns=["edge"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
+        exposure_all_storms.drop(columns=["event_id"]).groupby("edge").sum().to_parquet(snakemake.output.by_edge)
+    else:
+        # we have declared to snakemake that this output will be a directory (when there's data, it's sharded)
+        # write out the schema as a pretend directory parquet dataset
+        os.makedirs(snakemake.output.by_event)
+        os.makedirs(snakemake.output.by_edge)
+        schema.drop(columns=["edge"]).groupby("event_id").sum().to_parquet(os.path.join(snakemake.output.by_event, "part.0.parquet"))
+        schema.drop(columns=["event_id"]).groupby("edge").sum().to_parquet(os.path.join(snakemake.output.by_edge, "part.0.parquet"))

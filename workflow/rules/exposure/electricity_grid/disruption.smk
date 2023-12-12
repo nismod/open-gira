@@ -18,9 +18,10 @@ def country_storm_paths_for_storm(wildcards):
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wilcards.SAMPLE,  # str
         STORM_ID=wildcards.STORM_ID  # str
     )
 
@@ -32,7 +33,7 @@ rule disruption_merge_countries_of_storm:
     input:
         disruption = country_storm_paths_for_storm
     output:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/disruption_by_target.nc",
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/disruption_by_target.nc",
     run:
         import logging
         import os
@@ -65,7 +66,7 @@ rule aggregate_disruption_within_sample:
     sample) and aggregate into a per-target file and a per-event file.
     """
     input:
-        disruption_by_event = disruption_by_storm_for_country_for_storm_set
+        disruption_by_event = rules.electricity_grid_damages.output.disruption
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:
