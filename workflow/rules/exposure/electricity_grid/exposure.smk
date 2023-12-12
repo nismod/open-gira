@@ -8,27 +8,6 @@ in excess of a threshold.
 from open_gira.io import cached_json_file_read
 
 
-def exposure_by_storm_for_country_for_storm_set(wildcards):
-    """
-    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
-
-    Return a list of the relevant exposure netCDF file paths.
-    """
-
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
-    storm_set_by_country = cached_json_file_read(json_file)
-
-    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
-
-    return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
-        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
-        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
-        STORM_SET=wildcards.STORM_SET,  # str
-        SAMPLE=wildcards.SAMPLE,  # str
-        STORM_ID=storms  # list of str
-    )
-
 rule aggregate_exposure_within_sample:
     """
     Take per-event exposure files with per-edge rows and aggregate into a per-edge file and a per-event file.
