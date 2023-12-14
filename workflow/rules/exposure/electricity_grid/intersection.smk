@@ -132,13 +132,15 @@ rule electricity_grid_damages:
     disruption estimates.
     """
     input:
+        # `threads_for_country` will fail unless this CSV is present when resources are set
+        country_target_count=country_target_count_path,
         grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
         wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
+    threads: threads_for_country
     resources:
-        # TODO: make this a function of country?
-        mem_mb = 1_024 * 3
+        mem_mb = lambda wildcards: threads_for_country(wildcards) * 1_024 * 2.5
     output:
         exposure = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/")),
         disruption = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/")),

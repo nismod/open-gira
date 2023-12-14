@@ -10,6 +10,7 @@ For each storm (maximum wind speed field) in storm list:
 import json
 import logging
 import os
+import multiprocessing
 import sys
 
 import geopandas as gpd
@@ -26,6 +27,44 @@ import snkit
 # a value less than 1 limits the targets stored in disruption files to areas
 # negatively affected by storms
 MAX_SUPPLY_FACTOR: float = 0.90
+
+
+def process_event(
+    storm_id: str,
+    wind_fields: xr.DataArray,
+    splits: gpd.GeoDataFrame,
+    speed_thresholds: list[float],
+    network: snkit.network.Network,
+    exposure_dir: str,
+    disruption_dir: str
+) -> None:
+    """
+
+    """
+
+    logging.info(storm_id)
+    exposure, disruption = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
+
+    # filter out values (and coordinate values) that are not of interest
+    # this helps keep output file sizes manageable (especially for large networks)
+    exposure = exposure.sel(event_id=storm_id)
+    exposure = exposure.where(exposure.length_m > 0, drop=True)
+    disruption = disruption.sel(event_id=storm_id)
+    disruption = disruption.where(disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
+
+    exposure_summary = exposure.length_m.sum(dim='edge')
+    exposure_summary_str = (
+        "Exposure summary" +
+        "\nThreshold [m s-1], Grid exposed [m]\n" +
+        "\n".join([f"{exposure.threshold:.1f}, {exposure:.2E}" for exposure in exposure_summary])
+    )
+    logging.info(exposure_summary_str)
+
+    logging.info("Writing results to disk")
+    exposure.to_netcdf(os.path.join(exposure_dir, f"{storm_id}.nc"))
+    disruption.to_netcdf(os.path.join(disruption_dir, f"{storm_id}.nc"))
+
+    return
 
 
 def subset_network(
@@ -151,7 +190,7 @@ def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) ->
 
 
 def degrade_grid_with_storm(
-    storm_id: xr.DataArray,
+    storm_id: str,
     wind_fields: xr.DataArray,
     splits: gpd.GeoDataFrame,
     speed_thresholds: list,
@@ -315,6 +354,7 @@ if __name__ == "__main__":
     speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
     exposure_dir: str = snakemake.output.exposure
     disruption_dir: str = snakemake.output.disruption
+    n_proc: int = int(snakemake.threads)
 
     os.makedirs(exposure_dir)
     os.makedirs(disruption_dir)
@@ -341,27 +381,13 @@ if __name__ == "__main__":
 
     logging.info(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
-    for storm_id_coordinate in wind_fields.event_id:
-        storm_id: str = storm_id_coordinate.item()
-
-        logging.info(f"Calculating exposure and simulating network failure due to {storm_id}...")
-        exposure, disruption = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
-
-        # filter out values (and coordinate values) that are not of interest
-        # this helps keep output file sizes manageable (especially for large networks)
-        exposure = exposure.sel(event_id=storm_id)
-        exposure = exposure.where(exposure.length_m > 0, drop=True)
-        disruption = disruption.sel(event_id=storm_id)
-        disruption = disruption.where(disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
-
-        exposure_summary = exposure.length_m.sum(dim='edge')
-        exposure_summary_str = (
-            "Exposure summary" +
-            "\nThreshold [m s-1], Grid exposed [m]\n" +
-            "\n".join([f"{exposure.threshold:.1f}, {exposure:.2E}" for exposure in exposure_summary])
-        )
-        logging.info(exposure_summary_str)
-
-        logging.info("Writing results to disk")
-        exposure.to_netcdf(os.path.join(exposure_dir, f"{storm_id}.nc"))
-        disruption.to_netcdf(os.path.join(disruption_dir, f"{storm_id}.nc"))
+    args = (
+        (storm_id.item(), wind_fields, splits, speed_thresholds, network, exposure_dir, disruption_dir)
+        for storm_id in wind_fields.event_id
+    )
+    if n_proc > 1:
+        with multiprocessing.get_context("fork").Pool(processes=n_proc) as pool:
+            pool.starmap(process_event, args)
+    else:
+        for arg in args:
+            process_event(*arg)

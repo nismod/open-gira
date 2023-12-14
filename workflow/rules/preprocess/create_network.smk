@@ -227,6 +227,9 @@ def threads_for_country(wildcards) -> int:
     countries by their number of targets, and then apply a sigmoid (logistic
     minimum) function to the ranking.
 
+    N.B. Rules that employ this function must also include
+    `country_target_count_path` as an input.
+
     Args:
         wildcards: Must include COUNTRY_ISO_A3 to do the country lookup.
 
