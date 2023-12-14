@@ -17,8 +17,8 @@ rule aggregate_exposure_within_sample:
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:
-        by_event = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_event.pq"),
-        by_edge = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_edge.pq"),
+        by_event = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_event.pq")),
+        by_edge = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_edge.pq")),
     script:
         "../../../scripts/exposure/aggregate_grid_exposure.py"
 
