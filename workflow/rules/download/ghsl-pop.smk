@@ -44,7 +44,7 @@ rule download_ghsl_all:
     input:
         expand(
             os.path.join(
-                config["output_dir"],
+                "{{OUTPUT_DIR}}",
                 "input",
                 "ghsl",
                 "GHS_POP_E{year}_GLOBE_R2022A_54009_{resolution}_V1_0.tif",
