@@ -3,7 +3,7 @@ rule parse_powerplants:
     Parse powerplant data for world and save in convenient format
     """
     input:
-        powerplants="{OUTPUT_DIR}/input/powerplants/global_power_plant_database.csv",
+        powerplants=rules.download_powerplants.output.csv
     output:
         powerplants="{OUTPUT_DIR}/power/powerplants.geoparquet",
     run:

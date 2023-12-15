@@ -6,7 +6,6 @@ We provide a basic config file `config/config.yml` with explanatory comments tha
 The configuration file is meant to specify the location of input data
 and outputs, as well as some runtime settings.
 
-- `output_dir`: Relative or absolute path where the output should be placed. Will be created if it does not exist.
 - `hazard_datasets`: Named list of file paths to `.txt` files containing a list of hazard files.
 Files can be specified (both the `.txt` files and the `.tif` files they point to) either as filenames
 relative to the project root, as absolute file paths, or as remote resources (`http://` or `https://`).

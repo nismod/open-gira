@@ -1,7 +1,3 @@
-# Input data and output locations
-output_dir: 'results'
-
-
 #####################################
 ### FLOODING / TRANSPORT WORKFLOW ###
 #####################################
