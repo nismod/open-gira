@@ -174,3 +174,63 @@ rule exposure_by_admin_region_for_storm_set:
 Test with:
 snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/EAE_admin-level-2.gpq
 """
+
+
+def EAE_all_coarser_admin_levels(wildcards) -> list[str]:
+    """
+    Given an admin level, return a list of paths to the EAE file at that admin
+    level and all the coarser levels down to and including level 0 (national).
+    """
+    max_level = int(wildcards.ADMIN_SLUG.split("-")[-1])
+    return expand(
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_admin-level-{i}.gpq",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+        i=range(max_level + 1),
+    )
+
+rule merge_exposure_admin_levels:
+    """
+    Take results at target admin level and gap fill with coarser admin levels
+    where appropriate.
+    """
+    input:
+        admin_levels = EAE_all_coarser_admin_levels,
+    output:
+        merged_admin_levels = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_{ADMIN_SLUG}-0.gpq"
+    run:
+        import logging
+
+        import geopandas as gpd
+
+        from open_gira.admin import merge_gadm_admin_levels
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        if len(input.admin_levels) == 1:
+            # already at national level, no other region level data to merge
+            gpd.read_parquet(input.admin_levels).to_parquet(output.merged_admin_levels)
+
+        else:
+
+            def read_and_label_ISO_A3(path: str) -> gpd.GeoDataFrame:
+                """Requires a GID_n column with e.g. ZWE.9.3_1 or AFG.3_1 data."""
+                df = gpd.read_parquet(path)
+                GID_col, = df.columns[list(map(lambda s: s.startswith("GID_"), df.columns))]
+                if "ISO_A3" in df.columns:
+                    raise RuntimeError("Will not overwrite ISO_A3 column, quitting.")
+                df["ISO_A3"] = df[GID_col].apply(lambda s: s.split(".")[0])
+                return df
+
+            # e.g. admin-level-3, admin-level-2, [admin-level-1, admin-level-0]
+            # or admin-level-1, admin-level-0, []
+            primary, secondary, *others = [read_and_label_ISO_A3(path) for path in sorted(input.admin_levels, reverse=True)]
+
+            logging.info(f"Starting with: {set(primary.ISO_A3)}")
+            merged = merge_gadm_admin_levels(primary, secondary)
+
+            for other in others:
+                merged = merge_gadm_admin_levels(merged, other)
+
+            merged.reset_index(drop=True).sort_index(axis=1).to_parquet(output.merged_admin_levels)
+            logging.info("Done")
