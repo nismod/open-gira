@@ -55,7 +55,6 @@ def get_proximity_condition(asset_type: str, edge_limit: float | int) -> Callabl
 
 
 if __name__ == "__main__":
-    output_dir: str = snakemake.config["output_dir"]
     plants_path: str = snakemake.input.plants
     targets_path: str = snakemake.input.targets
     gridfinder_path: str = snakemake.input.gridfinder
