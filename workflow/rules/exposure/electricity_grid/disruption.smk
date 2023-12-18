@@ -178,11 +178,11 @@ def disruption_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_LEVEL}.gpq",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_SLUG}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
-        ADMIN_LEVEL=wildcards.ADMIN_LEVEL  # str
+        ADMIN_SLUG=wildcards.ADMIN_SLUG  # str
     )
 
 
@@ -193,7 +193,7 @@ rule disruption_by_admin_region_for_storm_set:
     input:
         disruption = disruption_summaries_for_storm_set
     output:
-        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_LEVEL}.gpq"
+        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_SLUG}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd
