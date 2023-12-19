@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     # create list of data read and transform tasks
     tasks = []
-    for file_path in glob.glob(f"{snakemake.input.disruption_by_event}/*.nc"):
+    for file_path in sorted(glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")):
         tasks.append(disruption_by_target(file_path, schema))
 
     # write out to disk as parquet
