@@ -5,9 +5,6 @@
 # ideally it would the primary config file where there are no need for changes,
 # but to my knowledge YAML files are not composable, modular, referenceable etc.
 
-# Input data and output locations
-output_dir: 'results'
-
 
 #####################################
 ### FLOODING / TRANSPORT WORKFLOW ###

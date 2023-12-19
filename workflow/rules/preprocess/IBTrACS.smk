@@ -1,8 +1,8 @@
 rule parse_ibtracs:
     input:
-        ibtracs_csv = "results/input/IBTrACS/raw/v4.csv"
+        ibtracs_csv = "{OUTPUT_DIR}/input/IBTrACS/raw/v4.csv"
     output:
-        ibtracs_parquet = "results/storm_tracks/IBTrACS/0/tracks.geoparquet"
+        ibtracs_parquet = "{OUTPUT_DIR}/storm_tracks/IBTrACS/0/tracks.geoparquet"
     script:
         "../../scripts/preprocess/parse_IBTrACS.py"
 

@@ -11,9 +11,9 @@ rule download_gridfinder:
         electricity_grid_global = "{OUTPUT_DIR}/input/gridfinder/grid.gpkg",
         electricity_targets_global = "{OUTPUT_DIR}/input/gridfinder/targets.tif",
     shell:
-        f"""
-        mkdir -p {config['output_dir']}/input/gridfinder
-        cd {config['output_dir']}/input/gridfinder
+        """
+        mkdir -p {wildcards.OUTPUT_DIR}/input/gridfinder
+        cd {wildcards.OUTPUT_DIR}/input/gridfinder
         zenodo_get 10.5281/zenodo.3628142
         """
 

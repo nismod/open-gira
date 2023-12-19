@@ -227,6 +227,9 @@ def threads_for_country(wildcards) -> int:
     countries by their number of targets, and then apply a sigmoid (logistic
     minimum) function to the ranking.
 
+    N.B. Rules that employ this function must also include
+    `country_target_count_path` as an input.
+
     Args:
         wildcards: Must include COUNTRY_ISO_A3 to do the country lookup.
 
@@ -239,7 +242,7 @@ def threads_for_country(wildcards) -> int:
 
     ranked["threads"] = logistic_min(
         ranked.index,  # input to transform
-        0.8 * workflow.cores,  # maximum (roughly)
+        0.85 * workflow.cores,  # maximum (roughly)
         -2,  # minimum (roughly)
         0.02,  # steepness of sigmoid
         0.8 * len(ranked.index)  # location of sigmoid centre on input axis

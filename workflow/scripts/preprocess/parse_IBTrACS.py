@@ -160,6 +160,9 @@ if __name__ == "__main__":
     # boolean: is storm over land?
     df["landfall"] = df["distance_to_land_km"] == 0
 
+    # the synthetic tracksets have a sample attribute, match for common interface
+    df["sample"] = 0
+
     df = df.drop(columns=WIND_COLS + RMW_COLS + PRESSURE_COLS + ["time_utc"])
 
     # reorder columns to match STORM dataset (except track_id and name, which are additional)

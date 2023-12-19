@@ -86,7 +86,7 @@ rule annotate_targets:
         admin="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
         population=rules.calculate_population_of_targets.output.population_table,
         targets=rules.polygonise_targets.output.targets,
-        gdp="{OUTPUT_DIR}/input/GDP/GDP_per_capita_PPP_1990_2015_v2.nc",
+        gdp=rules.download_GDP.output.gdp_pc,
     output:
         targets="{OUTPUT_DIR}/power/targets.geoparquet",
     script:

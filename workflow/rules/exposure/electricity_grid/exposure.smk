@@ -8,38 +8,17 @@ in excess of a threshold.
 from open_gira.io import cached_json_file_read
 
 
-def exposure_by_storm_for_country_for_storm_set(wildcards):
-    """
-    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
-
-    Return a list of the relevant exposure netCDF file paths.
-    """
-
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
-    storm_set_by_country = cached_json_file_read(json_file)
-
-    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
-
-    return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
-        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
-        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
-        STORM_SET=wildcards.STORM_SET,  # str
-        SAMPLE=wildcards.SAMPLE,  # str
-        STORM_ID=storms  # list of str
-    )
-
 rule aggregate_exposure_within_sample:
     """
     Take per-event exposure files with per-edge rows and aggregate into a per-edge file and a per-event file.
     """
     input:
-        exposure_by_event = exposure_by_storm_for_country_for_storm_set
+        exposure_by_event = rules.electricity_grid_damages.output.exposure
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:
-        by_event = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_event.pq"),
-        by_edge = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_edge.pq"),
+        by_event = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_event.pq")),
+        by_edge = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}_length_m_by_edge.pq")),
     script:
         "../../../scripts/exposure/aggregate_grid_exposure.py"
 
@@ -163,11 +142,11 @@ def exposure_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/EAE_{ADMIN_LEVEL}.gpq",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/EAE_{ADMIN_SLUG}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
-        ADMIN_LEVEL=wildcards.ADMIN_LEVEL  # str
+        ADMIN_SLUG=wildcards.ADMIN_SLUG  # str
     )
 
 rule exposure_by_admin_region_for_storm_set:
@@ -180,7 +159,7 @@ rule exposure_by_admin_region_for_storm_set:
     input:
         exposure = exposure_summaries_for_storm_set
     output:
-        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_{ADMIN_LEVEL}.gpq"
+        storm_set_exposure = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_{ADMIN_SLUG}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd
@@ -195,3 +174,63 @@ rule exposure_by_admin_region_for_storm_set:
 Test with:
 snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/EAE_admin-level-2.gpq
 """
+
+
+def EAE_all_coarser_admin_levels(wildcards) -> list[str]:
+    """
+    Given an admin level, return a list of paths to the EAE file at that admin
+    level and all the coarser levels down to and including level 0 (national).
+    """
+    max_level = int(wildcards.ADMIN_SLUG.split("-")[-1])
+    return expand(
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_admin-level-{i}.gpq",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+        i=range(max_level + 1),
+    )
+
+rule merge_exposure_admin_levels:
+    """
+    Take results at target admin level and gap fill with coarser admin levels
+    where appropriate.
+    """
+    input:
+        admin_levels = EAE_all_coarser_admin_levels,
+    output:
+        merged_admin_levels = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/EAE_{ADMIN_SLUG}-0.gpq"
+    run:
+        import logging
+
+        import geopandas as gpd
+
+        from open_gira.admin import merge_gadm_admin_levels
+
+        logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+
+        if len(input.admin_levels) == 1:
+            # already at national level, no other region level data to merge
+            gpd.read_parquet(input.admin_levels).to_parquet(output.merged_admin_levels)
+
+        else:
+
+            def read_and_label_ISO_A3(path: str) -> gpd.GeoDataFrame:
+                """Requires a GID_n column with e.g. ZWE.9.3_1 or AFG.3_1 data."""
+                df = gpd.read_parquet(path)
+                GID_col, = df.columns[list(map(lambda s: s.startswith("GID_"), df.columns))]
+                if "ISO_A3" in df.columns:
+                    raise RuntimeError("Will not overwrite ISO_A3 column, quitting.")
+                df["ISO_A3"] = df[GID_col].apply(lambda s: s.split(".")[0])
+                return df
+
+            # e.g. admin-level-3, admin-level-2, [admin-level-1, admin-level-0]
+            # or admin-level-1, admin-level-0, []
+            primary, secondary, *others = [read_and_label_ISO_A3(path) for path in sorted(input.admin_levels, reverse=True)]
+
+            logging.info(f"Starting with: {set(primary.ISO_A3)}")
+            merged = merge_gadm_admin_levels(primary, secondary)
+
+            for other in others:
+                merged = merge_gadm_admin_levels(merged, other)
+
+            merged.reset_index(drop=True).sort_index(axis=1).to_parquet(output.merged_admin_levels)
+            logging.info("Done")

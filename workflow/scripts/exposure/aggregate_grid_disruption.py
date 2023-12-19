@@ -2,7 +2,9 @@
 Take per-event disruption files with per-target rows and aggregate into a per-target file and a per-event file.
 """
 
+import glob
 import logging
+import os
 
 import dask
 import dask.dataframe
@@ -84,10 +86,18 @@ if __name__ == "__main__":
 
     # create list of data read and transform tasks
     tasks = []
-    for file_path in snakemake.input.disruption_by_event:
+    for file_path in sorted(glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")):
         tasks.append(disruption_by_target(file_path, schema))
-    disruption_all_storms = dask.dataframe.from_delayed(tasks)
 
     # write out to disk as parquet
-    disruption_all_storms.drop(columns=["target"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
-    disruption_all_storms.drop(columns=["event_id"]).groupby("target").sum().to_parquet(snakemake.output.by_target)
+    if tasks:
+        disruption_all_storms = dask.dataframe.from_delayed(tasks)
+        disruption_all_storms.drop(columns=["target"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
+        disruption_all_storms.drop(columns=["event_id"]).groupby("target").sum().to_parquet(snakemake.output.by_target)
+    else:
+        # we have declared to snakemake that this output will be a directory (when there's data, it's sharded)
+        # write out the schema as a pretend directory parquet dataset
+        os.makedirs(snakemake.output.by_event)
+        os.makedirs(snakemake.output.by_target)
+        schema.drop(columns=["target"]).groupby("event_id").sum().to_parquet(os.path.join(snakemake.output.by_event, "part.0.parquet"))
+        schema.drop(columns=["event_id"]).groupby("target").sum().to_parquet(os.path.join(snakemake.output.by_target, "part.0.parquet"))

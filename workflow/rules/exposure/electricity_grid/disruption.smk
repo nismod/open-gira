@@ -8,30 +8,6 @@ power supply to an electricity consuming target.
 from open_gira.io import cached_json_file_read
 
 
-def country_storm_paths_for_storm_set(wildcards):
-    """
-    Return list of paths of country-storm disruption
-    """
-    import json
-    import os
-
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    country_set_by_storm = cached_json_file_read(json_file)
-
-    paths = []
-    for storm_id, countries in country_set_by_storm.items():
-        paths.extend(
-            expand(
-                "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
-                COUNTRY_ISO_A3=countries,  # list of str
-                STORM_SET=wildcards.STORM_SET,  # str
-                STORM_ID=storm_id  # str
-            )
-        )
-
-    return paths
-
-
 def country_storm_paths_for_storm(wildcards):
     """
     Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
@@ -42,9 +18,10 @@ def country_storm_paths_for_storm(wildcards):
     country_set_by_storm = cached_json_file_read(json_file)
 
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
+        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
         COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wilcards.SAMPLE,  # str
         STORM_ID=wildcards.STORM_ID  # str
     )
 
@@ -56,7 +33,7 @@ rule disruption_merge_countries_of_storm:
     input:
         disruption = country_storm_paths_for_storm
     output:
-        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/disruption_by_target.nc",
+        by_target = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/disruption_by_target.nc",
     run:
         import logging
         import os
@@ -79,90 +56,9 @@ rule disruption_merge_countries_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/2017260N12310/disruption_by_target.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/0/2017260N12310/disruption_by_target.nc
 """
 
-
-def disruption_by_target_for_all_storms_in_storm_set(wildcards):
-    """
-    Given STORM_SET as a wildcard, lookup the storms in the set.
-
-    Return a list of the disruption_by_target.nc file paths for every storm in the set.
-    """
-
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    country_set_by_storm = cached_json_file_read(json_file)
-
-    storms = list(country_set_by_storm.keys())
-
-    return expand(
-        "results/power/by_storm_set/{STORM_SET}/by_storm/{STORM_ID}/disruption_by_target.nc",
-        STORM_SET=wildcards.STORM_SET,  # str
-        STORM_ID=storms  # list of str
-    )
-
-
-rule disruption_by_storm_for_storm_set:
-    """
-    A target rule to generate the exposure and disruption netCDFs for all
-    targets affected (across multiple countries) for each storm.
-    """
-    input:
-        disruption = disruption_by_target_for_all_storms_in_storm_set
-    output:
-        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption.txt"
-    shell:
-        """
-        # one output file per line
-        echo {input.disruption} | tr ' ' '\n' > {output.completion_flag}
-        """
-
-"""
-Test with:
-snakemake -c1 -- results/power/by_storm_set/IBTrACS/disruption.txt
-"""
-
-
-def disruption_by_storm_for_country_for_storm_set(wildcards):
-    """
-    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
-
-    Return a list of the relevant disruption netCDF file paths.
-    """
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
-    storm_set_by_country = cached_json_file_read(json_file)
-
-    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
-
-    return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/by_storm/{STORM_ID}.nc",
-        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
-        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
-        STORM_SET=wildcards.STORM_SET,  # str
-        STORM_ID=storms  # list of str
-    )
-
-
-def disruption_by_storm_for_country_for_storm_set(wildcards):
-    """
-    Given STORM_SET as a wildcard, lookup the storms in the set impacting given COUNTRY_ISO_A3.
-
-    Return a list of the relevant disruption netCDF file paths.
-    """
-
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.storm_set_by_country
-    storm_set_by_country = cached_json_file_read(json_file)
-
-    storms = storm_set_by_country[wildcards.COUNTRY_ISO_A3]
-
-    return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
-        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
-        COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,  # str
-        STORM_SET=wildcards.STORM_SET,  # str
-        SAMPLE=wildcards.SAMPLE,  # str
-        STORM_ID=storms  # list of str
-    )
 
 rule aggregate_disruption_within_sample:
     """
@@ -170,12 +66,12 @@ rule aggregate_disruption_within_sample:
     sample) and aggregate into a per-target file and a per-event file.
     """
     input:
-        disruption_by_event = disruption_by_storm_for_country_for_storm_set
+        disruption_by_event = rules.electricity_grid_damages.output.disruption
     params:
         thresholds = config["transmission_windspeed_failure"]
     output:
-        by_event = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_event.pq"),
-        by_target = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_target.pq"),
+        by_event = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_event.pq")),
+        by_target = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}_pop_affected_by_target.pq")),
     script:
         "../../../scripts/exposure/aggregate_grid_disruption.py"
 
@@ -282,11 +178,11 @@ def disruption_summaries_for_storm_set(wildcards):
     country_set = cached_json_file_read(json_file)
 
     return expand(
-        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_LEVEL}.gpq",
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/EAPA_{ADMIN_SLUG}.gpq",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         COUNTRY_ISO_A3=country_set,  # list of str
         STORM_SET=wildcards.STORM_SET,  # str
-        ADMIN_LEVEL=wildcards.ADMIN_LEVEL  # str
+        ADMIN_SLUG=wildcards.ADMIN_SLUG  # str
     )
 
 
@@ -297,7 +193,7 @@ rule disruption_by_admin_region_for_storm_set:
     input:
         disruption = disruption_summaries_for_storm_set
     output:
-        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_LEVEL}.gpq"
+        storm_set_disruption = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/EAPA_{ADMIN_SLUG}.gpq"
     run:
         import geopandas as gpd
         import pandas as pd

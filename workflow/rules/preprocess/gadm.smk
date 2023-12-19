@@ -1,6 +1,6 @@
 rule simplify_admin_bounds:
     input:
-        all_admin_bounds = rules.download_gadm_levels.output.admin_bounds_global_layer_per_level
+        all_admin_bounds = rules.download_gadm_levels.output.gpkg
     output:
         simplified_layer = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet"
     run:
