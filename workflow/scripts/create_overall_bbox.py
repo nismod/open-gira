@@ -2,7 +2,6 @@ import json
 import os.path
 import re
 import subprocess
-import sys
 
 
 # do not permit values outside this range
@@ -10,18 +9,9 @@ import sys
 MIN_LAT = -60
 MAX_LAT = 72
 
-try:
-    osm_file = snakemake.input[0]  # type: ignore
-    results_dir = snakemake.config["output_dir"]  # type: ignore
-    out_file = snakemake.output[0]  # type: ignore
-except NameError:
-    if len(sys.argv) != 4:
-        raise RuntimeError(
-            "Incorrect number of input args, 3 required. Args: .osm.pbf file, results directory, new .json file"
-        )
-    osm_file = sys.argv[1]
-    results_dir = sys.argv[2]
-    out_file = sys.argv[3]
+osm_file = snakemake.input.osm_pbf
+results_dir = snakemake.wildcards.OUTPUT_DIR
+out_file = snakemake.output.bbox
 
 bboxes = subprocess.check_output(["osmium", "fileinfo", osm_file, "-g", "header.boxes"])
 
