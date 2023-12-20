@@ -101,7 +101,7 @@ rule aggregate_per_event_disruption_across_samples:
     input:
         per_sample = disruption_per_event_sample_files,
     output:
-        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_event.pq",
+        all_samples = protected("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_event.pq"),
     run:
         import pandas as pd
 
@@ -134,7 +134,7 @@ rule aggregate_per_target_disruption_across_samples:
     input:
         per_sample = disruption_per_target_sample_files,
     output:
-        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_target.pq",
+        all_samples = protected("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/pop_affected_by_target.pq"),
     run:
         import pandas as pd
 

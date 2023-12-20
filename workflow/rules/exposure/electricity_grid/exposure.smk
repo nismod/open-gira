@@ -48,7 +48,7 @@ rule aggregate_per_event_exposure_across_samples:
     input:
         per_sample = exposure_per_event_sample_files,
     output:
-        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_event.pq",
+        all_samples = protected("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_event.pq"),
     run:
         import pandas as pd
 
@@ -81,7 +81,7 @@ rule aggregate_per_edge_exposure_across_samples:
     input:
         per_sample = exposure_per_edge_sample_files,
     output:
-        all_samples = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_edge.pq",
+        all_samples = protected("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/length_m_by_edge.pq"),
     run:
         import pandas as pd
 
