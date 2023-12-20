@@ -142,8 +142,8 @@ rule electricity_grid_damages:
     resources:
         mem_mb = lambda wildcards: threads_for_country(wildcards) * 1_024 * 2.5
     output:
-        exposure = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/")),
-        disruption = temp(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/")),
+        exposure = protected(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/")),
+        disruption = protected(directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/")):we,
     script:
         "../../../scripts/intersect/grid_disruption.py"
 
