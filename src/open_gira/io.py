@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pyproj
 from tqdm import tqdm
+import xarray as xr
 
 from open_gira.utils import natural_sort
 
@@ -21,11 +22,94 @@ from open_gira.utils import natural_sort
 WGS84_EPSG = 4326
 
 
+def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
+    """
+    Given a Dataset, return the dict to pack its variables into an integer type
+    for serialisation as netCDF. Should provide space savings over using a
+    single or double floating point type.
+
+    Args:
+        ds: Dataset to determine encoding parameters for.
+        n_bits: Size of integer type to use as storage on disk.
+
+    Returns:
+        Encoding dictionary for use with xr.Dataset.to_netcdf.
+    """
+
+    if not isinstance(ds, xr.Dataset):
+        raise ValueError(f"ds must be an xarray Dataset, but is instead {type(ds)}")
+
+    per_variable: list[dict] = [
+        bit_pack_dataarray_encoding(ds[var_name], n_bits) for var_name in ds.data_vars
+    ]
+
+    # merge the dictionaries from the DataArrays
+    return functools.reduce(lambda a, b: {**a, **b}, per_variable)
+
+
+def bit_pack_dataarray_encoding(da: xr.DataArray, n_bits: int = 16) -> dict:
+    """
+    Given a DataArray, return the dict to pack it into an integer type for
+    serialisation as netCDF. Should provide space savings over using a single or
+    double floating point type.
+
+    Args:
+        da: DataArray to determine encoding parameters for.
+        n_bits: Size of integer type to use as storage on disk.
+
+    Returns:
+        Encoding dictionary for use with xr.DataArray.to_netcdf.
+    """
+
+    if not isinstance(da, xr.DataArray):
+        raise ValueError(f"da must be an xarray DataArray, but is instead {type(da)}")
+
+    def defaults() -> Tuple[int, int, int]:
+        return 1, 0, -1
+
+    if da.size == 0:
+        # no data
+        scale_factor, add_offset, fill_value = defaults()
+    elif np.count_nonzero(np.isnan(da.values)) == da.size:
+        # everything is NaN!
+        scale_factor, add_offset, fill_value = defaults()
+    else:
+        scale_factor, add_offset, fill_value = netcdf_packing_parameters(
+            da.min().item(),
+            da.max().item(),
+            n_bits
+        )
+
+    return {
+        da.name: {
+            'dtype': f'int{n_bits:d}',
+            'scale_factor': scale_factor,
+            'add_offset': add_offset,
+            '_FillValue': fill_value
+        }
+    }
+
+
 def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tuple[float, float]:
     """
     Given (floating point) data within a certain range, find the best scale
     factor and offset to use to pack as signed integer values, using most of
-    the available bits.
+    the available bits:
+
+        deserialised = scale_factor * serialised + add_offset
+        serialised = (deserialised - add_offset) / scale_factor
+
+    The fill_value is a sentinel value required to successfully round-trip NaN
+    values from float (in memory) to int (on disk) to float (in memory).
+
+    The precision of the round-tripped data is the scale_factor, i.e. for a
+    scale_factor of 0.01, deserialised figures will differ by increments of
+    0.01. If this is approximately equal to (or larger than) features of
+    interest in your data, you will lose those features.
+
+    N.B. Whatever reads this data from disk must read and employ the
+    scale_factor and add_offset metadata! netCDF4-python and xarray do, ncdump
+    doesn't.
 
     See here for more information:
     https://docs.xarray.dev/en/stable/user-guide/io.html#scaling-and-type-conversions
