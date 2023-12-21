@@ -20,6 +20,7 @@ import xarray as xr
 
 from open_gira import fields
 from open_gira.grid import weighted_allocation
+from open_gira.io import bit_pack_dataset_encoding, bit_pack_dataarray_encoding
 import snkit
 
 
@@ -39,7 +40,19 @@ def process_event(
     disruption_dir: str
 ) -> None:
     """
+    File handling, filtering, logging and serialisation to disk for the exposure
+    and disruption associated with a given storm.
 
+    Args:
+        storm_id: Unique ID of event to process
+        wind_fields: Max wind speeds on event_id, longitude, latitude coordinates
+        splits: Infrastructure edges split by wind grid
+        speed_thresholds: Wind speeds at which to consider assets failed
+        network: Network of nodes and edges to allocate power over
+        exposure_dir: Location to write out exposure (length of assets exposed
+            to wind speeds in excess of threshold(s)).
+        disruption_dir: Location to write out disruption (supply factors and
+            number of people disconnected)
     """
 
     logging.info(storm_id)
@@ -61,8 +74,24 @@ def process_event(
     logging.info(exposure_summary_str)
 
     logging.info("Writing results to disk")
-    exposure.to_netcdf(os.path.join(exposure_dir, f"{storm_id}.nc"))
-    disruption.to_netcdf(os.path.join(disruption_dir, f"{storm_id}.nc"))
+
+    # pack floating point data into 16 bit integer types to save space on disk
+    exposure.to_netcdf(
+        os.path.join(exposure_dir, f"{storm_id}.nc"),
+        encoding=bit_pack_dataset_encoding(exposure)
+    )
+
+    # supply factor is a float between 0 and 1, can reasonably pack into 16 bit integer space
+    disruption_encoding = bit_pack_dataarray_encoding(disruption.supply_factor)
+
+    # customers affected spans a large (positive) range, use a single precision
+    # float to save space over the default double
+    disruption_encoding["customers_affected"] = {"dtype": "float32"}
+
+    disruption.to_netcdf(
+        os.path.join(disruption_dir, f"{storm_id}.nc"),
+        encoding=disruption_encoding
+    )
 
     return
 
