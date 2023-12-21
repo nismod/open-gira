@@ -25,4 +25,4 @@ jobs:
         sudo apt update && sudo apt install osmium-tool
         osmium --version
 
-        python -m pytest -n auto tests/
+        python -m pytest -n auto
