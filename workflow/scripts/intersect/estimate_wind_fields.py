@@ -16,7 +16,7 @@ import pyproj
 import rioxarray
 import xarray as xr
 
-from open_gira.io import netcdf_packing_parameters
+from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
     advective_vector, rotational_field, interpolate_track,
     empty_wind_da, WIND_COORDS, ENV_PRESSURE
@@ -245,32 +245,10 @@ if __name__ == "__main__":
     # da["spatial_ref"] = ((), 0, spatial_ref_attrs)
     da = da.rio.write_crs("EPSG:4326")
 
-    # https://docs.xarray.dev/en/stable/user-guide/io.html#scaling-and-type-conversions
-
-    # we serialise as 16 bit integers to save space compared to standard 64 bit float
-    # we don't need the precision of floats and this is much faster
-    # (and 3x smaller) than using zlib compression
-
-    # deserialised = scale_factor * serialised + add_offset
-    # serialised = (deserialised - add_offset) / scale_factor
-
-    # _FillValue is a sentinel value required to successfully round-trip NaN values
-    # from float (in memory) to int (on disk) to float (in memory)
-
-    # N.B. whatever reads this data must read and employ the scale_factor and
-    # add_offset metadata! netCDF4-python and xarray do, ncdump doesn't
-
-    scale_factor, add_offset, fill_value = netcdf_packing_parameters(da.min().item(), da.max().item(), 16)
+    # pack floating point data as integers on disk
     da.to_netcdf(
         output_path,
-        encoding={
-            "max_wind_speed": {
-                'dtype': 'int16',
-                'scale_factor': scale_factor,
-                'add_offset': add_offset,
-                '_FillValue': fill_value
-            }
-        }
+        encoding=bit_pack_dataarray_encoding(da)
     )
 
     logging.info("Done estimating wind fields")
