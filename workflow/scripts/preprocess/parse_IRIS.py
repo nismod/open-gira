@@ -6,6 +6,7 @@ Output format shares columns with IBTrACS.
 """
 
 from glob import glob
+import logging
 import os
 import re
 from typing import List
@@ -37,6 +38,8 @@ IRIS_FREQUENCY = "3H"
 
 
 if __name__ == "__main__":
+
+    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
     csv_dir = snakemake.input.csv_dir
     parquet_path = snakemake.output.parquet
@@ -93,6 +96,12 @@ if __name__ == "__main__":
         data.append(df)
 
     df = pd.concat(data)
+
+    df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.lat}_{row.lon}", axis=1)
+    n_rows_raw = len(df)
+    logging.info(f"Collated {n_rows_raw} track points")
+    df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
+    logging.info(f"Dropped {n_rows_raw - len(df)} track points as duplicates")
 
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(
