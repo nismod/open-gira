@@ -14,6 +14,7 @@ import math
 import os.path
 from glob import glob
 
+import numpy as np
 import requests
 
 from open_gira.assets import Assets
@@ -59,6 +60,19 @@ else:
     # if we have a non-empty list, check the request against what's implemented
     # will raise ValueError in case of mismatch
     Assets.valid_selection(requested_asset_damage_types)
+
+# check tropical cyclone / grid workflow return period array is valid
+TC_RPs = np.array(config["return_period_years"])
+if not np.all(np.diff(TC_RPs) > 0):
+    raise ValueError("config.return_period_years should be monotonically increasing")
+if not np.all(TC_RPs > 0):
+    raise ValueError("config.return_period_years values must be strictly positive")
+
+# check transmission wind speed damage thresholds
+if not config["best_estimate_windspeed_failure_threshold"] in config["transmission_windspeed_failure"]:
+    raise ValueError(
+        "config.transmissions_windspeed_failure must contain config.best_estimate_windspeed_failure_threshold"
+    )
 
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
