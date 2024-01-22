@@ -259,7 +259,7 @@ rule plot_pop_affected_return_periods:
         ax.set_xscale("log")
         ax.set_xlabel("Return period [years]", labelpad=10)
 
-        ax.set_ylabel(f"Population affected", labelpad=10)
+        ax.set_ylabel(f"Population at risk of disconnection", labelpad=10)
 
         ax.grid(alpha=0.4, which="both")
         plt.subplots_adjust(right=0.8)
@@ -309,6 +309,71 @@ rule plot_pop_affected_return_periods_storm_set:
 """
 Test with:
 snakemake -c1 -- results/power/by_storm_set/STORM-constant/pop_affected_RP_plots.flag
+"""
+
+
+def pop_affected_return_period_paths(wildcards) -> list[str]:
+    """
+    Return a list of paths, one for each country.
+    """
+    import json
+
+    country_set_path = f"{wildcards.OUTPUT_DIR}/power/by_storm_set/{wildcards.STORM_SET}/countries_impacted.json"
+    with open(country_set_path, "r") as fp:
+        countries = json.load(fp)
+
+    return expand(
+        rules.disruption_pop_affected_return_periods.output.return_periods_interpolated,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=countries,
+        STORM_SET=wildcards.STORM_SET,
+    )
+
+
+rule disruption_pop_affected_return_period_map:
+    """
+    Number of people at risk of disconnection by country, by return period.
+    """
+    input:
+        return_period_data = pop_affected_return_period_paths,
+        admin_boundaries = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
+    params:
+        return_periods = config["return_period_years"]
+    output:
+        return_period_maps = directory("{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/disruption/pop_affected_RP/"),
+    run:
+        import geopandas as gpd
+        import pandas as pd
+
+        countries = gpd.read_parquet(input.admin_boundaries)
+        countries = countries.rename(columns={"GID_0": "ISO_A3"}).set_index("ISO_A3")
+
+        data_by_country = []
+        for path in input.return_period_data:
+            iso_a3: str = path.split("/")[-4]
+            df = pd.read_parquet(path)
+            df["ISO_A3"] = iso_a3
+            df = df.reset_index().set_index(["return_period_years", "threshold", "ISO_A3"])
+            # threshold indicies are transformed into columns, long -> wide
+            df = df.unstack("threshold")
+            df.columns = df.columns.droplevel(0)
+            data_by_country.append(df)
+
+        data = pd.concat(data_by_country)
+
+        os.makedirs(output.return_period_maps)
+        for return_period in params.return_periods:
+            # select one return period -- table now has country rows and threshold columns
+            df = data.xs(return_period, level="return_period_years")
+
+            # merge in geometry column, and name
+            gdf = gpd.GeoDataFrame(df.join(countries))
+
+            gdf.to_parquet(os.path.join(output.return_period_maps, f"{return_period}.gpq"))
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/STORM-constant/disruption/pop_affected_RP
 """
 
 
