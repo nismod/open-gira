@@ -45,6 +45,8 @@ rule concat_storm_tracks:
     """
     input:
         by_sample=all_storm_tracks_by_sample
+    resources:
+        mem_mb = 48_000
     output:
         tracks_from_all_samples="{OUTPUT_DIR}/storm_tracks/{STORM_SET}/tracks.geoparquet",
     run:
