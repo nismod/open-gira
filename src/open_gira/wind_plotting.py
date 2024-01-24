@@ -5,7 +5,7 @@ Functions for creating animations and static plots of wind fields.
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from matplotlib import animation
+from matplotlib import animation, colors, colormaps
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import xarray as xr
@@ -67,7 +67,9 @@ def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path:
 
     da = xr.DataArray(field.T, coords={"i": range(x), "j": range(y)})
 
-    xr.plot.pcolormesh(da, levels=17, x="i", y="j", ax=ax, vmin=0, vmax=MAX_SPEED, cmap=WIND_CMAP, cbar_ax=cax)
+    cmap = colormaps[WIND_CMAP]
+    cmap.set_under("w")
+    xr.plot.pcolormesh(da, levels=16, x="i", y="j", ax=ax, vmin=5, vmax=MAX_SPEED, cmap=cmap, cbar_ax=cax)
 
     stats_str = fr"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
     ax.set_title(title + "\n" + stats_str)
@@ -109,29 +111,28 @@ def animate_track(wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: st
     track_length, *grid_shape = wind_field.shape
 
     fig, ax = plt.subplots(figsize=size_plot(*grid_shape[::-1]))
+    cmap = colormaps[WIND_CMAP]
+    cmap.set_under("w")
 
     # origin lower so latitude indicies increasing northwards
-    img = ax.imshow(np.zeros(grid_shape), vmin=0, vmax=MAX_SPEED, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
-    fig.colorbar(img, ax=ax, location="right", label="Wind speed [m/s]", shrink=0.81)
-    quiv = ax.quiver(
+    img = ax.imshow(
         np.zeros(grid_shape),
-        np.zeros(grid_shape),
-        angles='xy',
-        scale=QUIVER_SCALE,
-        color='white'
+        norm=colors.BoundaryNorm(np.linspace(5, 80, 16), cmap.N, extend="both"),
+        origin=WIND_PLOT_ORIGIN,
+        cmap=cmap,
     )
+    fig.colorbar(img, ax=ax, location="right", label="Wind speed [m/s]", shrink=0.81)
 
-    def animate(i, image, quiver):
+    def animate(i, image):
         image.set_array(np.abs(wind_field[i]))
-        quiver.set_UVC(wind_field[i].real, wind_field[i].imag)
         ax.set_title(f"{track_name} wind vector\n{i + 1} of {track_length}")
-        return img, quiv
+        return [img]
 
     anim = animation.FuncAnimation(
         fig,
         animate,
         frames=track_length,
-        fargs=(img, quiv),
+        fargs=(img,),
         blit=True,
     )
 

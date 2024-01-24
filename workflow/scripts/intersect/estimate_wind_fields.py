@@ -18,8 +18,8 @@ import xarray as xr
 
 from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
-    advective_vector, rotational_field, interpolate_track,
-    empty_wind_da, WIND_COORDS, ENV_PRESSURE
+    estimate_wind_field, interpolate_track, empty_wind_da, WIND_COORDS,
+    ENV_PRESSURE
 )
 from open_gira.wind_plotting import plot_contours, animate_track
 
@@ -104,36 +104,24 @@ def process_track(
     # hemisphere belongs to {-1, 1}
     track["hemisphere"] = np.sign(track.geometry.y)
 
-    adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
-    rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
+    # result array
+    wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
     for track_i, track_point in enumerate(track.itertuples()):
 
-        adv_vector: np.complex128 = advective_vector(
-            track_point.advection_azimuth_deg,
-            track_point.eye_speed_ms,
-            track_point.hemisphere,
-        )
-
-        adv_field[track_i, :] = np.full(grid_shape, adv_vector)
-
-        # maximum wind speed, less advective component
-        # this is the maximum tangential wind speed in the eye's non-rotating reference frame
-        max_wind_speed_relative_to_eye_ms: float = track_point.max_wind_speed_ms - np.abs(adv_vector)
-
-        rot_field[track_i, :] = rotational_field(
+        wind_field[track_i, :] = estimate_wind_field(
             longitude,  # degrees
             latitude,  # degrees
             track_point.geometry.x,  # degrees
             track_point.geometry.y,  # degrees
             track_point.radius_to_max_winds_km * 1_000,  # convert to meters
-            max_wind_speed_relative_to_eye_ms,
+            track_point.max_wind_speed_ms,
             track_point.min_pressure_hpa * 100,  # convert to Pascals
             ENV_PRESSURE[basin] * 100,  # convert to Pascals
+            track_point.advection_azimuth_deg,
+            track_point.eye_speed_ms,
+            track_point.hemisphere,  # {+1|-1}
         )
-
-    # sum components of wind field, (timesteps, y, x)
-    wind_field: np.ndarray[complex] = adv_field + rot_field
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field

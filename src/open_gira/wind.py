@@ -167,11 +167,11 @@ def advective_vector(
     Geophys. Res., 117, D09120, doi:10.1029/2011JD017126
 
     Arguments:
-        eye_heading_deg (float): Heading of eye in degrees clockwise from north
-        eye_speed_ms (float): Speed of eye in metres per second
-        hemisphere (int): +1 for northern, -1 for southern
-        alpha (float): Fractional reduction of advective wind speed from eye speed
-        beta (float): Degrees advective winds tend to rotate past storm track (in direction of rotation)
+        eye_heading_deg: Heading of eye in degrees clockwise from north
+        eye_speed_ms: Speed of eye in metres per second
+        hemisphere: +1 for northern, -1 for southern
+        alpha: Fractional reduction of advective wind speed from eye speed
+        beta: Degrees advective winds tend to rotate past storm track (in direction of rotation)
 
     Returns:
         np.complex128: Advective wind vector
@@ -187,7 +187,20 @@ def advective_vector(
     return mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
 
 
-def rotational_field(
+@numba.njit
+def sigmoid_decay(x: np.ndarray, cutoff: float, steepness: float) -> np.ndarray:
+    """
+    Transform input by a sigmoid shape decay to return values in range [0, 1].
+
+    Args:
+        x: Input array to transform
+        cutoff: Approximate location in x where decay starts
+        steepness: How quickly the function decays
+    """
+    return 0.5 * (1 + np.tanh((cutoff / 2) - x / steepness))
+
+
+def estimate_wind_field(
     longitude: np.ndarray,
     latitude: np.ndarray,
     eye_long: float,
@@ -196,23 +209,43 @@ def rotational_field(
     max_wind_speed_ms: float,
     min_pressure_pa: float,
     env_pressure_pa: float,
+    advection_azimuth_deg: float,
+    eye_speed_ms: float,
+    hemisphere: int,
 ) -> np.ndarray:
     """
-    Calculate the rotational component of a storm's vector wind field
+    Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.
+
+    The rotational component uses a modified Holland model. The advective
+    component (from the storm's translational motion) is modelled to fall off
+    from approximately 10 maximum wind radii. These two components are vector
+    added and returned.
 
     Args:
-        longitude (np.ndarray[float]): Grid values to evaluate on
-        latitude (np.ndarray[float]): Grid values to evaluate on
-        eye_long (float): Location of eye in degrees
-        eye_lat (float): Location of eye in degrees
-        radius_to_max_winds_m (float): Distance from eye centre to maximum wind speed in metres
-        max_wind_speed_ms (float): Maximum linear wind speed (relative to storm eye)
-        min_pressure_pa (float): Minimum pressure in storm eye in Pascals
-        env_pressure_pa (float): Environmental pressure, typical for this locale, in Pascals
+        longitude: Grid values to evaluate on
+        latitude: Grid values to evaluate on
+        eye_long: Location of eye in degrees
+        eye_lat: Location of eye in degrees
+        radius_to_max_winds_m: Distance from eye centre to maximum wind speed in metres
+        max_wind_speed_ms: Maximum wind speed (relative to ground)
+        min_pressure_pa: Minimum pressure in storm eye in Pascals
+        env_pressure_pa: Environmental pressure, typical for this locale, in Pascals
+        eye_heading_deg: Heading of eye in degrees clockwise from north
+        eye_speed_ms: Speed of eye in metres per second
+        hemisphere: +1 for northern, -1 for southern
 
     Returns:
-        np.ndarray[complex]: Grid of wind vectors
+        Grid of wind vectors
     """
+    adv_vector: np.complex128 = advective_vector(
+        advection_azimuth_deg,
+        eye_speed_ms,
+        hemisphere,
+    )
+
+    # maximum wind speed, less advective component
+    # this is the maximum tangential wind speed in the eye's non-rotating reference frame
+    max_wind_speed_relative_to_eye_ms: float = max_wind_speed_ms - np.abs(adv_vector)
 
     X, Y = np.meshgrid(longitude, latitude)
     grid_shape = X.shape  # or Y.shape
@@ -225,13 +258,25 @@ def rotational_field(
         np.full(len(Y.ravel()), eye_lat),
     )
 
+    distance_to_eye_grid_m = radius_m.reshape(grid_shape)
+
+    # find the radius, r to eye for each pixel, normalised by radius to maximum winds, RMW
+    # multiply by a decay function, so that
+    # for r / RMW < 5, output ~ 1
+    # for 10 < r / RMW < 30, there is decay from 1 to 0
+    # for r / RMW > 30, output ~ 0
+
+    # including this decay hopefully prevents us from making nonsense estimates
+    # of wind speeds thousands of km from the storm eye
+    adv_field: np.ndarray = adv_vector * sigmoid_decay(distance_to_eye_grid_m / radius_to_max_winds_m, 6, 6)
+
     # magnitude of rotational wind component
     mag_v_r: np.ndarray = holland_wind_model(
         radius_to_max_winds_m,
-        max_wind_speed_ms,
+        max_wind_speed_relative_to_eye_ms,
         min_pressure_pa,
         env_pressure_pa,
-        radius_m.reshape(grid_shape),
+        distance_to_eye_grid_m,
         eye_lat
     )
 
@@ -239,7 +284,9 @@ def rotational_field(
     phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
 
     # find components of vector at each pixel
-    return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+    rot_field = mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+
+    return adv_field + rot_field
 
 
 def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
