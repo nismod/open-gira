@@ -80,11 +80,14 @@ def process_track(
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
 
     # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
-    track: gpd.GeoDataFrame = interpolate_track(track)
-
-    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
+    try:
+        track: gpd.GeoDataFrame = interpolate_track(track)
+    except AssertionError:
+        logging.warning(f"Could not successfully interpolate {track_id}")
+        return track_id, np.zeros_like(downscaling_factors)
 
     # forward azimuth angle and distances from track eye to next track eye
+    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
     advection_azimuth_deg, _, eye_step_distance_m = geod_wgs84.inv(
         track.geometry.x.iloc[:-1],
         track.geometry.y.iloc[:-1],
@@ -109,19 +112,22 @@ def process_track(
 
     for track_i, track_point in enumerate(track.itertuples()):
 
-        wind_field[track_i, :] = estimate_wind_field(
-            longitude,  # degrees
-            latitude,  # degrees
-            track_point.geometry.x,  # degrees
-            track_point.geometry.y,  # degrees
-            track_point.radius_to_max_winds_km * 1_000,  # convert to meters
-            track_point.max_wind_speed_ms,
-            track_point.min_pressure_hpa * 100,  # convert to Pascals
-            ENV_PRESSURE[basin] * 100,  # convert to Pascals
-            track_point.advection_azimuth_deg,
-            track_point.eye_speed_ms,
-            track_point.hemisphere,  # {+1|-1}
-        )
+        try:
+            wind_field[track_i, :] = estimate_wind_field(
+                longitude,  # degrees
+                latitude,  # degrees
+                track_point.geometry.x,  # degrees
+                track_point.geometry.y,  # degrees
+                track_point.radius_to_max_winds_km * 1_000,  # convert to meters
+                track_point.max_wind_speed_ms,
+                track_point.min_pressure_hpa * 100,  # convert to Pascals
+                ENV_PRESSURE[basin] * 100,  # convert to Pascals
+                track_point.advection_azimuth_deg,
+                track_point.eye_speed_ms,
+                track_point.hemisphere,  # {+1|-1}
+            )
+        except AssertionError:
+            logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
