@@ -112,7 +112,7 @@ storm_sets:
     IBTrACS_black-marble-validation: 'config/storm_sets/20230120_black_marble.json'
 
 # consider countries at risk of a storm if within this many degrees of any storm track point
-max_track_search_radius_deg: 2
+max_track_search_radius_deg: 3
 
 # wind speed is constant within a square area of sides wind_grid_resolution_deg
 # note that for large domains, e.g. USA or CHN, 0.05 deg resolution requires
