@@ -237,6 +237,17 @@ def estimate_wind_field(
     Returns:
         Grid of wind vectors
     """
+
+    # check inputs
+    assert 0 < max_wind_speed_ms < 130
+    assert 0 < radius_to_max_winds_m < 1500000
+    assert 75000 < min_pressure_pa < 102000
+    assert 0 < eye_speed_ms < 40
+    assert hemisphere in {-1, 1}
+
+    # clip eye speed to a maximum of 30ms-1
+    # greater than this is non-physical, and probably the result of a data error
+    # we do not want to propagate such an error to our advective wind field
     adv_vector: np.complex128 = advective_vector(
         advection_azimuth_deg,
         eye_speed_ms,
@@ -298,7 +309,6 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
         gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
             radius_to_max_winds_km and geometry columns interpolated.
     """
-
     if len(track) == 0:
         raise ValueError("No track data")
     elif len(track) == 1:
