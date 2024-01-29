@@ -188,16 +188,16 @@ def advective_vector(
 
 
 @numba.njit
-def sigmoid_decay(x: np.ndarray, cutoff: float, steepness: float) -> np.ndarray:
+def sigmoid_decay(x: np.ndarray, midpoint: float, slope: float) -> np.ndarray:
     """
     Transform input by a sigmoid shape decay to return values in range [0, 1].
 
     Args:
         x: Input array to transform
-        cutoff: Approximate location in x where decay starts
-        steepness: How quickly the function decays
+        midpoint: Decay midpoint in x
+        slope: Larger values decay faster
     """
-    return 0.5 * (1 + np.tanh((cutoff / 2) - x / steepness))
+    return 0.5 * (1 + np.tanh(slope * (midpoint - x)))
 
 
 def estimate_wind_field(
@@ -260,15 +260,9 @@ def estimate_wind_field(
 
     distance_to_eye_grid_m = radius_m.reshape(grid_shape)
 
-    # find the radius, r to eye for each pixel, normalised by radius to maximum winds, RMW
-    # multiply by a decay function, so that
-    # for r / RMW < 5, output ~ 1
-    # for 10 < r / RMW < 30, there is decay from 1 to 0
-    # for r / RMW > 30, output ~ 0
-
-    # including this decay hopefully prevents us from making nonsense estimates
-    # of wind speeds thousands of km from the storm eye
-    adv_field: np.ndarray = adv_vector * sigmoid_decay(distance_to_eye_grid_m / radius_to_max_winds_m, 6, 6)
+    # decay effect of advective field from maximum at storm eye out to zero at 1,000km radius
+    # we shouldn't claim any authority on winds outside the vicinity of the storm
+    adv_field: np.ndarray = adv_vector * sigmoid_decay(distance_to_eye_grid_m / 1_000, 500, 0.004)
 
     # magnitude of rotational wind component
     mag_v_r: np.ndarray = holland_wind_model(
