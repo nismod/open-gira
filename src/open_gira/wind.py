@@ -345,8 +345,19 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
     # merge dataframes, on index collision, keep the non-NaN values from track
     interp_track = track.combine_first(interp_domain).sort_index()
 
+    # don't interpolate over some sensible duration
+    # note that we limit by an integer number of timesteps, not a time
+    # so our implicit assumption is that the input index is equally spaced
+    max_steps_to_fill: int = np.round(pd.Timedelta("6H") / pd.Timedelta(frequency)).astype(int)
+
     # interpolate over numeric value of index
-    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
+    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(
+        method=interp_method,
+        limit=max_steps_to_fill
+    )
+
+    # fail if we still have NaN values (probably the time gaps exceed `max_steps_to_fill`
+    assert not interp_track.loc[:, interp_cols].isnull().values.any()
 
     interp_track["geometry"] = gpd.points_from_xy(
         interp_track.x, interp_track.y, crs="EPSG:4326"
