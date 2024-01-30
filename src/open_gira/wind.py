@@ -211,7 +211,6 @@ def estimate_wind_field(
     env_pressure_pa: float,
     advection_azimuth_deg: float,
     eye_speed_ms: float,
-    hemisphere: int,
 ) -> np.ndarray:
     """
     Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.
@@ -232,7 +231,6 @@ def estimate_wind_field(
         env_pressure_pa: Environmental pressure, typical for this locale, in Pascals
         eye_heading_deg: Heading of eye in degrees clockwise from north
         eye_speed_ms: Speed of eye in metres per second
-        hemisphere: +1 for northern, -1 for southern
 
     Returns:
         Grid of wind vectors
@@ -243,7 +241,6 @@ def estimate_wind_field(
     assert 0 < radius_to_max_winds_m < 1500000
     assert 75000 < min_pressure_pa < 102000
     assert 0 <= eye_speed_ms < 40
-    assert hemisphere in {-1, 1}
 
     # clip eye speed to a maximum of 30ms-1
     # greater than this is non-physical, and probably the result of a data error
@@ -251,7 +248,7 @@ def estimate_wind_field(
     adv_vector: np.complex128 = advective_vector(
         advection_azimuth_deg,
         eye_speed_ms,
-        hemisphere,
+        np.sign(eye_lat),
     )
 
     # maximum wind speed, less advective component

@@ -104,9 +104,6 @@ def process_track(
     # calculate eye speed
     track["eye_speed_ms"] = eye_step_distance_m / period.seconds.values
 
-    # hemisphere belongs to {-1, 1}
-    track["hemisphere"] = np.sign(track.geometry.y)
-
     # result array
     wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
@@ -124,7 +121,6 @@ def process_track(
                 ENV_PRESSURE[basin] * 100,  # convert to Pascals
                 track_point.advection_azimuth_deg,
                 track_point.eye_speed_ms,
-                track_point.hemisphere,  # {+1|-1}
             )
         except AssertionError:
             logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros")
