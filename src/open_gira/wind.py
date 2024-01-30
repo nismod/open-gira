@@ -242,7 +242,7 @@ def estimate_wind_field(
     assert 0 < max_wind_speed_ms < 130
     assert 0 < radius_to_max_winds_m < 1500000
     assert 75000 < min_pressure_pa < 102000
-    assert 0 < eye_speed_ms < 40
+    assert 0 <= eye_speed_ms < 40
     assert hemisphere in {-1, 1}
 
     # clip eye speed to a maximum of 30ms-1
