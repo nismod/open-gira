@@ -167,11 +167,11 @@ def advective_vector(
     Geophys. Res., 117, D09120, doi:10.1029/2011JD017126
 
     Arguments:
-        eye_heading_deg (float): Heading of eye in degrees clockwise from north
-        eye_speed_ms (float): Speed of eye in metres per second
-        hemisphere (int): +1 for northern, -1 for southern
-        alpha (float): Fractional reduction of advective wind speed from eye speed
-        beta (float): Degrees advective winds tend to rotate past storm track (in direction of rotation)
+        eye_heading_deg: Heading of eye in degrees clockwise from north
+        eye_speed_ms: Speed of eye in metres per second
+        hemisphere: +1 for northern, -1 for southern
+        alpha: Fractional reduction of advective wind speed from eye speed
+        beta: Degrees advective winds tend to rotate past storm track (in direction of rotation)
 
     Returns:
         np.complex128: Advective wind vector
@@ -187,7 +187,20 @@ def advective_vector(
     return mag_v_a * np.sin(phi_a) + mag_v_a * np.cos(phi_a) * 1j
 
 
-def rotational_field(
+@numba.njit
+def sigmoid_decay(x: np.ndarray, midpoint: float, slope: float) -> np.ndarray:
+    """
+    Transform input by a sigmoid shape decay to return values in range [0, 1].
+
+    Args:
+        x: Input array to transform
+        midpoint: Decay midpoint in x
+        slope: Larger values decay faster
+    """
+    return 0.5 * (1 + np.tanh(slope * (midpoint - x)))
+
+
+def estimate_wind_field(
     longitude: np.ndarray,
     latitude: np.ndarray,
     eye_long: float,
@@ -196,23 +209,51 @@ def rotational_field(
     max_wind_speed_ms: float,
     min_pressure_pa: float,
     env_pressure_pa: float,
+    advection_azimuth_deg: float,
+    eye_speed_ms: float,
 ) -> np.ndarray:
     """
-    Calculate the rotational component of a storm's vector wind field
+    Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.
+
+    The rotational component uses a modified Holland model. The advective
+    component (from the storm's translational motion) is modelled to fall off
+    from approximately 10 maximum wind radii. These two components are vector
+    added and returned.
 
     Args:
-        longitude (np.ndarray[float]): Grid values to evaluate on
-        latitude (np.ndarray[float]): Grid values to evaluate on
-        eye_long (float): Location of eye in degrees
-        eye_lat (float): Location of eye in degrees
-        radius_to_max_winds_m (float): Distance from eye centre to maximum wind speed in metres
-        max_wind_speed_ms (float): Maximum linear wind speed (relative to storm eye)
-        min_pressure_pa (float): Minimum pressure in storm eye in Pascals
-        env_pressure_pa (float): Environmental pressure, typical for this locale, in Pascals
+        longitude: Grid values to evaluate on
+        latitude: Grid values to evaluate on
+        eye_long: Location of eye in degrees
+        eye_lat: Location of eye in degrees
+        radius_to_max_winds_m: Distance from eye centre to maximum wind speed in metres
+        max_wind_speed_ms: Maximum wind speed (relative to ground)
+        min_pressure_pa: Minimum pressure in storm eye in Pascals
+        env_pressure_pa: Environmental pressure, typical for this locale, in Pascals
+        eye_heading_deg: Heading of eye in degrees clockwise from north
+        eye_speed_ms: Speed of eye in metres per second
 
     Returns:
-        np.ndarray[complex]: Grid of wind vectors
+        Grid of wind vectors
     """
+
+    # check inputs
+    assert 0 < max_wind_speed_ms < 130
+    assert 0 < radius_to_max_winds_m < 1500000
+    assert 75000 < min_pressure_pa < 102000
+    assert 0 <= eye_speed_ms < 40
+
+    # clip eye speed to a maximum of 30ms-1
+    # greater than this is non-physical, and probably the result of a data error
+    # we do not want to propagate such an error to our advective wind field
+    adv_vector: np.complex128 = advective_vector(
+        advection_azimuth_deg,
+        eye_speed_ms,
+        np.sign(eye_lat),
+    )
+
+    # maximum wind speed, less advective component
+    # this is the maximum tangential wind speed in the eye's non-rotating reference frame
+    max_wind_speed_relative_to_eye_ms: float = max_wind_speed_ms - np.abs(adv_vector)
 
     X, Y = np.meshgrid(longitude, latitude)
     grid_shape = X.shape  # or Y.shape
@@ -225,13 +266,19 @@ def rotational_field(
         np.full(len(Y.ravel()), eye_lat),
     )
 
+    distance_to_eye_grid_m = radius_m.reshape(grid_shape)
+
+    # decay effect of advective field from maximum at storm eye out to zero at 1,000km radius
+    # we shouldn't claim any authority on winds outside the vicinity of the storm
+    adv_field: np.ndarray = adv_vector * sigmoid_decay(distance_to_eye_grid_m / 1_000, 500, 0.004)
+
     # magnitude of rotational wind component
     mag_v_r: np.ndarray = holland_wind_model(
         radius_to_max_winds_m,
-        max_wind_speed_ms,
+        max_wind_speed_relative_to_eye_ms,
         min_pressure_pa,
         env_pressure_pa,
-        radius_m.reshape(grid_shape),
+        distance_to_eye_grid_m,
         eye_lat
     )
 
@@ -239,7 +286,9 @@ def rotational_field(
     phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
 
     # find components of vector at each pixel
-    return mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+    rot_field = mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
+
+    return adv_field + rot_field
 
 
 def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
@@ -257,7 +306,6 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
         gpd.GeoDataFrame: Track with min_pressure_hpa, max_wind_speed_ms,
             radius_to_max_winds_km and geometry columns interpolated.
     """
-
     if len(track) == 0:
         raise ValueError("No track data")
     elif len(track) == 1:
@@ -294,8 +342,19 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
     # merge dataframes, on index collision, keep the non-NaN values from track
     interp_track = track.combine_first(interp_domain).sort_index()
 
+    # don't interpolate over some sensible duration
+    # note that we limit by an integer number of timesteps, not a time
+    # so our implicit assumption is that the input index is equally spaced
+    max_steps_to_fill: int = np.round(pd.Timedelta("6H") / pd.Timedelta(frequency)).astype(int)
+
     # interpolate over numeric value of index
-    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(method=interp_method)
+    interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(
+        method=interp_method,
+        limit=max_steps_to_fill
+    )
+
+    # fail if we still have NaN values (probably the time gaps exceed `max_steps_to_fill`
+    assert not interp_track.loc[:, interp_cols].isnull().values.any()
 
     interp_track["geometry"] = gpd.points_from_xy(
         interp_track.x, interp_track.y, crs="EPSG:4326"

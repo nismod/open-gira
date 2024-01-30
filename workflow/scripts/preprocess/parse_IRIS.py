@@ -46,7 +46,9 @@ if __name__ == "__main__":
     sample = snakemake.wildcards.SAMPLE
 
     data = []
-    for path in tqdm(natural_sort(glob(f"{csv_dir}/*_1000Y_n{sample}.txt"))):
+    for path in natural_sort(glob(f"{csv_dir}/*_1000Y_n{sample}.txt")):
+
+        logging.info(path)
 
         df = pd.read_csv(path, header=1, sep=r"\s+", names=IRIS_CSV_SCHEMA.keys(), dtype=IRIS_CSV_SCHEMA)
         df = df.rename(
@@ -82,6 +84,12 @@ if __name__ == "__main__":
             + df["tc_number"].astype(int).astype(str)
         )
 
+        # drop any duplicates
+        df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.timestep}", axis=1)
+        n_rows_raw = len(df)
+        df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
+        logging.info(f"Collated {n_rows_raw} track points, dropped {n_rows_raw - len(df)} as duplicates")
+
         # we'll want to interpolate and then measure the speed of tracks later,
         # this is easiest when we have some temporal index (as in IBTrACS)
         # so make up an artificial one here based on the IRIS reporting frequency
@@ -96,12 +104,6 @@ if __name__ == "__main__":
         data.append(df)
 
     df = pd.concat(data)
-
-    df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.lat}_{row.lon}", axis=1)
-    n_rows_raw = len(df)
-    logging.info(f"Collated {n_rows_raw} track points")
-    df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
-    logging.info(f"Dropped {n_rows_raw - len(df)} track points as duplicates")
 
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(

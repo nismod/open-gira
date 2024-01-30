@@ -55,7 +55,9 @@ if __name__ == "__main__":
 
     data = []
     # loop over basins for given sample, processing tracks into a common format
-    for path in tqdm(natural_sort(glob(f"{csv_dir}/*_1000_YEARS_{sample}*.csv"))):
+    for path in natural_sort(glob(f"{csv_dir}/*_1000_YEARS_{sample}*.csv")):
+
+        logging.info(path)
 
         df = pd.read_csv(path, names=STORM_CSV_SCHEMA.keys(), dtype=STORM_CSV_SCHEMA)
 
@@ -79,10 +81,15 @@ if __name__ == "__main__":
             + df["tc_number"].astype(int).astype(str)
         )
 
+        # STORM contains duplicate track points (duplicate timesteps for a given year-tc_number combination)
+        df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.timestep}", axis=1)
+        n_rows_raw = len(df)
+        df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
+        logging.info(f"Collated {n_rows_raw} track points, dropped {n_rows_raw - len(df)} as duplicates")
+
         # we'll want to interpolate and then measure the speed of tracks later,
         # this is easiest when we have some temporal index (as in IBTrACS)
         # so make up an artificial one here based on the STORM reporting frequency
-
         track_datetimes: List[np.ndarray] = []
         track_lengths: np.ndarray = df.track_id.apply(hash).value_counts(sort=False).values
         for length in track_lengths:
@@ -99,12 +106,6 @@ if __name__ == "__main__":
 
     # rescale winds to 1-minutely
     df.max_wind_speed_ms /= STORM_1MIN_WIND_FACTOR
-
-    df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.lat}_{row.lon}", axis=1)
-    n_rows_raw = len(df)
-    logging.info(f"Collated {n_rows_raw} track points")
-    df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
-    logging.info(f"Dropped {n_rows_raw - len(df)} track points as duplicates")
 
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(

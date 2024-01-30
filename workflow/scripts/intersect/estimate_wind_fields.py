@@ -18,8 +18,8 @@ import xarray as xr
 
 from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
-    advective_vector, rotational_field, interpolate_track,
-    empty_wind_da, WIND_COORDS, ENV_PRESSURE
+    estimate_wind_field, interpolate_track, empty_wind_da, WIND_COORDS,
+    ENV_PRESSURE
 )
 from open_gira.wind_plotting import plot_contours, animate_track
 
@@ -80,11 +80,14 @@ def process_track(
     basin: str = track.iloc[0, track.columns.get_loc("basin_id")]
 
     # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
-    track: gpd.GeoDataFrame = interpolate_track(track)
-
-    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
+    try:
+        track: gpd.GeoDataFrame = interpolate_track(track)
+    except AssertionError:
+        logging.warning(f"Could not successfully interpolate {track_id}")
+        return track_id, np.zeros_like(downscaling_factors)
 
     # forward azimuth angle and distances from track eye to next track eye
+    geod_wgs84: pyproj.Geod = pyproj.CRS("epsg:4326").get_geod()
     advection_azimuth_deg, _, eye_step_distance_m = geod_wgs84.inv(
         track.geometry.x.iloc[:-1],
         track.geometry.y.iloc[:-1],
@@ -101,39 +104,26 @@ def process_track(
     # calculate eye speed
     track["eye_speed_ms"] = eye_step_distance_m / period.seconds.values
 
-    # hemisphere belongs to {-1, 1}
-    track["hemisphere"] = np.sign(track.geometry.y)
-
-    adv_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
-    rot_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
+    # result array
+    wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
     for track_i, track_point in enumerate(track.itertuples()):
 
-        adv_vector: np.complex128 = advective_vector(
-            track_point.advection_azimuth_deg,
-            track_point.eye_speed_ms,
-            track_point.hemisphere,
-        )
-
-        adv_field[track_i, :] = np.full(grid_shape, adv_vector)
-
-        # maximum wind speed, less advective component
-        # this is the maximum tangential wind speed in the eye's non-rotating reference frame
-        max_wind_speed_relative_to_eye_ms: float = track_point.max_wind_speed_ms - np.abs(adv_vector)
-
-        rot_field[track_i, :] = rotational_field(
-            longitude,  # degrees
-            latitude,  # degrees
-            track_point.geometry.x,  # degrees
-            track_point.geometry.y,  # degrees
-            track_point.radius_to_max_winds_km * 1_000,  # convert to meters
-            max_wind_speed_relative_to_eye_ms,
-            track_point.min_pressure_hpa * 100,  # convert to Pascals
-            ENV_PRESSURE[basin] * 100,  # convert to Pascals
-        )
-
-    # sum components of wind field, (timesteps, y, x)
-    wind_field: np.ndarray[complex] = adv_field + rot_field
+        try:
+            wind_field[track_i, :] = estimate_wind_field(
+                longitude,  # degrees
+                latitude,  # degrees
+                track_point.geometry.x,  # degrees
+                track_point.geometry.y,  # degrees
+                track_point.radius_to_max_winds_km * 1_000,  # convert to meters
+                track_point.max_wind_speed_ms,
+                track_point.min_pressure_hpa * 100,  # convert to Pascals
+                ENV_PRESSURE[basin] * 100,  # convert to Pascals
+                track_point.advection_azimuth_deg,
+                track_point.eye_speed_ms,
+            )
+        except AssertionError:
+            logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
