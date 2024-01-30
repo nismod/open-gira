@@ -9,6 +9,7 @@ import logging
 import sys
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 import shapely
 from tqdm import tqdm
@@ -59,6 +60,7 @@ if __name__ == "__main__":
             arrival, *_, departure = df.index
             sliced = tracks[tracks.track_id == track_id].loc[arrival: departure]
             assert sliced.timestep.is_monotonic_increasing
+            assert np.all(np.diff(sliced.timestep) == 1)
             sliced_tracks_by_track.append(sliced)
 
     sliced_tracks = pd.concat(sliced_tracks_by_track)
