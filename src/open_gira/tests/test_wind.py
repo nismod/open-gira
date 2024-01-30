@@ -1,6 +1,6 @@
 import numpy as np
 
-from open_gira.wind import holland_wind_model, advective_vector, rotational_field
+from open_gira.wind import holland_wind_model, advective_vector, sigmoid_decay, estimate_wind_field
 
 
 class TestHollandWindModel:
@@ -84,35 +84,109 @@ class TestAdvectiveVector:
         )
 
 
-class TestRotationalField:
-    """
-    Test function which computes field of rotational vectors, that is intensity
-    from the Holland model, and rotation direction from hemisphere.
-    """
+class TestSigmoidDecay:
+    """Test sigmoid/logistic decay function."""
 
-    def test_rotational_field(self):
-        eye_lon = -30
-        lon_width = 5
-        max_lon = eye_lon + (lon_width - 1) / 2
-        min_lon = eye_lon - (lon_width - 1) / 2
-        lon_arr = np.linspace(min_lon, max_lon, lon_width)
-        eye_lat = 15
+    def test_sigmoid_decay(self):
+        expected = [
+            0.98201379, 0.97340301, 0.96083428, 0.94267582, 0.9168273 ,
+            0.88079708, 0.83201839, 0.76852478, 0.68997448, 0.59868766,
+            0.5       , 0.40131234, 0.31002552, 0.23147522, 0.16798161,
+            0.11920292, 0.0831727 , 0.05732418, 0.03916572, 0.02659699,
+            0.01798621
+        ]
 
-        expected = np.array(
-            [[0.00063 -0.139398j, 0.029922-13.247382j, np.nan + np.nan * 1j, 0.029922+13.247382j, 0.00063  +0.139398j]]
-        )
-        # test for regression
-        north = rotational_field(lon_arr, np.array([eye_lat]), eye_lon, eye_lat, 50_000, 100, 95_000, 100_000)
         np.testing.assert_allclose(
-            north,
             expected,
-            rtol=1E-5
+            sigmoid_decay(np.arange(0, 1001, 50), 500, 0.004),
+            rtol=1E-6
         )
 
-        # check that the direction of rotation is reversed in the southern hemisphere
-        south = rotational_field(lon_arr, np.array([-eye_lat]), eye_lon, -eye_lat, 50_000, 100, 95_000, 100_000)
 
+class TestEstimateWindField:
+    """
+    Test function which computes fields of advective and rotational vectors and combines them.
+
+    Testing a transect in longitude either side of storm eye, with single valued latitude.
+    """
+
+    def test_estimate_wind_field_rotation_only(self):
+        # stationary, rotating with maximum velocity of 80ms-1 at 10,000m radius
+        # should rotate anticlockwise in northern hemisphere
+        result = estimate_wind_field(np.linspace(-30.5, -29.5, 9), 15, -30, 15, 10000, 80, 92000, 100000, 0, 0)
         np.testing.assert_allclose(
-            np.angle(north),
-            -1 * np.angle(south)
+            np.abs(result),
+            np.array(
+                [[16.58826006, 23.81669229, 38.22875421, 72.35172612, np.nan,
+                72.35172612, 38.22875421, 23.81669229, 16.58826006]]
+            )
+        )
+        np.testing.assert_allclose(
+            np.angle(result, deg=True),
+            np.array(
+                # degrees CCW from positive real axis (mathematical convention)
+                [[-89.93529486, -89.95147127, -89.96764757, -89.9838238 ,
+                np.nan,  89.9838238 ,  89.96764757,  89.95147127, 89.93529486]]
+            )
+        )
+
+    def test_estimate_wind_field_rotation_only_southern_hemisphere(self):
+        # stationary, rotating with maximum velocity of 80ms-1 at 10,000m radius
+        # should rotate clockwise in southern hemisphere
+        result = estimate_wind_field(np.linspace(-30.5, -29.5, 9), -15, -30, -15, 10000, 80, 92000, 100000, 0, 0)
+        np.testing.assert_allclose(
+            np.abs(result),
+            np.array(
+                [[16.58826006, 23.81669229, 38.22875421, 72.35172612, np.nan,
+                72.35172612, 38.22875421, 23.81669229, 16.58826006]]
+            )
+        )
+        np.testing.assert_allclose(
+            np.angle(result, deg=True),
+            np.array(
+                # flipped sign w.r.t. test_estimate_wind_field_rotation_only
+                # degrees anticlockwise from positive real axis (mathematical convention)
+                [[ 89.93529486,  89.95147127,  89.96764757,  89.9838238 , np.nan,
+                -89.9838238 , -89.96764757, -89.95147127, -89.93529486]]
+            )
+        )
+
+    def test_estimate_wind_field_advection_only(self):
+        # storm moving N (heading 0 degrees) at 10ms-1, no pressure drop and no rotation (what a perverse storm)
+        result = estimate_wind_field(np.linspace(-30.5, -29.5, 9), 15, -30, 15, 10000, 1E-6, 99999, 100000, 0, 10)
+        # recovering alpha parameter, ~0.56 factor reduction from eye speed
+        np.testing.assert_allclose(
+            np.abs(result) / 10,
+            np.array(
+                [[0.54467011, 0.5461928 , 0.5475677 , 0.54880849, np.nan,
+                0.54880849, 0.5475677 , 0.5461928 , 0.54467011]]
+            )
+        )
+        # recovering beta parameter, 19.2 degrees over-rotation
+        np.testing.assert_allclose(
+            np.angle(result, deg=True) - 90,
+            np.array(
+                # degrees CCW from positive real axis (mathematical convention)
+                [[19.2, 19.2, 19.2, 19.2, np.nan, 19.2, 19.2, 19.2, 19.2]]
+            )
+        )
+
+    def test_estimate_wind_field_rotation_and_advection(self):
+        # storm moving N at 10ms-1, rotating at 80ms-1 with RMW=10km, 100mbar pressure drop
+        result = estimate_wind_field(np.linspace(-30.5, -29.5, 9), 15, -30, 15, 10000, 80, 90000, 100000, 0, 10)
+        # greater speeds on east of eye, where advection and rotation combine
+        np.testing.assert_allclose(
+            np.abs(result),
+            np.array(
+                [[24.45427248, 31.92847355, 44.33622784, 65.62543488, np.nan,
+                75.9877587 , 54.67172047, 42.23278268, 34.72300576]]
+            )
+        )
+        np.testing.assert_allclose(
+            np.angle(result, deg=True),
+            np.array(
+                # degrees CCW from positive real axis (mathematical convention)
+                [[-94.12223634, -93.16869142, -92.29164582, -91.55850813,
+                np.nan,  91.34593479,  91.8582487 ,  92.39504393, 92.90189219]]
+            )
         )
