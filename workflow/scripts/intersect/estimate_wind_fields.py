@@ -127,7 +127,7 @@ def process_track(
                 track_point.hemisphere,  # {+1|-1}
             )
         except AssertionError:
-            logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}")
+            logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
