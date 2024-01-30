@@ -172,12 +172,6 @@ if __name__ == "__main__":
     # change geometry from 0-360 to -180-180
     df.lon = np.where(df.lon > 180, df.lon - 360, df.lon)
 
-    df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.lat}_{row.lon}", axis=1)
-    n_rows_raw = len(df)
-    logging.info(f"Collated {n_rows_raw} track points")
-    df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
-    logging.info(f"Dropped {n_rows_raw - len(df)} track points as duplicates")
-
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(
         data=df,
