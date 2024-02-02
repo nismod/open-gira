@@ -111,6 +111,10 @@ SAMPLES_PER_TRACKSET = {
 }
 
 ##### load rules #####
+include: "buildings/ghsl-built.smk"
+include: "buildings/giri-bem.smk"
+include: "buildings/overture.smk"
+
 include: "context/coastlines.smk"
 include: "context/gadm.smk"
 include: "context/natural-earth.smk"
