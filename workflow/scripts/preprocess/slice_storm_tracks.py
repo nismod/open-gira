@@ -63,10 +63,15 @@ if __name__ == "__main__":
             assert np.all(np.diff(sliced.timestep) == 1)
             sliced_tracks_by_track.append(sliced)
 
-    sliced_tracks = pd.concat(sliced_tracks_by_track)
-    logging.info(
-        f"Filtered to {len(sliced_tracks.track_id.unique())} valid (n > 1) tracks, with {len(sliced_tracks)} points"
-    )
+    if len(sliced_tracks_by_track) > 0:
+        sliced_tracks = pd.concat(sliced_tracks_by_track)
+        logging.info(
+            f"Filtered to {len(sliced_tracks.track_id.unique())} "
+            f"valid (n > 1) tracks, with {len(sliced_tracks)} points"
+        )
+    else:
+        sliced_tracks = gpd.GeoDataFrame({"geometry": []}, crs=4326)
+        logging.info("No valid tracks found")
 
     logging.info("Writing tracks subset to disk")
     os.makedirs(os.path.dirname(sliced_tracks_path), exist_ok=True)
