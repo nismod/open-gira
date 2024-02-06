@@ -132,7 +132,7 @@ include: "tropical-cyclone/IBTrACS.smk"
 include: "tropical-cyclone/IRIS.smk"
 include: "tropical-cyclone/STORM.smk"
 include: "tropical-cyclone/join_tracks.smk"
-include: "tropical-cyclone/wind_fields.smk"
+include: "tropical-cyclone/wind_fields/wind_fields.smk"
 
 include: "transport-flood/network_raster_intersection.smk"
 include: "transport-flood/flood_damages.smk"

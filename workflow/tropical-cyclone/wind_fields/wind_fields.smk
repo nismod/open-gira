@@ -148,7 +148,7 @@ rule create_surface_roughness_raster:
     output:
         surface_roughness = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/surface_roughness.tiff"
     script:
-        "./wind_fields/surface_roughness.py"
+        "./surface_roughness.py"
 
 """
 Test with:
@@ -166,7 +166,7 @@ rule create_downscaling_factors:
         downscale_factors="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.npy",
         downscale_factors_plot="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/downscale_factors.png",
     script:
-        "./wind_fields/wind_downscaling_factors.py"
+        "./wind_downscaling_factors.py"
 
 """
 To test:
@@ -220,7 +220,7 @@ rule estimate_wind_fields:
         plot_dir=directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/plots/"),
         wind_speeds="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
     script:
-        "./wind_fields/estimate_wind_fields.py"
+        "./estimate_wind_fields.py"
 
 """
 To test:
@@ -251,7 +251,7 @@ rule concat_wind_fields_over_sample:
     output:
         concat="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/max_wind_field.nc",
     script:
-        "./wind_fields/concat_wind_over_sample.py"
+        "./concat_wind_over_sample.py"
 
 """
 To test:
