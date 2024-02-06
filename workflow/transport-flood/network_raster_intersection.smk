@@ -19,7 +19,7 @@ rule rasterise_osm_network:
     # TODO: investigate why this job is sometimes failing with a coredump from intersection.py
     retries: 3
     script:
-        "../scripts/intersection.py"
+        "../../scripts/intersection.py"
 
 """
 Test with:

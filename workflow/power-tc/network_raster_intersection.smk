@@ -15,7 +15,7 @@ rule rasterise_electricity_grid:
     output:
         geoparquet="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/edges_split.geoparquet",
     script:
-        "../scripts/intersection.py"
+        "../../scripts/intersection.py"
 
 """
 Test with:
