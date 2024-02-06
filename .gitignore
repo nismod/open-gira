@@ -5,6 +5,7 @@
 __pycache__/*
 venv/*
 src/snkit
+build
 
 # Data
 data/*
@@ -24,10 +25,7 @@ tester/*
 # IDE
 .idea
 *.swp
+.vscode
 
 # Rendered documentation
 docs/book/
-
-validation/plots/*
-validation/holland_done_ratio
-validation/wind_model_comparison
