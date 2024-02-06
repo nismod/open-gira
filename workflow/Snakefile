@@ -95,8 +95,12 @@ wildcard_constraints:
     # may be upper or lower, one 'f' or two
     TIFF_FILE="[^\/\.\s]+\.[tT][iI][fF][fF]?",
 
-# generate values for global variables used across rules
-include: "tropical-cyclone/tc_workflow_global_variables.smk"
+# how many samples is each storm track dataset split into?
+SAMPLES_PER_TRACKSET = {
+    "IBTrACS": 1,
+    "STORM": 10,
+    "IRIS": 10,
+}
 
 ##### load rules #####
 include: "context/coastlines.smk"
