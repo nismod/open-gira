@@ -364,7 +364,6 @@ if __name__ == "__main__":
         default_shoulder_width_metres = snakemake.config["transport"]["road"]["default_shoulder_width_metres"]  # type: ignore
         default_lane_width_metres = snakemake.config["transport"]["road"]["default_lane_width_metres"]  # type: ignore
         flow_cost_time_factor = snakemake.config["transport"]["road"]["flow_cost_time_factor"]  # type: ignore
-        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
 
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
@@ -382,7 +381,6 @@ if __name__ == "__main__":
             default_shoulder_width_metres,
             default_lane_width_metres,
             flow_cost_time_factor,
-            osm_epsg,
         ) = sys.argv[1:]
 
         # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-road/slice-0.geoparquet
@@ -397,14 +395,13 @@ if __name__ == "__main__":
         # default_shoulder_width_metres = 1.5
         # default_lane_width_metres = 3.25
         # flow_cost_time_factor = 0.49
-        # osm_epsg = 4326
 
     # cast script arguments to relevant types where necessary
     default_shoulder_width_metres = float(default_shoulder_width_metres)
     default_lane_width_metres = float(default_lane_width_metres)
     flow_cost_time_factor = float(flow_cost_time_factor)
     slice_number = int(slice_number)
-    osm_epsg = int(osm_epsg)
+    osm_epsg = 4326
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 

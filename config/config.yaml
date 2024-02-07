@@ -57,9 +57,6 @@ keep_tags:
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 64
 
-# CRS OSM uses
-osm_epsg: 4326
-
 transport:
   # if the following data can be sourced/hosted online, remove these config entries and download instead
   rehabilitation_costs_path: 'bundled_data/transport/rehabilitation.xlsx'

@@ -61,7 +61,6 @@ if __name__ == "__main__":
         edges_output_path = snakemake.output["edges"]  # type: ignore
         slice_number = snakemake.params["slice_number"]  # type: ignore
         rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]  # type: ignore
-        osm_epsg = snakemake.config["osm_epsg"]  # type: ignore
 
     except NameError:
         # If "snakemake" doesn't exist then must be running from the
@@ -76,7 +75,6 @@ if __name__ == "__main__":
             rehabilitation_costs_path,
             transport_costs_path,
             flow_cost_time_factor,
-            osm_epsg,
         ) = sys.argv[1:]
 
         # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
@@ -86,10 +84,9 @@ if __name__ == "__main__":
         # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
         # slice_number = 0
         # rehabilitation_costs_path = ../../bundled_data/rehabilitation.xlsx
-        # osm_epsg = 4326
 
     slice_number = int(slice_number)
-    osm_epsg = int(osm_epsg)
+    osm_epsg = 4326
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
