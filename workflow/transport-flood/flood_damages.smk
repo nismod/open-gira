@@ -4,7 +4,7 @@ Damage fraction is a function of hazard intensity (expressed as damage curves)
 """
 
 
-rule direct_damages:
+rule return_period_direct_damages:
     input:
         unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
         exposure = rules.rasterise_osm_network.output.geoparquet
@@ -19,7 +19,7 @@ rule direct_damages:
         # determine the hazard type from the hazard slug, e.g. flood, earthquake, storm
         hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
     script:
-        "./direct_damages.py"
+        "./return_period_direct_damages.py"
 
 """
 Test with:
@@ -38,4 +38,25 @@ rule plot_damage_distributions:
 """
 Test with:
 snakemake --cores 1 results/egypt-latest_filter-road/hazard-aqueduct-river/damage_fraction_plots
+"""
+
+
+rule event_set_direct_damages:
+    input:
+        unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
+        exposure = rules.rasterise_osm_network.output.geoparquet
+    output:
+        damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
+        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.geoparquet",
+    params:
+        # determine the network type from the filter, e.g. road, rail
+        network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),
+        # determine the hazard type from the hazard slug, e.g. flood, earthquake, storm
+        hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
+    script:
+        "./event_set_direct_damages.py"
+
+"""
+Test with:
+snakemake --cores 1 results/direct_damages/thailand-latest_filter-road/hazard-jba-event/EAD_and_cost_per_RP/slice-5.geoparquet
 """

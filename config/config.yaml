@@ -10,11 +10,13 @@ hazard_datasets:
   #aqueduct-coast: 'config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt'
   #aqueduct-river: 'config/hazard_resource_locations/aqueduct-river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
   aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
+  jba-event: 'config/hazard_resource_locations/jba-events.txt'
 
 # TODO: have hazards as instances of some kind of struct rather than several dicts?
 hazard_types:
   aqueduct-coast: 'flood'
   aqueduct-river: 'flood'
+  jba-event: 'flood'
 
 # OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
@@ -35,6 +37,7 @@ infrastructure_datasets:
   jamaica-latest: 'http://download.geofabrik.de/central-america/jamaica-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  thailand-latest: 'https://download.geofabrik.de/asia/thailand-latest.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   # small extract for testing purposes
   tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
@@ -52,7 +55,7 @@ keep_tags:
   rail: ['railway', 'bridge', 'name']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 1
+slice_count: 64
 
 # CRS OSM uses
 osm_epsg: 4326
