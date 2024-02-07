@@ -163,10 +163,10 @@ if __name__ == "__main__":
     for dataframe in (damage_fraction, direct_damages):
         assert "edge_id" in dataframe
 
-    logging.info(f"Writing out {damage_fraction.shape=} (per split geometry, hazard RP map)")
+    logging.info(f"Writing out {damage_fraction.shape=} (per split geometry, event raster)")
     damage_fraction.to_parquet(damage_fraction_path)
 
-    logging.info(f"Writing out {direct_damages.shape=} (per unified geometry, hazard RP map)")
+    logging.info(f"Writing out {direct_damages.shape=} (per unified geometry, event raster)")
     direct_damages.to_parquet(damage_cost_path)
 
     logging.info("Done calculating direct damages")
