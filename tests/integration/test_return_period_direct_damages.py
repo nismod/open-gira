@@ -1,9 +1,9 @@
 from . import runner
 
 
-def test_direct_damages():
+def test_return_period_direct_damages():
     runner.run_snakemake_test(
-        "direct_damages",
+        "return_period_direct_damages",
         (
             "results/direct_damages/djibouti-latest_filter-road/hazard-aqueduct-river/fraction_per_RP/slice-0.geoparquet",
             "results/direct_damages/djibouti-latest_filter-road/hazard-aqueduct-river/cost_per_RP/slice-0.geoparquet",
