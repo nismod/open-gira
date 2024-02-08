@@ -3,7 +3,6 @@ Given an exposure estimate and some damage curves, calculate the damage
 fraction for exposed assets.
 """
 
-from collections import defaultdict
 import logging
 import sys
 import warnings
@@ -11,9 +10,9 @@ import warnings
 import geopandas as gpd
 import pandas as pd
 from scipy.interpolate import interp1d
-from scipy.integrate import simpson
 
 from open_gira import fields
+from open_gira.direct_damages import annotate_rehab_cost
 from open_gira.io import write_empty_frames, read_damage_curves
 from open_gira.utils import natural_sort
 
@@ -26,6 +25,7 @@ if __name__ == "__main__":
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
         damage_curves_dir: str = snakemake.config["direct_damages"]["curves_dir"]
+        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
         asset_types: set[str] = set(snakemake.config["direct_damages"]["asset_types"])
@@ -59,6 +59,10 @@ if __name__ == "__main__":
         for path in OUTPUT_FILE_PATHS:
             write_empty_frames(path)
         sys.exit(0)  # exit gracefully so snakemake will continue
+
+    logging.info("Annotate network with rehabilitation costs")
+    rehab_cost = pd.read_excel(rehabilitation_costs_path, sheet_name=network_type)
+    exposure = annotate_rehab_cost(exposure, network_type, rehab_cost)
 
     # column groupings for data selection
     hazard_columns = [col for col in exposure.columns if col.startswith(fields.HAZARD_PREFIX)]

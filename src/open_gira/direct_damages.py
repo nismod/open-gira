@@ -6,6 +6,10 @@ from abc import ABC, abstractmethod
 import re
 from typing import Union
 
+import pandas as pd
+import snkit
+
+from open_gira import fields
 from open_gira.utils import natural_sort
 
 
@@ -214,3 +218,79 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
 
     # return a concrete subclass of ReturnPeriodMap
     return prefix_class_map[prefix](name)
+
+
+def rail_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+    """
+    Determine the cost of rehabilitation for a given rail segment (row).
+
+    Args:
+        row: Railway segment
+        rehab_costs: Table of rehabilitation costs for various rail types
+
+    Returns:
+        Minimum cost, maximum cost, units of cost
+    """
+
+    # bridge should be a boolean type after data cleaning step
+    if row.bridge:
+        asset_type = "bridge"
+    else:
+        asset_type = "rail"
+
+    return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
+
+
+def road_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+    """
+    Fetch the cost of rehabilitation for a given road segment (row).
+
+    Args:
+        row: Road segment
+        rehab_costs: Table of rehabilitation costs for various road types
+
+    Returns:
+        Cost in units of USD per km per lane.
+    """
+
+    # bridge should be boolean after data cleaning step
+    if row.bridge:
+        highway_type = "bridge"
+    else:
+        highway_type = row.tag_highway
+
+    if row.paved:
+        condition = "paved"
+    else:
+        condition = "unpaved"
+
+    return float(
+        rehab_costs["rehab_cost_USD_per_km_per_lane"].loc[
+            (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
+        ].squeeze()
+    )
+
+
+def annotate_rehab_cost(network: snkit.network.Network, network_type: str, rehab_cost: pd.DataFrame) -> snkit.network.Network:
+    """
+    Label a network with rehabilitation costs to be used in subsequent direct
+    damage cost estimate.
+
+    Args:
+        network: Network with edges to label.
+        network_type: Category string, currently either road or rail.
+        rehab_cost: Table containing rehabilitation cost data per km. See lookup
+            functions for more requirements.
+
+    Returns:
+        Network labelled with rehabilitation cost data.
+    """
+
+    if network_type == "road":
+        network.edges[fields.REHAB_COST] = network.edges.apply(road_rehab_cost, axis=1, args=(rehab_cost,)) * network.edges.lanes
+    elif network_type == "rail":
+        network.edges[fields.REHAB_COST] = network.edges.apply(rail_rehab_cost, axis=1, args=(rehab_cost,))
+    else:
+        raise ValueError(f"No lookup function available for {network_type=}")
+
+    return network

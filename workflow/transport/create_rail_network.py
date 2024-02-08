@@ -9,8 +9,6 @@ import sys
 import warnings
 
 import geopandas as gpd
-import pandas as pd
-import snkit
 
 from utils import annotate_country, get_administrative_data
 from open_gira.assets import RailAssets
@@ -19,71 +17,14 @@ from open_gira.network import create_network
 from open_gira.utils import str_to_bool
 
 
-def annotate_rehabilitation_costs(
-    network: snkit.network.Network, rehab_costs: pd.DataFrame
-) -> snkit.network.Network:
-
-    def get_rehab_costs(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
-        """
-        Determine the cost of rehabilitation for a given rail segment (row).
-
-        Args:
-            row (pd.Series): Road segment
-            rehab_costs: (pd.DataFrame): Table of rehabilitation costs for various rail types
-
-        Returns:
-            Tuple[float, float, str]: Minimum cost, maximum cost, units of cost
-        """
-
-        # bridge should be a boolean type after data cleaning step
-        if row.bridge:
-            asset_type = "bridge"
-        else:
-            asset_type = "rail"
-
-        return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
-
-    # lookup costs
-    network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
-        get_rehab_costs, axis=1, args=(rehab_costs,)
-    )
-
-    return network
-
-
 if __name__ == "__main__":
 
-    try:
-        osm_edges_path = snakemake.input["edges"]  # type: ignore
-        osm_nodes_path = snakemake.input["nodes"]  # type: ignore
-        administrative_data_path = snakemake.input["admin"]  # type: ignore
-        nodes_output_path = snakemake.output["nodes"]  # type: ignore
-        edges_output_path = snakemake.output["edges"]  # type: ignore
-        slice_number = snakemake.params["slice_number"]  # type: ignore
-        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]  # type: ignore
-
-    except NameError:
-        # If "snakemake" doesn't exist then must be running from the
-        # command line.
-        (
-            osm_edges_path,
-            osm_nodes_path,
-            administrative_data_path,
-            nodes_output_path,
-            edges_output_path,
-            slice_number,
-            rehabilitation_costs_path,
-            transport_costs_path,
-            flow_cost_time_factor,
-        ) = sys.argv[1:]
-
-        # osm_edges_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
-        # osm_nodes_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_nodes.geoparquet
-        # administrative_data_path = ../../results/input/admin-boundaries/gadm36_levels.gpkg
-        # nodes_output_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_nodes.geoparquet
-        # edges_output_path = ../../results/geoparquet/tanzania-latest_filter-rail/slice-0_edges.geoparquet
-        # slice_number = 0
-        # rehabilitation_costs_path = ../../bundled_data/rehabilitation.xlsx
+    osm_edges_path = snakemake.input["edges"]  # type: ignore
+    osm_nodes_path = snakemake.input["nodes"]  # type: ignore
+    administrative_data_path = snakemake.input["admin"]  # type: ignore
+    nodes_output_path = snakemake.output["nodes"]  # type: ignore
+    edges_output_path = snakemake.output["edges"]  # type: ignore
+    slice_number = int(snakemake.params["slice_number"])  # type: ignore
 
     slice_number = int(slice_number)
     osm_epsg = 4326
@@ -142,12 +83,6 @@ if __name__ == "__main__":
     network = annotate_country(
         network,
         get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
-    )
-
-    logging.info("Annotate network with rehabilitation costs")
-    network = annotate_rehabilitation_costs(
-        network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="rail")
     )
 
     logging.info("Writing network to disk")
