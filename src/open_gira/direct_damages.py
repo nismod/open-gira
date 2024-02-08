@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import re
 from typing import Union
 
+import geopandas as gpd
 import pandas as pd
 import snkit
 
@@ -271,26 +272,26 @@ def road_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
     )
 
 
-def annotate_rehab_cost(network: snkit.network.Network, network_type: str, rehab_cost: pd.DataFrame) -> snkit.network.Network:
+def annotate_rehab_cost(edges: gpd.GeoDataFrame, network_type: str, rehab_cost: pd.DataFrame) -> gpd.GeoDataFrame:
     """
-    Label a network with rehabilitation costs to be used in subsequent direct
+    Label edges with rehabilitation costs to be used in subsequent direct
     damage cost estimate.
 
     Args:
-        network: Network with edges to label.
+        edges: Edges to label.
         network_type: Category string, currently either road or rail.
         rehab_cost: Table containing rehabilitation cost data per km. See lookup
             functions for more requirements.
 
     Returns:
-        Network labelled with rehabilitation cost data.
+        Edges labelled with rehabilitation cost data.
     """
 
     if network_type == "road":
-        network.edges[fields.REHAB_COST] = network.edges.apply(road_rehab_cost, axis=1, args=(rehab_cost,)) * network.edges.lanes
+        edges[fields.REHAB_COST] = edges.apply(road_rehab_cost, axis=1, args=(rehab_cost,)) * edges.lanes
     elif network_type == "rail":
-        network.edges[fields.REHAB_COST] = network.edges.apply(rail_rehab_cost, axis=1, args=(rehab_cost,))
+        edges[fields.REHAB_COST] = edges.apply(rail_rehab_cost, axis=1, args=(rehab_cost,))
     else:
         raise ValueError(f"No lookup function available for {network_type=}")
 
-    return network
+    return edges
