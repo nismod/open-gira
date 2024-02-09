@@ -242,13 +242,13 @@ def rail_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
     return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
 
 
-def road_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+def road_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
     """
     Fetch the cost of rehabilitation for a given road segment (row).
 
     Args:
         row: Road segment
-        rehab_costs: Table of rehabilitation costs for various road types
+        rehab_cost: Table of rehabilitation costs for various road types
 
     Returns:
         Cost in units of USD per km per lane.
@@ -261,15 +261,20 @@ def road_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
         highway_type = row.tag_highway
 
     if row.paved:
-        condition = "paved"
+        # paved costs vary by highway type
+        data = rehab_cost["rehab_cost_USD_per_km_per_lane"].loc[
+            (rehab_cost.highway == highway_type) & (rehab_cost.road_cond == "paved")
+        ]
     else:
-        condition = "unpaved"
+        # we only expect a single unpaved value
+        data = rehab_cost["rehab_cost_USD_per_km_per_lane"].loc[
+            rehab_cost.road_cond == "unpaved"
+        ]
 
-    return float(
-        rehab_costs["rehab_cost_USD_per_km_per_lane"].loc[
-            (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-        ].squeeze()
-    )
+    # unpack what should be a singleton series
+    cost, = data
+
+    return float(cost)
 
 
 def annotate_rehab_cost(edges: gpd.GeoDataFrame, network_type: str, rehab_cost: pd.DataFrame) -> gpd.GeoDataFrame:
