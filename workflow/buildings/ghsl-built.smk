@@ -26,20 +26,21 @@ Concept & Methodology:
 
 rule download_ghsl_built_s:
     output:
-        "{OUTPUT_DIR}/input/ghsl/GHS_{RES_NRES}_E{YEAR}_GLOBE_R2023A_4326_3ss_V1_0.tif"
-    wildcard_constraints:
-        YEAR=range(1975, 2031, 5),
-        RES_NRES="BUILT_S|BUILT_S_NRES"
+        "{OUTPUT_DIR}/input/ghsl/GHS_{VAR}_E{YEAR}_GLOBE_R2023A_4326_3ss_V1_0.tif"
+    params:
+        GROUP=lambda wildcards, output: wildcards.VAR.replace("_NRES", "").replace("_ANBH", "")
     shell:
         """
         output_dir=$(dirname {output})
 
         mkdir -p $output_dir
 
-        wget -nc https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_{wildcards.RES_NRES}_GLOBE_R2023A/GHS_{wildcards.RES_NRES}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss/V1-0/GHS_{wildcards.RES_NRES}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss_V1_0.zip
-            --directory-prefix=$output_dir
+        wget \
+            -nc \
+            --directory-prefix=$output_dir \
+            https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_{params.GROUP}_GLOBE_R2023A/GHS_{wildcards.VAR}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss/V1-0/GHS_{wildcards.VAR}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss_V1_0.zip
 
-        unzip -o $output_dir/GHS_{wildcards.RES_NRES}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss_V1_0.zip \
+        unzip -o $output_dir/GHS_{wildcards.VAR}_E{wildcards.YEAR}_GLOBE_R2023A_4326_3ss_V1_0.zip \
             -d $output_dir
         """
 
@@ -47,11 +48,18 @@ rule download_ghsl_built_s_all:
     input:
         expand(
             os.path.join(
-                "{{OUTPUT_DIR}}",
+                "results",
                 "input",
                 "ghsl",
-                "GHS_{RES_NRES}_E{YEAR}_GLOBE_R2023A_4326_3ss_V1_0.tif",
+                "GHS_BUILT_{VAR}_E{YEAR}_GLOBE_R2023A_4326_3ss_V1_0.tif",
             ),
-            RES_NRES=("BUILT_S", "BUILT_S_NRES"),
+            VAR=("S", "S_NRES", "V", "V_NRES"),
             YEAR=(2020, )
-        )
+        ) + [
+            os.path.join(
+                "results",
+                "input",
+                "ghsl",
+                "GHS_BUILT_H_ANBH_E2018_GLOBE_R2023A_4326_3ss_V1_0.tif",
+            )
+        ]
