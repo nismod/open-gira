@@ -26,10 +26,35 @@ rule download_giri_bem:
         nres="{OUTPUT_DIR}/input/giri/bem_5x5_valfis_nres.tif",
     shell:
         """
-        output_dir=$(dirname {output})
+        output_dir=$(dirname {output.res})
 
         wget -nc https://hazards-data.unepgrid.ch/bem_5x5_valfis_res.tif \
             --directory-prefix=$output_dir
         wget -nc https://hazards-data.unepgrid.ch/bem_5x5_valfis_nres.tif \
             --directory-prefix=$output_dir
+        """
+
+rule summarise_giri_bem_admin:
+    output:
+        adm1="{OUTPUT_DIR}/input/giri/bem_5x5_valfis_adm1.csv",
+        adm0="{OUTPUT_DIR}/input/giri/bem_5x5_valfis_adm0.csv",
+    shell:
+        """
+        exactextract \
+            -p ./results/input/admin-boundaries/adm1.shp \
+            -r "res:results/input/giri/bem_5x5_valfis_res.tif" \
+            -r "nres:results/input/giri/bem_5x5_valfis_nres.tif" \
+            -f GID_1 \
+            -o adm1_bem-res.csv \
+            -s "sum(res)" \
+            -s "sum(nres)"
+
+        exactextract \
+            -p ./results/input/admin-boundaries/adm0.shp \
+            -r "res:results/input/giri/bem_5x5_valfis_res.tif" \
+            -r "nres:results/input/giri/bem_5x5_valfis_nres.tif" \
+            -f GID_0 \
+            -o adm0_bem-res.csv \
+            -s "sum(res)" \
+            -s "sum(nres)"
         """
