@@ -63,16 +63,18 @@ if __name__ == "__main__":
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
 
-    # select and label assets with their type
-    network.nodes.loc[network.nodes.tag_railway == 'station', 'asset_type'] = RailAssets.STATION
-    network.edges.loc[str_to_bool(network.edges['tag_bridge']), 'asset_type'] = RailAssets.BRIDGE
-    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
+    # boolean bridge field
+    network.edges['bridge'] = str_to_bool(network.edges['tag_bridge'])
 
     # boolean station field
     network.nodes['station'] = network.nodes.tag_railway == 'station'
 
-    # boolean bridge field
-    network.edges['bridge'] = str_to_bool(network.edges['tag_bridge'])
+    # select and label assets with their type
+    # we will use the `asset_type` field to select damage curves
+    network.nodes.loc[network.nodes.station == True, 'asset_type'] = RailAssets.STATION
+    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
+    # bridge overrides railway as asset class, tag last
+    network.edges.loc[network.edges.bridge == True, 'asset_type'] = RailAssets.BRIDGE
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
