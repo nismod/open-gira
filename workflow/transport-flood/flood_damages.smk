@@ -46,8 +46,8 @@ rule event_set_direct_damages:
         unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
         exposure = rules.rasterise_osm_network.output.geoparquet
     output:
-        damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.geoparquet",
-        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.geoparquet",
+        damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.gpq",
+        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.gpq",
     params:
         # determine the network type from the filter, e.g. road, rail
         network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),
@@ -58,5 +58,36 @@ rule event_set_direct_damages:
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/thailand-latest_filter-road/hazard-jba-event/EAD_and_cost_per_RP/slice-5.geoparquet
+snakemake --cores 1 results/direct_damages/thailand-latest_filter-road/hazard-jba-event/cost/slice-5.gpq
+"""
+
+
+rule concat_event_set_direct_damages:
+    input:
+        slices = lambda wildcards: expand(
+            os.path.join(
+                "{OUTPUT_DIR}",
+                "direct_damages",
+                "{DATASET}_{FILTER_SLUG}",
+                "{HAZARD_SLUG}",
+                "cost",
+                "slice-{i}.gpq",
+            ),
+            **wildcards,
+            i=range(config["slice_count"])
+        ),
+    output:
+        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost.gpq",
+    run:
+        import geopandas as gpd
+        import pandas as pd
+
+        slices = []
+        for path in input.slices:
+            slices.append(gpd.read_parquet(path))
+        pd.concat(slices).to_parquet(output.damage_cost)
+
+"""
+Test with:
+snakemake -c1 results/direct_damages/thailand-latest_filter-road/hazard-jba-event/cost.gpq
 """
