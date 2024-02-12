@@ -64,3 +64,4 @@ class RoadAssets(Assets):
     UNPAVED = "road_unpaved",
     PAVED = "road_paved",
     BRIDGE = "road_bridge"
+    MOTORWAY = "road_motorway"

@@ -199,8 +199,10 @@ if __name__ == "__main__":
 
     # select and label assets with their type
     # the asset_type is used to later select a damage curve
+    # note that order is important here, if an edge is paved, motorway and a bridge, it will be tagged as a bridge only
     network.edges.loc[network.edges.paved == False, 'asset_type'] = RoadAssets.UNPAVED
     network.edges.loc[network.edges.paved == True, 'asset_type'] = RoadAssets.PAVED
+    network.edges.loc[network.edges.tag_highway == 'motorway', 'asset_type'] = RoadAssets.MOTORWAY
     network.edges.loc[network.edges.bridge == True, 'asset_type'] = RoadAssets.BRIDGE
 
     logging.info("Writing network to disk")
