@@ -17,9 +17,11 @@
 hazard_datasets:
   # long return period to show up well when testing exposure maps
   aqueduct-river: 'external_files/hazard_sources.txt'
+  jba-event: 'config/hazard_resource_locations/jba-events.txt'
 
 hazard_types:
   aqueduct-river: 'flood'
+  jba-event: 'flood'
 
 # testing data (from geofabrik)
 infrastructure_datasets:
