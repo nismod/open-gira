@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 
 from open_gira import fields
 from open_gira.direct_damages import annotate_rehab_cost
-from open_gira.io import write_empty_frames, read_damage_curves
+from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_costs
 from open_gira.utils import natural_sort
 
 
@@ -22,12 +22,14 @@ if __name__ == "__main__":
     try:
         unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]
+        rehabilitation_costs_path: str = snakemake.input["rehab_cost"]
+        damage_curves_dir: str = snakemake.input["damage_curves"]
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
         damage_curves_dir: str = snakemake.config["direct_damages"]["curves_dir"]
-        rehabilitation_costs_path = snakemake.config["transport"]["rehabilitation_costs_path"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
+        # note, this config entry might have been mutated on execution of the Snakefile
         asset_types: set[str] = set(snakemake.config["direct_damages"]["asset_types"])
     except NameError:
         raise ValueError("Must be run via snakemake.")
@@ -61,7 +63,7 @@ if __name__ == "__main__":
         sys.exit(0)  # exit gracefully so snakemake will continue
 
     logging.info("Annotate network with rehabilitation costs")
-    rehab_cost = pd.read_excel(rehabilitation_costs_path, sheet_name=network_type)
+    rehab_cost = read_rehab_costs(rehabilitation_costs_path)
     exposure = annotate_rehab_cost(exposure, network_type, rehab_cost)
 
     # column groupings for data selection
@@ -74,15 +76,16 @@ if __name__ == "__main__":
 
     # calculate damages for assets we have damage curves for
     damage_fraction_by_asset_type = []
-    logging.info(f"Exposed assets {set(exposure.asset_type)}")
+    logging.info(f"Exposed assets {natural_sort(set(exposure.asset_type))}")
     for asset_type in natural_sort(set(exposure.asset_type) & set(damage_curves.keys())):
 
-        logging.info(f"Processing {asset_type=}")
         damage_curve: pd.DataFrame = damage_curves[asset_type]
 
         # pick out rows of asset type and columns of hazard intensity
         asset_type_mask: gpd.GeoDataFrame = exposure.asset_type == asset_type
         asset_exposure: pd.DataFrame = pd.DataFrame(exposure.loc[asset_type_mask, hazard_columns])
+
+        logging.info(f"Processing {asset_type=}, with n={len(asset_exposure)}")
 
         # create interpolated damage curve for given asset type
         hazard_intensity, damage_fraction = damage_curve.iloc[:, 0], damage_curve.iloc[:, 1]
@@ -98,7 +101,6 @@ if __name__ == "__main__":
 
         # apply damage_curve function to exposure table
         # the return value of interpolated_damage_curve is a numpy array
-        logging.info("Calculating damage fractions")
         damage_fraction_for_asset_type = pd.DataFrame(
             interpolated_damage_curve(asset_exposure),
             index=asset_exposure.index,

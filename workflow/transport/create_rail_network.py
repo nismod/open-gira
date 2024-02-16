@@ -71,9 +71,9 @@ if __name__ == "__main__":
 
     # select and label assets with their type
     # we will use the `asset_type` field to select damage curves
+    # bridge overrides railway as asset class, tag last
     network.nodes.loc[network.nodes.station == True, 'asset_type'] = RailAssets.STATION
     network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
-    # bridge overrides railway as asset class, tag last
     network.edges.loc[network.edges.bridge == True, 'asset_type'] = RailAssets.BRIDGE
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs

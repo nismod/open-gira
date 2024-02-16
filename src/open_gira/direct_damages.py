@@ -221,25 +221,26 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
     return prefix_class_map[prefix](name)
 
 
-def rail_rehab_cost(row: pd.Series, rehab_costs: pd.DataFrame) -> float:
+def rail_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
     """
     Determine the cost of rehabilitation for a given rail segment (row).
 
     Args:
         row: Railway segment
-        rehab_costs: Table of rehabilitation costs for various rail types
+        rehab_cost: Table of rehabilitation costs for various rail asset types
 
     Returns:
-        Minimum cost, maximum cost, units of cost
+        Cost in units of USD per km.
     """
 
-    # bridge should be a boolean type after data cleaning step
-    if row.bridge:
-        asset_type = "bridge"
-    else:
-        asset_type = "rail"
+    data = rehab_cost.loc[rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km"]
+    if data.empty:
+        raise ValueError(f"Missing rehabilitation cost data for {row.asset_type}, please amend.")
 
-    return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
+    # unpack single element series
+    cost, = data
+
+    return float(cost)
 
 
 def road_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
@@ -248,30 +249,17 @@ def road_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
 
     Args:
         row: Road segment
-        rehab_cost: Table of rehabilitation costs for various road types
+        rehab_cost: Table of rehabilitation costs for various road asset types
 
     Returns:
         Cost in units of USD per km per lane.
     """
 
-    # bridge should be boolean after data cleaning step
-    if row.bridge:
-        highway_type = "bridge"
-    else:
-        highway_type = row.tag_highway
+    data = rehab_cost.loc[rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km_per_lane"]
+    if data.empty:
+        raise ValueError(f"Missing rehabilitation cost data for {row.asset_type}, please amend.")
 
-    if row.paved:
-        # paved costs vary by highway type
-        data = rehab_cost["rehab_cost_USD_per_km_per_lane"].loc[
-            (rehab_cost.highway == highway_type) & (rehab_cost.road_cond == "paved")
-        ]
-    else:
-        # we only expect a single unpaved value
-        data = rehab_cost["rehab_cost_USD_per_km_per_lane"].loc[
-            rehab_cost.road_cond == "unpaved"
-        ]
-
-    # unpack what should be a singleton series
+    # unpack single element series
     cost, = data
 
     return float(cost)

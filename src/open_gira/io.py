@@ -21,6 +21,9 @@ from open_gira.utils import natural_sort
 
 WGS84_EPSG = 4326
 
+# lines beginning with this character will be ignored by pandas
+COMMENT_PREFIX: str = "#"
+
 
 def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
     """
@@ -242,9 +245,6 @@ def read_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
         Mapping from asset_type to respective damage curve
     """
 
-    # lines beginning with this character will be ignored by pandas
-    COMMENT_PREFIX: str = "#"
-
     # fetch damage curves for relevant hazard type
     damage_curve_paths = glob(join(damage_curves_dir, hazard_type, "*.csv"))
 
@@ -255,6 +255,7 @@ def read_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
     }
 
     for asset_type, damage_curve in damage_curves.items():
+        assert len(damage_curve.columns) == 2
         # check hazard intensity and damage fraction values are 0 or positive real
         assert ((damage_curve >= 0).all()).all()
         # check damage fraction is less than or equal to 1
@@ -264,3 +265,31 @@ def read_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
         raise RuntimeError(f"requested {asset_types=} not all found: {damage_curves.keys()=}")
 
     return damage_curves
+
+
+def read_rehab_costs(path: str) -> pd.DataFrame:
+    """
+    Read a rehabilitation costs CSV table and check its contents. Expects two columns:
+        1) `asset_type`, column containing categorical strings, as enumerated in open_gira.assets.
+        2) Some sort of monetary cost in US Dollars. What this cost refers to exactly may depend on the context.
+
+    Arguments:
+        path: Path to rehabilitation cost CSV file.
+
+    Returns:
+        Rehabilitation costs
+    """
+    costs = pd.read_csv(path, comment=COMMENT_PREFIX)
+
+    assert len(costs) > 0
+    assert len(costs.columns) == 2
+
+    # check asset_type
+    assert 'asset_type' == costs.columns[0]
+    assert costs.asset_type.dtype == object
+
+    # check costs
+    assert costs.iloc[:, 1].dtype == float
+    assert (costs.iloc[:, 1] >= 0).all()
+
+    return costs

@@ -202,6 +202,12 @@ if __name__ == "__main__":
     # note that order is important here, if an edge is paved, motorway and a bridge, it will be tagged as a bridge only
     network.edges.loc[network.edges.paved == False, 'asset_type'] = RoadAssets.UNPAVED
     network.edges.loc[network.edges.paved == True, 'asset_type'] = RoadAssets.PAVED
+    network.edges.loc[network.edges.tag_highway == 'unclassified', 'asset_type'] = RoadAssets.UNCLASSIFIED
+    network.edges.loc[network.edges.tag_highway == 'residential', 'asset_type'] = RoadAssets.RESIDENTIAL
+    network.edges.loc[network.edges.tag_highway == 'tertiary', 'asset_type'] = RoadAssets.TERTIARY
+    network.edges.loc[network.edges.tag_highway == 'secondary', 'asset_type'] = RoadAssets.SECONDARY
+    network.edges.loc[network.edges.tag_highway == 'primary', 'asset_type'] = RoadAssets.PRIMARY
+    network.edges.loc[network.edges.tag_highway == 'trunk', 'asset_type'] = RoadAssets.TRUNK
     network.edges.loc[network.edges.tag_highway == 'motorway', 'asset_type'] = RoadAssets.MOTORWAY
     network.edges.loc[network.edges.bridge == True, 'asset_type'] = RoadAssets.BRIDGE
 
