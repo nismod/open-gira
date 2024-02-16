@@ -121,6 +121,7 @@ include: "buildings/imf-investment-capital-stock.smk"
 include: "buildings/ghsl-built.smk"
 include: "buildings/giri-bem.smk"
 include: "buildings/overture.smk"
+include: "buildings/disaggregate_bem.smk"
 
 include: "nature-ecosystems/land-cover.smk"
 include: "population-economy/dryad-gdp.smk"
