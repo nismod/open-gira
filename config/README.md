@@ -1,43 +1,41 @@
-# Configuration
+# open-gira configuration directory
 
-The pipeline is configured from `config/config.yaml` file. 
-We provide a basic config file `config/config.yml` with explanatory comments that you can modify.
+## README.md
+This file.
 
-The configuration file is meant to specify the location of input data
-and outputs, as well as some runtime settings.
+## config.yaml
+YAML configuration file. This file contains parameters that are frequently
+modified prior to an analysis. Refer to it for more information.
 
-- `hazard_datasets`: Named list of file paths to `.txt` files containing a list of hazard files.
-Files can be specified (both the `.txt` files and the `.tif` files they point to) either as filenames
-relative to the project root, as absolute file paths, or as remote resources (`http://` or `https://`).
-The names in the list should not include `_` or `/` characters.
-Remote resources will be fetched with the `wget` utility.
-- `infrastructure_datasets`: Named list of file paths to `.osm.pbf` files to use as datasets.
-These can be local files, specified with absolute file paths or file paths relative to the project root,
-or they can be remote files to fetch with `wget`.
+## land_use_to_surface_roughness.csv
+A lookup table from a land use classification scheme to a typical surface
+roughness length. This is used in downscaling wind speeds in tropical-cyclone
+analyses.
 
-- `slice_count`: Number of slices to take for each infrastructure dataset.
-More slices allows for greater parallelization, but will also duplicate sections of roads that cross
-slice boundaries, so too high a number can lead to redundancy.
-- `keep_tags`: Osmium tags to preserve in .geoparquet file.
-- `osmium_tags_filters_file`: File containing the OSM attributes to filter the input data
+## arc_cluster
+`snakemake` profile for running open-gira on the University of Oxford's ARC
+cluster.
 
-Modifying the configuration file on the whole will *not* trigger a re-run of
-the pipeline by snakemake. If you wish to rerun the whole pipeline after
-altering the configuration, use:
+## damage_curves
+CSV files, one per `asset_type`, describing the relationship between hazard
+intensity and damage fraction. These are used for direct damage estimation.
 
-```
-snakemake --cores all --forceall
-```
+## hazard_resource_locations
+Fairly self-explanatory, contains files containing lists of hazard file URLs to
+acquire for analyses.
 
-Re-running the whole pipeline from the start might not be necessary. For
-instance if you modify `<output_dir>`, only the last few pipeline steps will be
-altered. In this case, you can ask snakemake to (re)start from the first
-affected rule (see `Snakefile`), and it will figure out what must be done to
-complete the pipeline. In this case: 
+## osm_filters
+Text files for use by osmium to [filter features based on
+tag](https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html). We used
+these to construct infrastructure networks from OpenStreetMap data.
 
-```
-snakemake --cores all -R intersection
-```
+## rehab_costs
+CSV files containing rehabilitation cost estimates in USD. One file per sector,
+each row a unique `asset_type`.
 
-which will re-run `intersection` and `join_data` rules,
-in this order.
+## storm_sets
+JSON files, each containing a single list. The list may contain zero or many
+unique string storm IDs. These can be used to subset a parent `STORM_SET`, e.g.
+IBTrACS may be subset to contain just storms that hit Mexico since 2000, if the
+relevant storm IDs are provided. Where the list provided is empty, this is
+interpreted as "process every storm in the parent set", i.e. all of IBTrACS.
