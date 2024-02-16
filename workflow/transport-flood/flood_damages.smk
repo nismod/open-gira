@@ -72,14 +72,14 @@ rule concat_event_set_direct_damages:
                 "direct_damages",
                 "{DATASET}_{FILTER_SLUG}",
                 "{HAZARD_SLUG}",
-                "cost",
+                "{COST_OR_FRACTION}",
                 "slice-{i}.gpq",
             ),
             **wildcards,
             i=range(config["slice_count"])
         ),
     output:
-        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost.gpq",
+        damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/{COST_OR_FRACTION}.gpq",
     run:
         import geopandas as gpd
         import pandas as pd
