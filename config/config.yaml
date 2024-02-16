@@ -12,7 +12,6 @@ hazard_datasets:
   aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
   jba-event: 'config/hazard_resource_locations/jba-events.txt'
 
-# TODO: have hazards as instances of some kind of struct rather than several dicts?
 hazard_types:
   aqueduct-coast: 'flood'
   aqueduct-river: 'flood'
