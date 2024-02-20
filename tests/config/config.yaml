@@ -17,9 +17,11 @@
 hazard_datasets:
   # long return period to show up well when testing exposure maps
   aqueduct-river: 'external_files/hazard_sources.txt'
+  jba-event: 'config/hazard_resource_locations/jba-events.txt'
 
 hazard_types:
   aqueduct-river: 'flood'
+  jba-event: 'flood'
 
 # testing data (from geofabrik)
 infrastructure_datasets:
@@ -42,34 +44,16 @@ keep_tags:
 # smallest non-unity square number -- test our splitting and aggregating across slices
 slice_count: 4
 
-# CRS OSM uses
-osm_epsg: 4326
-
-transport:
-  # if the following data can be sourced/hosted online, remove these config entries and download instead
-  rehabilitation_costs_path: 'bundled_data/transport/rehabilitation.xlsx'
-  tariff_costs_path: 'bundled_data/transport/tariffs.xlsx'
-  speeds_path: 'bundled_data/transport/speeds.xlsx'
-  road:
-    # road network specific configuration
-    default_shoulder_width_metres: 1.5
-    default_lane_width_metres: 3.25
-    # fudge factor to tune flow allocation
-    flow_cost_time_factor: 0.49
-  rail:
-    flow_cost_time_factor: 0.49
-
 direct_damages:
   # assets to calculate direct damages for
+  # e.g. ['road_motorway', 'road_trunk', 'rail_railway']
   # use empty list to process direct damages for all implemented asset types
   asset_types: [
     'road_paved',
     'road_unpaved',
     'rail_railway',
   ]
-  # CSV damage fraction as a function of hazard intensity
-  # per asset type, per hazard (flood, storm, etc.)
-  curves_dir: 'bundled_data/damage_curves/'
+
 
 ###############################
 ### STORM / ENERGY WORKFLOW ###

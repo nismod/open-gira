@@ -90,6 +90,7 @@ wildcard_constraints:
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_SET="(?:IBTrACS|STORM|IRIS)[^\/]*",
     EVENTS_OR_FIXED="events|fixed",
+    COST_OR_FRACTION="cost|fraction",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     SAMPLE="\d+",
     # may be upper or lower, one 'f' or two

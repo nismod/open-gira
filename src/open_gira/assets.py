@@ -52,8 +52,8 @@ class RailAssets(Assets):
     """
     Typology of rail assets
     """
-    RAILWAY = "rail_railway",
-    BRIDGE = "rail_bridge",
+    RAILWAY = "rail_railway"
+    BRIDGE = "rail_bridge"
     STATION = "rail_station"
 
 
@@ -61,6 +61,13 @@ class RoadAssets(Assets):
     """
     Typology of road assets
     """
-    UNPAVED = "road_unpaved",
-    PAVED = "road_paved",
     BRIDGE = "road_bridge"
+    MOTORWAY = "road_motorway"
+    TRUNK = "road_trunk"
+    PRIMARY = "road_primary"
+    SECONDARY = "road_secondary"
+    TERTIARY = "road_tertiary"
+    RESIDENTIAL = "road_residential"
+    UNCLASSIFIED = "road_unclassified"
+    PAVED = "road_paved"
+    UNPAVED = "road_unpaved"

@@ -1,0 +1,16 @@
+# Sources:
+# World Bank. Road Costs Knowledge System (ROCKS) v2.3
+# US Federal Highways Agency, Bridge Replacement Unit Costs 2020, https://www.fhwa.dot.gov/bridge/nbi/sd2020.cfm#c
+# Koks et al 2019, A global multi-hazard risk analysis of road and railway infrastructure assets
+# Asian Development Bank, Asian Transport Outlook, https://asiantransportoutlook.com/costdata/
+"asset_type","rehab_cost_USD_per_km_per_lane"
+"road_bridge",40805816.00
+"road_motorway",2289717.82
+"road_trunk",348280.34
+"road_primary",348280.34
+"road_secondary",164059.77
+"road_tertiary",164059.77
+"road_residential",164059.77
+"road_unclassified",164059.77
+"road_paved",164059.77
+"road_unpaved",23545.10

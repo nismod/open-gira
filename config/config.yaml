@@ -10,11 +10,12 @@ hazard_datasets:
   #aqueduct-coast: 'config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt'
   #aqueduct-river: 'config/hazard_resource_locations/aqueduct-river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
   aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
+  jba-event: 'config/hazard_resource_locations/jba-events.txt'
 
-# TODO: have hazards as instances of some kind of struct rather than several dicts?
 hazard_types:
   aqueduct-coast: 'flood'
   aqueduct-river: 'flood'
+  jba-event: 'flood'
 
 # OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
@@ -35,6 +36,7 @@ infrastructure_datasets:
   jamaica-latest: 'http://download.geofabrik.de/central-america/jamaica-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
+  thailand-latest: 'https://download.geofabrik.de/asia/thailand-latest.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
   # small extract for testing purposes
   tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
@@ -42,46 +44,34 @@ infrastructure_datasets:
 # these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
 # the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
 network_filters:
-  road: 'config/osm_filters/road-tertiary.txt'
+  road: 'config/osm_filters/road-residential.txt'
   rail: 'config/osm_filters/rail.txt'
 
 # OSM tag data to retain on selected features, typically for usage in network annotation/analysis
 # N.B. feature SELECTION is done with the expressions pointed to from network_filters
 keep_tags:
   road: ['highway', 'surface', 'bridge', 'maxspeed', 'lanes']
-  rail: ['railway', 'bridge', 'name']
+  rail: ['railway', 'bridge', 'name', 'gauge', 'usage']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 1
-
-# CRS OSM uses
-osm_epsg: 4326
-
-transport:
-  # if the following data can be sourced/hosted online, remove these config entries and download instead
-  rehabilitation_costs_path: 'bundled_data/transport/rehabilitation.xlsx'
-  tariff_costs_path: 'bundled_data/transport/tariffs.xlsx'
-  speeds_path: 'bundled_data/transport/speeds.xlsx'
-  road:
-    # road network specific configuration
-    default_shoulder_width_metres: 1.5
-    default_lane_width_metres: 3.25
-    # fudge factor to tune flow allocation
-    flow_cost_time_factor: 0.49
-  rail:
-    flow_cost_time_factor: 0.49
+slice_count: 4
 
 direct_damages:
   # assets to calculate direct damages for
+  # e.g. ['road_motorway', 'road_trunk', 'rail_railway']
   # use empty list to process direct damages for all implemented asset types
   asset_types: [
+    'road_motorway',
+    'road_trunk',
+    'road_primary',
+    'road_tertiary',
+    'road_secondary',
+    'road_residential',
+    'road_unclassified',
     'road_paved',
     'road_unpaved',
     'rail_railway',
   ]
-  # CSV damage fraction as a function of hazard intensity
-  # per asset type, per hazard (flood, storm, etc.)
-  curves_dir: 'bundled_data/damage_curves/'
 
 
 ###############################

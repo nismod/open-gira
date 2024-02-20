@@ -70,7 +70,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
 
         # Copy data to the temporary workdir.
         shutil.copytree(data_path, workdir)
-        auxilliary_dirs = ["config", "external_files", "bundled_data"]
+        auxilliary_dirs = ["config", "external_files"]
         for folder in auxilliary_dirs:
             folder_path = workdir / folder
             shutil.copytree(f"tests/{folder}", folder_path)
