@@ -44,7 +44,10 @@ infrastructure_datasets:
 # these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
 # the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
 network_filters:
-  road: 'config/osm_filters/road-residential.txt'
+  road-residential: 'config/osm_filters/road-residential.txt'
+  road-tertiary: 'config/osm_filters/road-tertiary.txt'
+  road-secondary: 'config/osm_filters/road-secondary.txt'
+  road-primary: 'config/osm_filters/road-primary.txt'
   rail: 'config/osm_filters/rail.txt'
 
 # OSM tag data to retain on selected features, typically for usage in network annotation/analysis

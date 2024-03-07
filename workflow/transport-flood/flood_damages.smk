@@ -8,7 +8,7 @@ rule return_period_direct_damages:
     input:
         unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
         exposure = rules.rasterise_osm_network.output.geoparquet,
-        rehab_cost=lambda wildcards: f"config/rehab_costs/{wildcards.FILTER_SLUG.replace('filter-', '')}.csv",
+        rehab_cost=lambda wildcards: f"config/rehab_costs/{wildcards.FILTER_SLUG.split('-')[1]}.csv",
         damage_curves="config/damage_curves/",
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction_per_RP/{SLICE_SLUG}.geoparquet",
@@ -25,7 +25,7 @@ rule return_period_direct_damages:
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/slice-5.geoparquet
+snakemake --cores 1 results/direct_damages/egypt-latest_filter-road-tertiary/hazard-aqueduct-river/EAD_and_cost_per_RP/slice-5.geoparquet
 """
 
 
@@ -47,20 +47,20 @@ rule event_set_direct_damages:
     input:
         unsplit = rules.create_transport_network.output.edges,  # for pre-intersection geometry
         exposure = rules.rasterise_osm_network.output.geoparquet,
-        rehab_cost=lambda wildcards: f"config/rehab_costs/{wildcards.FILTER_SLUG.replace('filter-', '')}.csv",
+        rehab_cost=lambda wildcards: f"config/rehab_costs/{wildcards.FILTER_SLUG.split('-')[1]}.csv",
         damage_curves="config/damage_curves/",
     output:
         damage_fraction = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/fraction/{SLICE_SLUG}.gpq",
         damage_cost = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/cost/{SLICE_SLUG}.gpq",
     params:
-        network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),
+        network_type=lambda wildcards: wildcards.FILTER_SLUG.split('-')[1],
         hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
     script:
         "./event_set_direct_damages.py"
 
 """
 Test with:
-snakemake --cores 1 results/direct_damages/thailand-latest_filter-road/hazard-jba-event/cost/slice-5.gpq
+snakemake --cores 1 results/direct_damages/thailand-latest_filter-road-primary/hazard-jba-event/cost/slice-5.gpq
 """
 
 

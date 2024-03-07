@@ -1,0 +1,1 @@
+w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link
