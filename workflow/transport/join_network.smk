@@ -16,12 +16,12 @@ rule join_network:
             i=range(config['slice_count'])
         ),
     output:
-        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
-        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet"
+        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.gpq",
+        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.gpq"
     script:
         "./join_network.py"
 
 """
 Test with:
-snakemake --cores all results/tanzania-mini_filter-road/nodes.geoparquet
+snakemake --cores all results/tanzania-mini_filter-road/nodes.gpq
 """
