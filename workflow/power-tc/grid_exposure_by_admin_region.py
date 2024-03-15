@@ -62,6 +62,21 @@ if __name__ == "__main__":
     exposure_by_event = dask.dataframe.read_parquet(snakemake.input.exposure_by_event)
 
     # calculate number of years between first and last storm event, necessary for expected annual exposure
+
+    # N.B. dask==2024.3.0 breaks the line assigning to event_ids -- the index will not resolve to values
+
+    # pytest -s tests/integration/test_exposure_by_admin_region.py
+
+    # the following seems to know about the index values, look at the repr str..!
+    # (Pdb) exposure_by_event.index.compute()
+    # Empty DataFrame
+    # Columns: []
+    # Index: [2007345N18298, ..., 2022255N15324]
+
+    # but actually try and access those values ...
+    # (Pdb) exposure_by_event.index.compute().values
+    # array([], shape=(10, 0), dtype=float64)
+
     event_ids: list[str] = list(set(exposure_by_event.index))
     years: set[int] = set(track_year.loc[event_ids, "year"])
     span_years: int = max([1, max(years) - min(years)])  # with a minimum of one
