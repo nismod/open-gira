@@ -19,6 +19,7 @@ dependencies:
   - cython==0.29.28     # c--python interface
   - contextily          # basemaps for plots
   - datashader          # plotting large datasets
+  - dask                # larger-than-memory computing
   - flake8              # linter
   - gdal>=3.3           # command-line tools for spatial data
   - geopandas==0.14.1   # geospatial dataframes
