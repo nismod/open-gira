@@ -46,6 +46,17 @@ network_filters:
   road-primary: 'config/osm_filters/road-primary.txt'
   rail: 'config/osm_filters/rail.txt'
 
+# define a set of partial transport networks to create and interconnect
+# file should be a CSV with `infrastructure_dataset` and `network_filters` columns (with header)
+# e.g.
+# infrastructure_dataset,network_filter
+# thailand-latest,road-secondary
+# cambodia-latest,road-primary
+# laos-latest,road-primary
+composite_network:
+  south-east-asia-road: 'config/composite_network/south-east-asia-road.csv'
+  south-east-asia-rail: 'config/composite_network/south-east-asia-rail.csv'
+
 # OSM tag data to retain on selected features, typically for usage in network annotation/analysis
 # N.B. feature SELECTION is done with the expressions pointed to from network_filters
 keep_tags:
