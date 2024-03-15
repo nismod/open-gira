@@ -25,14 +25,10 @@ def concat_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
 
 
 if __name__ == "__main__":
-    try:
-        node_slice_files = snakemake.input["nodes"]  # type: ignore
-        edge_slice_files = snakemake.input["edges"]  # type: ignore
-        nodes_output_file = snakemake.output["nodes"]  # type: ignore
-        edges_output_file = snakemake.output["edges"]  # type: ignore
-    except NameError:
-        # not sure of an elegant way to handle the two lists of input filenames
-        sys.exit("please invoke via snakemake")
+    node_slice_files = snakemake.input["nodes"]
+    edge_slice_files = snakemake.input["edges"]
+    nodes_output_file = snakemake.output["nodes"]
+    edges_output_file = snakemake.output["edges"]
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
@@ -44,32 +40,17 @@ if __name__ == "__main__":
     logging.info("Joining network edge slices")
     edges = concat_slices(edge_slice_files)
 
-    # drop the ids we used on a per-slice basis
-    nodes = nodes.drop(["node_id"], axis="columns")
-    edges = edges.drop(["edge_id", "from_node_id", "to_node_id"], axis="columns")
-
     network = snkit.network.Network(edges=edges, nodes=nodes)
 
-    # relabel with network-wide ids prior to adding topology
-#    logging.info("Labelling edges and nodes with ids")
-#    network = snkit.network.add_ids(network)
+    # ensure we haven't reused any ids
+    assert len(network.nodes) == len(network.nodes.id.unique())
+    assert len(network.edges) == len(network.edges.id.unique())
 
-#    logging.info("Labelling edge ends with node ids")
-#    network = snkit.network.add_topology(network)
+    logging.info("Labelling edge ends with from/to node ids")
+    network = snkit.network.add_topology(network)
 
-    # TODO: adding the topology and component ids needs accelerating, 9M rows takes over a day
-
-    # TODO: check what takes the time, is it identifying the components or labelling them?
-
-    # perhaps, do it for each slice, and then at this step, check which slice components
-    # join neighbouring slice components and relabel components as such
-    # N.B. this will require using the {start|end}_node_reference=NaN nodes
-    # N.B. these should only be at bbox edges, but appear to be all over slices
-
-    # another option is to use igraph rather than networkx in snkit to identify the components
-
-#    logging.info("Labelling edges and nodes with network component ids")
-#    network = snkit.network.add_component_ids(network)
+    logging.info("Labelling edges and nodes with network component ids")
+    network = snkit.network.add_component_ids(network)
 
     logging.info("Writing network to disk")
     network.nodes.to_parquet(nodes_output_file)
