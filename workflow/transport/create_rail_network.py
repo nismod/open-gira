@@ -19,14 +19,14 @@ from open_gira.utils import str_to_bool
 
 if __name__ == "__main__":
 
-    osm_edges_path = snakemake.input["edges"]  # type: ignore
-    osm_nodes_path = snakemake.input["nodes"]  # type: ignore
-    administrative_data_path = snakemake.input["admin"]  # type: ignore
-    nodes_output_path = snakemake.output["nodes"]  # type: ignore
-    edges_output_path = snakemake.output["edges"]  # type: ignore
-    slice_number = int(snakemake.params["slice_number"])  # type: ignore
+    osm_edges_path = snakemake.input["edges"]
+    osm_nodes_path = snakemake.input["nodes"]
+    administrative_data_path = snakemake.input["admin"]
+    dataset_name = snakemake.wildcards.DATASET
+    nodes_output_path = snakemake.output["nodes"]
+    edges_output_path = snakemake.output["edges"]
+    slice_number = int(snakemake.params["slice_number"])
 
-    slice_number = int(slice_number)
     osm_epsg = 4326
 
     logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     # pass an id_prefix containing the slice number to ensure edges and nodes
     # are uniquely identified across all slices in the network
-    network = create_network(edges=edges, nodes=nodes, id_prefix=f"{slice_number}")
+    network = create_network(edges=edges, nodes=nodes, id_prefix=f"{dataset_name}_{slice_number}")
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )

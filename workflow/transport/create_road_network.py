@@ -149,12 +149,13 @@ def annotate_condition(network: snkit.network.Network) -> snkit.network.Network:
 
 if __name__ == "__main__":
 
-    osm_edges_path = snakemake.input["edges"]  # type: ignore
-    osm_nodes_path = snakemake.input["nodes"]  # type: ignore
-    administrative_data_path = snakemake.input["admin"]  # type: ignore
-    nodes_output_path = snakemake.output["nodes"]  # type: ignore
-    edges_output_path = snakemake.output["edges"]  # type: ignore
-    slice_number = int(snakemake.params["slice_number"])  # type: ignore
+    osm_edges_path = snakemake.input["edges"]
+    osm_nodes_path = snakemake.input["nodes"]
+    administrative_data_path = snakemake.input["admin"]
+    dataset_name = snakemake.wildcards.DATASET
+    nodes_output_path = snakemake.output["nodes"]
+    edges_output_path = snakemake.output["edges"]
+    slice_number = int(snakemake.params["slice_number"])
 
     osm_epsg = 4326
 
@@ -178,7 +179,7 @@ if __name__ == "__main__":
 
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
-    network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{slice_number}")
+    network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{dataset_name}_{slice_number}")
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
