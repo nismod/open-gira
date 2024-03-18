@@ -35,5 +35,5 @@ rule filter_osm_data:
 
 """
 Test with:
-snakemake --cores all results/input/OSM/tanzania-mini_filter-road.osm.pbf
+snakemake --cores all results/input/OSM/tanzania-mini_filter-road-primary.osm.pbf
 """

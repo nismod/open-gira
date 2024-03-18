@@ -1,24 +1,13 @@
-#####################################
-### FLOODING / TRANSPORT WORKFLOW ###
-#####################################
-
-## Aqueduct Analysis ##
-# This should be a named list of files that specify hazard raster files
-# to retrieve using wget -i
-hazard_datasets:
-  aqueduct-coast: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tiffs.txt'
-  #aqueduct-coast: 'config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt'
-  #aqueduct-river: 'config/hazard_resource_locations/aqueduct-river_rcp4p5_MIROC-ESM-CHEM_2030_tifs.txt'  # subset of aqueduct_tifs.txt
-  aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
-  jba-event: 'config/hazard_resource_locations/jba-events.txt'
-
-hazard_types:
-  aqueduct-coast: 'flood'
-  aqueduct-river: 'flood'
-  jba-event: 'flood'
+##########################
+### TRANSPORT WORKFLOW ###
+##########################
 
 # OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
+  # note that there is a JSON index with country ISO-A2 codes here:
+  # https://download.geofabrik.de/index-v1-nogeom.json
+  # we could do lookup from ISO code to URL using this file, to avoid registering URLs here
+  #
   # whole planet file
   planet-latest: 'https://planet.osm.org/pbf/planet-latest.osm.pbf'
   # 'continent' extracts
@@ -30,22 +19,43 @@ infrastructure_datasets:
   north-america-latest: 'http://download.geofabrik.de/north-america-latest.osm.pbf'
   south-america-latest: 'http://download.geofabrik.de/south-america-latest.osm.pbf'
   # country extracts
+  bangladesh-latest: 'https://download.geofabrik.de/asia/bangladesh-latest.osm.pbf'
+  cambodia-latest: 'https://download.geofabrik.de/asia/cambodia-latest.osm.pbf'
+  china-latest: 'https://download.geofabrik.de/asia/china-latest.osm.pbf'
   djibouti-latest: 'https://download.geofabrik.de/africa/djibouti-latest.osm.pbf'
   egypt-latest: 'http://download.geofabrik.de/africa/egypt-latest.osm.pbf'
   great-britain-latest: 'http://download.geofabrik.de/europe/great-britain-latest.osm.pbf'
+  india-latest: 'https://download.geofabrik.de/asia/india-latest.osm.pbf'
   jamaica-latest: 'http://download.geofabrik.de/central-america/jamaica-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
+  laos-latest: 'https://download.geofabrik.de/asia/laos-latest.osm.pbf'
+  myanmar-latest: 'https://download.geofabrik.de/asia/myanmar-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
   thailand-latest: 'https://download.geofabrik.de/asia/thailand-latest.osm.pbf'
   wales-latest: 'https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf'
+  vietnam-latest: 'https://download.geofabrik.de/asia/vietnam-latest.osm.pbf'
   # small extract for testing purposes
   tanzania-mini: 'https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf'
 
 # these files contain osmium filter expressions for selecting relevant nodes, ways and relations from .osm.pbf files
 # the keys in the mapping, i.e. 'road' and 'rail' will be used to create FILTER_SLUG in rules
 network_filters:
-  road: 'config/osm_filters/road-residential.txt'
+  road-residential: 'config/osm_filters/road-residential.txt'
+  road-tertiary: 'config/osm_filters/road-tertiary.txt'
+  road-secondary: 'config/osm_filters/road-secondary.txt'
+  road-primary: 'config/osm_filters/road-primary.txt'
   rail: 'config/osm_filters/rail.txt'
+
+# define a set of partial transport networks to create and interconnect
+# file should be a CSV with `infrastructure_dataset` and `network_filters` columns (with header)
+# e.g.
+# infrastructure_dataset,network_filter
+# thailand-latest,road-secondary
+# cambodia-latest,road-primary
+# laos-latest,road-primary
+composite_network:
+  south-east-asia-road: 'config/composite_network/south-east-asia-road.csv'
+  south-east-asia-rail: 'config/composite_network/south-east-asia-rail.csv'
 
 # OSM tag data to retain on selected features, typically for usage in network annotation/analysis
 # N.B. feature SELECTION is done with the expressions pointed to from network_filters
@@ -54,7 +64,23 @@ keep_tags:
   rail: ['railway', 'bridge', 'name', 'gauge', 'usage']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 4
+slice_count: 64
+
+
+#########################
+### FLOODING WORKFLOW ###
+#########################
+
+hazard_datasets:
+  # hazard rasters to retrieve
+  aqueduct-coast: 'config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt'
+  aqueduct-river: 'config/hazard_resource_locations/aqueduct-river.txt'
+  jba-event: 'config/hazard_resource_locations/jba-events.txt'
+
+hazard_types:
+  aqueduct-coast: 'flood'
+  aqueduct-river: 'flood'
+  jba-event: 'flood'
 
 direct_damages:
   # assets to calculate direct damages for

@@ -1,7 +1,7 @@
 rule network_components:
     input:
-        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.geoparquet",
-        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.geoparquet",
+        nodes="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/nodes.gpq",
+        edges="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/edges.gpq",
     output:
         component_population="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/component_population.svg",
         component_map="{OUTPUT_DIR}/{DATASET}_{FILTER_SLUG}/network_map_by_component.png",

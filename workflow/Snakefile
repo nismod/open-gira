@@ -76,6 +76,11 @@ if not config["best_estimate_windspeed_failure_threshold"] in config["transmissi
 
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
+    # the output dir must end in 'results'
+    # e.g. '/data/open-gira/results', './results', '/my-results', etc.
+    # this prevents us matching past it into other folders for an incorrect OUTPUT_DIR,
+    # but is more flexible than reading a value from, for example, config.yaml
+    OUTPUT_DIR="^.*results",
     DATASET="[^_/]+",
     SLICE_SLUG="slice-[0-9]+",
     FILTER_SLUG="filter-[^_/]+",

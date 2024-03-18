@@ -99,8 +99,8 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
 
     Arguments:
         network (snkit.network.Network): Network to label with geographic information
-            network.edges must have 'from_node_id', 'to_node_id'
-            network.nodes must have 'node_id', 'geometry'
+            network.edges must have 'from_id', 'to_id'
+            network.nodes must have 'id', 'geometry'
         countries (gpd.GeoDataFrame): Table required to contain the following columns:
             'iso_a3', 'geometry'
 
@@ -113,8 +113,8 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
     nodes = network.nodes
 
     # check we have required inputs
-    assert set(edges.columns.values).issuperset({"from_node_id", "to_node_id"})
-    assert set(nodes.columns.values).issuperset({"node_id", "geometry"})
+    assert set(edges.columns.values).issuperset({"from_id", "to_id"})
+    assert set(nodes.columns.values).issuperset({"id", "geometry"})
     assert set(countries.columns.values).issuperset({"iso_a3", "geometry"})
 
     # check our inputs have a registered CRS
@@ -155,27 +155,27 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
         crs=input_node_crs
     )
 
-    # set edge.from_node_id from node.node_id and use iso_a3 of from node as edge start
+    # set edge.from_iso_a3 from node.iso_a3 of edge.from_id
     edges = pd.merge(
         edges,
-        nodes[["node_id", "iso_a3"]],
+        nodes[["id", "iso_a3"]],
         how="left",
-        left_on=["from_node_id"],
-        right_on=["node_id"],
+        left_on=["from_id"],
+        right_on=["id"],
     )
-    edges.rename(columns={"iso_a3": "from_iso_a3"}, inplace=True)
-    edges.drop("node_id", axis=1, inplace=True)
+    edges = edges.drop("id_y", axis=1)
+    edges = edges.rename(columns={"iso_a3": "from_iso_a3", "id_x": "id"})
 
-    # set edge.to_node_id from node.node_id and use iso_a3 of from node as edge end
+    # set edge.to_iso_a3 from node.iso_a3 of edge.to_id
     edges = pd.merge(
         edges,
-        nodes[["node_id", "iso_a3"]],
+        nodes[["id", "iso_a3"]],
         how="left",
-        left_on=["to_node_id"],
-        right_on=["node_id"],
+        left_on=["to_id"],
+        right_on=["id"],
     )
-    edges.rename(columns={"iso_a3": "to_iso_a3"}, inplace=True)
-    edges.drop("node_id", axis=1, inplace=True)
+    edges = edges.drop("id_y", axis=1)
+    edges = edges.rename(columns={"iso_a3": "to_iso_a3", "id_x": "id"})
 
     network.nodes = nodes
     network.edges = edges

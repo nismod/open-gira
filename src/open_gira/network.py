@@ -77,10 +77,4 @@ def create_network(
     logging.info("Creating network topology")
     network = snkit.network.add_topology(network, id_col="id")
 
-    network.edges.rename(
-        columns={"from_id": "from_node_id", "to_id": "to_node_id", "id": "edge_id"},
-        inplace=True,
-    )
-    network.nodes.rename(columns={"id": "node_id"}, inplace=True)
-
     return network
