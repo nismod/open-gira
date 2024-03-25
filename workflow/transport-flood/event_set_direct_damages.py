@@ -23,6 +23,8 @@ if __name__ == "__main__":
         damage_curves_dir: str = snakemake.input["damage_curves"]
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
+        rehab_cost_multiplier: float = float(snakemake.config["direct_damages"]["rehab_cost_multiplier"])
+        damage_curves_dir: str = snakemake.config["direct_damages"]["curves_dir"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
         # note, this config entry might have been mutated on execution of the Snakefile
@@ -58,8 +60,15 @@ if __name__ == "__main__":
             write_empty_frames(path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
-    logging.info("Annotate network with rehabilitation costs")
     rehab_cost = read_rehab_costs(rehabilitation_costs_path)
+    logging.info(f"Rehabilitation costs\n{rehab_cost}")
+
+    logging.info(f"Rehab cost multiplier: {rehab_cost_multiplier}")
+
+    rehab_cost = rehab_cost * rehab_cost_multiplier
+    logging.info(f"Rehabilitation costs after multiplier\n{rehab_cost}")
+
+    logging.info("Annotate network with rehabilitation costs")
     exposure = annotate_rehab_cost(exposure, network_type, rehab_cost)
 
     # column groupings for data selection
