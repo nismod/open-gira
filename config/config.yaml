@@ -64,7 +64,7 @@ keep_tags:
   rail: ['railway', 'bridge', 'name', 'gauge', 'usage']
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 64
+slice_count: 169
 
 
 #########################
@@ -98,6 +98,7 @@ direct_damages:
     'road_unpaved',
     'rail_railway',
   ]
+  rehab_cost_multiplier: 0.5
 
 
 ###############################
