@@ -24,7 +24,6 @@ if __name__ == "__main__":
         damage_fraction_path: str = snakemake.output["damage_fraction"]
         damage_cost_path: str = snakemake.output["damage_cost"]
         rehab_cost_multiplier: float = float(snakemake.config["direct_damages"]["rehab_cost_multiplier"])
-        damage_curves_dir: str = snakemake.config["direct_damages"]["curves_dir"]
         network_type: str = snakemake.params["network_type"]
         hazard_type: str = snakemake.params["hazard_type"]
         # note, this config entry might have been mutated on execution of the Snakefile
