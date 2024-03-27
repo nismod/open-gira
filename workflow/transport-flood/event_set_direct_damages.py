@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     logging.info(f"Rehab cost multiplier: {rehab_cost_multiplier}")
 
-    rehab_cost = rehab_cost * rehab_cost_multiplier
+    rehab_cost.iloc[:, 1] = rehab_cost.iloc[:, 1] * rehab_cost_multiplier
     logging.info(f"Rehabilitation costs after multiplier\n{rehab_cost}")
 
     logging.info("Annotate network with rehabilitation costs")
