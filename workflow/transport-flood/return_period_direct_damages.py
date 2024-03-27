@@ -130,15 +130,15 @@ if __name__ == "__main__":
 
     # lose columns like "cell_indicies" or rastered length measures that are specific to _rastered_ edges
     non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
-    unsplit_subset = unsplit[non_hazard_output_columns].set_index("edge_id", drop=False)
+    unsplit_subset = unsplit[non_hazard_output_columns].set_index("id", drop=False)
 
     # rejoin direct damage cost estimates with geometry and metadata columns and write to disk
     # join on 'right' / grouped_direct_damages index to only keep rows we have damages for
     direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one", how="right")
-    direct_damages["edge_id"] = direct_damages.index
+    direct_damages["id"] = direct_damages.index
     # we may not have calculated damages for every possible asset_type
     assert len(direct_damages) <= len(unsplit_subset)
-    assert "edge_id" in direct_damages.columns
+    assert "id" in direct_damages.columns
 
     expected_annual_damages_only = pd.DataFrame(data=expected_annual_damages, index=grouped_direct_damages.index)
     # rejoin expected annual damage cost estimates with geometry and metadata columns and write to disk
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         unsplit_subset.join(expected_annual_damages_only, validate="one_to_one", how="right")
     )
     assert len(expected_annual_damages) <= len(unsplit_subset)
-    assert "edge_id" in expected_annual_damages.columns
+    assert "id" in expected_annual_damages.columns
 
     # combined the per return period and the integrated outputs into a single dataframe
     return_period_and_ead_damages = direct_damages.join(expected_annual_damages_only, validate="one_to_one")
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     assert len(direct_damages) == len(expected_annual_damages)
 
     for dataframe in (damage_fraction, direct_damages, expected_annual_damages, return_period_and_ead_damages):
-        assert "edge_id" in dataframe
+        assert "id" in dataframe
 
     logging.info(f"Writing out {damage_fraction.shape=} (per split geometry, hazard RP map)")
     damage_fraction.to_parquet(damage_fraction_path)

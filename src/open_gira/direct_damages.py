@@ -304,7 +304,7 @@ def direct_damage(
 
     Args:
         exposure: Table containing exposed assets, likely edges split on a
-            raster grid (i.e. `edge_id` is not necessarily unique).
+            raster grid (i.e. `id` is not necessarily unique).
         damage_curves: Relationship between hazard intensity and damage
             fraction, keyed by `asset_type`.
         hazard_columns: Columns in `exposure` which denote hazard intensities.
@@ -313,7 +313,7 @@ def direct_damage(
 
     Returns:
         Direct damage fraction, rows are splits of edges.
-        Direct damage cost, rows are edges and `edge_id` should now be unique.
+        Direct damage cost, rows are edges and `id` should now be unique.
     """
 
     ##########################################################
@@ -382,11 +382,11 @@ def direct_damage(
     # join the other fields with the direct damage estimates
     logging.info("Unifying rasterised segments and summing damage costs")
 
-    # grouping on edge_id, sum all direct damage estimates to give a total dollar cost per edge
+    # grouping on id, sum all direct damage estimates to give a total dollar cost per edge
     direct_damages = pd.concat(
-        [direct_damages_only, damage_fraction["edge_id"]],
+        [direct_damages_only, damage_fraction["id"]],
         axis="columns"
-    ).set_index("edge_id")
+    ).set_index("id")
     grouped_direct_damages = direct_damages.groupby(direct_damages.index).sum()
 
     return damage_fraction, grouped_direct_damages

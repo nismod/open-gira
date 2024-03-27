@@ -82,21 +82,21 @@ if __name__ == "__main__":
 
     # lose columns like "cell_indicies" or rastered length measures that are specific to _rastered_ edges
     non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
-    unsplit_subset = unsplit[non_hazard_output_columns].set_index("edge_id", drop=False)
+    unsplit_subset = unsplit[non_hazard_output_columns].set_index("id", drop=False)
 
     # rejoin direct damage cost estimates with geometry and metadata columns and write to disk
     # join on 'right' / grouped_direct_damages index to only keep rows we have damages for
     direct_damages = unsplit_subset.join(grouped_direct_damages, validate="one_to_one", how="right")
-    direct_damages["edge_id"] = direct_damages.index
+    direct_damages["id"] = direct_damages.index
     # we may not have calculated damages for every possible asset_type
     assert len(direct_damages) <= len(unsplit_subset)
-    assert "edge_id" in direct_damages.columns
+    assert "id" in direct_damages.columns
 
     # damage_fraction is on the split geometries, will have more rows
     assert len(damage_fraction) >= len(direct_damages)
 
     for dataframe in (damage_fraction, direct_damages):
-        assert "edge_id" in dataframe
+        assert "id" in dataframe
 
     logging.info(f"Writing out {damage_fraction.shape=} (per split geometry, event raster)")
     damage_fraction.to_parquet(damage_fraction_path)
