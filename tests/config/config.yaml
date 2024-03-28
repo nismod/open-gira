@@ -53,6 +53,7 @@ direct_damages:
     'road_unpaved',
     'rail_railway',
   ]
+  rehab_cost_multiplier: 1
 
 
 ###############################

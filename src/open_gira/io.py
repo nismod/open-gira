@@ -289,7 +289,7 @@ def read_rehab_costs(path: str) -> pd.DataFrame:
     assert costs.asset_type.dtype == object
 
     # check costs
-    assert costs.iloc[:, 1].dtype == float
+    assert pd.api.types.is_numeric_dtype(costs.iloc[:, 1].dtype)
     assert (costs.iloc[:, 1] >= 0).all()
 
     return costs
