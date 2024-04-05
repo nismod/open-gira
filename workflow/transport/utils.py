@@ -60,39 +60,6 @@ def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
             raise ValueError("Couldn't recast to non-nullable value") from casting_error
 
 
-def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
-    """
-    Read administrative data (country ISO, country geometry) from disk
-
-    Arguments:
-        file_path (str): Location of file with country data:
-            containing an ISO three letter code as 'GID_0' and a geometry as
-            'geometry'
-        to_epsg (int): EPSG code to project data to
-
-    Returns:
-        gpd.GeoDataFrame: Table of country and geometry data with:
-            'iso_a3' and 'geometry' columns
-    """
-
-    # read file
-    gdf = gpd.read_file(file_path)
-
-    # check schema is as expected
-    expected_columns = {"GID_0", "geometry"}
-    assert expected_columns.issubset(set(gdf.columns.values))
-
-    # reproject if desired
-    if to_epsg is not None:
-        gdf = gdf.to_crs(epsg=to_epsg)
-
-    # rename these columns first so we don't have to do this twice (to nodes and edges) later
-    gdf.rename(columns={"GID_0": "iso_a3"}, inplace=True)
-
-    # subset, sort by iso_a3 and return
-    return gdf[["iso_a3", "geometry"]].sort_values(by=["iso_a3"], ascending=True)
-
-
 def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame) -> snkit.network.Network:
     """
     Label network edges and nodes with their country ISO code

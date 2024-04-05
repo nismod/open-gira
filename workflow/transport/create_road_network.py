@@ -13,7 +13,8 @@ import geopandas as gpd
 import pandas as pd
 import snkit
 
-from utils import annotate_country, cast, get_administrative_data, strip_suffix
+from utils import annotate_country, cast, strip_suffix
+from open_gira.admin import get_administrative_data
 from open_gira.assets import RoadAssets
 from open_gira.io import write_empty_frames
 from open_gira.network import create_network

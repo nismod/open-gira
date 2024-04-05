@@ -10,7 +10,8 @@ import warnings
 
 import geopandas as gpd
 
-from utils import annotate_country, get_administrative_data
+from utils import annotate_country
+from open_gira.admin import get_administrative_data
 from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames
 from open_gira.network import create_network
