@@ -58,3 +58,16 @@ rule summarise_giri_bem_admin:
             -s "sum(res)" \
             -s "sum(nres)"
         """
+
+rule clip_raster_by_country:
+    input:
+        raster="{OUTPUT_DIR}/input/{DATASET}/{FILENAME}.tif",
+        admin="{OUTPUT_DIR}/input/admin-boundaries/gadm36_levels.gpkg",
+    output:
+        raster="{OUTPUT_DIR}/input/{DATASET}/{ISO3}/{FILENAME}__{ISO3}.tif",
+    run:
+        import irv_datapkg
+        from open_gira.admin import get_administrative_data, boundary_geom
+        admin = get_administrative_data(input.admin)
+        # TODO difficult to use? includes 1-pixel buffer for "safety" in small areas - could be tightened
+        irv_datapkg.crop_raster(input.raster, output.raster, boundary_geom(admin, wildcards.ISO3))
