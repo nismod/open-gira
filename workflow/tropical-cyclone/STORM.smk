@@ -179,12 +179,19 @@ rule extract_storm_fixed_future:
         STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL_FUTURE.upper()
     shell:
         """
-        # first try STORM_MODEL_FUTURE, otherwise fall back to trying the uppercase version
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
-        || \
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
+        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/"
+        uppercase_filename="STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+        desired_filename="STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+
+        # try extracting filename with STORM_MODEL_FUTURE, fall back to STORM_MODEL_UPPER
+        unzip -o {input} $desired_filename -d $unpack_dir || unzip -o {input} $uppercase_filename -d $unpack_dir
+
+        # if we unpacked the uppercase version and its different to STORM_MODEL_FUTURE, rename it
+        pushd $unpack_dir
+            if [ -f $uppercase_filename ] && [ $uppercase_filename != $desired_filename ]; then
+                mv $uppercase_filename $desired_filename
+            fi
+        popd
         """
 
 
