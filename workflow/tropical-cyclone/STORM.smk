@@ -202,7 +202,7 @@ rule wrap_storm_fixed:
         temp("{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.wrapped.tif")
     shell:
         """
-        gdalwarp -te -180 -60 180 60 {input} {output}
+        gdalwarp -te -179.85 -60.15 180.15 59.95 -co COMPRESS=LZW -co PREDICTOR=2 -co TILED=YES {input} {output}
         """
 
 
