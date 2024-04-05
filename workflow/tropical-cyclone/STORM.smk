@@ -235,3 +235,23 @@ rule mosaic_storm_fixed:
             --creation-option="PREDICTOR=2" \
             --creation-option="TILED=YES"
         """
+
+rule mosaic_storm_fixed_all:
+    input:
+        tiffs=expand(
+            "{{OUTPUT_DIR}}/input/STORM/fixed/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif",
+            STORM_MODEL=[
+                "constant",
+                "CMCC-CM2-VHR4",
+                "CNRM-CM6-1-HR",
+                "EC-Earth3P-HR",
+                "HadGEM3-GC31-HM",
+            ],
+            STORM_RP=(
+                list(range(10, 100, 10))
+                + list(range(100, 1000, 100))
+                + list(range(1000, 10001, 1000))
+            ),
+        )
+    output:
+        touch("{OUTPUT_DIR}/input/STORM/fixed/mosaic.done")
