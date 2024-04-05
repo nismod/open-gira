@@ -230,5 +230,8 @@ rule mosaic_storm_fixed:
             -F {input.basin_tif_wp} \
             --outfile={output} \
             --calc="numpy.max((A,B,C,D,E,F),axis=0)" \
-            --NoDataValue=0
+            --NoDataValue=0 \
+            --creation-option="COMPRESS=LZW" \
+            --creation-option="PREDICTOR=2" \
+            --creation-option="TILED=YES"
         """
