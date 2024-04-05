@@ -179,12 +179,19 @@ rule extract_storm_fixed_future:
         STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL_FUTURE.upper()
     shell:
         """
-        # first try STORM_MODEL_FUTURE, otherwise fall back to trying the uppercase version
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
-        || \
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/ \
+        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/"
+        uppercase_filename="STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+        desired_filename="STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+
+        # try extracting filename with STORM_MODEL_FUTURE, fall back to STORM_MODEL_UPPER
+        unzip -o {input} $desired_filename -d $unpack_dir || unzip -o {input} $uppercase_filename -d $unpack_dir
+
+        # if we unpacked the uppercase version and its different to STORM_MODEL_FUTURE, rename it
+        pushd $unpack_dir
+            if [ -f $uppercase_filename ] && [ $uppercase_filename != $desired_filename ]; then
+                mv $uppercase_filename $desired_filename
+            fi
+        popd
         """
 
 
@@ -195,7 +202,7 @@ rule wrap_storm_fixed:
         temp("{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.wrapped.tif")
     shell:
         """
-        gdalwarp -te -180 -60 180 60 {input} {output}
+        gdalwarp -te -179.85 -60.15 180.15 59.95 -co COMPRESS=LZW -co PREDICTOR=2 -co TILED=YES {input} {output}
         """
 
 
@@ -223,5 +230,28 @@ rule mosaic_storm_fixed:
             -F {input.basin_tif_wp} \
             --outfile={output} \
             --calc="numpy.max((A,B,C,D,E,F),axis=0)" \
-            --NoDataValue=0
+            --NoDataValue=0 \
+            --creation-option="COMPRESS=LZW" \
+            --creation-option="PREDICTOR=2" \
+            --creation-option="TILED=YES"
         """
+
+rule mosaic_storm_fixed_all:
+    input:
+        tiffs=expand(
+            "{{OUTPUT_DIR}}/input/STORM/fixed/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif",
+            STORM_MODEL=[
+                "constant",
+                "CMCC-CM2-VHR4",
+                "CNRM-CM6-1-HR",
+                "EC-Earth3P-HR",
+                "HadGEM3-GC31-HM",
+            ],
+            STORM_RP=(
+                list(range(10, 100, 10))
+                + list(range(100, 1000, 100))
+                + list(range(1000, 10001, 1000))
+            ),
+        )
+    output:
+        touch("{OUTPUT_DIR}/input/STORM/fixed/mosaic.done")
