@@ -30,7 +30,9 @@ if __name__ == "__main__":
 
     osm_epsg = 4326
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
@@ -49,33 +51,41 @@ if __name__ == "__main__":
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
-        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
-        axis="columns"
+        [
+            col
+            for col in edges.columns
+            if col.startswith("start_node_") or col.startswith("end_node_")
+        ],
+        axis="columns",
     )
 
     # if present, filter nodes to stations
     if nodes is not None and not nodes.empty:
-        nodes = nodes.loc[nodes.tag_railway == 'station', :]
+        nodes = nodes.loc[nodes.tag_railway == "station", :]
 
     # pass an id_prefix containing the slice number to ensure edges and nodes
     # are uniquely identified across all slices in the network
-    network = create_network(edges=edges, nodes=nodes, id_prefix=f"{dataset_name}_{slice_number}")
+    network = create_network(
+        edges=edges, nodes=nodes, id_prefix=f"{dataset_name}_{slice_number}"
+    )
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
 
     # boolean bridge field
-    network.edges['bridge'] = str_to_bool(network.edges['tag_bridge'])
+    network.edges["bridge"] = str_to_bool(network.edges["tag_bridge"])
 
     # boolean station field
-    network.nodes['station'] = network.nodes.tag_railway == 'station'
+    network.nodes["station"] = network.nodes.tag_railway == "station"
 
     # select and label assets with their type
     # we will use the `asset_type` field to select damage curves
     # bridge overrides railway as asset class, tag last
-    network.nodes.loc[network.nodes.station == True, 'asset_type'] = RailAssets.STATION
-    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
-    network.edges.loc[network.edges.bridge == True, 'asset_type'] = RailAssets.BRIDGE
+    network.nodes.loc[network.nodes.station == True, "asset_type"] = RailAssets.STATION
+    network.edges.loc[network.edges.tag_railway == "rail", "asset_type"] = (
+        RailAssets.RAILWAY
+    )
+    network.edges.loc[network.edges.bridge == True, "asset_type"] = RailAssets.BRIDGE
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
