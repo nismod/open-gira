@@ -5,9 +5,12 @@ Tools for manipulating administrative region data.
 import logging
 
 import pandas as pd
+import geopandas as gpd
 
 
-def merge_gadm_admin_levels(preference: pd.DataFrame, alternative: pd.DataFrame) -> pd.DataFrame:
+def merge_gadm_admin_levels(
+    preference: pd.DataFrame, alternative: pd.DataFrame
+) -> pd.DataFrame:
     """
     Geospatial data is often aggregated at admin 'levels', as exemplified by the
     GADM project. These integer levels are 0 for nation states, 1 for the
@@ -33,8 +36,47 @@ def merge_gadm_admin_levels(preference: pd.DataFrame, alternative: pd.DataFrame)
     substitute_countries = set(alternative.ISO_A3) - set(preference.ISO_A3)
     logging.info(f"Gap filling with: {substitute_countries}")
 
-    substitute_regions: pd.DataFrame = alternative[alternative["ISO_A3"].isin(substitute_countries)]
+    substitute_regions: pd.DataFrame = alternative[
+        alternative["ISO_A3"].isin(substitute_countries)
+    ]
 
     merged = pd.concat([preference, substitute_regions])
 
     return merged.sort_values("ISO_A3")
+
+
+def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
+    """
+    Read administrative data (country ISO, country geometry) from disk
+
+    Arguments:
+        file_path (str): Location of file with country data:
+            containing an ISO three letter code as 'GID_0' and a geometry as
+            'geometry'
+        to_epsg (int): EPSG code to project data to
+
+    Returns:
+        gpd.GeoDataFrame: Table of country and geometry data with:
+            'iso_a3' and 'geometry' columns
+    """
+
+    # read file
+    gdf = gpd.read_file(file_path)
+
+    # check schema is as expected
+    expected_columns = {"GID_0", "geometry"}
+    assert expected_columns.issubset(set(gdf.columns.values))
+
+    # reproject if desired
+    if to_epsg is not None:
+        gdf = gdf.to_crs(epsg=to_epsg)
+
+    # rename these columns first so we don't have to do this twice (to nodes and edges) later
+    gdf.rename(columns={"GID_0": "iso_a3"}, inplace=True)
+
+    # subset, sort by iso_a3 and return
+    return gdf[["iso_a3", "geometry"]].sort_values(by=["iso_a3"], ascending=True)
+
+
+def boundary_geom(df, iso3):
+    return df.set_index("iso_a3").loc[iso3, "geometry"]

@@ -14,7 +14,8 @@ import pandas as pd
 import snkit
 from pyproj import Geod
 
-from utils import annotate_country, cast, get_administrative_data, strip_suffix
+from utils import annotate_country, cast, strip_suffix
+from open_gira.admin import get_administrative_data
 from open_gira.assets import RoadAssets
 from open_gira.io import write_empty_frames
 from open_gira.network import create_network
@@ -46,13 +47,13 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
     if "tag_highway" in edges.columns:
         # None -> empty string
-        edges.loc[edges['tag_highway'].isnull(), 'tag_highway'] = ''
+        edges.loc[edges["tag_highway"].isnull(), "tag_highway"] = ""
         # turn the <highway_type>_link entries into <highway_type>
         edges.tag_highway = edges.tag_highway.apply(strip_suffix)
 
     # boolean bridge field from tag_bridges
     if "tag_bridge" in edges.columns:
-        edges['bridge'] = str_to_bool(edges['tag_bridge'])
+        edges["bridge"] = str_to_bool(edges["tag_bridge"])
 
     return edges
 
@@ -186,7 +187,9 @@ def assign_road_speeds(row: pd.Series) -> Tuple[float, float]:
     return min_speed, max_speed
 
 
-def annotate_speeds(network: snkit.network.Network, speeds_by_country) -> snkit.network.Network:
+def annotate_speeds(
+    network: snkit.network.Network, speeds_by_country
+) -> snkit.network.Network:
     """
     Using OSM data (network.edges.maxspeed) and speeds_by_country, assemble a
     best guess of road speeds in km/h.
@@ -336,15 +339,19 @@ def annotate_rehabilitation_costs(
             condition = "unpaved"
 
         return float(
-            rehab_costs["rehab_cost_USD_per_km_per_lane"].loc[
-                (rehab_costs.highway == highway_type) & (rehab_costs.road_cond == condition)
-            ].squeeze()
+            rehab_costs["rehab_cost_USD_per_km_per_lane"]
+            .loc[
+                (rehab_costs.highway == highway_type)
+                & (rehab_costs.road_cond == condition)
+            ]
+            .squeeze()
         )
 
     # lookup costs
-    network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
-        get_rehab_costs, axis=1, args=(rehab_costs,)
-    ) * network.edges.lanes
+    network.edges["rehab_cost_USD_per_km"] = (
+        network.edges.apply(get_rehab_costs, axis=1, args=(rehab_costs,))
+        * network.edges.lanes
+    )
 
     return network
 
@@ -406,7 +413,9 @@ if __name__ == "__main__":
     slice_number = int(slice_number)
     osm_epsg = int(osm_epsg)
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
@@ -420,13 +429,19 @@ if __name__ == "__main__":
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
-        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
-        axis="columns"
+        [
+            col
+            for col in edges.columns
+            if col.startswith("start_node_") or col.startswith("end_node_")
+        ],
+        axis="columns",
     )
 
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
-    network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{slice_number}")
+    network = create_network(
+        edges=clean_edges(edges), nodes=None, id_prefix=f"{slice_number}"
+    )
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
@@ -449,9 +464,9 @@ if __name__ == "__main__":
 
     # select and label assets with their type
     # the asset_type is used to later select a damage curve
-    network.edges.loc[network.edges.paved == False, 'asset_type'] = RoadAssets.UNPAVED
-    network.edges.loc[network.edges.paved == True, 'asset_type'] = RoadAssets.PAVED
-    network.edges.loc[network.edges.bridge == True, 'asset_type'] = RoadAssets.BRIDGE
+    network.edges.loc[network.edges.paved == False, "asset_type"] = RoadAssets.UNPAVED
+    network.edges.loc[network.edges.paved == True, "asset_type"] = RoadAssets.PAVED
+    network.edges.loc[network.edges.bridge == True, "asset_type"] = RoadAssets.BRIDGE
 
     logging.info("Annotating network with road speed data")
     network = annotate_speeds(
@@ -467,8 +482,7 @@ if __name__ == "__main__":
 
     logging.info("Annotate network with rehabilitation costs")
     network = annotate_rehabilitation_costs(
-        network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="road")
+        network, pd.read_excel(rehabilitation_costs_path, sheet_name="road")
     )
 
     logging.info("Writing network to disk")

@@ -12,7 +12,8 @@ import geopandas as gpd
 import pandas as pd
 import snkit
 
-from utils import annotate_country, get_administrative_data
+from utils import annotate_country
+from open_gira.admin import get_administrative_data
 from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames
 from open_gira.network import create_network
@@ -41,7 +42,11 @@ def annotate_rehabilitation_costs(
         else:
             asset_type = "rail"
 
-        return float(rehab_costs.loc[rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"])
+        return float(
+            rehab_costs.loc[
+                rehab_costs["asset_type"] == asset_type, "rehab_cost_USD_per_km"
+            ]
+        )
 
     # lookup costs
     network.edges["rehab_cost_USD_per_km"] = network.edges.apply(
@@ -91,7 +96,9 @@ if __name__ == "__main__":
     slice_number = int(slice_number)
     osm_epsg = int(osm_epsg)
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
@@ -110,13 +117,17 @@ if __name__ == "__main__":
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
-        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
-        axis="columns"
+        [
+            col
+            for col in edges.columns
+            if col.startswith("start_node_") or col.startswith("end_node_")
+        ],
+        axis="columns",
     )
 
     # if present, filter nodes to stations
     if nodes is not None and not nodes.empty:
-        nodes = nodes.loc[nodes.tag_railway == 'station', :]
+        nodes = nodes.loc[nodes.tag_railway == "station", :]
 
     # pass an id_prefix containing the slice number to ensure edges and nodes
     # are uniquely identified across all slices in the network
@@ -126,15 +137,21 @@ if __name__ == "__main__":
     )
 
     # select and label assets with their type
-    network.nodes.loc[network.nodes.tag_railway == 'station', 'asset_type'] = RailAssets.STATION
-    network.edges.loc[str_to_bool(network.edges['tag_bridge']), 'asset_type'] = RailAssets.BRIDGE
-    network.edges.loc[network.edges.tag_railway == 'rail', 'asset_type'] = RailAssets.RAILWAY
+    network.nodes.loc[network.nodes.tag_railway == "station", "asset_type"] = (
+        RailAssets.STATION
+    )
+    network.edges.loc[str_to_bool(network.edges["tag_bridge"]), "asset_type"] = (
+        RailAssets.BRIDGE
+    )
+    network.edges.loc[network.edges.tag_railway == "rail", "asset_type"] = (
+        RailAssets.RAILWAY
+    )
 
     # boolean station field
-    network.nodes['station'] = network.nodes.tag_railway == 'station'
+    network.nodes["station"] = network.nodes.tag_railway == "station"
 
     # boolean bridge field
-    network.edges['bridge'] = str_to_bool(network.edges['tag_bridge'])
+    network.edges["bridge"] = str_to_bool(network.edges["tag_bridge"])
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()
@@ -149,8 +166,7 @@ if __name__ == "__main__":
 
     logging.info("Annotate network with rehabilitation costs")
     network = annotate_rehabilitation_costs(
-        network,
-        pd.read_excel(rehabilitation_costs_path, sheet_name="rail")
+        network, pd.read_excel(rehabilitation_costs_path, sheet_name="rail")
     )
 
     logging.info("Writing network to disk")
