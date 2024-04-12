@@ -437,7 +437,7 @@ def disruption_summaries_for_storm_set(wildcards):
     affects and return paths to their summary files.
     """
 
-    json_file = f"{wildcards.OUTPUT_DIR}/power/by_storm_set/{wildcards.STORM_SET}/countries_impacted.json"
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
     country_set = cached_json_file_read(json_file)
 
     return expand(
