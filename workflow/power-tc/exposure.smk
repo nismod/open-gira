@@ -138,7 +138,7 @@ def exposure_summaries_for_storm_set(wildcards):
     affects and return paths to their summary files.
     """
 
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    json_file = f"{wildcards.OUTPUT_DIR}/power/by_storm_set/{wildcards.STORM_SET}/countries_impacted.json"
     country_set = cached_json_file_read(json_file)
 
     return expand(
@@ -234,3 +234,8 @@ rule merge_exposure_admin_levels:
 
             merged.reset_index(drop=True).sort_index(axis=1).to_parquet(output.merged_admin_levels)
             logging.info("Done")
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/exposure/EAE_admin-level-2-0.gpq
+"""
