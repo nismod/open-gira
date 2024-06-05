@@ -9,7 +9,10 @@ rule download_osm:
     run:
         input_file = config["infrastructure_datasets"][wildcards.DATASET]
         if re.match("^https?://", input_file):
-            os.system(f"wget {input_file} --output-document={output}")
+            # if the URL doesn't point to a file, wget will create the output file anyway
+            # snakemake will then think the rule has completed successfully
+            # instead, if we get a bad exit code from wget (4), rm the empty file
+            os.system(f"wget {input_file} --output-document={output} || rm {output}")
         else:
             os.system("mkdir -p dirname {output}")
             os.system(f"cp {input_file} {output}")
