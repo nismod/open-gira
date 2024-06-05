@@ -29,6 +29,7 @@ infrastructure_datasets:
   jamaica-latest: 'http://download.geofabrik.de/central-america/jamaica-latest.osm.pbf'
   kenya-latest: 'http://download.geofabrik.de/africa/kenya-latest.osm.pbf'
   laos-latest: 'https://download.geofabrik.de/asia/laos-latest.osm.pbf'
+  malaysia-latest: 'https://download.geofabrik.de/asia/malaysia-singapore-brunei-latest.osm.pbf'
   myanmar-latest: 'https://download.geofabrik.de/asia/myanmar-latest.osm.pbf'
   tanzania-latest: 'https://download.geofabrik.de/africa/tanzania-latest.osm.pbf'
   thailand-latest: 'https://download.geofabrik.de/asia/thailand-latest.osm.pbf'
