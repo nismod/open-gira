@@ -11,6 +11,10 @@ build
 data/*
 results/*
 *.bak
+soge-sync
+push
+pull
+SCRATCH
 
 # snakemake
 .snakemake/
