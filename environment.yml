@@ -9,12 +9,13 @@ dependencies:
   - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.3.1 # vector-raster intersections
+    - nismod-snail==0.5.0 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
     # required zenodo_get version not available via conda-forge
     - zenodo_get>=1.5.1   # data download client, zenodo API broken w/ <1.5.1
-    - .                   # open_gira helper package
+    - irv-datapkg==0.1.2  # data package helper
+    - -e .                # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
   - contextily          # basemaps for plots
