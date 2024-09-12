@@ -76,27 +76,29 @@ if not config["best_estimate_windspeed_failure_threshold"] in config["transmissi
 
 # Constrain wildcards to NOT use _ or /
 wildcard_constraints:
+    ADMIN_SLUG="admin-level-[0-4]",
+    AGG_FUNC_SLUG="agg-sum",
+    CHUNK_SLUG="chunk-[\d]+",
+    COST_OR_FRACTION="cost|fraction",
+    DATASET="[^_/]+",
+    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
+    EVENTS_OR_FIXED="events|fixed",
+    FILTER_SLUG="filter-[^_/]+",
+    FILENAME="[^/]+",
+    HAZARD_SLUG="hazard-[^_/]+",
+    IRIS_SCENARIO="PRESENT|SSP1-2050|SSP2-2050|SSP5-2050",
     # the output dir must end in 'results'
     # e.g. '/data/open-gira/results', './results', '/my-results', etc.
     # this prevents us matching past it into other folders for an incorrect OUTPUT_DIR,
     # but is more flexible than reading a value from, for example, config.yaml
     OUTPUT_DIR="^.*results",
-    DATASET="[^_/]+",
+    PROJECT_SLUG="project-[^_/]+",
     SLICE_SLUG="slice-[0-9]+",
-    FILTER_SLUG="filter-[^_/]+",
-    HAZARD_SLUG="hazard-[^_/]+",
-    ADMIN_SLUG="admin-level-[0-4]",
-    AGG_FUNC_SLUG="agg-sum",
-    FILENAME="[^/]+",
     STORM_BASIN="EP|NA|NI|SI|SP|WP",
-    STORM_RP="[0-9]+",
-    IRIS_SCENARIO="PRESENT|SSP1-2050|SSP2-2050|SSP5-2050",
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
+    STORM_RP="[0-9]+",
     STORM_SET="(?:IBTrACS|STORM|IRIS)[^\/]*",
-    EVENTS_OR_FIXED="events|fixed",
-    COST_OR_FRACTION="cost|fraction",
-    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     SAMPLE="\d+",
     # may be upper or lower, one 'f' or two
     TIFF_FILE="[^\/\.\s]+\.[tT][iI][fF][fF]?",
@@ -130,6 +132,8 @@ include: "transport/create_network.smk"
 include: "transport/osm_to_geoparquet.smk"
 include: "transport/create_overall_bbox.smk"
 include: "transport/join_data.smk"
+include: "transport/maritime/maritime.smk"
+include: "transport/multi-modal/multi_modal.smk"
 
 include: "flood/aqueduct.smk"
 include: "flood/trim_hazard_data.smk"

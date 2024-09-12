@@ -3,7 +3,6 @@
 name: open-gira
 channels:
   - conda-forge  # majority of dependencies
-  - bioconda  # snakemake
   - defaults
 dependencies:
   - python=3.10
@@ -25,6 +24,7 @@ dependencies:
   - gdal>=3.3           # command-line tools for spatial data
   - geopandas==0.14.4   # geospatial dataframes
   - geopy               # geocoding client
+  - igraph              # graph algorithms and data structures
   - ipykernel           # notebook support
   - jupyter             # notebook support
   - jq                  # JSON processing tool
@@ -50,7 +50,7 @@ dependencies:
   - rioxarray           # xarray datasets from raster files
   - scipy               # scientific computing library
   - spatialpandas       # plotting large datasets
-  - snakemake==7.18.2   # workflow management
+  - bioconda::snakemake==7.18.2   # workflow management
   # https://github.com/snakemake/snakemake/issues/1891
   - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   - tqdm==4.62.3        # progress bars
