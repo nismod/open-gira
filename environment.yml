@@ -9,7 +9,7 @@ dependencies:
   - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.3.1 # vector-raster intersections
+    - nismod-snail==0.5.2 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
     # required zenodo_get version not available via conda-forge
