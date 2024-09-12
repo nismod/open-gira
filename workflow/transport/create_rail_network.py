@@ -14,7 +14,7 @@ from utils import annotate_country
 from open_gira.admin import get_administrative_data
 from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames
-from open_gira.network import create_network
+from open_gira.network_creation import create_network
 from open_gira.utils import str_to_bool
 
 
