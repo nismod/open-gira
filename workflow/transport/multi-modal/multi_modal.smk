@@ -29,7 +29,7 @@ rule remove_edges_in_excess_of_threshold:
         edges = "{OUTPUT_DIR}/multi-modal_network/{PROJECT_SLUG}/edges.gpq",
         raster = "{OUTPUT_DIR}/hazard/{HAZARD_SLUG}.tif",
     output:
-        edges = "{OUTPUT_DIR}/multi-modal_network/{PROJECT_SLUG}/{HAZARD_SLUG}/chunks/{CHUNK_SLUG}/edges.gpq"
+        edges = temp("{OUTPUT_DIR}/multi-modal_network/{PROJECT_SLUG}/{HAZARD_SLUG}/chunks/{CHUNK_SLUG}/edges.gpq")
     run:
         import geopandas as gpd
         import numpy as np
