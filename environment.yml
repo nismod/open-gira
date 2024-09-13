@@ -3,13 +3,12 @@
 name: open-gira
 channels:
   - conda-forge  # majority of dependencies
-  - bioconda  # snakemake
   - defaults
 dependencies:
   - python=3.10
   - pip
   - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.3.1 # vector-raster intersections
+    - nismod-snail==0.5.2 # vector-raster intersections
     - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
     # required zenodo_get version not available via conda-forge
@@ -23,8 +22,9 @@ dependencies:
   - dask<2024.3.0       # larger-than-memory computing
   - flake8              # linter
   - gdal>=3.3           # command-line tools for spatial data
-  - geopandas==0.14.1   # geospatial dataframes
+  - geopandas==0.14.4   # geospatial dataframes
   - geopy               # geocoding client
+  - igraph              # graph algorithms and data structures
   - ipykernel           # notebook support
   - jupyter             # notebook support
   - jq                  # JSON processing tool
@@ -50,7 +50,7 @@ dependencies:
   - rioxarray           # xarray datasets from raster files
   - scipy               # scientific computing library
   - spatialpandas       # plotting large datasets
-  - snakemake==7.18.2   # workflow management
+  - bioconda::snakemake==7.18.2   # workflow management
   # https://github.com/snakemake/snakemake/issues/1891
   - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   - tqdm==4.62.3        # progress bars

@@ -1,6 +1,6 @@
-##########################
-### TRANSPORT WORKFLOW ###
-##########################
+##################################
+### TRANSPORT DAMAGES WORKFLOW ###
+##################################
 
 # OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
@@ -66,6 +66,37 @@ keep_tags:
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 64
 
+#####################################
+### TRANSPORT DISRUPTION WORKFLOW ###
+#####################################
+
+# country for which trade OD has been prepared, and we are to route land trade flows
+study_country_iso_a3: "THA"
+
+# transport cost information
+# road
+road_cost_USD_t_km: 0.05
+road_cost_USD_t_h: 0.48
+road_default_speed_limit_km_h: 80
+# rail
+rail_cost_USD_t_km: 0.05
+rail_cost_USD_t_h: 0.38
+rail_average_freight_speed_km_h: 40
+
+# cost of changing transport mode in USD per tonne
+# from mistral/ccg-critical-minerals/processed_data/transport_costs/intermodal.xlsx, 20240611
+intermodal_cost_USD_t:
+  road_rail: 5
+  maritime_road: 4
+  maritime_rail: 5
+
+# drop trade flows with less volume than this (accelerate flow allocation)
+# N.B. 50t threshold preserves 91% of total volume and 88% of total value
+# for combined agriculture & manufacturing flows between Thailand road nodes -> partner countries
+minimum_flow_volume_t: 50
+
+# if disrupting a network, remove edges experiencing hazard values in excess of this
+edge_failure_threshold: 0.5
 
 #########################
 ### FLOODING WORKFLOW ###
