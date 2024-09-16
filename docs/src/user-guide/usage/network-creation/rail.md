@@ -43,8 +43,6 @@ To specify a desired network:
       a single chunk). To speed network creation for large domains, it can be
       set to a larger square number. The first square number greater than your
       number of available CPUs is a good heuristic.
-    - Check and amend the values of `transport.rail`, which provide some
-      defaults for OSM data gap-filling.
 
 ## Creation
 

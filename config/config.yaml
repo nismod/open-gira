@@ -1,6 +1,6 @@
-##################################
-### TRANSPORT DAMAGES WORKFLOW ###
-##################################
+#########################
+### TRANSPORT DAMAGES ###
+#########################
 
 # OSM datasets in PBF format, principally from: https://download.geofabrik.de/ #
 infrastructure_datasets:
@@ -66,9 +66,9 @@ keep_tags:
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 64
 
-#####################################
-### TRANSPORT DISRUPTION WORKFLOW ###
-#####################################
+####################################
+### MULTI-MODAL NETWORK CREATION ###
+####################################
 
 # country for which trade OD has been prepared, and we are to route land trade flows
 study_country_iso_a3: "THA"
@@ -90,6 +90,10 @@ intermodal_cost_USD_t:
   maritime_road: 4
   maritime_rail: 5
 
+############################
+### TRANSPORT DISRUPTION ###
+############################
+
 # drop trade flows with less volume than this (accelerate flow allocation)
 # N.B. 50t threshold preserves 91% of total volume and 88% of total value
 # for combined agriculture & manufacturing flows between Thailand road nodes -> partner countries
@@ -98,9 +102,9 @@ minimum_flow_volume_t: 50
 # if disrupting a network, remove edges experiencing hazard values in excess of this
 edge_failure_threshold: 0.5
 
-#########################
-### FLOODING WORKFLOW ###
-#########################
+##########################
+### TRANSPORT FLOODING ###
+##########################
 
 hazard_datasets:
   # hazard rasters to retrieve
@@ -131,9 +135,9 @@ direct_damages:
   ]
 
 
-###############################
-### STORM / ENERGY WORKFLOW ###
-###############################
+##################################
+### CYCLONE / ELECTRICITY GRID ###
+##################################
 
 # sets of storm ids to process for potentially many country networks
 storm_sets:
