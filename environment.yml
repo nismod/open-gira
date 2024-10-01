@@ -31,6 +31,7 @@ dependencies:
   - jq                  # JSON processing tool
   - matplotlib==3.7.1   # basic plotting
   - nb_conda_kernels    # notebook support
+  - nbstripout          # notebooks in git
   - netCDF4             # NetCDF file format
   - networkx            # networks
   - numpy               # data arrays
