@@ -4,25 +4,24 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-    - name: Install Python environment
-      uses: mamba-org/provision-with-micromamba@main
-      with:
-        environment-file: environment.yml
-        environment-name: open-gira
-        cache-env: true
+      - name: Install Python environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          environment-name: open-gira
+          cache-environment: true
 
-    - name: Test with pytest
-      # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
-      shell: bash -l {0}
-      # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
-      run: |
-        sudo apt update && sudo apt install osmium-tool
-        osmium --version
+      - name: Test with pytest
+        # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
+        shell: bash -l {0}
+        # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
+        run: |
+          sudo apt update && sudo apt install osmium-tool
+          osmium --version
 
-        python -m pytest -n auto
+          python -m pytest -n auto
