@@ -75,6 +75,7 @@ rule extract_imf_icsd:
             input.xlsx,
             sheet_name='Dataset',
         )
-        # cn is "Capital stock at current PPPs (in mil. 2017US$)"
+        # k{sector}_rppp variables are capital stock in billions of constant
+        # 2017 international dollars for government, private and public-private
         df = df[['country','isocode','year','kgov_rppp', 'kpriv_rppp', 'kppp_rppp']]
         df.to_csv(output.csv, index=False)
