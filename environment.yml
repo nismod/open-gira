@@ -13,7 +13,8 @@ dependencies:
     - snkit==1.8.1        # spatial network cleaning
     # required zenodo_get version not available via conda-forge
     - zenodo_get>=1.5.1   # data download client, zenodo API broken w/ <1.5.1
-    - .                   # open_gira helper package
+    - irv-datapkg==0.1.2  # data package helper
+    - -e .                # open_gira helper package
   - black               # formatter
   - cython==0.29.28     # c--python interface
   - contextily          # basemaps for plots
@@ -30,6 +31,7 @@ dependencies:
   - jq                  # JSON processing tool
   - matplotlib==3.7.1   # basic plotting
   - nb_conda_kernels    # notebook support
+  - nbstripout          # notebooks in git
   - netCDF4             # NetCDF file format
   - networkx            # networks
   - numpy               # data arrays
