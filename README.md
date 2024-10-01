@@ -146,4 +146,5 @@ Programme. The views expressed here do not necessarily reflect the UK
 government's official policies.
 
 This research has also been supported by funding from the World Bank
-Group.
+Group, and the UK Natural Environment Research Council (NERC) through 
+the UK Centre for Greening Finance and Investment (CGFI).
