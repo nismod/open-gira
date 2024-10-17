@@ -144,6 +144,7 @@ include: "transport/multi-modal/multi_modal.smk"
 include: "transport/flow_allocation/allocate.smk"
 
 include: "flood/aqueduct.smk"
+include: "flood/jrc.smk"
 include: "flood/trim_hazard_data.smk"
 
 include: "tropical-cyclone/IBTrACS.smk"
