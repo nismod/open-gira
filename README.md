@@ -48,16 +48,32 @@ And to activate the environment:
 micromamba activate open-gira
 ```
 
-You are now ready to request result files, triggering analysis jobs in the
-process.
+### Utilities
 
-Note that all subsequent commands given in the documentation assume that the
-`open-gira` environment is already activated.
+Some rules use the `wget` utility to download files.
+
+On Linux or MacOS, you may already have the `wget` utility available. If not, 
+it should be possible to install with your usual package manager (e.g. apt, 
+MacPorts, brew), or else using micromamba:
+```bash
+micromamba install wget
+```
+
+On Windows, you may have it already if you have a MinGW or Cygwin installation.
+If not, you can access binaries at [eternallybored.org](https://eternallybored.org/misc/wget/).
+Download the standalone exe and place it for example in `C:\Users\username\bin`
+or somewhere on your PATH.
 
 `exactextract` is used for zonal statistics in the tropical cyclones /
 electricity grid analysis. It is not available via the `conda` package
 management ecosystem and so must be installed separately. Please see
 installation instructions [here](https://github.com/isciences/exactextract).
+
+You are now ready to request result files, triggering analysis jobs in the
+process.
+
+Note that all subsequent commands given in the documentation assume that the
+`open-gira` environment is already activated.
 
 ## Tests
 
