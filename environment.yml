@@ -54,6 +54,5 @@ dependencies:
   # https://github.com/snakemake/snakemake/issues/1891
   - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
   - tqdm==4.62.3        # progress bars
-  - wget                # file downloader
   # pin xarray as suspect 2023.11.0 duplicates/nisnames coords when concatenating
   - xarray==2023.10.1   # named n-dimensional arrays
