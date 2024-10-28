@@ -48,8 +48,8 @@ To specify a desired network:
 
 And to create the network, by way of example:
 ```bash
-snakemake --cores all -- results/egypt-latest_filter-rail/edges.geoparquet
+snakemake --cores all -- results/egypt-latest_filter-rail/edges.gpq
 ```
 
-Note that the nodes file, `results/egypt-latest_filter-rail/nodes.geoparquet`
+Note that the nodes file, `results/egypt-latest_filter-rail/nodes.gpq`
 will by default contain the stations and their names as recorded in OSM.

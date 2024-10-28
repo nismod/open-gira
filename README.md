@@ -95,18 +95,20 @@ users have, if any) by applying general rules with pattern matching on file and
 folder names.
 
 A example invocation looks like:
+
 ```bash
-snakemake --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
+snakemake --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
 ```
 
 Here, we ask `snakemake` to use up to 2 CPUs to produce a target file, in this
 case, the edges of the Welsh road network. `snakemake` pattern matches
-`wales-latest` as the OSM dataset name and `filter-road` as the network type we
-want to filter for.
+`wales-latest` as the OSM dataset name and `road-primary` as the network
+type we want to filter for, picking up the [filter expressions](https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html#filter-expressions) as defined in `config/osm_filters/road-primary.txt`.
 
 To check what work we're going to request before commencing, use the `-n` flag:
+
 ```bash
-snakemake -n --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
+snakemake -n --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
 ```
 
 This will explain which rules will be required to run to produce the target

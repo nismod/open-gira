@@ -11,9 +11,11 @@ snakemake --cores 1 -R clean
 
 ## Geoparquet -> Geopackage
 
-As standard we use the `.geoparquet` format to store vector data on disk.
-Unfortunately common GIS software such as QGIS may not yet support this file
-format. To convert file(s) to geopackage, use:
+As standard we use the [GeoParquet](https://geoparquet.org/) (`.geoparquet` or
+`.gpq`) format to store vector data on disk. Unfortunately common GIS software
+such as QGIS may not yet support this file format. To convert file(s) to
+geopackage, use:
+
 ```
 python workflow/scripts/pq_to_gpkg.py <path_to_geoparquet_1> <path_to_geoparquet_2> <...>
 ```

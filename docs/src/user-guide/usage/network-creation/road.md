@@ -47,5 +47,5 @@ To specify a desired network:
 
 And to create the network, by way of example:
 ```bash
-snakemake --cores all -- results/egypt-latest_filter-road/edges.geoparquet
+snakemake --cores all -- results/egypt-latest_filter-road-primary/edges.gpq
 ```
