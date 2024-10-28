@@ -11,6 +11,7 @@ workflow can be used to analyse environmental risks to infrastructure
 networks using global open data. It is a work in progress.
 
 Goals:
+
 - Automated pipeline for reproducible analysis anywhere in the world
 - Maps per-country and of larger areas
 - Charts/stats of exposure per admin region, per hazard type, scenario, epoch
@@ -20,6 +21,7 @@ Goals:
 - Estimate indirect effects of disruption - people affected, economic activity disrupted
 
 Non-goals:
+
 - Using closed data, which may be appropriate for other projects or use-cases
 - Detailed operational/engineering level simulation
 - Long-term planning
@@ -27,6 +29,7 @@ Non-goals:
 ## Installation
 
 Install `open-gira` by cloning the repository:
+
 ```bash
 git clone https://github.com/nismod/open-gira.git
 ```
@@ -39,11 +42,13 @@ manage these `conda` packages.
 
 Having installed one of the suggested package managers, to create the
 `open-gira` conda environment:
+
 ```bash
 micromamba create -f environment.yml -y
 ```
 
 And to activate the environment:
+
 ```bash
 micromamba activate open-gira
 ```
@@ -52,9 +57,10 @@ micromamba activate open-gira
 
 Some rules use the `wget` utility to download files.
 
-On Linux or MacOS, you may already have the `wget` utility available. If not, 
-it should be possible to install with your usual package manager (e.g. apt, 
+On Linux or MacOS, you may already have the `wget` utility available. If not,
+it should be possible to install with your usual package manager (e.g. apt,
 MacPorts, brew), or else using micromamba:
+
 ```bash
 micromamba install wget
 ```
@@ -80,6 +86,7 @@ Note that all subsequent commands given in the documentation assume that the
 Workflow steps are tested using small sample datasets.
 
 To run the tests:
+
 ```bash
 python -m pytest tests
 ```
@@ -164,5 +171,5 @@ Programme. The views expressed here do not necessarily reflect the UK
 government's official policies.
 
 This research has also been supported by funding from the World Bank
-Group, and the UK Natural Environment Research Council (NERC) through 
+Group, and the UK Natural Environment Research Council (NERC) through
 the UK Centre for Greening Finance and Investment (CGFI).

@@ -5,6 +5,7 @@
 ## Removing intermediate files
 
 You can remove intermediate files by running the `clean` rule.
+
 ```bash
 snakemake --cores 1 -R clean
 ```
@@ -26,6 +27,7 @@ This will write `.gpkg` files beside their source `.geoparquet`.
 
 `matplotlib` plots can be interactive (zoom, pan, etc.), but not as static
 images. Some rules produce pickled plot files. To view these, use:
+
 ```
 python workflow/scripts/unpickle_plot.py <path_to_pickled_plot>
 ```
@@ -34,6 +36,7 @@ python workflow/scripts/unpickle_plot.py <path_to_pickled_plot>
 
 The bash script `archive_results.sh` can be used to back up analysis results.
 Here's an example usage:
+
 ```bash
 ./archive_results.sh results/ /mnt/backup/open-gira
 ```
