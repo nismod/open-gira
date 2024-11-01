@@ -3,9 +3,9 @@ Common functionality for reading and writing to disk.
 """
 
 import functools
-from glob import glob
 import logging
 import json
+from glob import glob
 from os.path import splitext, basename, join
 from typing import Optional, Tuple
 
@@ -13,8 +13,9 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
-from tqdm import tqdm
+import rasterio
 import xarray as xr
+from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
@@ -23,6 +24,8 @@ WGS84_EPSG = 4326
 
 # lines beginning with this character will be ignored by pandas
 COMMENT_PREFIX: str = "#"
+
+NO_GEOM_ERROR_MSG = "geometry"
 
 
 def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
@@ -299,3 +302,32 @@ def read_rehab_costs(path: str) -> pd.DataFrame:
     assert (costs.iloc[:, 1] >= 0).all()
 
     return costs
+
+
+def write_raster_ds(
+    fname,
+    data,
+    transform,
+    driver="GTiff",
+    crs="+proj=latlong",
+):
+    with rasterio.open(
+        fname,
+        "w",
+        driver=driver,
+        height=data.shape[0],
+        width=data.shape[1],
+        count=1,
+        dtype=data.dtype,
+        crs=crs,
+        transform=transform,
+    ) as ds:
+        ds.write(data, indexes=1)
+
+
+def read_raster_ds(fname, band=1, replace_nodata=False, nodata_fill=0):
+    with rasterio.open(fname) as ds:
+        data = ds.read(band)
+    if replace_nodata:
+        data = np.where(data == ds.nodata, nodata_fill, data)
+    return data, ds

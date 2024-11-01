@@ -28,7 +28,8 @@ def max_vector_rasters_intersection(
 def max_vector_raster_intersection(
     vector: geopandas.GeoSeries, raster: str
 ) -> numpy.array:
-    """
+    """Intersect vector geometries with raster, return array of max raster values
+
     Parameters
     ----------
     vector: GeoSeries
