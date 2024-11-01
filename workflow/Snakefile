@@ -82,7 +82,7 @@ wildcard_constraints:
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
-    EVENTS_OR_FIXED="events|fixed",
+    EVENTS_OR_RASTERS="events|wind_speed_raster|RP_raster",
     FILTER_SLUG="filter-[^_/]+",
     FILENAME="[^/]+",
     HAZARD_SLUG="hazard-[^_/]+",

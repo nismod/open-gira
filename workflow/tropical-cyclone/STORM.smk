@@ -11,42 +11,46 @@ https://data.4tu.nl/articles/dataset/STORM_Climate_Change_synthetic_tropical_cyc
 """
 
 
-rule download_storm:
+rule download_STORM:
     """
-    Download an archive of all storm data for a given model (and some metadata,
-    readmes, etc.). For event sets and return period maps.
+    Download an archive STORM wind speed data for a given model (and some
+    metadata, readmes, etc.). For event sets (tracks) and raster maps (fixed
+    RP, or fixed wind speed).
 
     N.B. We rename the downloaded ZIP file from it's original name to
     archive.zip. This makes it easier to match on this file later. The mv
     command should fail if there's more than one zipfile as input (from the
     glob).
+
+    Test with:
+    snakemake -c1 results/input/STORM/events/HadGEM3-GC31-HM/archive.zip
+    snakemake -c1 results/input/STORM/wind_speed_raster/HadGEM3-GC31-HM/archive.zip
+    snakemake -c1 results/input/STORM/RP_raster/HadGEM3-GC31-HM/archive.zip
     """
     output:
-        zip_file = "{OUTPUT_DIR}/input/STORM/{EVENTS_OR_FIXED}/{STORM_MODEL}/archive.zip"
+        zip_file = "{OUTPUT_DIR}/input/STORM/{EVENTS_OR_RASTERS}/{STORM_MODEL}/archive.zip"
     shell:
         """
-        if [[ "{wildcards.EVENTS_OR_FIXED}" == "events" ]]
+        if [[ "{wildcards.EVENTS_OR_RASTERS}" == "events" ]]
         then
-            RESOURCE_FILE="storm_tracks_{wildcards.STORM_MODEL}.txt"
+            RESOURCE_FILE="events/{wildcards.STORM_MODEL}.txt"
+        elif [[ "{wildcards.EVENTS_OR_RASTERS}" == "wind_speed_raster" ]]
+        then
+            RESOURCE_FILE="wind_speed_raster/{wildcards.STORM_MODEL}.txt"
         else
-            RESOURCE_FILE="storm_fixed_{wildcards.STORM_MODEL}.txt"
+            RESOURCE_FILE="RP_raster/{wildcards.STORM_MODEL}.txt"
         fi
 
         wget \
-            --input-file=config/hazard_resource_locations/$RESOURCE_FILE \
-            --directory-prefix={wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/ \
+            --input-file=config/hazard_resource_locations/cyclone/STORM/$RESOURCE_FILE \
+            --directory-prefix={wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_RASTERS}/{wildcards.STORM_MODEL}/ \
             --timestamping \
             --no-check-certificate \
             --content-disposition
         mv \
-            {wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/*.zip \
-            {wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_FIXED}/{wildcards.STORM_MODEL}/archive.zip
+            {wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_RASTERS}/{wildcards.STORM_MODEL}/*.zip \
+            {wildcards.OUTPUT_DIR}/input/STORM/{wildcards.EVENTS_OR_RASTERS}/{wildcards.STORM_MODEL}/archive.zip
         """
-
-"""
-Test with:
-snakemake -c1 results/input/STORM/events/HadGEM-GC31-HM/archive.zip
-"""
 
 rule parse_storm:
     input:
@@ -77,6 +81,7 @@ rule slice_storm:
 To test:
 snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/0/tracks.geoparquet
 """
+
 
 rule extract_storm_event:
     """
@@ -131,31 +136,31 @@ snakemake -c1 results/input/STORM/events/constant/raw/
 """
 
 
-rule extract_storm_fixed_present:
+rule extract_storm_wind_speed_raster_present:
     """
     Unzip a storm file
     """
     input:
-        "{OUTPUT_DIR}/input/STORM/fixed/constant/archive.zip"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/archive.zip"
     output:
-        "{OUTPUT_DIR}/input/STORM/fixed/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     shell:
         """
         unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/fixed/constant/{wildcards.STORM_BASIN}/
+            -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
         """
 
 """
 Test with:
-snakemake -c1 results/input/STORM/fixed/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
+snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
 """
 
 
-rule rename_storm_fixed_present:
+rule rename_storm_wind_speed_raster_present:
     input:
-        rules.extract_storm_fixed_present.output
+        rules.extract_storm_wind_speed_raster_present.output
     output:
-        "{OUTPUT_DIR}/input/STORM/fixed/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_constant_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_constant_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     shell:
         """
         mv {input} {output}
@@ -163,23 +168,23 @@ rule rename_storm_fixed_present:
 
 """
 Test with:
-snakemake -c1 results/input/STORM/fixed/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
+snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
 """
 
 
-rule extract_storm_fixed_future:
+rule extract_storm_wind_speed_raster_future:
     """
     Unzip a storm file
     """
     input:
-        "{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL_FUTURE}/archive.zip"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL_FUTURE}/archive.zip"
     output:
-        "{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL_FUTURE}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL_FUTURE}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL_FUTURE}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL_FUTURE}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     params:
         STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL_FUTURE.upper()
     shell:
         """
-        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/fixed/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/"
+        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/"
         uppercase_filename="STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
         desired_filename="STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
 
@@ -195,30 +200,30 @@ rule extract_storm_fixed_future:
         """
 
 
-rule wrap_storm_fixed:
+rule wrap_storm_wind_speed_raster:
     input:
-        "{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     output:
-        temp("{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.wrapped.tif")
+        temp("{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.wrapped.tif")
     shell:
         """
         gdalwarp -te -179.85 -60.15 180.15 59.95 -co COMPRESS=LZW -co PREDICTOR=2 -co TILED=YES {input} {output}
         """
 
 
-rule mosaic_storm_fixed:
+rule mosaic_storm_wind_speed_raster:
     """
     Merge basin return period maps to global extent
     """
     input:
-        basin_tif_ep="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/EP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_EP_{STORM_RP}_YR_RP.wrapped.tif",
-        basin_tif_na="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/NA/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NA_{STORM_RP}_YR_RP.wrapped.tif",
-        basin_tif_ni="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/NI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NI_{STORM_RP}_YR_RP.wrapped.tif",
-        basin_tif_si="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/SI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SI_{STORM_RP}_YR_RP.wrapped.tif",
-        basin_tif_sp="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/SP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SP_{STORM_RP}_YR_RP.wrapped.tif",
-        basin_tif_wp="{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/WP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_WP_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_ep="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/EP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_EP_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_na="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/NA/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NA_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_ni="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/NI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_NI_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_si="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/SI/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SI_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_sp="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/SP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_SP_{STORM_RP}_YR_RP.wrapped.tif",
+        basin_tif_wp="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/WP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_WP_{STORM_RP}_YR_RP.wrapped.tif",
     output:
-        "{OUTPUT_DIR}/input/STORM/fixed/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif"
     shell:
         """
         gdal_calc.py \
@@ -236,10 +241,10 @@ rule mosaic_storm_fixed:
             --creation-option="TILED=YES"
         """
 
-rule mosaic_storm_fixed_all:
+rule mosaic_storm_wind_speed_raster_all:
     input:
         tiffs=expand(
-            "{{OUTPUT_DIR}}/input/STORM/fixed/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif",
+            "{{OUTPUT_DIR}}/input/STORM/wind_speed_raster/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif",
             STORM_MODEL=[
                 "constant",
                 "CMCC-CM2-VHR4",
@@ -254,4 +259,4 @@ rule mosaic_storm_fixed_all:
             ),
         )
     output:
-        touch("{OUTPUT_DIR}/input/STORM/fixed/mosaic.done")
+        touch("{OUTPUT_DIR}/input/STORM/wind_speed_raster/mosaic.done")
