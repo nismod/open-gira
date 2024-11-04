@@ -138,7 +138,9 @@ snakemake -c1 results/input/STORM/events/constant/raw/
 
 rule extract_storm_wind_speed_raster_present:
     """
-    Unzip a storm file
+    Unzip a contemporary climate STORM wind speed raster
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
     """
     input:
         "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/archive.zip"
@@ -150,13 +152,13 @@ rule extract_storm_wind_speed_raster_present:
             -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
         """
 
-"""
-Test with:
-snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
-"""
-
 
 rule rename_storm_wind_speed_raster_present:
+    """
+    Add the 'constant' sub-string to demarcate as contemporary climate
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
+    """
     input:
         rules.extract_storm_wind_speed_raster_present.output
     output:
@@ -166,15 +168,12 @@ rule rename_storm_wind_speed_raster_present:
         mv {input} {output}
         """
 
-"""
-Test with:
-snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
-"""
-
 
 rule extract_storm_wind_speed_raster_future:
     """
     Unzip a storm file
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_RETURN_PERIODS_CMCC-CM2-VHR4_NA_10_YR_RP.tif
     """
     input:
         "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL_FUTURE}/archive.zip"
@@ -201,6 +200,10 @@ rule extract_storm_wind_speed_raster_future:
 
 
 rule wrap_storm_wind_speed_raster:
+    """
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_RETURN_PERIODS_CMCC-CM2-VHR4_NA_10_YR_RP.wrapped.tif
+    """
     input:
         "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     output:
@@ -214,6 +217,9 @@ rule wrap_storm_wind_speed_raster:
 rule mosaic_storm_wind_speed_raster:
     """
     Merge basin return period maps to global extent
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/constant/STORM_FIXED_RETURN_PERIODS_constant_10_YR_RP.tif
+    snakemake -c1 results/input/STORM/wind_speed_raster/CMCC-CM2-VHR4/STORM_FIXED_RETURN_PERIODS_CMCC-CM2-VHR4_10_YR_RP.tif
     """
     input:
         basin_tif_ep="{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/EP/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_EP_{STORM_RP}_YR_RP.wrapped.tif",
