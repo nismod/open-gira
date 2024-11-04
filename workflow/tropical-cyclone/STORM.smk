@@ -145,27 +145,14 @@ rule extract_storm_wind_speed_raster_present:
     input:
         "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/archive.zip"
     output:
-        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
-    shell:
-        """
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
-        """
-
-
-rule rename_storm_wind_speed_raster_present:
-    """
-    Add the 'constant' sub-string to demarcate as contemporary climate
-    Test with:
-    snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
-    """
-    input:
-        rules.extract_storm_wind_speed_raster_present.output
-    output:
         "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_constant_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     shell:
         """
-        mv {input} {output}
+        OUTPUT_DIR={wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}
+        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+            -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
+        mv $OUTPUT_DIR/STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+            $OUTPUT_DIR/STORM_FIXED_RETURN_PERIODS_constant_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif
         """
 
 
