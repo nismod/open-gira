@@ -53,6 +53,11 @@ rule download_STORM:
         """
 
 rule parse_storm:
+    """
+    Process raw CSV track data into common geoparquet format
+    Test with:
+    snakemake -c1 results/storm_tracks/STORM-constant/0/tracks.geoparquet
+    """
     input:
         csv_dir="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw"
     output:
@@ -60,13 +65,13 @@ rule parse_storm:
     script:
         "./parse_STORM.py"
 
-"""
-Test with:
-snakemake -c1 results/storm_tracks/STORM-constant/0/tracks.geoparquet
-"""
-
 
 rule slice_storm:
+    """
+    Select tracks by location
+    To test:
+    snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/0/tracks.geoparquet
+    """
     input:
         global_tracks="{OUTPUT_DIR}/storm_tracks/STORM-{STORM_MODEL}/{SAMPLE}/tracks.geoparquet",
         grid_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json"
@@ -77,15 +82,14 @@ rule slice_storm:
     script:
         "./slice_storm_tracks.py"
 
-"""
-To test:
-snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/0/tracks.geoparquet
-"""
 
 
 rule extract_storm_event:
     """
     Unzip a storm file for a basin we are interested in
+    Test with:
+    snakemake -c1 results/input/STORM/events/constant/NA/STORM_DATA_IBTRACS_NA_1000_YEARS_0.txt
+    snakemake -c1 results/input/STORM/events/HadGEM3-GC31-HM/NA/STORM_DATA_HadGEM3-GC31-HM_NA_1000_YEARS_0_IBTRACSDELTA.txt
     """
     input:
         "{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/archive.zip"
@@ -106,16 +110,12 @@ rule extract_storm_event:
         fi
         """
 
-"""
-Test with:
-snakemake -c1 results/input/STORM/events/constant/NA/STORM_DATA_IBTRACS_NA_1000_YEARS_0.txt
-snakemake -c1 results/input/STORM/events/HadGEM3-GC31-HM/NA/STORM_DATA_HadGEM3-GC31-HM_NA_1000_YEARS_0_IBTRACSDELTA.txt
-"""
-
 
 rule extract_all_storm_events:
     """
     Unzip all the storm files for a given model. Rename to appropriate file extension (CSV).
+    Test with:
+    snakemake -c1 results/input/STORM/events/constant/raw/
     """
     input:
         "{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/archive.zip"
@@ -129,11 +129,6 @@ rule extract_all_storm_events:
             mv -- $FILE ${{FILE%.txt}}.csv
         done
         """
-
-"""
-Test with:
-snakemake -c1 results/input/STORM/events/constant/raw/
-"""
 
 
 rule extract_storm_wind_speed_raster:
@@ -226,7 +221,13 @@ rule mosaic_storm_wind_speed_raster:
             --creation-option="TILED=YES"
         """
 
+
 rule mosaic_storm_wind_speed_raster_all:
+    """
+    Target rule to create mosaicked wind speed rasters for all models and return periods
+    Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/mosiac.done
+    """
     input:
         tiffs=expand(
             "{{OUTPUT_DIR}}/input/STORM/wind_speed_raster/{STORM_MODEL}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_RP}_YR_RP.tif",
