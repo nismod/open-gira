@@ -136,53 +136,45 @@ snakemake -c1 results/input/STORM/events/constant/raw/
 """
 
 
-rule extract_storm_wind_speed_raster_present:
-    """
-    Unzip a contemporary climate STORM wind speed raster
-    Test with:
-    snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_NA_20_YR_RP.tif
-    """
-    input:
-        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/archive.zip"
-    output:
-        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_constant_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
-    shell:
-        """
-        OUTPUT_DIR={wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}
-        unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
-        mv $OUTPUT_DIR/STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
-            $OUTPUT_DIR/STORM_FIXED_RETURN_PERIODS_constant_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif
-        """
-
-
-rule extract_storm_wind_speed_raster_future:
+rule extract_storm_wind_speed_raster:
     """
     Unzip a storm file
     Test with:
+    snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
     snakemake -c1 results/input/STORM/wind_speed_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_RETURN_PERIODS_CMCC-CM2-VHR4_NA_10_YR_RP.tif
     """
     input:
-        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL_FUTURE}/archive.zip"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/archive.zip"
     output:
-        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL_FUTURE}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL_FUTURE}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
+        "{OUTPUT_DIR}/input/STORM/wind_speed_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_RETURN_PERIODS_{STORM_MODEL}_{STORM_BASIN}_{STORM_RP}_YR_RP.tif"
     params:
-        STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL_FUTURE.upper()
+        STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL.upper()
     shell:
         """
-        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/{wildcards.STORM_MODEL_FUTURE}/{wildcards.STORM_BASIN}/"
-        uppercase_filename="STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
-        desired_filename="STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL_FUTURE}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/"
 
-        # try extracting filename with STORM_MODEL_FUTURE, fall back to STORM_MODEL_UPPER
-        unzip -o {input} $desired_filename -d $unpack_dir || unzip -o {input} $uppercase_filename -d $unpack_dir
+        if [[ "{wildcards.STORM_MODEL}" == "constant" ]]
+        then
+            # present climate
+            unzip -o {input} STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+                -d {wildcards.OUTPUT_DIR}/input/STORM/wind_speed_raster/constant/{wildcards.STORM_BASIN}/
+            mv $unpack_dir/STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif \
+                $unpack_dir/STORM_FIXED_RETURN_PERIODS_constant_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif
+        else
+            # future climate
+            uppercase_filename="STORM_FIXED_RETURN_PERIODS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
+            desired_filename="STORM_FIXED_RETURN_PERIODS_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_{wildcards.STORM_RP}_YR_RP.tif"
 
-        # if we unpacked the uppercase version and its different to STORM_MODEL_FUTURE, rename it
-        pushd $unpack_dir
-            if [ -f $uppercase_filename ] && [ $uppercase_filename != $desired_filename ]; then
-                mv $uppercase_filename $desired_filename
-            fi
-        popd
+            # try extracting filename with STORM_MODEL, fall back to STORM_MODEL_UPPER
+            unzip -o {input} $desired_filename -d $unpack_dir || unzip -o {input} $uppercase_filename -d $unpack_dir
+
+            # if we unpacked the uppercase version and its different to STORM_MODEL, rename it
+            pushd $unpack_dir
+                if [ -f $uppercase_filename ] && [ $uppercase_filename != $desired_filename ]; then
+                    mv $uppercase_filename $desired_filename
+                fi
+            popd
+        fi
         """
 
 
