@@ -21,35 +21,37 @@ from user-supplied sources (e.g. rehabilitation costs).
 ## Configuration
 
 To specify a desired network:
+
 - Review and amend the spreadsheets in `bundled_data/transport`, these supply
   information that is used to gap-fill or extend what can be determined from OSM alone.
 - Review and amend `config/config.yaml`:
-    - The `infrastructure_datasets` map should contain a key pointing to an `.osm.pbf`
-      file URL for desired area. There are currently entries for the planet,
-      for (some definition of) continents and several countries. We use
-      the [geofabrik](http://download.geofabrik.de/) service for continent and
-      country-level OSM extracts.
-    - Check the OSM filter file pointed to by `network_filters.rail`.
-      This file specifies which [elements](https://wiki.openstreetmap.org/wiki/Elements)
-      (nodes, ways or relations) to keep (or reject) from the multitude of data
-      in an OSM file. See the filter expressions section
-      [here](https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html)
-      for more information on the syntax of these files.
-    - Check and amend `keep_tags.rail`. This list of strings specifies which
-      `tags` (attributes) to retain on the filtered elements we extract from
-      the `.osm.pbf` file.
-    - Review `slice_count`. This controls the degree of parallelism possible.
-      With it set to 1, there is no spatial slicing (we create the network in
-      a single chunk). To speed network creation for large domains, it can be
-      set to a larger square number. The first square number greater than your
-      number of available CPUs is a good heuristic.
+  - The `infrastructure_datasets` map should contain a key pointing to an `.osm.pbf`
+    file URL for desired area. There are currently entries for the planet,
+    for (some definition of) continents and several countries. We use
+    the [geofabrik](http://download.geofabrik.de/) service for continent and
+    country-level OSM extracts.
+  - Check the OSM filter file pointed to by `network_filters.rail`.
+    This file specifies which [elements](https://wiki.openstreetmap.org/wiki/Elements)
+    (nodes, ways or relations) to keep (or reject) from the multitude of data
+    in an OSM file. See the filter expressions section
+    [here](https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html)
+    for more information on the syntax of these files.
+  - Check and amend `keep_tags.rail`. This list of strings specifies which
+    `tags` (attributes) to retain on the filtered elements we extract from
+    the `.osm.pbf` file.
+  - Review `slice_count`. This controls the degree of parallelism possible.
+    With it set to 1, there is no spatial slicing (we create the network in
+    a single chunk). To speed network creation for large domains, it can be
+    set to a larger square number. The first square number greater than your
+    number of available CPUs is a good heuristic.
 
 ## Creation
 
 And to create the network, by way of example:
+
 ```bash
-snakemake --cores all -- results/egypt-latest_filter-rail/edges.geoparquet
+snakemake --cores all -- results/egypt-latest_filter-rail/edges.gpq
 ```
 
-Note that the nodes file, `results/egypt-latest_filter-rail/nodes.geoparquet`
+Note that the nodes file, `results/egypt-latest_filter-rail/nodes.gpq`
 will by default contain the stations and their names as recorded in OSM.
