@@ -10,6 +10,11 @@ build
 # Data
 data/*
 results/*
+notebooks/*.gpkg
+notebooks/*.png
+notebooks/*.qgz
+notebooks/*.tif
+notebooks/*.xml
 *.bak
 
 # snakemake
