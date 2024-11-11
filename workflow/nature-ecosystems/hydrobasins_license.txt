@@ -1,0 +1,279 @@
+HydroSHEDS Technical Documentation v1.4
+
+https://data.hydrosheds.org/file/technical-documentation/HydroSHEDS_TechDoc_v1_4.pdf
+
+APPENDIX A
+
+HYDROSHEDS VERSION 1 – LICENSE AGREEMENT
+
+THE LICENSED MATERIALS (AS DEFINED BELOW) ARE PROVIDED UNDER THE TERMS OF THIS
+LICENSE ("LICENSE"). THE LICENSED MATERIALS ARE PROTECTED BY COPYRIGHT AND/OR
+OTHER APPLICABLE LAW. ANY USE OF THE LICENSED MATERIALS OTHER THAN AS AUTHORIZED
+UNDER THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED. BY EXERCISING ANY RIGHTS TO
+THE LICENSED MATERIALS PROVIDED HERE, YOU ACCEPT AND AGREE TO BE BOUND BY THE
+TERMS OF THIS LICENSE. TO THE EXTENT THIS LICENSE MAY BE CONSIDERED TO BE A
+CONTRACT, THE LICENSOR GRANTS YOU THE RIGHTS CONTAINED HERE IN CONSIDERATION OF
+YOUR ACCEPTANCE OF SUCH TERMS AND CONDITIONS.
+
+1. DEFINITIONS
+
+1.1. “Derivative Works” shall have the meaning set forth in the U.S. Copyright
+Act (17 U.S.C. §101 et seq).
+
+1.2. “End Users” means those parties to whom Licensee or an authorized
+distributor has licensed the Licensed Materials integrated with the Licensee
+Programs pursuant to a written license agreement for such party’s use and not
+for redistribution.
+
+1.3. “Intellectual Property Rights” means any and all tangible and intangible:
+(i) copyrights and other rights associated with works of authorship throughout
+the world, including but not limited to copyrights, moral rights, and mask
+works, and all Derivative Works thereof; (ii) trademark and trade name rights
+and similar rights; (iii) trade secret rights; (iv) patents, designs,
+algorithms, utility models, and other industrial property rights, and all
+improvements thereto; (v) all other intellectual and industrial property rights
+(of every kind and nature throughout the world and however designated) whether
+arising by operation of law, contract, license, or otherwise; and (vi) all
+registrations, applications, renewals, extensions, continuations, divisions, or
+reissues thereof now or hereafter in force (including any rights in any of the
+foregoing).
+
+1.4. “Licensed Materials” means WWF’s Hydrological data and maps based on
+SHuttle Elevation Derivatives at multiple Scales (“HydroSHEDS”) version 1 data
+for all regions and versions available as of the Effective Date and later
+developed during the term of this License, as further described in Exhibit A,
+not including any later versions or modifications.
+
+1.5. “Personnel” means a Party’s employees, contractors (including
+Subcontractors) and consultants.
+
+2. LICENSE GRANTS
+
+2.1. License. Subject to the terms and conditions of this License, WWF hereby
+grants to Licensee the following rights and licenses:
+
+2.1.1. Development. A worldwide, nonexclusive, non-transferable, paid up right
+and license to (i) use, reproduce, display, and perform the Licensed Materials
+to the extent necessary to integrate the Licensed Materials with Derivative
+Works; and (ii) permit third parties doing development work for Licensee
+(“Subcontractors”) to exercise any or all of the rights set forth in (i).
+Licensee shall be responsible for the acts or omissions of its Subcontractors
+and for ensuring that use of the Licensed Materials by its Subcontractors is
+consistent with Licensee’s obligations under this License.
+
+2.1.2. Distribution and Sublicense Rights. A worldwide, nonexclusive,
+non-transferable, paid up right and license to (i) market and distribute the
+Licensed Materials incorporated into any Derivative Works to End Users, subject
+to the terms and conditions of an end user license agreement with terms that are
+at least as protective of the Licensed Materials as are the terms of this
+License; and (ii) sublicense to Licensee’s authorized distributors any or all of
+the rights set forth in (i), pursuant to a written distribution agreement with
+terms that are at least as protective of the Licensed Materials as are the terms
+of this License. In no event shall Licensee license or distribute the Licensed
+Materials as a stand-alone product. Licensee’s agreement with an authorized
+distributor shall provide that: (i) the agreement shall automatically terminate
+upon any termination of this License; and (ii) WWF shall be an intended third
+party beneficiary of the agreement and shall have the right to enforce any and
+all obligations of Licensee under such agreement. Licensee shall be responsible
+for the acts or omissions of any of its distributors and for ensuring that use
+of the Licensed Materials by its distributors is consistent with the terms of
+this License. Each sublicense agreement shall obligate the applicable
+distributor to distribute the Licensed Materials to End Users only (accompanied
+by an end user license agreement), and shall not permit such distributor to
+distribute to other subdistributors. In no event will a distributor be granted
+the development rights set forth in Section 2.1.1.
+
+2.1.3. Restrictions and Sublicense. Licensee shall not decompile, reverse
+engineer, or disassemble the Licensed Materials, in whole or in part, except as
+expressly authorized by this License or by prior written consent of WWF, and
+shall include such restrictions in its license agreement with End Users.
+Licensee shall protect against unauthorized copying and/or distribution of
+Licensed Materials, associated license keys and/or licensing mechanisms, if
+applicable, with the same degree of care that it protects its Licensee
+confidential information.
+
+2.2. Attribution Requirements. Licensee shall ensure that its use and
+distribution of the Licensed Materials includes the required attributions set
+forth in Exhibit B.
+
+3. OWNERSHIP
+
+Except as otherwise provided in this License, WWF, or its licensors, shall own
+and retain all Intellectual Property Rights in the Licensed Materials and any
+modifications, extensions, or improvements of the Licensed Materials however
+developed.
+
+4. NO WARRANTY
+
+4.1. THE LICENSED MATERIALS AND ANY OTHER INFORMATION PROVIDED TO LICENSEE BY
+WWF ARE PROVIDED “AS IS” AND WITH ALL FAULTS. THE ENTIRE RISK AS TO SATISFACTORY
+USE, PERFORMANCE, QUALITY AND ACCURACY OF THE LICENSED MATERIALS AND ANY OTHER
+INFORMATION PROVIDED TO LICENSEE BY WWF IS WITH LICENSEE. TO THE MAXIMUM EXTENT
+PERMITTED UNDER APPLICABLE LAW, WWF DISCLAIMS AND HEREBY EXCLUDES ALL
+WARRANTIES, CONDITIONS AND REPRESENTATIONS, WHETHER EXPRESS, IMPLIED, WRITTEN,
+OR ORAL, STATUTORY OR OTHERWISE, AND WHETHER ARISING UNDER THIS LICENSE OR
+OTHERWISE, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTIES OF DESIGN,
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT OF THIRD
+PARTY RIGHTS, OR WARRANTIES ARISING FROM A COURSE OF DEALING, COURSE OF
+PERFORMANCE, USAGE OR TRADE PRACTICE. WWF SHALL NOT BE BOUND BY OR LIABLE FOR
+ANY REPRESENTATIONS OR WARRANTIES, WHETHER WRITTEN OR ORAL, WITH RESPECT TO THE
+LICENSED MATERIALS OR ANY OTHER INFORMATION PROVIDED TO LICENSEE BY WWF, MADE BY
+WWF OR ITS AGENTS, EMPLOYEES, REPRESENTATIVES OR ANY THIRD PARTY.
+
+4.2. Licensee shall not: (a) make any representation or warranty whatsoever on
+behalf of WWF concerning the quality, performance or other characteristics of
+the Licensed Materials or any other information provided to Licensee by WWF; (b)
+incur any liability on behalf of WWF or purport to make any commitment binding
+upon WWF; or (c) make any commitment to modify any of the Licensed Materials or
+any other information provided to Licensee by WWF.
+
+5. INDEMNIFICATION
+
+5.1. As used in this Section 8, (i) “Claim” means any and all pending, actual or
+threatened third party claims, and any resulting losses, damages, liabilities,
+settlement, costs, or expenses of WWF (including legal expenses and the expenses
+of other professionals), as incurred, arising out of or relating to this
+License, and (ii) indemnification extends to the officers, directors, employees
+and agents of WWF, as applicable. HydroSHEDS Technical Documentation v1.4
+
+5.2. Licensee will defend, indemnify and hold WWF harmless from and against any
+Claim arising out of or relating to (i) the use by Licensee, its affiliates,
+third party developers, or End Users of the Licensed Materials or any other
+information provided to Licensee by WWF; (ii) the marketing or distribution of
+the Licensed Materials by Licensee, its affiliates, or any of their
+sublicensees; and (iii) any changes made to the Licensed Materials by Licensee,
+its affiliates, or third party developers.
+
+5.3. WWF will provide Licensee prompt notice of any actual or alleged Claim,
+provided, that the failure to give such notice shall not relieve Licensee of
+Licensee’s obligations hereunder except to the extent that Licensee was actually
+and materially prejudiced by such failure. Licensee shall have the option to
+defend such Claims provided that Licensee may not compromise or settle any Claim
+or consent to the entry of any judgment without WWF’s prior written consent,
+which WWF shall withhold in its sole discretion.
+
+6. LIABILITY AND WAIVER OF DAMAGES
+
+LICENSEE ACKNOWLEDGES THAT WWF IS A NONPROFIT ORGANIZATION NOT ENGAGED IN A
+COMMERCIAL BUSINESS, INDUSTRY, OR TRADE. WWF’S LIABILITY TO LICENSEE, WHETHER IN
+CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY OR BY STATUTE OR OTHERWISE, ARISING
+OUT OF OR RELATING TO THE FORMATION OR PERFORMANCE OF THIS LICENSE, SHALL NOT
+EXCEED THE ROYALTY, IF ANY, PAID TO WWF UNDER THIS LICENSE. ALL LIABILITY IS
+CUMULATIVE AND NOT PER INCIDENT. WWF WILL NOT BE LIABLE, WHETHER IN CONTRACT,
+TORT, NEGLIGENCE, STRICT LIABILITY OR BY STATUTE OR OTHERWISE, FOR ANY INDIRECT,
+SPECIAL, INCIDENTAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT
+LIMITATION, DAMAGES FOR LOSS OF PROFITS, LOSS OF BUSINESS, LOSS OF USE OR OF
+DATA, OR INTERRUPTION OF BUSINESS), ARISING OUT OF OR RELATING TO THE FORMATION
+OR PERFORMANCE OF THIS LICENSE, EVEN IF THE PARTIES HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS WILL APPLY NOTWITHSTANDING ANY
+FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY PROVIDED HEREIN. THE PARTIES
+STIPULATE AND AGREE THAT THIS SECTION 6 WAS PART OF THE CONSIDERATION FOR THE
+AGREED-UPON ROYALTY AND ACCESS TO USE DATA NOT ORIGINALLY DEVELOPED FOR
+COMMERCIAL USERS.
+
+7. TERMINATION
+
+7.1. Termination. This License and the rights granted hereunder will terminate
+(i) automatically upon any breach by Licensee of the terms of this License; or
+(ii) in the sole discretion of WWF.
+
+7.2. Rights upon Termination. If this License is terminated, all licenses to
+distribute and sublicense the Licensed Materials granted hereunder shall
+terminate; however, any End User licenses for Derivative Works that incorporate
+Licensed Materials that were entered into prior to the date of termination,
+shall not be affected and shall continue in full force and effect.
+
+7.3. Survival. The Parties’ rights and obligations under Sections 4 (No
+Warranty), 5 (Indemnification), 6 (Liability and Waiver of Damages), 7.2 (Rights
+Upon Termination), 9 (Notices) and 10 (Miscellaneous) shall survive any
+termination of this License.
+
+8. PUBLICITY
+
+8.1. Use of Marks Prohibited. The Licensee shall not issue any press release or
+any other publicity regarding this License or the Parties’ relationship without
+WWF’s express written approval. Neither Party shall use the name, trade name,
+trademarks, service marks or logos of the other Party without the prior written
+consent of the other Party.
+
+9. NOTICES
+
+All notices required to be given to WWF under this License are deemed effective
+when made in writing and received by (i) registered mail, (ii) certified mail,
+return receipt requested, or (iii) overnight mail, addressed and sent to the
+attention of:
+
+Name: World Wildlife Fund, Inc.
+
+Address: 1250 24th Street NW Washington, DC 20031
+
+Attention: General Counsel
+
+10. MISCELLANEOUS
+
+10.1. Governing Law, Jurisdiction and Venue. This License and all matters
+arising out of or relating to this License shall be governed by the laws of the
+District of Columbia, without giving effect to any law or rule that would cause
+the laws of any other jurisdiction to be applied.
+
+10.2. Severability. In the event any provision of this License is held to be
+invalid or unenforceable, the remaining provisions of this License will remain
+in full force.
+
+10.3. Waiver. The waiver by either Party of any default or breach of this
+License shall not constitute a waiver of any other or subsequent default or
+breach.
+
+10.4. Injunctive Relief. Licensee acknowledges that a breach of its obligations
+under this License would cause WWF irreparable damage. Accordingly, Licensee
+agrees that in the event of such breach or threatened breach, in addition to
+remedies at law, WWF shall have the right to injunctive or other equitable
+relief to prevent Licensee’s violations of its obligations hereunder.
+
+10.5. No Agency, Partnership or Joint Venture. No agency, employment,
+partnership, joint venture, or other joint relationship is created hereby.
+Licensee and WWF are each independent contractors with respect to the other and
+neither has any authority to bind the other in any respect whatsoever.
+
+10.6. Assignment. This License is binding on and inures to the benefit of the
+Parties and their respective successors and permitted assigns. Licensee may not
+assign this License except with the prior written consent of WWF. WWF shall be
+entitled to assign, transfer, delegate or otherwise dispose of, whether
+voluntarily or involuntarily, by operation of law or otherwise, this License and
+any of its rights or obligations under this License. Any attempted assignment,
+delegation, or transfer in contravention of this License shall be null and void.
+
+10.7. Records. Licensee agrees to maintain complete, clear and accurate records
+for at least two (2) years backwards at any point in time of its activities
+under this License, including, without limitation, its sales of the Licensed
+Materials integrated with any Derivative Works and the identity and address of
+each End User, in accordance with standard business practices and Generally
+Accepted Accounting Principles. Licensee shall permit WWF or persons designated
+by WWF to inspect records pertaining to the Licensed Materials and any other
+materials provided to Licensee by WWF to ensure compliance by Licensee with its
+obligations to WWF. Any such inspection and audit shall be conducted during
+regular business hours and in such a manner as not to interfere unduly with
+normal business activities of Licensee.
+
+10.8. Export Control. The Parties agree that the export of the Licensed
+Materials is subject to the export control laws of the United States of America,
+including, without limitation, any regulations promulgated by the Department of
+Commerce (or its successors) or the Department of Treasury and Licensee agrees
+to comply with all such laws and regulation in connection with its use,
+distribution or licensing of the Licensed Materials.
+
+10.9. Headings. The section headings appearing in this License are inserted only
+as a matter of convenience and in no way define, limit, construe or describe the
+scope or intent of any such section nor in any way affect this License.
+
+10.10. Entire Agreement; Amendment. This License, together with the Exhibits and
+Attachments hereto, constitutes the final, complete and exclusive agreement
+between the Parties relative to the subject matter hereof and supersedes all
+prior or contemporaneous agreements or representations, written or oral,
+relating to its subject matter. This License shall also supersede all terms of
+any additional or unsigned license terms included in any package, media or
+electronic version of Licensed Materials provided under this License, including
+but not limited to any "shrink wrap", "click wrap" or "pop-up" license terms.
+This License shall not be changed, modified, supplemented or amended in any
+manner except as agreed to in a written instrument signed by authorized
+representatives of both Parties

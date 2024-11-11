@@ -116,6 +116,8 @@ include: "context/gadm.smk"
 include: "context/natural-earth.smk"
 
 include: "nature-ecosystems/land-cover.smk"
+include: "nature-ecosystems/hydrobasins.smk"
+
 include: "population-economy/dryad-gdp.smk"
 include: "population-economy/ghsl-pop.smk"
 
