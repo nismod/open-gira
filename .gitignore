@@ -10,6 +10,7 @@ build
 # Data
 data/*
 results/*
+notebooks/*.geojson
 notebooks/*.gpkg
 notebooks/*.png
 notebooks/*.qgz
