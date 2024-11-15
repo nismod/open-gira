@@ -83,7 +83,6 @@ rule slice_storm:
         "./slice_storm_tracks.py"
 
 
-
 rule extract_storm_event:
     """
     Unzip a storm file for a basin we are interested in
@@ -133,7 +132,7 @@ rule extract_all_storm_events:
 
 rule extract_storm_wind_speed_raster:
     """
-    Unzip a storm file
+    Unzip a STORM file of wind speeds (for a given climate model, basin and return period).
     Test with:
     snakemake -c1 results/input/STORM/wind_speed_raster/constant/NA/STORM_FIXED_RETURN_PERIODS_constant_NA_20_YR_RP.tif
     snakemake -c1 results/input/STORM/wind_speed_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_RETURN_PERIODS_CMCC-CM2-VHR4_NA_10_YR_RP.tif
@@ -173,6 +172,49 @@ rule extract_storm_wind_speed_raster:
         """
 
 
+rule extract_storm_RP_raster:
+    """
+    Unzip a STORM file of return periods in years (for a given climate model, basin and wind speed).
+    Test with:
+    snakemake -c1 results/input/STORM/RP_raster/constant/NA/STORM_FIXED_WIND_SPEEDS_constant_NA_30_MS.tif
+    snakemake -c1 results/input/STORM/RP_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_WIND_SPEEDS_CMCC-CM2-VHR4_NA_30_MS.tif
+    snakemake -c1 results/input/STORM/RP_raster/HadGEM3-GC31-HM/NA/STORM_FIXED_WIND_SPEEDS_HadGEM3-GC31-HM_NA_30_MS.tif
+    """
+    input:
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/archive.zip"
+    output:
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_{STORM_BASIN}_{STORM_SPEED}_MS.tif"
+    params:
+        STORM_MODEL_UPPER = lambda wildcards: wildcards.STORM_MODEL.upper()
+    shell:
+        """
+        unpack_dir="{wildcards.OUTPUT_DIR}/input/STORM/RP_raster/{wildcards.STORM_MODEL}/{wildcards.STORM_BASIN}/"
+
+        if [[ "{wildcards.STORM_MODEL}" == "constant" ]]
+        then
+            # present climate
+            unzip -o {input} STORM_FIXED_WIND_SPEEDS_{wildcards.STORM_BASIN}_{wildcards.STORM_SPEED}_MS.tif \
+                -d {wildcards.OUTPUT_DIR}/input/STORM/RP_raster/constant/{wildcards.STORM_BASIN}/
+            mv $unpack_dir/STORM_FIXED_WIND_SPEEDS_{wildcards.STORM_BASIN}_{wildcards.STORM_SPEED}_MS.tif \
+                $unpack_dir/STORM_FIXED_WIND_SPEEDS_constant_{wildcards.STORM_BASIN}_{wildcards.STORM_SPEED}_MS.tif
+        else
+            # future climate
+            uppercase_filename="STORM_FIXED_WIND_SPEEDS_{params.STORM_MODEL_UPPER}_{wildcards.STORM_BASIN}_{wildcards.STORM_SPEED}_MS.tif"
+            desired_filename="STORM_FIXED_WIND_SPEEDS_{wildcards.STORM_MODEL}_{wildcards.STORM_BASIN}_{wildcards.STORM_SPEED}_MS.tif"
+
+            # try extracting filename with STORM_MODEL, fall back to STORM_MODEL_UPPER
+            unzip -o {input} $desired_filename -d $unpack_dir || unzip -o {input} $uppercase_filename -d $unpack_dir
+
+            # if we unpacked the uppercase version and its different to STORM_MODEL, rename it
+            pushd $unpack_dir
+                if [ -f $uppercase_filename ] && [ $uppercase_filename != $desired_filename ]; then
+                    mv $uppercase_filename $desired_filename
+                fi
+            popd
+        fi
+        """
+
+
 rule wrap_storm_wind_speed_raster:
     """
     Test with:
@@ -185,6 +227,21 @@ rule wrap_storm_wind_speed_raster:
     shell:
         """
         gdalwarp -te -179.85 -60.15 180.15 59.95 -co COMPRESS=LZW -co PREDICTOR=2 -co TILED=YES {input} {output}
+        """
+
+
+rule wrap_storm_RP_raster:
+    """
+    Test with:
+    snakemake -c1 results/input/STORM/RP_raster/CMCC-CM2-VHR4/NA/STORM_FIXED_WIND_SPEEDS_CMCC-CM2-VHR4_NA_30_MS.wrapped.tif
+    """
+    input:
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_{STORM_BASIN}_{STORM_SPEED}_MS.tif"
+    output:
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/{STORM_BASIN}/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_{STORM_BASIN}_{STORM_SPEED}_MS.wrapped.tif"
+    shell:
+        """
+        gdalwarp -te -179.85 -60.15 180.15 59.95 -co COMPRESS=LZW -co PREDICTOR=2 -co TILED=YES -dstnodata 0 {input} {output}
         """
 
 
@@ -222,11 +279,53 @@ rule mosaic_storm_wind_speed_raster:
         """
 
 
+rule mosaic_storm_RP_raster:
+    """
+    Merge basin wind speed maps to global extent
+    Test with:
+    snakemake -c1 results/input/STORM/RP_raster/constant/STORM_FIXED_WIND_SPEEDS_constant_30_MS.tif
+    snakemake -c1 results/input/STORM/RP_raster/CMCC-CM2-VHR4/STORM_FIXED_WIND_SPEEDS_CMCC-CM2-VHR4_30_MS.tif
+    """
+    input:
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/EP/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_EP_{STORM_SPEED}_MS.wrapped.tif",
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/NA/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_NA_{STORM_SPEED}_MS.wrapped.tif",
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/NI/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_NI_{STORM_SPEED}_MS.wrapped.tif",
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/SI/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_SI_{STORM_SPEED}_MS.wrapped.tif",
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/SP/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_SP_{STORM_SPEED}_MS.wrapped.tif",
+        "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/WP/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_WP_{STORM_SPEED}_MS.wrapped.tif",
+    output:
+        mosaic = "{OUTPUT_DIR}/input/STORM/RP_raster/{STORM_MODEL}/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_{STORM_SPEED}_MS.tif"
+    run:
+        import numpy as np
+        import rioxarray as rio
+        import xarray as xr
+
+        max_return_period_years = 2_000  # discard values above this threshold
+
+        rasters: list[xr.DataArray] = []
+        for basin_path in input:
+            basin: str = basin_path.split("/")[-2]
+            raster: xr.DataArray = rio.open_rasterio(basin_path).sel(band=1)
+            raster.expand_dims("basin")
+            raster["basin"] = basin
+            # discard return period values over some threshold (those with only a handful of events)
+            raster = raster.where(raster < max_return_period_years)
+            # we're interested in the minimum non-zero value across the (overlapping) basins
+            # set zero values to NaN, allows nanmin subsequently
+            raster = raster.where(raster != 0)
+            rasters.append(raster)
+        concat: xr.DataArray = xr.concat(rasters, "basin")
+
+        mosaic: xr.DataArray = raster.copy(data=np.nanmin(concat.values, axis=0))
+        mosaic = mosaic.drop_vars("basin")
+        mosaic.rio.to_raster(output.mosaic)
+
+
 rule mosaic_storm_wind_speed_raster_all:
     """
     Target rule to create mosaicked wind speed rasters for all models and return periods
     Test with:
-    snakemake -c1 results/input/STORM/wind_speed_raster/mosiac.done
+    snakemake -c1 results/input/STORM/wind_speed_raster/mosaic.done
     """
     input:
         tiffs=expand(
@@ -246,3 +345,26 @@ rule mosaic_storm_wind_speed_raster_all:
         )
     output:
         touch("{OUTPUT_DIR}/input/STORM/wind_speed_raster/mosaic.done")
+
+
+rule mosaic_storm_RP_raster_all:
+    """
+    Target rule to create mosaicked return period rasters for all models and return periods
+    N.B. Rule mosaic_storm_RP_raster drops return period values over a threshold (considered noise).
+    Test with:
+    snakemake -c1 results/input/STORM/RP_raster/mosaic.done
+    """
+    input:
+        tiffs=expand(
+            "{{OUTPUT_DIR}}/input/STORM/RP_raster/{STORM_MODEL}/STORM_FIXED_WIND_SPEEDS_{STORM_MODEL}_{STORM_SPEED}_MS.tif",
+            STORM_MODEL=[
+                "constant",
+                "CMCC-CM2-VHR4",
+                "CNRM-CM6-1-HR",
+                "EC-Earth3P-HR",
+                "HadGEM3-GC31-HM",
+            ],
+            STORM_SPEED=(20, 25, 29, 30, 35, 37, 40, 43, 45, 50, 51, 55, 60, 61, 65, 70, 75),
+        )
+    output:
+        touch("{OUTPUT_DIR}/input/STORM/RP_raster/mosaic.done")
