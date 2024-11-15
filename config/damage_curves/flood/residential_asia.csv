@@ -1,0 +1,13 @@
+# Huizinga et al., 2017 European Commission JRC Techical Report
+# https://publications.jrc.ec.europa.eu/repository/handle/JRC105688
+# table 3-2: average continental damage function for Asia - residential buildings
+inundation_depth_(m),damage_fraction
+0,0
+0.5,0.33
+1,0.49
+1.5,0.62
+2,0.72
+3,0.87
+4,0.93
+5,0.98
+6,1

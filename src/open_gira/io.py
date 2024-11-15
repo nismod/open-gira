@@ -3,9 +3,9 @@ Common functionality for reading and writing to disk.
 """
 
 import functools
-from glob import glob
 import logging
 import json
+from glob import glob
 from os.path import splitext, basename, join
 from typing import Optional, Tuple
 
@@ -13,8 +13,9 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
-from tqdm import tqdm
+import rasterio
 import xarray as xr
+from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
@@ -23,6 +24,8 @@ WGS84_EPSG = 4326
 
 # lines beginning with this character will be ignored by pandas
 COMMENT_PREFIX: str = "#"
+
+NO_GEOM_ERROR_MSG = "geometry"
 
 
 def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
@@ -78,22 +81,22 @@ def bit_pack_dataarray_encoding(da: xr.DataArray, n_bits: int = 16) -> dict:
         scale_factor, add_offset, fill_value = defaults()
     else:
         scale_factor, add_offset, fill_value = netcdf_packing_parameters(
-            da.min().item(),
-            da.max().item(),
-            n_bits
+            da.min().item(), da.max().item(), n_bits
         )
 
     return {
         da.name: {
-            'dtype': f'int{n_bits:d}',
-            'scale_factor': scale_factor,
-            'add_offset': add_offset,
-            '_FillValue': fill_value
+            "dtype": f"int{n_bits:d}",
+            "scale_factor": scale_factor,
+            "add_offset": add_offset,
+            "_FillValue": fill_value,
         }
     }
 
 
-def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tuple[float, float]:
+def netcdf_packing_parameters(
+    minimum: float, maximum: float, n_bits: int
+) -> Tuple[float, float]:
     """
     Given (floating point) data within a certain range, find the best scale
     factor and offset to use to pack as signed integer values, using most of
@@ -135,7 +138,7 @@ def netcdf_packing_parameters(minimum: float, maximum: float, n_bits: int) -> Tu
 
     # _FillValue used to representing NaN as serialised integer
     # we have kept room at the ends of the integer bit space to avoid a collision
-    fill_value = -2 ** (n_bits - 1)
+    fill_value = -(2 ** (n_bits - 1))
 
     # if there is no variance in the data, return unscaled
     if minimum == maximum:
@@ -216,7 +219,9 @@ def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> Non
     """
 
     # write with a CRS, makes it easier to concatenate dataframes later
-    empty_gdf = gpd.GeoDataFrame({"geometry": []}, crs=pyproj.CRS.from_user_input(WGS84_EPSG))
+    empty_gdf = gpd.GeoDataFrame(
+        {"geometry": []}, crs=pyproj.CRS.from_user_input(WGS84_EPSG)
+    )
     empty_gdf.to_parquet(edges_path)
 
     # some parts of the workflow only consider edges, not nodes
@@ -227,7 +232,9 @@ def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> Non
     return
 
 
-def read_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: set) -> dict[str, pd.DataFrame]:
+def read_damage_curves(
+    damage_curves_dir: str, hazard_type: str, asset_types: set
+) -> dict[str, pd.DataFrame]:
     """
     Load damage curves from CSVs on disk
 
@@ -251,18 +258,20 @@ def read_damage_curves(damage_curves_dir: str, hazard_type: str, asset_types: se
     damage_curves: dict[str, pd.DataFrame] = {
         # curves expected to be named as a value of Asset class, e.g. RoadAssets.BRIDGE -> road_bridge.csv
         # dict is asset_type: dataframe with hazard intensity [0, inf] and damage fraction [0, 1]
-        splitext(basename(path))[0]: pd.read_csv(path, comment=COMMENT_PREFIX) for path in damage_curve_paths
+        splitext(basename(path))[0]: pd.read_csv(path, comment=COMMENT_PREFIX)
+        for path in damage_curve_paths
     }
 
     for asset_type, damage_curve in damage_curves.items():
-        assert len(damage_curve.columns) == 2
         # check hazard intensity and damage fraction values are 0 or positive real
         assert ((damage_curve >= 0).all()).all()
         # check damage fraction is less than or equal to 1
         assert (damage_curve.iloc[:, 1] <= 1).all()
 
     if not set(damage_curves.keys()).issuperset(asset_types):
-        raise RuntimeError(f"requested {asset_types=} not all found: {damage_curves.keys()=}")
+        raise RuntimeError(
+            f"requested {asset_types=} not all found: {damage_curves.keys()=}"
+        )
 
     return damage_curves
 
@@ -285,7 +294,7 @@ def read_rehab_costs(path: str) -> pd.DataFrame:
     assert len(costs.columns) == 2
 
     # check asset_type
-    assert 'asset_type' == costs.columns[0]
+    assert "asset_type" == costs.columns[0]
     assert costs.asset_type.dtype == object
 
     # check costs
@@ -293,3 +302,32 @@ def read_rehab_costs(path: str) -> pd.DataFrame:
     assert (costs.iloc[:, 1] >= 0).all()
 
     return costs
+
+
+def write_raster_ds(
+    fname,
+    data,
+    transform,
+    driver="GTiff",
+    crs="+proj=latlong",
+):
+    with rasterio.open(
+        fname,
+        "w",
+        driver=driver,
+        height=data.shape[0],
+        width=data.shape[1],
+        count=1,
+        dtype=data.dtype,
+        crs=crs,
+        transform=transform,
+    ) as ds:
+        ds.write(data, indexes=1)
+
+
+def read_raster_ds(fname, band=1, replace_nodata=False, nodata_fill=0):
+    with rasterio.open(fname) as ds:
+        data = ds.read(band)
+    if replace_nodata:
+        data = np.where(data == ds.nodata, nodata_fill, data)
+    return data, ds

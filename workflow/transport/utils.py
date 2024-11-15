@@ -60,7 +60,9 @@ def cast(x: Any, *, casting_function: Callable, nullable: bool) -> Any:
             raise ValueError("Couldn't recast to non-nullable value") from casting_error
 
 
-def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame) -> snkit.network.Network:
+def annotate_country(
+    network: snkit.network.Network, countries: gpd.GeoDataFrame
+) -> snkit.network.Network:
     """
     Label network edges and nodes with their country ISO code
 
@@ -93,19 +95,25 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
 
     # shorthand for selecting certain column sets
     starting_node_columns = list(nodes.columns.values)
-    desired_node_columns = starting_node_columns + ['iso_a3']
+    desired_node_columns = starting_node_columns + ["iso_a3"]
 
     # spatial join nodes geometries to their containing country, retain only node geometries
     nodes_with_iso_a3 = nodes.sjoin(countries, how="left", predicate="within")
     # drop cruft from merge (i.e. "index_right")
     nodes_with_iso_a3 = nodes_with_iso_a3[desired_node_columns]
     interior_nodes = nodes_with_iso_a3[~nodes_with_iso_a3["iso_a3"].isna()]
-    logging.info(f"Found {len(interior_nodes)} nodes that are within a country geometry")
+    logging.info(
+        f"Found {len(interior_nodes)} nodes that are within a country geometry"
+    )
 
     # for any nodes where sjoin didn't work, drop the iso_a3 and try again with sjoin_nearest
     # reproject to web mercator CRS for this operation
-    exterior_nodes = nodes_with_iso_a3[nodes_with_iso_a3["iso_a3"].isna()].drop(["iso_a3"], axis="columns")
-    exterior_nodes = exterior_nodes.to_crs(WEB_MERC_EPSG).sjoin_nearest(countries.to_crs(WEB_MERC_EPSG))
+    exterior_nodes = nodes_with_iso_a3[nodes_with_iso_a3["iso_a3"].isna()].drop(
+        ["iso_a3"], axis="columns"
+    )
+    exterior_nodes = exterior_nodes.to_crs(WEB_MERC_EPSG).sjoin_nearest(
+        countries.to_crs(WEB_MERC_EPSG)
+    )
     exterior_nodes = exterior_nodes.to_crs(input_node_crs)
     if not exterior_nodes.empty:
         logging.info(
@@ -119,7 +127,7 @@ def annotate_country(network: snkit.network.Network, countries: gpd.GeoDataFrame
         # use the columns we were passed, plus the country code of each node
         nodes[desired_node_columns],
         geometry="geometry",
-        crs=input_node_crs
+        crs=input_node_crs,
     )
 
     # set edge.from_iso_a3 from node.iso_a3 of edge.from_id
