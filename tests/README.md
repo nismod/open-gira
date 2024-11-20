@@ -21,18 +21,18 @@ the runtimes brief.
 
 Some of the tests rely on some external files, i.e. files that should not be a
 part of the workflow because they are not produced by the workflow but are
-instead located elsewhere. The download_* rules, for instance, import files
+instead located elsewhere. The download\_\* rules, for instance, import files
 from either local or remote locations. For testing purposes, we store those
 remote files outside the working directory of the test, in
 `tests/external_files`.
 
 The contents of this directory are:
 
-| filename | description |
-|----------|-------------|
-| `djibouti-latest.osm.pbf` | OpenStreetMap test data (see [above](#test-dataset)) |
-| `hazard_sources.txt` | Text file that contains the file path to the hazard file below |
-| `inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp01000.tif` | Hazard data raster file |
+| filename                                           | description                                                    |
+| -------------------------------------------------- | -------------------------------------------------------------- |
+| `djibouti-latest.osm.pbf`                          | OpenStreetMap test data (see [above](#test-dataset))           |
+| `hazard_sources.txt`                               | Text file that contains the file path to the hazard file below |
+| `inunriver_rcp4p5_MIROC-ESM-CHEM_2030_rp01000.tif` | Hazard data raster file                                        |
 
 ## Configuration
 
@@ -58,27 +58,32 @@ That is done as follows:
    and hazard data sources. Changing what's already there might break extant
    tests.
 2. Run a snakemake job that executes your rule and creates the output files you
-need. To this end you may find it useful to run a job from open-gira/ with the
-testing configuration. This can be achieved as follows: `snakemake --cores all
---configfile tests/config/config.yaml --directory . <desired_output>`
-3. Create a new directory `tests/unit/<rule_name>` where `<rule_name>` is
-the name of your new rule (without angle brackets).
-4. Create a new Python file `tests/unit/test_<rule_name>.py`.
-5. Inside your `tests/unit/<rule_name>` directory, create two folders:
+   need. To this end you may find it useful to run a job from open-gira/ with the
+   testing configuration. This can be achieved as follows:
+   ```
+   snakemake \
+      --cores all \
+      --configfile tests/config/config.yaml \
+      --directory . results/splits/djibouti-latest_filter-road/hazard-aqueduct-river/slice-0.geoparquet
+   ```
+3. Create a new directory `tests/integration/<rule_name>` where `<rule_name>` is
+   the name of your new rule (without angle brackets).
+4. Create a new Python file `tests/integration/test_<rule_name>.py`.
+5. Inside your `tests/integration/<rule_name>` directory, create two folders:
    1. `data`, containing any files your rule takes as inputs (or an empty
-   `.gitkeep` file if there are no inputs).
+      `.gitkeep` file if there are no inputs).
    2. `expected` containing any outputs your rule produces
 6. Copy the contents of one of the other test files into your
-`tests/unit/test_<rule_name>.py` file.
+   `tests/integration/test_<rule_name>.py` file.
    1. Change the function name to `test_<rule_name>`.
    2. Change the first argument of the `run_snakemake_test` call to `<rule_name>`.
    3. Change the second argument of the `run_snakemake_test` call to be a tuple
-   of the desired output paths i.e. the target files or directories.
+      of the desired output paths i.e. the target files or directories.
 
 ### Automatically (sort of)
 
 Running `snakemake` with the `--generate-unit-tests` options automatically
-create unit tests for each rule in the workflow file.  Input data and expected
+create unit tests for each rule in the workflow file. Input data and expected
 outputs are copied into a specific directory under `.tests/unit`.
 
 N.B. Before generating the tests, the pipeline must have been successfully run
@@ -94,14 +99,15 @@ The tests rely on a runner and common output checking mechanism, located in
 `tests/unit/runner.py`.
 
 The test procedure stages are:
+
 1. Setup temporary test environment and copy required files
 2. Run the snakemake command being tested
 3. Check output against an expected output
 
 The first stage additionally copies across the `tests/config`,
 `tests/external_files` and `tests/bundled_data` directories to the temporary
-working directory.  The last stage is specifically told to ignore those
-directories when testing the output.  This will not be a problem unless a rule
+working directory. The last stage is specifically told to ignore those
+directories when testing the output. This will not be a problem unless a rule
 attempts to modify the configuration files, which it should not do.
 
 ## Continuous Integration
