@@ -32,7 +32,9 @@ class ReturnPeriodMap(ABC):
 
     def __init__(self):
         if type(self) is ReturnPeriodMap:
-            raise RuntimeError("Abstract class; please subclass rather than directly instantiating")
+            raise RuntimeError(
+                "Abstract class; please subclass rather than directly instantiating"
+            )
 
     @property
     @abstractmethod
@@ -122,14 +124,24 @@ class AqueductFlood(ReturnPeriodMap):
             self.model = climate_model
 
         elif map_type == self.COASTAL:
-
             # unpack rest of name
-            scenario, sub_str, year, return_period_years, *slr_perc_list = split_name
+            (
+                scenario,
+                sub_str,
+                year,
+                return_period_years,
+                return_period_decimal_place,
+                *slr_perc_list,
+            ) = split_name
+
+            return_period_years = f"{return_period_years}.{return_period_decimal_place}"
 
             if sub_str == self.WITH_SUBSIDENCE:
                 subsidence = True
             elif sub_str == self.WITHOUT_SUBSIDENCE:
                 subsidence = False
+            elif sub_str in ("MIN", "MEAN", "MAX"):
+                subsidence = None
             else:
                 raise ValueError(f"malformed aqueduct subsidence string {sub_str=}")
 
@@ -137,11 +149,11 @@ class AqueductFlood(ReturnPeriodMap):
             slr_perc_str = "_".join(slr_perc_list)
 
             # N.B. default is 95th percentile
-            if slr_perc_str == "0":
+            if slr_perc_str == "":
                 slr_percentile = 95.0
-            elif slr_perc_str == "0_perc_50":
+            elif slr_perc_str == "perc_50":
                 slr_percentile = 50.0
-            elif slr_perc_str == "0_perc_05":
+            elif slr_perc_str == "perc_05":
                 slr_percentile = 5.0
             else:
                 raise ValueError(
@@ -161,7 +173,12 @@ class AqueductFlood(ReturnPeriodMap):
             )
 
         # attributes common to riverine and coastal maps
-        self.year = int(year)
+        try:
+            self.year = int(year)
+        except ValueError:
+            baseline_year = 1980
+            logging.debug("Parsing year %s as %s", year, baseline_year)
+            self.year = baseline_year
         self.return_period_years = float(return_period_years.replace("rp", ""))
         self.scenario = scenario
 
@@ -174,7 +191,8 @@ class AqueductFlood(ReturnPeriodMap):
         information (climate model / subsidence).
         """
         split_name = self.name.split("_")
-        split_name.pop(2)  # index of climate model / subsidence component
+        # index of climate model / subsidence component
+        split_name.pop(2)
         return "_".join(split_name)
 
     @property
@@ -188,11 +206,14 @@ class AqueductFlood(ReturnPeriodMap):
         """
 
         split_name = self.name.split("_")
-        split_name.pop(4)  # index of return period element for river and coastal map names
+        # index of return period element for river and coastal map names
+        split_name.pop(4)
         return "_".join(split_name)
 
 
-def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:
+def generate_rp_maps(
+    names: list[str], prefix: Union[None, str] = None
+) -> list[ReturnPeriodMap]:
     """
     Given a list of strings, generate some ReturnPeriodMap objects. Optionally
     remove a prefix string from the input.
@@ -234,12 +255,16 @@ def rail_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
         Cost in units of USD per km.
     """
 
-    data = rehab_cost.loc[rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km"]
+    data = rehab_cost.loc[
+        rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km"
+    ]
     if data.empty:
-        raise ValueError(f"Missing rehabilitation cost data for {row.asset_type}, please amend.")
+        raise ValueError(
+            f"Missing rehabilitation cost data for {row.asset_type}, please amend."
+        )
 
     # unpack single element series
-    cost, = data
+    (cost,) = data
 
     return float(cost)
 
@@ -256,17 +281,23 @@ def road_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
         Cost in units of USD per km per lane.
     """
 
-    data = rehab_cost.loc[rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km_per_lane"]
+    data = rehab_cost.loc[
+        rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km_per_lane"
+    ]
     if data.empty:
-        raise ValueError(f"Missing rehabilitation cost data for {row.asset_type}, please amend.")
+        raise ValueError(
+            f"Missing rehabilitation cost data for {row.asset_type}, please amend."
+        )
 
     # unpack single element series
-    cost, = data
+    (cost,) = data
 
     return float(cost)
 
 
-def annotate_rehab_cost(edges: gpd.GeoDataFrame, network_type: str, rehab_cost: pd.DataFrame) -> gpd.GeoDataFrame:
+def annotate_rehab_cost(
+    edges: gpd.GeoDataFrame, network_type: str, rehab_cost: pd.DataFrame
+) -> gpd.GeoDataFrame:
     """
     Label edges with rehabilitation costs to be used in subsequent direct
     damage cost estimate.
@@ -282,9 +313,13 @@ def annotate_rehab_cost(edges: gpd.GeoDataFrame, network_type: str, rehab_cost: 
     """
 
     if network_type == "road":
-        edges[fields.REHAB_COST] = edges.apply(road_rehab_cost, axis=1, args=(rehab_cost,)) * edges.lanes
+        edges[fields.REHAB_COST] = (
+            edges.apply(road_rehab_cost, axis=1, args=(rehab_cost,)) * edges.lanes
+        )
     elif network_type == "rail":
-        edges[fields.REHAB_COST] = edges.apply(rail_rehab_cost, axis=1, args=(rehab_cost,))
+        edges[fields.REHAB_COST] = edges.apply(
+            rail_rehab_cost, axis=1, args=(rehab_cost,)
+        )
     else:
         raise ValueError(f"No lookup function available for {network_type=}")
 
@@ -323,26 +358,33 @@ def direct_damage(
     # calculate damages for assets we have damage curves for
     damage_fraction_by_asset_type = []
     logging.info(f"Exposed assets {natural_sort(set(exposure.asset_type))}")
-    for asset_type in natural_sort(set(exposure.asset_type) & set(damage_curves.keys())):
+    for asset_type in natural_sort(
+        set(exposure.asset_type) & set(damage_curves.keys())
+    ):
 
         damage_curve: pd.DataFrame = damage_curves[asset_type]
 
         # pick out rows of asset type and columns of hazard intensity
         asset_type_mask: gpd.GeoDataFrame = exposure.asset_type == asset_type
-        asset_exposure: pd.DataFrame = pd.DataFrame(exposure.loc[asset_type_mask, hazard_columns])
+        asset_exposure: pd.DataFrame = pd.DataFrame(
+            exposure.loc[asset_type_mask, hazard_columns]
+        )
 
         logging.info(f"Processing {asset_type=}, with n={len(asset_exposure)}")
 
         # create interpolated damage curve for given asset type
-        hazard_intensity, damage_fraction = damage_curve.iloc[:, 0], damage_curve.iloc[:, 1]
+        hazard_intensity, damage_fraction = (
+            damage_curve.iloc[:, 0],
+            damage_curve.iloc[:, 1],
+        )
         # if curve of length n, where x < x_0, y = y_0 and where x > x_n, y = y_n
         bounds = tuple(f(damage_fraction) for f in (min, max))
         interpolated_damage_curve = interp1d(
             hazard_intensity,
             damage_fraction,
-            kind='linear',
+            kind="linear",
             fill_value=bounds,
-            bounds_error=False
+            bounds_error=False,
         )
 
         # apply damage_curve function to exposure table
@@ -350,7 +392,7 @@ def direct_damage(
         damage_fraction_for_asset_type = pd.DataFrame(
             interpolated_damage_curve(asset_exposure),
             index=asset_exposure.index,
-            columns=asset_exposure.columns
+            columns=asset_exposure.columns,
         )
 
         # store the computed direct damages and any columns we started with
@@ -359,14 +401,16 @@ def direct_damage(
             pd.concat(
                 [
                     damage_fraction_for_asset_type,
-                    exposure.loc[asset_type_mask, non_hazard_columns]
+                    exposure.loc[asset_type_mask, non_hazard_columns],
                 ],
-                axis="columns"
+                axis="columns",
             )
         )
 
     # concatenate damage fractions for different asset types into single dataframe
-    damage_fraction: gpd.GeoDataFrame = gpd.GeoDataFrame(pd.concat(damage_fraction_by_asset_type))
+    damage_fraction: gpd.GeoDataFrame = gpd.GeoDataFrame(
+        pd.concat(damage_fraction_by_asset_type)
+    )
 
     ###################################################################
     # DAMAGE COST (for split, then grouped geometry, for all rasters) #
@@ -375,9 +419,11 @@ def direct_damage(
     # multiply the damage fraction estimates by a cost to rebuild the asset
     # units are: 1 * USD/km * km = USD
     logging.info("Calculating direct damage costs")
-    direct_damages_only = damage_fraction[hazard_columns] \
-        .multiply(damage_fraction[fields.REHAB_COST], axis="index") \
+    direct_damages_only = (
+        damage_fraction[hazard_columns]
+        .multiply(damage_fraction[fields.REHAB_COST], axis="index")
         .multiply(damage_fraction[fields.SPLIT_LENGTH], axis="index")
+    )
 
     # join the other fields with the direct damage estimates
     logging.info("Unifying rasterised segments and summing damage costs")
