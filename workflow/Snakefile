@@ -115,6 +115,13 @@ include: "context/coastlines.smk"
 include: "context/gadm.smk"
 include: "context/natural-earth.smk"
 
+include: "buildings/worldbank-cwon.smk"
+include: "buildings/penn-world-tables.smk"
+include: "buildings/imf-investment-capital-stock.smk"
+include: "buildings/ghsl-built.smk"
+include: "buildings/giri-bem.smk"
+include: "buildings/disaggregate_bem.smk"
+
 include: "nature-ecosystems/land-cover.smk"
 include: "population-economy/dryad-gdp.smk"
 include: "population-economy/ghsl-pop.smk"
@@ -137,6 +144,7 @@ include: "transport/multi-modal/multi_modal.smk"
 include: "transport/flow_allocation/allocate.smk"
 
 include: "flood/aqueduct.smk"
+include: "flood/jrc.smk"
 include: "flood/trim_hazard_data.smk"
 
 include: "tropical-cyclone/IBTrACS.smk"

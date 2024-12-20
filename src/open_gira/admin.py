@@ -9,7 +9,9 @@ import geopandas as gpd
 import shapely
 
 
-def merge_gadm_admin_levels(preference: pd.DataFrame, alternative: pd.DataFrame) -> pd.DataFrame:
+def merge_gadm_admin_levels(
+    preference: pd.DataFrame, alternative: pd.DataFrame
+) -> pd.DataFrame:
     """
     Geospatial data is often aggregated at admin 'levels', as exemplified by the
     GADM project. These integer levels are 0 for nation states, 1 for the
@@ -35,7 +37,9 @@ def merge_gadm_admin_levels(preference: pd.DataFrame, alternative: pd.DataFrame)
     substitute_countries = set(alternative.ISO_A3) - set(preference.ISO_A3)
     logging.info(f"Gap filling with: {substitute_countries}")
 
-    substitute_regions: pd.DataFrame = alternative[alternative["ISO_A3"].isin(substitute_countries)]
+    substitute_regions: pd.DataFrame = alternative[
+        alternative["ISO_A3"].isin(substitute_countries)
+    ]
 
     merged = pd.concat([preference, substitute_regions])
 
@@ -76,6 +80,5 @@ def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataF
 
 
 def boundary_geom(gdf: gpd.GeoDataFrame, iso_a3: str) -> shapely.Geometry:
-    """Given administrative data, return the boundary geometry for a given ISO3 country code
-    """
+    """Given administrative data, return the boundary geometry for a given ISO3 country code"""
     return gdf.set_index("iso_a3").loc[iso_a3, "geometry"]
