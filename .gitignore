@@ -17,6 +17,7 @@ notebooks/*.qgz
 notebooks/*.tif
 notebooks/*.xml
 *.bak
+*.zarr
 
 # snakemake
 .snakemake/
