@@ -110,12 +110,14 @@ hazard_datasets:
   # hazard rasters to retrieve
   aqueduct-coast: "config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt"
   aqueduct-river: "config/hazard_resource_locations/aqueduct-river.txt"
+  river-jrc: "config/hazard_resource_locations/river-jrc.txt"
   jba-event: "config/hazard_resource_locations/jba-events.txt"
   landslide-arup: "config/hazard_resource_locations/landslide-arup.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
   aqueduct-river: "flood"
+  river-jrc: "flood"
   jba-event: "flood"
   landslide-arup: "landslide"
 
