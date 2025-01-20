@@ -77,6 +77,29 @@ class ReturnPeriodMap(ABC):
         return hash(self.name)
 
 
+class JRCFlood(ReturnPeriodMap):
+    """Single set of return period flood maps
+    Named on this pattern:
+        floodMapGL_rp{RP}y.tif", RP=[10, 20, 50, 100, 200, 500]
+    """
+
+    PREFIX = "floodMapGL"
+
+    def __init__(self, name: str):
+        self.name = name
+        self.scenario = "historical"
+        self.year = 2020
+        self.model = "jrc"
+        rp = name.replace("floodMapGL_rp", "").replace("y", "")
+        self.return_period_years = int(rp)
+
+    def without_model(self) -> str:
+        return f"{self.PREFIX}_rp{self.return_period_years}"
+
+    def without_RP(self) -> str:
+        return self.PREFIX
+
+
 class AqueductFlood(ReturnPeriodMap):
     """
     Class holding information about aqueduct return period flood maps.
@@ -234,6 +257,7 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
     prefix_class_map: dict[str, type[ReturnPeriodMap]] = {
         AqueductFlood.RIVERINE: AqueductFlood,
         AqueductFlood.COASTAL: AqueductFlood,
+        JRCFlood.PREFIX: JRCFlood,
     }
 
     # choose constructor on name prefix
