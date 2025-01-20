@@ -33,7 +33,9 @@ infrastructure_datasets:
   tanzania-latest: "https://download.geofabrik.de/africa/tanzania-latest.osm.pbf"
   thailand-latest: "https://download.geofabrik.de/asia/thailand-latest.osm.pbf"
   wales-latest: "https://download.geofabrik.de/europe/great-britain/wales-latest.osm.pbf"
+  spain-latest: "https://download.geofabrik.de/europe/spain-latest.osm.pbf"
   vietnam-latest: "https://download.geofabrik.de/asia/vietnam-latest.osm.pbf"
+
   # small extract for testing purposes
   tanzania-mini: "https://raw.githubusercontent.com/mjaquiery/aqueduct/main/tanzania-mini.osm.pbf"
 
@@ -61,7 +63,7 @@ composite_network:
 # N.B. feature SELECTION is done with the expressions pointed to from network_filters
 keep_tags:
   road: ["highway", "surface", "bridge", "maxspeed", "lanes"]
-  rail: ["railway", "bridge", "name", "gauge", "usage"]
+  rail: ["railway", "bridge", "name", "gauge", "usage", "electrified", "passenger_lines", "voltage", "maxspeed"]
 
 # Number of slices to cut dataset into -- must be a square number
 slice_count: 64

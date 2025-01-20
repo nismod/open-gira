@@ -1,6 +1,6 @@
 # rail sections "for full sized passenger or freight trains in the standard
 # gauge of the country or state"
-w/railway=rail
+w/railway=rail,narrow_gauge 
 
 # https://wiki.openstreetmap.org/wiki/Tag:railway%3Dstation
 # stations "should be tagged as a node, placed at the centre of the station

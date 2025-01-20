@@ -19,6 +19,11 @@ notebooks/*.xml
 *.bak
 *.zarr
 
+soge-sync
+push
+pull
+SCRATCH
+
 # snakemake
 .snakemake/
 *.snakemake_timestamp

@@ -46,13 +46,13 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
     if "tag_highway" in edges.columns:
         # None -> empty string
-        edges.loc[edges['tag_highway'].isnull(), 'tag_highway'] = ''
+        edges.loc[edges["tag_highway"].isnull(), "tag_highway"] = ""
         # turn the <highway_type>_link entries into <highway_type>
         edges.tag_highway = edges.tag_highway.apply(strip_suffix)
 
     # boolean bridge field from tag_bridges
     if "tag_bridge" in edges.columns:
-        edges['bridge'] = str_to_bool(edges['tag_bridge'])
+        edges["bridge"] = str_to_bool(edges["tag_bridge"])
 
     return edges
 
@@ -160,7 +160,9 @@ if __name__ == "__main__":
 
     osm_epsg = 4326
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # Ignore geopandas parquet implementation warnings
     # NB though that .geoparquet is not the format to use for archiving.
@@ -174,13 +176,19 @@ if __name__ == "__main__":
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
-        [col for col in edges.columns if col.startswith("start_node_") or col.startswith("end_node_")],
-        axis="columns"
+        [
+            col
+            for col in edges.columns
+            if col.startswith("start_node_") or col.startswith("end_node_")
+        ],
+        axis="columns",
     )
 
     # for roads we do not currently use any nodes extracted from OSM (osm_nodes_path)
     logging.info("Creating road network")
-    network = create_network(edges=clean_edges(edges), nodes=None, id_prefix=f"{dataset_name}_{slice_number}")
+    network = create_network(
+        edges=clean_edges(edges), nodes=None, id_prefix=f"{dataset_name}_{slice_number}"
+    )
     logging.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
@@ -202,16 +210,30 @@ if __name__ == "__main__":
     # select and label assets with their type
     # the asset_type is used to later select a damage curve
     # note that order is important here, if an edge is paved, motorway and a bridge, it will be tagged as a bridge only
-    network.edges.loc[network.edges.paved == False, 'asset_type'] = RoadAssets.UNPAVED
-    network.edges.loc[network.edges.paved == True, 'asset_type'] = RoadAssets.PAVED
-    network.edges.loc[network.edges.tag_highway == 'unclassified', 'asset_type'] = RoadAssets.UNCLASSIFIED
-    network.edges.loc[network.edges.tag_highway == 'residential', 'asset_type'] = RoadAssets.RESIDENTIAL
-    network.edges.loc[network.edges.tag_highway == 'tertiary', 'asset_type'] = RoadAssets.TERTIARY
-    network.edges.loc[network.edges.tag_highway == 'secondary', 'asset_type'] = RoadAssets.SECONDARY
-    network.edges.loc[network.edges.tag_highway == 'primary', 'asset_type'] = RoadAssets.PRIMARY
-    network.edges.loc[network.edges.tag_highway == 'trunk', 'asset_type'] = RoadAssets.TRUNK
-    network.edges.loc[network.edges.tag_highway == 'motorway', 'asset_type'] = RoadAssets.MOTORWAY
-    network.edges.loc[network.edges.bridge == True, 'asset_type'] = RoadAssets.BRIDGE
+    network.edges.loc[network.edges.paved == False, "asset_type"] = RoadAssets.UNPAVED
+    network.edges.loc[network.edges.paved == True, "asset_type"] = RoadAssets.PAVED
+    network.edges.loc[network.edges.tag_highway == "unclassified", "asset_type"] = (
+        RoadAssets.UNCLASSIFIED
+    )
+    network.edges.loc[network.edges.tag_highway == "residential", "asset_type"] = (
+        RoadAssets.RESIDENTIAL
+    )
+    network.edges.loc[network.edges.tag_highway == "tertiary", "asset_type"] = (
+        RoadAssets.TERTIARY
+    )
+    network.edges.loc[network.edges.tag_highway == "secondary", "asset_type"] = (
+        RoadAssets.SECONDARY
+    )
+    network.edges.loc[network.edges.tag_highway == "primary", "asset_type"] = (
+        RoadAssets.PRIMARY
+    )
+    network.edges.loc[network.edges.tag_highway == "trunk", "asset_type"] = (
+        RoadAssets.TRUNK
+    )
+    network.edges.loc[network.edges.tag_highway == "motorway", "asset_type"] = (
+        RoadAssets.MOTORWAY
+    )
+    network.edges.loc[network.edges.bridge == True, "asset_type"] = RoadAssets.BRIDGE
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)

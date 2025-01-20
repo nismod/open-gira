@@ -11,8 +11,9 @@ users have, if any) by applying general rules with pattern matching on file and
 folder names.
 
 A example invocation looks like:
+
 ```bash
-snakemake --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
+snakemake --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
 ```
 
 Here, we ask `snakemake` to use up to 2 CPUs to produce a target file, in this
@@ -21,8 +22,9 @@ case, the edges of the Welsh road network. `snakemake` pattern matches
 want to filter for.
 
 To check what work we're going to request before commencing, use the `-n` flag:
+
 ```bash
-snakemake -n --cores 2 -- results/wales-latest_filter-road/edges.geoparquet
+snakemake -n --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
 ```
 
 This will explain which rules will be required to run to produce the target
