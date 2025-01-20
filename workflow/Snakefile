@@ -81,13 +81,8 @@ wildcard_constraints:
     CHUNK_SLUG="chunk-[\d]+",
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
-<<<<<<< HEAD
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP|EAD_and_cost_per_trigger",
-    EVENTS_OR_FIXED="events|fixed",
-=======
-    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
     EVENTS_OR_RASTERS="events|wind_speed_raster|RP_raster",
->>>>>>> main
     FILTER_SLUG="filter-[^_/]+",
     FILENAME="[^/]+",
     HAZARD_SLUG="hazard-[^_/]+",
