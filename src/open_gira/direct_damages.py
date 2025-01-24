@@ -192,6 +192,57 @@ class AqueductFlood(ReturnPeriodMap):
         return "_".join(split_name)
 
 
+class RiverGIRI(ReturnPeriodMap):
+    """Class holding information about GIRI return period flood maps.
+
+    Each point in these raster flood maps is an inundation depth for a given
+    combination of scenario, return period (probability).
+    """
+
+    # prefix of
+    GLOBAL = "global"
+
+    def __init__(self, name: str):
+        """Infer attributes from name.
+
+        Arguments:
+            name (str): Name string expected to be in the following formats:
+                global_pc_h5glob
+        """
+        if len(name.split(".")) > 1:
+            raise ValueError(f"{name=} contains dots; remove any file extension")
+
+        # store the original string for later use
+        self.name = name
+
+        _, *split_name = name.split("_")
+
+        scenario, return_period_years = split_name
+
+        if scenario == "pc":
+            self.scenario = "historical"
+            self.year = 2015
+        else:
+            self.scenario = scenario
+            self.year = 2075
+
+        self.return_period_years = float(
+            return_period_years.replace("h", "").replace("glob", "")
+        )
+        self.model = "GIRI"
+
+    @property
+    def without_model(self) -> str:
+        split_name = self.name.split("_")
+        return "_".join(split_name)
+
+    @property
+    def without_RP(self) -> str:
+        split_name = self.name.split("_")
+        split_name.pop(2)
+        return "_".join(split_name)
+
+
 def generate_rp_maps(names: list[str], prefix: Union[None, str] = None) -> list[ReturnPeriodMap]:
     """
     Given a list of strings, generate some ReturnPeriodMap objects. Optionally
@@ -213,6 +264,7 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
     prefix_class_map: dict[str, type[ReturnPeriodMap]] = {
         AqueductFlood.RIVERINE: AqueductFlood,
         AqueductFlood.COASTAL: AqueductFlood,
+        RiverGIRI.GLOBAL: RiverGIRI,
     }
 
     # choose constructor on name prefix
