@@ -112,18 +112,20 @@ hazard_datasets:
   # hazard rasters to retrieve
   aqueduct-coast: "config/hazard_resource_locations/aqueduct-coast_wtsub_perc95.txt"
   aqueduct-river: "config/hazard_resource_locations/aqueduct-river.txt"
-  river-jrc: "config/hazard_resource_locations/river-jrc.txt"
+  coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
   jba-event: "config/hazard_resource_locations/jba-events.txt"
   landslide-arup: "config/hazard_resource_locations/landslide-arup.txt"
-  coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
+  river-giri: "config/hazard_resource_locations/river-giri.txt"
+  river-jrc: "config/hazard_resource_locations/river-jrc.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
   aqueduct-river: "flood"
-  river-jrc: "flood"
+  coastal-deltares: "flood"
   jba-event: "flood"
   landslide-arup: "landslide"
-  coastal-deltares: "flood"
+  river-giri: "flood"
+  river-jrc: "flood"
 
 direct_damages:
   # assets to calculate direct damages for
