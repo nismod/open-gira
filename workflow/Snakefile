@@ -168,3 +168,5 @@ include: "power-tc/map/wind_fields.smk"
 include: "power-tc/map/target_disruption.smk"
 include: "power-tc/map/customers_affected_by_storm.smk"
 include: "power-tc/cyclone-grid.smk"
+
+include: "social/rwi.smk"
