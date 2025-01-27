@@ -25,6 +25,7 @@ dependencies:
   - gdal>=3.3           # command-line tools for spatial data
   - geopandas==0.14.4   # geospatial dataframes
   - geopy               # geocoding client
+  - hdx-python-api      # Python API for interacting with the HDX Data Portal
   - igraph              # graph algorithms and data structures
   - ipykernel           # notebook support
   - jupyter             # notebook support
