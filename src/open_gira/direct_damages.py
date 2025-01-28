@@ -282,6 +282,10 @@ def rail_rehab_cost(row: pd.Series, rehab_cost: pd.DataFrame) -> float:
     data = rehab_cost.loc[
         rehab_cost.asset_type == row.asset_type, "rehab_cost_USD_per_km"
     ]
+    if row.tag_railway == "narrow_gauge":
+        data = rehab_cost.loc[
+            rehab_cost.asset_type == "rail_narrow_gauge", "rehab_cost_USD_per_km"
+        ]
     if data.empty:
         raise ValueError(
             f"Missing rehabilitation cost data for {row.asset_type}, please amend."
@@ -382,6 +386,9 @@ def direct_damage(
 
     # calculate damages for assets we have damage curves for
     damage_fraction_by_asset_type = []
+    # TODO REMOVE PATCH FIX
+    exposure.asset_type = exposure.asset_type.fillna("rail_railway")
+
     logging.info(f"Exposed assets {natural_sort(set(exposure.asset_type))}")
     for asset_type in natural_sort(
         set(exposure.asset_type) & set(damage_curves.keys())
