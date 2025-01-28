@@ -124,6 +124,7 @@ include: "buildings/disaggregate_bem.smk"
 
 include: "nature-ecosystems/land-cover.smk"
 include: "nature-ecosystems/hydrobasins.smk"
+include: "nature-ecosystems/nbs-suitability.smk"
 
 include: "population-economy/dryad-gdp.smk"
 include: "population-economy/ghsl-pop.smk"
