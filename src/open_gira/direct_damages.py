@@ -100,6 +100,44 @@ class JRCFlood(ReturnPeriodMap):
         return self.PREFIX
 
 
+class DeltaresFlood(ReturnPeriodMap):
+    """Set of return period flood maps from Deltares Coastal Flood hazard
+
+    Named on this pattern:
+        expand(
+            "results/input/hazard-coastal-deltares/GFM_global_{DEM}DEM{RESOLUTION}_{YEAR}slr_{RP}_masked.tif",
+            DEM=["NASA", "MERIT"],
+            RESOLUTION=["90m", "1km"],
+            YEAR=[2018, 2050],
+            RP=[f"rp{rp:04d}" for rp in (0, 2, 5, 10, 25, 50, 100, 250)],
+        )
+    """
+
+    PREFIX = "GFM_global"
+
+    def __init__(self, name: str):
+        self.name = name
+        dem, resolution, year, rp = re.match(
+            r"GFM_global_(\w+)DEM(\d+k?m)_(\d+)slr_rp(\d+)_masked.tif", name
+        ).groups()
+        self.year = int(year)
+        if self.year == 2018:
+            self.scenario = "historical"
+        else:
+            self.scenario = "rpc8.5"
+
+        self.dem = dem
+        self.dem_resolution = resolution
+
+        self.return_period_years = int(rp)
+
+    def without_model(self) -> str:
+        return f"{self.PREFIX}_{self.dem}DEM{self.dem_resolution}_{self.year}_rp{self.rp:04d}"
+
+    def without_RP(self) -> str:
+        return f"{self.PREFIX}_{self.dem}DEM{self.dem_resolution}_{self.year}"
+
+
 class AqueductFlood(ReturnPeriodMap):
     """
     Class holding information about aqueduct return period flood maps.

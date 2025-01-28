@@ -115,6 +115,7 @@ hazard_datasets:
   river-jrc: "config/hazard_resource_locations/river-jrc.txt"
   jba-event: "config/hazard_resource_locations/jba-events.txt"
   landslide-arup: "config/hazard_resource_locations/landslide-arup.txt"
+  coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
@@ -122,6 +123,7 @@ hazard_types:
   river-jrc: "flood"
   jba-event: "flood"
   landslide-arup: "landslide"
+  coastal-deltares: "flood"
 
 direct_damages:
   # assets to calculate direct damages for
