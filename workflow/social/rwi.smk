@@ -1,7 +1,3 @@
-# Temp fix for issue with {OUTPUT_DIR} not working as in other snakemake scripts
-# Error is something along lines of "Target rules may not contain wildcards" 
-OUTPUT_DIR = "results"
-
 rule download_rwi:
     """
     Meta Relative Wealth Index
@@ -22,8 +18,8 @@ rule download_rwi:
     License: CC-BY-NC 4.0
     """
     output:
-        archive = f"{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.zip",
-        csv = f"{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.csv",
+        archive = "{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.zip",
+        csv = "{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.csv",
     shell:
         """
         output_dir=$(dirname {output.csv})
@@ -52,9 +48,9 @@ rule download_rwi:
 
 rule process_rwi_points:
     input:
-        csv = f"{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.csv",
+        csv = "{OUTPUT_DIR}/input/rwi/country_data/relative-wealth-index-april-2021.csv",
     output:
-        gpkg = f"{OUTPUT_DIR}/input/rwi/relative-wealth-index-april-2021.gpkg",
+        gpkg = "{OUTPUT_DIR}/input/rwi/relative-wealth-index-april-2021.gpkg",
     run:
         import pandas as pd
         import geopandas as gpd
@@ -86,9 +82,9 @@ rule process_rwi_grid:
     print("y res:", guess_resolution(gdf.geometry.y.unique())
     """
     input:
-        gpkg = f"{OUTPUT_DIR}/input/rwi/relative-wealth-index-april-2021.gpkg",
+        gpkg = "{OUTPUT_DIR}/input/rwi/relative-wealth-index-april-2021.gpkg",
     output:
-        tiff = f"{OUTPUT_DIR}/input/rwi/rwi.tif",
+        tiff = "{OUTPUT_DIR}/input/rwi/rwi.tif",
     shell:
         """
         gdal_rasterize \
@@ -101,4 +97,10 @@ rule process_rwi_grid:
             {input.gpkg} \
             {output.tiff}
         """
+
+rule population_weighted_rwi:
+    """
+    Population weights the rwi for a given administrative region
+    """
+
 
