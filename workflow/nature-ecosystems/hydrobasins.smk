@@ -118,3 +118,31 @@ rule extract_hydrobasins_all:
             "results/input/hydrobasins/hybas_lev{HYDROBASINS_LEVEL}_v1c.geoparquet",
             HYDROBASINS_LEVEL=[f"{n:02}" for n in range(1,13)]
         )
+
+rule hydrobasins_add_admin_codes:
+    input:
+        hydrobasins="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c.geoparquet",
+        adm0="{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
+        adm1="{OUTPUT_DIR}/input/admin-boundaries/admin-level-1.geoparquet",
+        adm2="{OUTPUT_DIR}/input/admin-boundaries/admin-level-2.geoparquet",
+    output:
+        hydrobasins_adm="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes.geoparquet",
+    run:
+        import geopandas
+        # Read inputs
+        hydrobasins = geopandas.read_parquet(input.hydrobasins, columns=["HYBAS_ID", "geometry"])
+        adm0 = geopandas.read_parquet(input.adm0, columns=['GID_0', 'NAME_0', 'geometry'])
+        adm1 = geopandas.read_parquet(input.adm1, columns=['GID_1', 'NAME_1', 'geometry'])
+        adm2 = geopandas.read_parquet(input.adm2, columns=['GID_2', 'NAME_2', 'geometry'])
+        # Copy geoms, use centroids for join
+        hb_geoms = hydrobasins[["HYBAS_ID", "geometry"]].copy().set_index("HYBAS_ID")
+        hydrobasins.geometry = hydrobasins.geometry.centroid
+        hb_adm = (
+            hydrobasins
+            .sjoin(adm0, how="left", predicate="within", lsuffix="", rsuffix="0")
+            .sjoin(adm1, how="left", predicate="within", lsuffix="", rsuffix="1")
+            .sjoin(adm2, how="left", predicate="within", lsuffix="", rsuffix="2")
+        )
+        # Set geoms back, save
+        hb_adm.set_index("HYBAS_ID").drop(columns="geometry").join(hb_geoms)
+        hb_adm.to_parquet(output.hydrobasins_adm)
