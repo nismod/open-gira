@@ -29,6 +29,8 @@ class ReturnPeriodMap(ABC):
     year: int
     # expect hazard to recur on average every return_period years
     return_period_years: float
+    # model can be used for GCM or other forcing/hazard model if necessary
+    model: str
 
     def __init__(self):
         if type(self) is ReturnPeriodMap:
@@ -59,6 +61,8 @@ class ReturnPeriodMap(ABC):
     @property
     def annual_probability(self) -> float:
         """Likelihood of hazard occurring in any given year"""
+        if self.return_period_years <= 0:
+            return 1
         return 1 / self.return_period_years
 
     def __eq__(self, other):
@@ -113,19 +117,19 @@ class DeltaresFlood(ReturnPeriodMap):
         )
     """
 
-    PREFIX = "GFM_global"
+    PREFIX = "GFM"
 
     def __init__(self, name: str):
         self.name = name
         dem, resolution, year, rp = re.match(
-            r"GFM_global_(\w+)DEM(\d+k?m)_(\d+)slr_rp(\d+)_masked.tif", name
+            r"GFM_global_(\w+)DEM(\d+k?m)_(\d+)slr_rp(\d+)_masked", name
         ).groups()
         self.year = int(year)
         if self.year == 2018:
             self.scenario = "historical"
         else:
             self.scenario = "rpc8.5"
-
+        self.model = "deltares"
         self.dem = dem
         self.dem_resolution = resolution
 
@@ -296,6 +300,7 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
         AqueductFlood.RIVERINE: AqueductFlood,
         AqueductFlood.COASTAL: AqueductFlood,
         JRCFlood.PREFIX: JRCFlood,
+        DeltaresFlood.PREFIX: DeltaresFlood,
     }
 
     # choose constructor on name prefix
