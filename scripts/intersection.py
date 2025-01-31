@@ -92,6 +92,8 @@ if __name__ == "__main__":
                         f"Height: expected={grid.height}; actual={other_grid.height}\n"
                         f"Width: expected={grid.width}; actual={other_grid.width}\n"
                         f"Transform equal? {other_grid.transform == grid.transform}\n"
+                        f"Transform expected= {grid.transform}\n"
+                        f"Transform actual= {other_grid.transform}\n"
                         f"CRS equal? {other_grid.crs == grid.crs}"
                     )
                 )
