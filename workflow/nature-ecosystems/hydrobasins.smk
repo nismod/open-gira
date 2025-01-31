@@ -134,15 +134,19 @@ rule hydrobasins_add_admin_codes:
         adm0 = geopandas.read_parquet(input.adm0, columns=['GID_0', 'NAME_0', 'geometry'])
         adm1 = geopandas.read_parquet(input.adm1, columns=['GID_1', 'NAME_1', 'geometry'])
         adm2 = geopandas.read_parquet(input.adm2, columns=['GID_2', 'NAME_2', 'geometry'])
-        # Copy geoms, use centroids for join
-        hb_geoms = hydrobasins[["HYBAS_ID", "geometry"]].copy().set_index("HYBAS_ID")
+        # Use centroids for join
         hydrobasins.geometry = hydrobasins.geometry.centroid
         hb_adm = (
             hydrobasins
             .sjoin(adm0, how="left", predicate="within", lsuffix="", rsuffix="0")
             .sjoin(adm1, how="left", predicate="within", lsuffix="", rsuffix="1")
             .sjoin(adm2, how="left", predicate="within", lsuffix="", rsuffix="2")
+            .drop(columns=["geometry", "index_0", "index_1"])
+            .drop_duplicates(subset="HYBAS_ID", keep="first")
+            .set_index("HYBAS_ID")
         )
         # Set geoms back, save
-        hb_adm.set_index("HYBAS_ID").drop(columns="geometry").join(hb_geoms)
+        hb_geoms = geopandas.read_parquet(input.hydrobasins, columns=["HYBAS_ID", "geometry"]) \
+            .set_index("HYBAS_ID")
+        hb_adm = hb_geoms.join(hb_adm)
         hb_adm.to_parquet(output.hydrobasins_adm)
