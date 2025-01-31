@@ -170,3 +170,4 @@ include: "power-tc/map/customers_affected_by_storm.smk"
 include: "power-tc/cyclone-grid.smk"
 
 include: "social/rwi.smk"
+include: "social/population_weighting.smk"
