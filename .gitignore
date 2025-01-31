@@ -41,3 +41,6 @@ tester/*
 
 # Rendered documentation
 docs/book/
+
+# Cluster
+slurm
