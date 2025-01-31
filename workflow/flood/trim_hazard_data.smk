@@ -49,7 +49,8 @@ rule trim_raster:
         # projwin is [ulx, uly, lrx, lry]
         gdal_translate \
             -projwin ${{COORDS[0]}} ${{COORDS[3]}} ${{COORDS[2]}} ${{COORDS[1]}} \
-            -co compress=lzw \
+            -co COMPRESS=LZW \
+            -co BIGTIFF=IF_SAFER \
             --config GDAL_CACHEMAX=50% \
             {input.tiff} {output.tiff}
 
