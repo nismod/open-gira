@@ -98,9 +98,5 @@ rule process_rwi_grid:
             {output.tiff}
         """
 
-rule population_weighted_rwi:
-    """
-    Population weights the rwi for a given administrative region
-    """
 
 
