@@ -23,7 +23,16 @@ def query_ds_points(features, grid_points):
 
 if __name__ == "__main__":
     slice_n = snakemake.wildcards.SLICE_SLUG.replace("slice-", "")
-    grid_points = gpd.read_parquet(snakemake.input.nbs_stack)
+    grid_points = gpd.read_parquet(
+        snakemake.input.nbs_stack,
+        columns=[
+            "biodiversity_benefit",
+            "carbon_benefit_t_per_ha",
+            "planting_cost_usd_per_ha",
+            "regen_cost_usd_per_ha",
+            "geometry",
+        ],
+    )
     basins = gpd.read_parquet(
         snakemake.input.hydrobasins_adm,
         columns=["HYBAS_ID", "GID_0", "GID_1", "GID_2", "geometry"],

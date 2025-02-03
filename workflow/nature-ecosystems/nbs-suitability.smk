@@ -23,6 +23,11 @@ rule download_nbs_suitability:
         the coastline. Intended to identify afforestation areas for
         catchment-scale river flood reduction.
 
+    landslide_slope_potential_tif: These are maps of currently non-woodland
+        areas which could be restored to woodland (under the two scenarios
+        potential vegetation and treeline) with slope 8-36 degrees. Values are
+        categorical: 1 for Crops, 2 for Anything Else 3 for Bare Ground.
+
     mangrove_potential_tif: Potential mangrove restoration based on Delft method
         with additional consideration of tidal range. Values are categorical: 1
         for accreting (expanding) shorelines (ideal); 2 for static to moderate
@@ -30,10 +35,11 @@ rule download_nbs_suitability:
         (might be worth considering if coastal managment is applied to block
         fill an otherwise appropriate area)
 
-    landslide_slope_potential_tif: These are maps of currently non-woodland
-        areas which could be restored to woodland (under the two scenarios
-        potential vegetation and treeline) with slope 8-36 degrees. Values are
-        categorical: 1 for Crops, 2 for Anything Else 3 for Bare Ground.
+    mangrove_planting_cost_tif: Native mangrove planting costs (Dollars per
+        hectare of restoration 2020)
+
+    mangrove_regeneration_cost_tif: Natural mangrove regeneration costs (Dollars
+        per hectare of restoration 2020)
     """
     output:
         biodiversity_benefit_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/G_BioBenefit_9s.tif",
@@ -41,8 +47,10 @@ rule download_nbs_suitability:
         planting_cost_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/G_PlantingCost_9s.tif",
         regeneration_cost_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/G_RegenCost_9s.tif",
         tree_potential_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/G_PotentialNonCoastalTreeNBS_9s.tif",
-        mangrove_potential_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/ManRestorClass_9s.tif",
         landslide_slope_potential_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/G_LandslideNbS_123_9s.tif",
+        mangrove_potential_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/ManRestorClass_9s.tif",
+        mangrove_planting_cost_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/ManPlantCost_9s.tif",
+        mangrove_regeneration_cost_tif="{OUTPUT_DIR}/input/nbs-suitability/raw/ManRegenCost_9s.tif",
     shell:
         """
         # pushd $(dirname {output.mangrove})

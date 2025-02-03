@@ -3,7 +3,6 @@ from pathlib import Path
 import pandas as pd
 import geopandas as gpd
 import xarray as xr
-from snail.io import extend_rasters_metadata
 
 
 def stack(layers: pd.DataFrame, target_path: Path):
@@ -30,7 +29,6 @@ def stack_to_points(grid_fname: Path, crs):
     grid_data = (
         xr.open_zarr(grid_fname)
         .to_dataframe()
-        .dropna()
         .reset_index()
         .pivot(index=["y", "x"], columns="key", values="band_data")
         .reset_index()
@@ -52,12 +50,16 @@ if __name__ == "__main__":
                 "carbon_benefit_t_per_ha",
                 "planting_cost_usd_per_ha",
                 "regen_cost_usd_per_ha",
+                "mangrove_planting_cost_usd_per_ha",
+                "mangrove_regen_cost_usd_per_ha",
             ],
             "path": [
                 snakemake.input.biodiversity_benefit_tif,
                 snakemake.input.carbon_benefit_tif,
                 snakemake.input.planting_cost_tif,
                 snakemake.input.regeneration_cost_tif,
+                snakemake.input.mangrove_planting_cost_tif,
+                snakemake.input.mangrove_regeneration_cost_tif,
             ],
         }
     )

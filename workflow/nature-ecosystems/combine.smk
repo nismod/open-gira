@@ -53,6 +53,8 @@ rule slice_stack:
         carbon_benefit_tif="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/G_CarbonBenefit_9s.tif",
         planting_cost_tif="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/G_PlantingCost_9s.tif",
         regeneration_cost_tif="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/G_RegenCost_9s.tif",
+        mangrove_planting_cost_tif="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/ManPlantCost_9s.tif",
+        mangrove_regeneration_cost_tif="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/ManRegenCost_9s.tif",
     output:
         zarr=directory("{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/nbs_stack.zarr"),
         parquet="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/nbs_stack.parquet",
