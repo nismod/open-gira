@@ -49,3 +49,27 @@ rule extract_jrc_flood:
 rule all_jrc_flood:
     input:
         tiffs=expand("results/input/jrc_flood/floodMapGL_rp{RP}y.tif", RP=[10, 20, 50, 100, 200, 500])
+
+rule merge_jrc_flood:
+    """
+    Merges all the jrc flood tiles
+    """
+    input:
+        raw_folder="{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw/"
+    output:
+        RP10="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP10.tif",
+        RP20="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP20.tif",
+        RP50="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP50.tif",
+        RP75="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP75.tif",
+        RP100="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP100.tif",
+        RP200="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP200.tif",
+        RP500="{OUTPUT_DIR}/input/{HAZARD_SLUG}/merged/jrc_global_flood_RP500.tif"
+    script:
+        "./merge_jrc.py"
+"""
+Test with
+snakemake -c1 results/input/hazard-jrc-river/merged/jrc_global_flood_RP10.tif
+"""
+    
+
+
