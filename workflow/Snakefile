@@ -171,3 +171,5 @@ include: "power-tc/cyclone-grid.smk"
 
 include: "social/rwi.smk"
 include: "social/population_weighting.smk"
+include: "social/social_flood.smk"
+include: "social/social_flood_analysis.smk"
