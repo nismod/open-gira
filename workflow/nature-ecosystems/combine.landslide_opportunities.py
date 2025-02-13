@@ -35,7 +35,7 @@ if __name__ == "__main__":
     basins = gpd.read_parquet(
         snakemake.input.hydrobasins_adm,
         columns=["HYBAS_ID", "GID_0", "GID_1", "GID_2", "geometry"],
-    )
+    ).reset_index()
 
     # Read opportunities
     with rasterio.open(snakemake.input.landslide_slope_potential_tif) as src:
