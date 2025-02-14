@@ -170,6 +170,7 @@ This research received funding from the FCDO Climate Compatible Growth
 Programme. The views expressed here do not necessarily reflect the UK
 government's official policies.
 
-This research has also been supported by funding from the World Bank
-Group, and the UK Natural Environment Research Council (NERC) through
-the UK Centre for Greening Finance and Investment (CGFI).
+This research has also been supported by funding from: the World Bank
+Group; the UK Natural Environment Research Council (NERC) through
+the UK Centre for Greening Finance and Investment (CGFI); and Global 
+Center on Adaptation (GCA).
