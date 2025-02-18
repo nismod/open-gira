@@ -47,7 +47,7 @@ if __name__ == "__main__":
         sys.exit()
 
     options = options.query("val != 0").drop(columns="filename").set_crs(src.crs)
-    labels = {1: "crops", 2: "other", 3: "bare"}
+    labels = {1: "other", 2: "crops", 3: "bare"}
     options["option_landuse"] = options.val.map(labels)
     options.drop(columns="val", inplace=True)
 
