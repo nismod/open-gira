@@ -97,9 +97,11 @@ class JRCFlood(ReturnPeriodMap):
         rp = name.replace("floodMapGL_rp", "").replace("y", "")
         self.return_period_years = int(rp)
 
+    @property
     def without_model(self) -> str:
         return f"{self.PREFIX}_rp{self.return_period_years}"
 
+    @property
     def without_RP(self) -> str:
         return self.PREFIX
 
@@ -135,9 +137,11 @@ class DeltaresFlood(ReturnPeriodMap):
 
         self.return_period_years = int(rp)
 
+    @property
     def without_model(self) -> str:
-        return f"{self.PREFIX}_{self.dem}DEM{self.dem_resolution}_{self.year}_rp{self.rp:04d}"
+        return f"{self.PREFIX}_{self.dem}DEM{self.dem_resolution}_{self.year}_rp{self.return_period_years:04d}"
 
+    @property
     def without_RP(self) -> str:
         return f"{self.PREFIX}_{self.dem}DEM{self.dem_resolution}_{self.year}"
 
