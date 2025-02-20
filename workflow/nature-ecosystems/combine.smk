@@ -1,7 +1,7 @@
 """Extract NbS opportunities as polygon patches, intersected with Hydrobasins
 and attributed with costs and benefits.
 
-TODO join with infrastructure/hazard EAD for relevant combinations:
+Then join with infrastructure/hazard EAD for relevant combinations:
 - mangrove / coastal flooding
 - slope vegetation / landslide
 - river basin afforestation / river flooding
@@ -12,7 +12,24 @@ TODO join with infrastructure/hazard EAD for relevant combinations:
 {"directory": ".", "extracts": [{"bbox": [-180.0,-60.0,-172.0,-57.06666666666667],"output": "slice-0.osm.pbf"}]}
 ```
 """
+import geopandas
 
+def fname_sector(fname: str) -> str:
+    if "filter-rail" in fname:
+        sector = "rail"
+    elif "filter-road" in fname:
+        sector = "road"
+    else:
+        assert False, f"Unexpected sector in {fname}"
+    return sector
+
+def read_ead(fname: str, sector: str) -> geopandas.GeoDataFrame:
+    ead = geopandas.read_parquet(fname)
+    ead_cols = [c for c in ead.columns if "_EAD" in c]
+    asset_cols = ["geometry"]
+    rename_cols = {col: f"{col}__{sector}" for col in ead_cols}
+    ead = ead[asset_cols + ead_cols].rename(columns=rename_cols)
+    return ead
 
 rule slice_raster:
     input:
@@ -71,6 +88,48 @@ rule mangrove_opportunities:
     script:
         "./combine.mangrove_opportunities.py"
 
+rule mangrove_with_ead:
+    input:
+        opportunities="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/mangrove.parquet",
+        risks=expand(
+            "{{OUTPUT_DIR}}/direct_damages/{{DATASET}}_{FILTER_SLUG}/{HAZARD_SLUG}/EAD_and_cost_per_RP/{{SLICE_SLUG}}.geoparquet",
+            HAZARD_SLUG=[
+                "hazard-aqueduct-coast",
+                "hazard-coastal-deltares",
+            ],
+            FILTER_SLUG=[
+                "filter-rail",
+                "filter-road-tertiary",
+            ],
+        ),
+    output:
+        parquet="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/mangrove_with_EAD.parquet",
+    run:
+        import geopandas
+        from open_gira.io import write_empty_frames
+
+        MANGROVE_EFFECT_M = 5000
+        options = geopandas.read_parquet(input.opportunities)
+
+        if options.empty:
+            write_empty_frames(output.parquet)
+            return
+
+
+        buf_geom = options.geometry.to_crs("ESRI:54009").buffer(MANGROVE_EFFECT_M).to_crs("EPSG:4326")
+        buf = geopandas.GeoDataFrame(
+            data = options.reset_index()[["feature_id"]],
+            geometry =  buf_geom.reset_index(drop=True)
+        )
+
+        for fname in input.risks:
+            sector = fname_sector(fname)
+            ead = read_ead(fname, sector)
+            joined = buf.sjoin(ead, how="left").drop(columns=["geometry", "index_right"])
+            options_damages = joined.groupby("feature_id").sum()
+            options = options.join(options_damages)
+        options.to_parquet(output.parquet)
+
 rule landslide_opportunities:
     input:
         hydrobasins_adm="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes.geoparquet",
@@ -81,6 +140,45 @@ rule landslide_opportunities:
     script:
         "./combine.landslide_opportunities.py"
 
+rule landslide_with_ead:
+    input:
+        opportunities="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/landslide_slope_vegetation.parquet",
+        risks=expand(
+            "{{OUTPUT_DIR}}/direct_damages/{{DATASET}}_{FILTER_SLUG}/{HAZARD_SLUG}/EAD_and_cost_per_trigger/{{SLICE_SLUG}}.geoparquet",
+            HAZARD_SLUG=[
+                "hazard-landslide-arup",
+            ],
+            FILTER_SLUG=[
+                "filter-rail",
+                "filter-road-tertiary",
+            ],
+        ),
+    output:
+        parquet="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/landslide_slope_vegetation_with_EAD.parquet",
+    run:
+        import geopandas
+        from open_gira.io import write_empty_frames
+        LANDSLIDE_EFFECT_M = 3000
+        options = geopandas.read_parquet(input.opportunities)
+
+        if options.empty:
+            write_empty_frames(output.parquet)
+            return
+
+        buf_geom = options.geometry.to_crs("ESRI:54009").buffer(LANDSLIDE_EFFECT_M).to_crs("EPSG:4326")
+        buf = geopandas.GeoDataFrame(
+            data = options.reset_index()[["feature_id"]],
+            geometry =  buf_geom.reset_index(drop=True)
+        )
+
+        for fname in input.risks:
+            sector = fname_sector(fname)
+            ead = read_ead(fname, sector)
+            joined = buf.sjoin(ead, how="left").drop(columns=["geometry", "index_right"])
+            options_damages = joined.groupby("feature_id").sum()
+            options = options.join(options_damages)
+        options.to_parquet(output.parquet)
+
 rule river_opportunities:
     input:
         hydrobasins_adm="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes.geoparquet",
@@ -90,3 +188,58 @@ rule river_opportunities:
         parquet="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/river_basin_afforestation.parquet",
     script:
         "./combine.river_opportunities.py"
+
+rule river_with_ead:
+    input:
+        opportunities="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/river_basin_afforestation.parquet",
+        hydrobasins_adm="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes.geoparquet",
+        risks=expand(
+            "{{OUTPUT_DIR}}/direct_damages/{{DATASET}}_{FILTER_SLUG}/{HAZARD_SLUG}/EAD_and_cost_per_RP/{{SLICE_SLUG}}.geoparquet",
+            HAZARD_SLUG=[
+                "hazard-aqueduct-river",
+                "hazard-river-jrc",
+            ],
+            FILTER_SLUG=[
+                "filter-rail",
+                "filter-road-tertiary",
+            ],
+        ),
+    output:
+        parquet="{OUTPUT_DIR}/slices/{DATASET}_nbs/{SLICE_SLUG}/river_basin_afforestation_with_EAD.parquet",
+    run:
+        import geopandas
+        from open_gira.io import write_empty_frames
+        options = geopandas.read_parquet(input.opportunities)
+
+        if options.empty:
+            write_empty_frames(output.parquet)
+            return
+
+        # union options so there's one multipolygon per basin - mean per_ha values
+        options = options.dissolve(
+            by=['HYBAS_ID', 'GID_0', 'GID_1', 'GID_2'],
+            aggfunc={
+                'area_m2': 'sum',
+                'area_ha': 'sum',
+                'biodiversity_benefit': 'mean',
+                'carbon_benefit_t_per_ha': 'mean',
+                'planting_cost_usd_per_ha': 'mean',
+                'regen_cost_usd_per_ha': 'mean',
+            },
+            dropna=False,
+        ).reset_index(level=['GID_0','GID_1','GID_2'])
+
+        # in future, could read with bbox option, if written with write_covering_bbox=True
+        # for now, read all and select with bounds using spatial index
+        basins = geopandas.read_parquet(input.hydrobasins_adm, columns=["HYBAS_ID", "geometry"]).reset_index()
+        xmin, ymin, xmax, ymax = options.total_bounds
+        basins = basins.cx[xmin:xmax, ymin:ymax]
+
+        # associate all damages within a basin to full option area within the basin
+        for fname in input.risks:
+            sector = fname_sector(fname)
+            ead = read_ead(fname, sector)
+            joined = basins.sjoin(ead, how="left").drop(columns=["geometry", "index_right"])
+            options_damages = joined.groupby("HYBAS_ID").sum()
+            options = options.join(options_damages)
+        options.to_parquet(output.parquet)
