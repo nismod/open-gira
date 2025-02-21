@@ -3,6 +3,7 @@
 [![mdBook Documentation](https://github.com/nismod/open-gira/actions/workflows/docs.yml/badge.svg?branch=main)](https://nismod.github.io/open-gira)
 [![pyTest](https://github.com/nismod/open-gira/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nismod/open-gira/actions/workflows/test.yml)
 [![snakemake workflow](https://img.shields.io/badge/snakemake-open--gira-informational)](https://snakemake.github.io/snakemake-workflow-catalog/?usage=nismod/open-gira)
+[![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14537079.svg)](https://doi.org/10.5281/zenodo.14537079)
 
 ## Introduction
 
