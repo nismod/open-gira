@@ -243,3 +243,38 @@ rule river_with_ead:
             options_damages = joined.groupby("HYBAS_ID").sum()
             options = options.join(options_damages)
         options.to_parquet(output.parquet)
+
+
+rule combine_with_ead:
+    input:
+        parquet=expand(
+            "{{OUTPUT_DIR}}/slices/{{DATASET}}_nbs/slice-{SLICE_SLUG}/{{NBS}}_with_EAD.parquet",
+            SLICE_SLUG=range(config["slice_count"])
+        )
+    output:
+        parquet="{OUTPUT_DIR}/nbs-adaptation/{DATASET}/{NBS}_with_EAD.parquet",
+    run:
+        # read from possibly-mixed schemas - would be nice to handle these as a single parquet directory
+        # with common schema, but would need to set this up at write time, and pass to `write_empty_files`
+        pds = pq.ParquetDataset(input.parquet)
+        nonempty = []
+        for pf_name in pds.files:
+            pf = pq.ParquetFile(pf_name)
+            if "HYBAS_ID" in pf.schema.names:
+                nonempty.append(pf_name)
+        pt = pq.read_table(nonempty)
+
+        # Write to combined geoparquet file
+        df = pt.to_pandas()
+        df.geometry = geopandas.GeoSeries.from_wkb(df.geometry)
+        gdf = geopandas.GeoDataFrame(df).set_crs(epsg=4326)
+        gdf.to_parquet(output.parquet)
+
+rule combine_all_with_ead:
+    input:
+        parquet=expand(
+            "{{OUTPUT_DIR}}/nbs-adaptation/{{DATASET}}/{NBS}_with_EAD.parquet",
+            NBS=["river_basin_afforestation", "mangrove", "landslide_slope_vegetation"]
+        )
+    output:
+        touch("{OUTPUT_DIR}/nbs-adaptation/{DATASET}/combined.flag")
