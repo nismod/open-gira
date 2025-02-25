@@ -9,6 +9,7 @@ class StrEnum(str, Enum):
     """
     Enum with strings as values.
     """
+
     pass
 
 
@@ -29,7 +30,9 @@ class Assets(StrEnum):
         """
         Return a set of all asset values implemented in subclasses of Assets
         """
-        return {asset for subclass in cls.__subclasses__() for asset in subclass.values()}
+        return {
+            asset for subclass in cls.__subclasses__() for asset in subclass.values()
+        }
 
     @classmethod
     def valid_selection(cls, requested_assets: set) -> None:
@@ -45,14 +48,18 @@ class Assets(StrEnum):
 
         if not requested_assets.issubset(cls.implemented_assets()):
             missing_assets = requested_assets - cls.implemented_assets()
-            raise ValueError(f"{missing_assets=} are not implemented, please amend request")
+            raise ValueError(
+                f"{missing_assets=} are not implemented, please amend request"
+            )
 
 
 class RailAssets(Assets):
     """
     Typology of rail assets
     """
+
     RAILWAY = "rail_railway"
+    RAILWAY_NARROW = "rail_narrow_gauge"
     BRIDGE = "rail_bridge"
     STATION = "rail_station"
 
@@ -61,6 +68,7 @@ class RoadAssets(Assets):
     """
     Typology of road assets
     """
+
     BRIDGE = "road_bridge"
     MOTORWAY = "road_motorway"
     TRUNK = "road_trunk"

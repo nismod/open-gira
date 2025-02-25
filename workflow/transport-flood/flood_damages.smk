@@ -17,7 +17,7 @@ rule return_period_direct_damages:
         return_period_and_ead = "{OUTPUT_DIR}/direct_damages/{DATASET}_{FILTER_SLUG}/{HAZARD_SLUG}/EAD_and_cost_per_RP/{SLICE_SLUG}.geoparquet",
     params:
         # determine the network type from the filter, e.g. road, rail
-        network_type=lambda wildcards: wildcards.FILTER_SLUG.replace('filter-', ''),
+        network_type=lambda wildcards: wildcards.FILTER_SLUG.split("-")[1],
         # determine the hazard type from the hazard slug, e.g. flood, earthquake, storm
         hazard_type=lambda wildcards: config["hazard_types"][wildcards.HAZARD_SLUG.replace('hazard-', '')]
     script:

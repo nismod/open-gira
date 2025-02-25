@@ -85,6 +85,9 @@ if __name__ == "__main__":
     network.edges.loc[network.edges.tag_railway == "rail", "asset_type"] = (
         RailAssets.RAILWAY
     )
+    network.edges.loc[network.edges.tag_railway == "narrow_gauge", "asset_type"] = (
+        RailAssets.RAILWAY_NARROW
+    )
     network.edges.loc[network.edges.bridge == True, "asset_type"] = RailAssets.BRIDGE
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs

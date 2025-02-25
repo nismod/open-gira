@@ -31,35 +31,29 @@ rule trim_raster:
     Trim a single raster according to a JSON specification
     """
     input:
-        raw_raster_file="{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw/{TIFF_FILE}",
-        json_file="{OUTPUT_DIR}/json/{DATASET}.json",
+        tiff="{OUTPUT_DIR}/input/{HAZARD_SLUG}/raw/{TIFF_FILE}",
+        json="{OUTPUT_DIR}/json/{DATASET}.json",
     output:
-        trimmed_raster_file="{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}/{TIFF_FILE}",
+        tiff="{OUTPUT_DIR}/input/{HAZARD_SLUG}/{DATASET}/{TIFF_FILE}",
     shell:
         """
         set -ex
 
-        mkdir --parents $(dirname {output.trimmed_raster_file})
+        mkdir --parents $(dirname {output.tiff})
 
         # pull out bounding box coords into bash array
-        declare -a "COORDS=($(jq '.extracts[0].bbox | @sh' {input.json_file}))"
+        # bbox is [xmin, ymin, xmax, ymax]
+        declare -a "COORDS=($(jq '.extracts[0].bbox | @sh' {input.json}  | sed 's/"//g'))"
 
-        # now trim the raster
+        # then use gdal_translate with projwin to avoid warping
+        # projwin is [ulx, uly, lrx, lry]
+        gdal_translate \
+            -projwin ${{COORDS[0]}} ${{COORDS[3]}} ${{COORDS[2]}} ${{COORDS[1]}} \
+            -co COMPRESS=LZW \
+            -co BIGTIFF=IF_SAFER \
+            --config GDAL_CACHEMAX=50% \
+            {input.tiff} {output.tiff}
 
-        # a plain gdalwarp call will trim the dataset successfully
-        # however, the output will be tens of times larger per unit area than the original
-        # using gdal_translate we can trim _and_ compress
-        # https://trac.osgeo.org/gdal/wiki/UserDocs/GdalWarp#GeoTIFFoutput-coCOMPRESSisbroken
-
-        # first, generate a VRT format job specification (a short XML file) with gdalwarp
-        JOB_SPEC=$(mktemp)  # file in /tmp
-        gdalwarp -te ${{COORDS[@]}} -of VRT {input.raw_raster_file} $JOB_SPEC
-
-        # then use gdal_translate to execute the job as specified
-        gdal_translate -co compress=lzw $JOB_SPEC {output.trimmed_raster_file}
-
-        # clean up job specification file
-        rm $JOB_SPEC
         """
 
 """

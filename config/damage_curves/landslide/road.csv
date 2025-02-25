@@ -1,0 +1,5 @@
+# Source:
+# Nirandjan et al. 2024 L7.3-4 L7.5, L7.12-19
+occurrence,damage_fraction,lower,upper
+0,0.0,0.0,0.0
+1,0.6,0.3,1.0

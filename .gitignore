@@ -10,7 +10,15 @@ build
 # Data
 data/*
 results/*
+notebooks/*.geojson
+notebooks/*.gpkg
+notebooks/*.png
+notebooks/*.qgz
+notebooks/*.tif
+notebooks/*.xml
 *.bak
+*.zarr
+
 soge-sync
 push
 pull
@@ -33,3 +41,6 @@ tester/*
 
 # Rendered documentation
 docs/book/
+
+# Cluster
+slurm

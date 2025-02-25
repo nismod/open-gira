@@ -32,7 +32,7 @@ rule simplify_admin_bounds:
     run:
         import geopandas as gpd
 
-        df = gpd.read_file(input.all_admin_bounds, layer=int(wildcards.ADMIN_SLUG.replace("admin-level-", "")))
+        df = gpd.read_file(input.all_admin_bounds, layer=wildcards.ADMIN_SLUG.replace("admin-level-", "level"))
 
         TOLERANCE_METRES = 50
         # GADM geometry is very precise -- drop some precision to save on memory and disk

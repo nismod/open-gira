@@ -3,7 +3,7 @@
 name: open-gira
 channels:
   - conda-forge  # majority of dependencies
-  - defaults
+  - nodefaults
 dependencies:
   - python=3.10
   - pip
@@ -58,3 +58,4 @@ dependencies:
   - tqdm==4.62.3        # progress bars
   # pin xarray as suspect 2023.11.0 duplicates/nisnames coords when concatenating
   - xarray==2023.10.1   # named n-dimensional arrays
+  - zarr                # zarr ndarray/raster store

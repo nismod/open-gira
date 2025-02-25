@@ -45,7 +45,7 @@ for network, file_path in config['network_filters'].items():
 if len(config["hazard_datasets"].keys()) != len(config["hazard_types"].keys()):
     raise ValueError(f"{config['hazard_datasets']=} not the same length as {config['hazard_types']=}")
 
-permitted_hazard_types = {"flood"}
+permitted_hazard_types = {"flood", "landslide"}
 configured_hazard_types = set(config["hazard_types"].values())
 if not configured_hazard_types.issubset(permitted_hazard_types):
     raise ValueError(f"unsupported hazard types: {permitted_hazard_types - configured_hazard_types}")
@@ -81,11 +81,11 @@ wildcard_constraints:
     CHUNK_SLUG="chunk-[\d]+",
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
-    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP",
+    DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP|EAD_and_cost_per_trigger",
     EVENTS_OR_RASTERS="events|wind_speed_raster|RP_raster",
     FILTER_SLUG="filter-[^_/]+",
     FILENAME="[^/]+",
-    HAZARD_SLUG="hazard-[^_/]+",
+    HAZARD_SLUG="hazard-[^_/]+|nbs-[^_/]+",
     IRIS_SCENARIO="PRESENT|SSP1-2050|SSP2-2050|SSP5-2050",
     # the output dir must end in 'results'
     # e.g. '/data/open-gira/results', './results', '/my-results', etc.
@@ -123,6 +123,10 @@ include: "buildings/giri-bem.smk"
 include: "buildings/disaggregate_bem.smk"
 
 include: "nature-ecosystems/land-cover.smk"
+include: "nature-ecosystems/hydrobasins.smk"
+include: "nature-ecosystems/nbs-suitability.smk"
+include: "nature-ecosystems/combine.smk"
+
 include: "population-economy/dryad-gdp.smk"
 include: "population-economy/ghsl-pop.smk"
 
@@ -144,8 +148,11 @@ include: "transport/multi-modal/multi_modal.smk"
 include: "transport/flow_allocation/allocate.smk"
 
 include: "flood/aqueduct.smk"
-include: "flood/jrc.smk"
+include: "flood/coastal_deltares.smk"
+include: "flood/river_jrc.smk"
 include: "flood/trim_hazard_data.smk"
+
+include: "landslide/landslide_arup.smk"
 
 include: "tropical-cyclone/IBTrACS.smk"
 include: "tropical-cyclone/IRIS.smk"
@@ -156,6 +163,8 @@ include: "tropical-cyclone/wind_fields/wind_fields.smk"
 include: "transport-flood/network_raster_intersection.smk"
 include: "transport-flood/flood_damages.smk"
 include: "transport-flood/aggregate_to_admin_area.smk"
+
+include: "transport-landslide/damages.smk"
 
 include: "power-tc/network_raster_intersection.smk"
 include: "power-tc/intersection.smk"

@@ -24,9 +24,10 @@ maps. European Commission, Joint Research Centre (JRC) [Dataset] PID:
 http://data.europa.eu/89h/jrc-floods-floodmapgl_rp50y-tif
 """
 
-rule download_jrc_flood:
+
+rule download_river_jrc:
     output:
-        zip="{OUTPUT_DIR}/input/jrc_flood/floodMapGL_rp{RP}y.zip"
+        zip="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip"
     shell:
         """
         output_dir=$(dirname {output.zip})
@@ -35,17 +36,27 @@ rule download_jrc_flood:
             --directory-prefix=$output_dir \
             https://cidportal.jrc.ec.europa.eu/ftp/jrc-opendata/FLOODS/GlobalMaps/floodMapGL_rp{wildcards.RP}y.zip
         """
-rule extract_jrc_flood:
+
+rule extract_river_jrc:
     input:
-        tiff="{OUTPUT_DIR}/input/jrc_flood/floodMapGL_rp{RP}y.zip"
+        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip"
     output:
-        tiff="{OUTPUT_DIR}/input/jrc_flood/floodMapGL_rp{RP}y.tif"
+        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.tif"
     shell:
         """
         output_dir=$(dirname {output.tiff})
         unzip $output_dir/floodMapGL_rp{wildcards.RP}y.zip floodMapGL_rp{wildcards.RP}y.tif -d $output_dir
         """
 
-rule all_jrc_flood:
+rule all_river_jrc:
     input:
-        tiffs=expand("results/input/jrc_flood/floodMapGL_rp{RP}y.tif", RP=[10, 20, 50, 100, 200, 500])
+        tiffs=expand("results/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.tif", RP=[10, 20, 50, 100, 200, 500])
+
+"""
+Current step is to run this explicitly:
+
+    snakemake -c 10 -- all_river_jrc
+
+Before asking for any risk results, so the checkpoint download_hazard_datasets
+will pick up the TIFFs in the directory.
+"""

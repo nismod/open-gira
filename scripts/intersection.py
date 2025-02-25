@@ -13,48 +13,19 @@ import sys
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import rasterio
 import pyproj
+import rasterio
+import snail.intersection
 from pyproj import Geod
-from snail.core.intersections import split_linestring
-from snail.core.intersections import get_cell_indices as get_cell_indicies_of_midpoint
 from tqdm import tqdm
 
 from open_gira import fields
 
 
-def associate_raster(df, fname, band_number=1) -> pd.Series:
-    """
-    For each split geometry, lookup the relevant raster value. Cell indicies
-    must have been previously calculated and stored as fields.RASTER_{I,J}.
-
-    N.B. This will pass through no data values from the raster (no filtering).
-
-    Args:
-        df (pd.DataFrame): Table of features, each with cell indicies pertaining
-            to relevant raster pixel. Indicies must be stored under columns with
-            names referenced by fields.RASTER_I and fields.RASTER_J
-        fname (str): Filename of raster file to read data from
-        band_number (int): Which band of the raster file to read
-
-    Returns:
-        pd.Series: Series of raster values, with same row indexing as df.
-    """
-
-    with rasterio.open(fname) as dataset:
-
-        band_data: np.ndarray = dataset.read(band_number)
-
-        # 2D numpy indexing is j, i (i.e. row, column)
-        return pd.Series(index=df.index, data=band_data[df[fields.RASTER_J], df[fields.RASTER_I]])
-
-
 def write_empty_files(columns, outputs_path):
     try:
         empty_geodf = gpd.GeoDataFrame(
-            columns=columns,
-            geometry="geometry",
-            crs=pyproj.CRS.from_user_input(4326)
+            columns=columns, geometry="geometry", crs=pyproj.CRS.from_user_input(4326)
         )
     except ValueError:
         raise ValueError("Empty dataframe must contain a geometry column")
@@ -68,7 +39,9 @@ def write_empty_files(columns, outputs_path):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
     tqdm.pandas()
     try:
         network_edges_path: str = snakemake.input.network
@@ -103,83 +76,39 @@ if __name__ == "__main__":
         raster_width = dataset.width
         raster_height = dataset.height
         raster_transform = list(dataset.transform)
-    logging.info(f"{raster_width=} {raster_height=}")
+
+    grid = snail.intersection.GridDefinition.from_raster(raster_paths[0])
+    logging.info(f"{grid=}")
 
     if len(raster_paths) > 1:
         # Check all raster files use the same grid
         logging.info("Checking raster grid consistency")
-        for raster_path in tqdm(raster_paths[1:]):
-            with rasterio.open(raster_path) as raster:
-                if (
-                    raster_width != raster.width
-                    or raster_height != raster.height
-                    or raster_transform != list(raster.transform)
-                ):
-                    raise AttributeError(
-                        (
-                            f"Raster attribute mismatch in file {raster_path}:\n"
-                            f"Height: expected={raster_height}; actual={raster.height}\n"
-                            f"Width: expected={raster_width}; actual={raster.width}\n"
-                            f"Transform equal? {'True' if list(raster.transform) == raster_transform else 'False'}"
-                        )
+        for raster_path in raster_paths[1:]:
+            other_grid = snail.intersection.GridDefinition.from_raster(raster_path)
+            if other_grid != grid:
+                raise AttributeError(
+                    (
+                        f"Raster attribute mismatch in file {raster_path}:\n"
+                        f"Height: expected={grid.height}; actual={other_grid.height}\n"
+                        f"Width: expected={grid.width}; actual={other_grid.width}\n"
+                        f"Transform equal? {other_grid.transform == grid.transform}\n"
+                        f"Transform expected= {grid.transform}\n"
+                        f"Transform actual= {other_grid.transform}\n"
+                        f"CRS equal? {other_grid.crs == grid.crs}"
                     )
+                )
 
     # Split edges
     logging.info("Split edges")
-    core_splits = []
-    for i in tqdm(range(len(core_edges))):
-        # split edge
-        splits = split_linestring(
-            core_edges.geometry[i], raster_width, raster_height, raster_transform
-        )
-        # add to collection
-        for s in splits:
-            # splitting sometimes returns zero-length linestrings on edge of raster
-            # see below for example linestring on eastern (lon=70W) extent of box
-            # (Pdb) geometry.coords.xy
-            # (array('d', [-70.0, -70.0]), array('d', [18.445832920952196, 18.445832920952196]))
-            # this split geometry has: j = raster_width
-            # however j should be in range: 0 <= j < raster_width
-            # as a hacky workaround, drop any splits with length 0
-            # do we need a nudge off a cell boundary somewhere when performing the splits in snail?
-            if not s.length == 0:
-                new_row = core_edges.iloc[i].copy()
-                new_row.geometry = s
-                core_splits.append(new_row)
-
-    core_splits = gpd.GeoDataFrame(core_splits)
+    core_splits = snail.intersection.split_linestrings(
+        core_edges.reset_index(drop=True), grid
+    )
 
     logging.info("Split %d edges into %d pieces", len(core_edges), len(core_splits))
 
     logging.info("Find indices")
-
-    def cell_indicies_of_split_geometry(geometry, *args, **kwargs) -> pd.Series:
-        """
-        Given a geometry, find the cell index (i, j) of its midpoint for the
-        enclosing raster parameters.
-
-        N.B. There is no checking whether a geometry spans more than one cell.
-        """
-
-        # integer indicies
-        i, j = get_cell_indicies_of_midpoint(geometry, raster_height, raster_width, raster_transform)
-
-        # die if we're out of bounds somehow
-        assert 0 <= i < raster_width
-        assert 0 <= j < raster_height
-
-        # return a series with labels so we can unpack neatly into two dataframe columns
-        return pd.Series(index=(fields.RASTER_I, fields.RASTER_J), data=[i, j])
-
-    core_splits = pd.concat(
-        [
-            core_splits,
-            core_splits.geometry.progress_apply(
-                cell_indicies_of_split_geometry,
-                result_type='expand',
-            )
-        ],
-        axis="columns"
+    core_splits = snail.intersection.apply_indices(
+        core_splits, grid, index_i=fields.RASTER_I, index_j=fields.RASTER_J
     )
 
     logging.info("Calculate split segment lengths")
@@ -198,13 +127,18 @@ if __name__ == "__main__":
         raster_data: dict[str, pd.Series] = {}
 
         for i in tqdm(range(len(raster_paths))):
-            raster_data[f"{fields.HAZARD_PREFIX}{raster_basenames[i]}"] = associate_raster(core_splits, raster_paths[i])
+            colname = f"{fields.HAZARD_PREFIX}{raster_basenames[i]}"
+            with rasterio.open(raster_paths[i]) as src:
+                data = src.read(1)
+                raster_data[colname] = snail.intersection.get_raster_values_for_splits(
+                    core_splits, data, index_i=fields.RASTER_I, index_j=fields.RASTER_J
+                )
 
         raster_data = pd.DataFrame(raster_data)
         core_splits = pd.concat([core_splits, raster_data], axis="columns")
         assert len(raster_data) == len(core_splits)
 
-    logging.info(f"Write data {core_splits.shape=}")
+    logging.info(f"Write data {core_splits.shape=} {core_splits.columns=}")
     core_splits.to_parquet(output_path)
 
     logging.info("Write data without geometry")

@@ -125,7 +125,8 @@ class OutputChecker:
         expected_files = set(
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
-            for f in files if ".snakemake" not in str(f)
+            for f in files
+            if ".snakemake" not in str(f)
         )
         unexpected_files = set()
 
@@ -151,7 +152,9 @@ class OutputChecker:
             # the loop could exit successfully if no files at all are are
             # found, so check that we've got the right number
             if len(produced_files) != len(expected_files):
-                produced_files = [str(file.relative_to(self.workdir)) for file in produced_files]
+                produced_files = [
+                    str(file.relative_to(self.workdir)) for file in produced_files
+                ]
                 expected_files = [str(file) for file in expected_files]
                 raise ValueError(
                     f"\n{len(produced_files)=} but {len(expected_files)=}"
@@ -173,7 +176,6 @@ class OutputChecker:
 
         printerr(f">>> Compare files:\n{generated_file}\n{expected_file}")
         file_ext = str(generated_file).split(".")[-1]
-
         # PARQUET
         if any([ext == file_ext for ext in ("pq", "parq", "parquet")]):
             generated = pd.read_parquet(generated_file)
@@ -188,21 +190,27 @@ class OutputChecker:
 
         # JSON
         elif re.search(r"\.(geo)?json$", str(generated_file), re.IGNORECASE):
-            with open(generated_file, 'r') as fp:
+            with open(generated_file, "r") as fp:
                 generated = json.load(fp)
-            with open(expected_file, 'r') as fp:
+            with open(expected_file, "r") as fp:
                 expected = json.load(fp)
 
-            if json.dumps(generated, sort_keys=True) != json.dumps(expected, sort_keys=True):
+            if json.dumps(generated, sort_keys=True) != json.dumps(
+                expected, sort_keys=True
+            ):
                 printerr(">>> Method: compare sorted JSON strings")
                 printerr(f">>> generated:\n{pformat(generated)}")
                 printerr(f">>> expected:\n{pformat(expected)}")
                 raise AssertionError("JSON files do not match")
 
         # JPG, PDF, PNG & SVG images
-        elif re.search(r"\.(jpg|jpeg|pdf|png|svg|tif|tiff)$", str(generated_file), re.IGNORECASE):
+        elif re.search(
+            r"\.(jpg|jpeg|pdf|png|svg|tif|tiff)$", str(generated_file), re.IGNORECASE
+        ):
             try:
-                sp.check_output(["tests/visual_compare.sh", generated_file, expected_file])
+                sp.check_output(
+                    ["tests/visual_compare.sh", generated_file, expected_file]
+                )
             except sp.CalledProcessError as e:
                 printerr(">>> Method: visual hash comparison (imagemagick's identify)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
@@ -270,7 +278,10 @@ class OutputChecker:
                         continue  # numbers are within floating point vagueness, skip to next col
 
                 # do the discrepancies occur only where there are null values (NaN & None)?
-                unequal_only_where_null = all(expected[col].isna() == (expected[col].values != generated[col].values))
+                unequal_only_where_null = all(
+                    expected[col].isna()
+                    == (expected[col].values != generated[col].values)
+                )
                 if not unequal_only_where_null:
                     printerr(f"{col=} {unequal_only_where_null=}")
 
@@ -278,19 +289,25 @@ class OutputChecker:
                     MAX_FAILURES_TO_PRINT = 20
                     failures = 0
                     for row in range(len(generated)):
-                        gen_str = str(generated[col][row: row + 1].values)
-                        exp_str = str(expected[col][row: row + 1].values)
+                        gen_str = str(generated[col][row : row + 1].values)
+                        exp_str = str(expected[col][row : row + 1].values)
                         if gen_str != exp_str:
                             failures += 1
                             if failures < MAX_FAILURES_TO_PRINT:
-                                printerr(f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}")
+                                printerr(
+                                    f">>> FAILURE at {col=}, {row=}: {gen_str} != {exp_str}"
+                                )
                             elif failures == MAX_FAILURES_TO_PRINT:
-                                printerr(f"Failures truncated after {MAX_FAILURES_TO_PRINT}...")
+                                printerr(
+                                    f"Failures truncated after {MAX_FAILURES_TO_PRINT}..."
+                                )
                             else:
                                 continue
 
                     if failures > 0:
-                        raise ValueError(f"Found {failures} row mismatch(es) between tables")
+                        raise ValueError(
+                            f"Found {failures} row mismatch(es) between tables"
+                        )
 
                 else:
                     # None != None according to pandas, and this is responsible for the apparent mismatch
