@@ -204,26 +204,23 @@ snakemake -c1 results/mark_paper/ghsl/kenya-latest/GHS_SMOD_E2020.tif
 
 rule download_flopros:
     """
-    Download the FLOPROS dataset NHESS.
-    Will be used to infer flood protection
+    Download and extract the FLOPROS dataset.
+    This rule outputs the shapefile needed for further processing.
     """
     output:
-        "{OUTPUT_DIR}/input/flopros/nhess-16-1049-2016-supplement"
+        shp="{OUTPUT_DIR}/input/flopros/Scussolini_etal_Suppl_info/FLOPROS_shp_V1/FLOPROS_shp_V1.shp"
     shell:
         """
-        output_dir=$(dirname {output})
-
+        output_dir=$(dirname {output.shp})
         mkdir -p $output_dir
-
         wget -nc http://dx.doi.org/10.5194/nhess-16-1049-2016-supplement \
             --directory-prefix=$output_dir
-
         unzip -o $output_dir/nhess-16-1049-2016-supplement \
             -d $output_dir
         """
 """
 Test with 
-snakemake -c1 results/input/flopros/nhess-16-1049-2016-supplement
+snakemake -c1 results/input/flopros/Scussolini_etal_Suppl_info/FLOPROS_shp_V1/FLOPROS_shp_V1.shp"
 """ 
 
 rule trim_flopros:
