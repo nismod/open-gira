@@ -49,6 +49,7 @@ with rasterio.open(rwi_path) as rwi_src, rasterio.open(pop_path) as pop_src, \
     risk = risk_src.read(1)
     risk_protected = risk_protected_src.read(1)
     affine = risk_src.transform 
+rwi[rwi==-999] = np.nan # convert -999 in RWI dataset to NaN
 
 logging.info("Reading level {admin_level} admin boundaries")
 # Read bbox bounds
@@ -91,7 +92,6 @@ for idx, region in clipped_admin_areas.iterrows():
     risk_clip = np.where(mask_array, risk, np.nan)
     risk_protected_clip = np.where(mask_array, risk_protected, np.nan)
     logging.info("Masking and flattening data")
-    rwi[rwi==-999] = np.nan # convert -999 in RWI dataset to NaN
     # Mask out areas where not all rasters are valid
     mask = (
         ~np.isnan(pop_clip) &
@@ -170,6 +170,10 @@ for idx, region in clipped_admin_areas.iterrows():
     CI_protected_urban = calculate_CI(df_protected_urban)
     CI_protected_rural = calculate_CI(df_protected_rural)
 
+    # Calculate the number of cells where population and rwi overla
+    total_pop = np.nansum(pop_clip)
+    pop_rwi = np.nansum(np.where(~np.isnan(rwi_clip), pop_clip, 0))
+
     results.append({
         area_unique_id_col: region[area_unique_id_col],
         area_name_col: region[area_name_col],
@@ -179,7 +183,8 @@ for idx, region in clipped_admin_areas.iterrows():
         "CI_rural": CI_rural,
         "CI_protected_urban": CI_protected_urban,
         "CI_protected_rural": CI_protected_rural,
-        "Population": np.sum(pop_flat),
+        "Population": total_pop,
+        "Population Coverage (%)": (pop_rwi/total_pop)*100,
         "rwi_count": np.count_nonzero(rwi_flat),
         "geometry": region["geometry"]
     })
