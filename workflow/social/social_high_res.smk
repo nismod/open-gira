@@ -189,7 +189,7 @@ snakemake -c1 results/mark_paper/high_resolution/concentration_index/kenya-lates
 """
 
 COUNTRIES = ["algeria-latest",
-            "angola-lates",
+            "angola-latest",
             "burkina-faso-latest",
             "benin-latest",
             "botswana-latest",
