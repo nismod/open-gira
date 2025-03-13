@@ -211,11 +211,11 @@ rule download_flopros:
         shp="{OUTPUT_DIR}/input/flopros/Scussolini_etal_Suppl_info/FLOPROS_shp_V1/FLOPROS_shp_V1.shp"
     shell:
         """
-        output_dir=$(dirname {output.shp})
+        output_dir=$(dirname $(dirname $(dirname {output.shp})))
         mkdir -p $output_dir
         wget -nc http://dx.doi.org/10.5194/nhess-16-1049-2016-supplement \
             --directory-prefix=$output_dir
-        unzip -o $output_dir/nhess-16-1049-2016-supplement \
+        unzip -o $output_dir/nhess-16-1049-2016-supplement
             -d $output_dir
         """
 """
