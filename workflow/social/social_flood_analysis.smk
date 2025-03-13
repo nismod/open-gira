@@ -211,17 +211,20 @@ rule download_flopros:
         shp="{OUTPUT_DIR}/input/flopros/Scussolini_etal_Suppl_info/FLOPROS_shp_V1/FLOPROS_shp_V1.shp"
     shell:
         """
-        output_dir=$(dirname $(dirname $(dirname {output.shp})))
+        # Define output directory as the correct parent directory
+        output_dir=$(realpath $(dirname {output.shp})/../..)
+
+        # Create the FLOPROS directory (without nesting issues)
         mkdir -p $output_dir
+
+        # Download the dataset if it does not already exist
         wget -nc http://dx.doi.org/10.5194/nhess-16-1049-2016-supplement \
             --directory-prefix=$output_dir
-        unzip -o $output_dir/nhess-16-1049-2016-supplement
-            -d $output_dir
+
+        # Unzip the dataset into the correct location
+        unzip -o $output_dir/nhess-16-1049-2016-supplement -d $output_dir
         """
-"""
-Test with 
-snakemake -c1 results/input/flopros/Scussolini_etal_Suppl_info/FLOPROS_shp_V1/FLOPROS_shp_V1.shp"
-""" 
+
 
 rule trim_flopros:
     """
