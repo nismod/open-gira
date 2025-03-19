@@ -188,6 +188,28 @@ Test with
 snakemake -c1 results/mark_paper/high_resolution/concentration_index/kenya-latest/concentration_index_admin-level-1.gpkg
 """
 
+rule plot_hr_concentration_curve:
+    """
+    This rule plots the concentration curve for the chosen admin region.
+    Here calculating it using the JRC damage curve...
+    """
+    input:
+        admin_areas = "{OUTPUT_DIR}/input/admin-boundaries/{ADMIN_SLUG}.geoparquet",
+        json_file="{OUTPUT_DIR}/json/{DATASET}.json",
+        rwi_file="{OUTPUT_DIR}/mark_paper/high_resolution/rwi/{DATASET}/rwi.tif",
+        pop_file="{OUTPUT_DIR}/mark_paper/high_resolution/ghsl/{DATASET}/GHS_POP_E2020.tif",
+        urban_file="{OUTPUT_DIR}/mark_paper/high_resolution/ghsl/{DATASET}/GHS_SMOD_E2020.tif",
+        risk_file="{OUTPUT_DIR}/mark_paper/high_resolution/relative_risk/hazard-jrc-river/{DATASET}/JRC/jrc_global_flood_AAR.tif",
+        risk_protected_file="{OUTPUT_DIR}/mark_paper/high_resolution/relative_risk/hazard-jrc-river/{DATASET}/JRC/jrc_global_flood_AAR_protected.tif"
+    output:
+        figure_directory = directory("{OUTPUT_DIR}/mark_paper/high_resolution/concentration_index/{DATASET}/plots/{ADMIN_SLUG}/"),
+    script:
+        "./plot_concentration_curves.py"
+"""
+Test with
+snakemake -c1 results/mark_paper/concentration_index/kenya-latest/plots/admin-level-0
+"""
+
 COUNTRIES = ["algeria-latest",
             "angola-latest",
             "burkina-faso-latest",
