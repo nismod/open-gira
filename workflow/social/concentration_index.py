@@ -170,6 +170,25 @@ for idx, region in clipped_admin_areas.iterrows():
     CI_protected_urban = calculate_CI(df_protected_urban)
     CI_protected_rural = calculate_CI(df_protected_rural)
 
+    logging.info("Calculating Quantile Ratios")
+    
+    def calculate_quantile_ratio(df, quantile=0.2):
+        # Sort the DataFrame by wealth (rwi) in ascending order
+        df_sorted = df.sort_values(by="rwi", ascending=True).copy()
+        n = len(df_sorted)
+        k = max(1, int(n * quantile))
+        
+        # Compute average flood exposure for bottom and top quantiles
+        bottom_avg = df_sorted["flood"].iloc[:k].mean()
+        top_avg = df_sorted["flood"].iloc[-k:].mean()
+        
+        # Return the ratio; avoid division by zero
+        return top_avg / bottom_avg if bottom_avg != 0 else np.nan
+    
+    QR_total = calculate_quantile_ratio(df, quantile=0.2)
+    QR_protected = calculate_quantile_ratio(df_protected, quantile=0.2)
+
+
     # Calculate the number of cells where population and rwi overla
     total_pop = np.nansum(pop_clip)
     pop_rwi = np.nansum(np.where(~np.isnan(rwi_clip), pop_clip, 0))
@@ -183,6 +202,8 @@ for idx, region in clipped_admin_areas.iterrows():
         "CI_rural": CI_rural,
         "CI_protected_urban": CI_protected_urban,
         "CI_protected_rural": CI_protected_rural,
+        "QR": QR_total,
+        "QR_protected": QR_protected,
         "Population": total_pop,
         "Population Coverage (%)": (pop_rwi/total_pop)*100,
         "rwi_count": np.count_nonzero(rwi_flat),
