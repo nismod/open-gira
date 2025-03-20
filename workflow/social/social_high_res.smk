@@ -273,3 +273,9 @@ rule all_countries:
         expand("{OUTPUT_DIR}/mark_paper/high_resolution/concentration_index/{DATASET}/concentration_index_{ADMIN_SLUG}.gpkg",
                OUTPUT_DIR=OUTPUT_DIRS, DATASET=COUNTRIES, ADMIN_SLUG=ADMINS)
 
+rule all_countries_figures:
+    input:
+        expand("{OUTPUT_DIR}/mark_paper/high_resolution/concentration_index/{DATASET}/plots/{ADMIN_SLUG}/",
+               OUTPUT_DIR=OUTPUT_DIRS, DATASET=COUNTRIES, ADMIN_SLUG=ADMINS)
+	 
+
