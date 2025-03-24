@@ -48,6 +48,21 @@ Having installed one of the suggested package managers, to create the
 micromamba create -f environment.yml -y
 ```
 
+### MacOS
+
+On MacOS with Apple silicon chips, the `osmium` and `osmium-tool` packages are
+not yet available for the `osx-arm64` [conda
+subdir](https://mamba.readthedocs.io/en/latest/advanced_usage/more_concepts.html#subdir),
+which is what Macs with silicon chips use by default.
+
+Explicitly set it to `osx-64` when creating the repo with mamba or conda:
+
+```
+mamba env create -f environment.yml --subdir osx-64
+```
+
+Or [build osmium and osmium-tool from source](https://github.com/osmcode/osmium-tool?tab=readme-ov-file#prerequisites).
+
 And to activate the environment:
 
 ```bash
