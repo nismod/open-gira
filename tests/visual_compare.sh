@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /bin/bash
 
 # given two image files as input, compare them with imagemagick's identfy
 # if the 'visual hashes' are equal, exit successfully, otherwise exit 1
