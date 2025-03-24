@@ -10,12 +10,21 @@ build
 # Data
 data/*
 results/*
-notebooks/*.geojson
-notebooks/*.gpkg
-notebooks/*.png
-notebooks/*.qgz
-notebooks/*.tif
-notebooks/*.xml
+notebooks/**/*.cpg
+notebooks/**/*.csv
+notebooks/**/*.dbf
+notebooks/**/*.geojson
+notebooks/**/*.gpkg
+notebooks/**/*.html
+notebooks/**/*.png
+notebooks/**/*.prj
+notebooks/**/*.qgz
+notebooks/**/*.shp
+notebooks/**/*.shx
+notebooks/**/*.tif
+notebooks/**/*.txt
+notebooks/**/*.xml
+notebooks/**/*.zip
 *.bak
 *.zarr
 
