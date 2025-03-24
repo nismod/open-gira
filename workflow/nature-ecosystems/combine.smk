@@ -52,7 +52,7 @@ rule slice_raster:
         gdal_translate \
             -projwin ${{COORDS[0]}} ${{COORDS[3]}} ${{COORDS[2]}} ${{COORDS[1]}} \
             -co compress=lzw \
-            --config GDAL_CACHEMAX=50% \
+            --config GDAL_CACHEMAX 50% \
             {input.tiff} {output.tiff}
 
         # gdalwarp gives identical grids, but hard to guarantee pixel alignment with source data
@@ -60,7 +60,7 @@ rule slice_raster:
         # gdalwarp \
         #     -te ${{COORDS[@]}} \
         #     -co COMPRESS=LZW \
-        #     --config GDAL_CACHEMAX=50% \
+        #     --config GDAL_CACHEMAX 50% \
         #     {input.tiff} {output.tiff}
         """
 
