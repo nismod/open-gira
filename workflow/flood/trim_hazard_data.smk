@@ -39,7 +39,7 @@ rule trim_raster:
         """
         set -ex
 
-        mkdir --parents $(dirname {output.tiff})
+        mkdir -p $(dirname {output.tiff})
 
         # pull out bounding box coords into bash array
         # bbox is [xmin, ymin, xmax, ymax]
@@ -51,7 +51,7 @@ rule trim_raster:
             -projwin ${{COORDS[0]}} ${{COORDS[3]}} ${{COORDS[2]}} ${{COORDS[1]}} \
             -co COMPRESS=LZW \
             -co BIGTIFF=IF_SAFER \
-            --config GDAL_CACHEMAX=50% \
+            --config GDAL_CACHEMAX 50% \
             {input.tiff} {output.tiff}
 
         """

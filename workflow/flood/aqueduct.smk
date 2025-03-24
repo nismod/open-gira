@@ -35,7 +35,7 @@ checkpoint download_hazard_datasets:
             print(f"local_files={local_files}")
             print(f"remote_files={remote_files}")
             target_dir = f"{wildcards.OUTPUT_DIR}/input/{wildcards.HAZARD_SLUG}/raw"
-            os.system(f"mkdir --parents {target_dir}")
+            os.system(f"mkdir -p {target_dir}")
 
             for f in local_files:
                 os.system(f"cp {f} {target_dir}/{os.path.basename(f)}")

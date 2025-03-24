@@ -48,6 +48,21 @@ Having installed one of the suggested package managers, to create the
 micromamba create -f environment.yml -y
 ```
 
+### MacOS
+
+On MacOS with Apple silicon chips, the `osmium` and `osmium-tool` packages are
+not yet available for the `osx-arm64` [conda
+subdir](https://mamba.readthedocs.io/en/latest/advanced_usage/more_concepts.html#subdir),
+which is what Macs with silicon chips use by default.
+
+Explicitly set it to `osx-64` when creating the repo with mamba or conda:
+
+```
+mamba env create -f environment.yml --subdir osx-64
+```
+
+Or [build osmium and osmium-tool from source](https://github.com/osmcode/osmium-tool?tab=readme-ov-file#prerequisites).
+
 And to activate the environment:
 
 ```bash
@@ -55,6 +70,8 @@ micromamba activate open-gira
 ```
 
 ### Utilities
+
+#### `wget`
 
 Some rules use the `wget` utility to download files.
 
@@ -71,10 +88,21 @@ If not, you can access binaries at [eternallybored.org](https://eternallybored.o
 Download the standalone exe and place it for example in `C:\Users\username\bin`
 or somewhere on your PATH.
 
-`exactextract` is used for zonal statistics in the tropical cyclones /
-electricity grid analysis. It is not available via the `conda` package
-management ecosystem and so must be installed separately. Please see
-installation instructions [here](https://github.com/isciences/exactextract).
+#### `exactextract`
+
+[`exactextract`](<(https://github.com/isciences/exactextract)>) is used for zonal
+statistics in the tropical cyclones / electricity grid analysis. It is not
+available via the `conda` package management ecosystem and so must be installed
+separately. Please see [exactextract installation
+instructions](https://isciences.github.io/exactextract/installation.html).
+
+#### `imagemagick`
+
+[`imagemagick`](https://imagemagick.org) is used for approximate comparison of
+image files produced by the automated tests. Imagemagick is available for
+[download and installation](https://imagemagick.org/script/download.php). On
+Linux, it is likely available through your package manager. On Mac, run `brew
+install imagemagick`.
 
 You are now ready to request result files, triggering analysis jobs in the
 process.
@@ -173,5 +201,5 @@ government's official policies.
 
 This research has also been supported by funding from: the World Bank
 Group; the UK Natural Environment Research Council (NERC) through
-the UK Centre for Greening Finance and Investment (CGFI); and Global 
+the UK Centre for Greening Finance and Investment (CGFI); and Global
 Center on Adaptation (GCA).
