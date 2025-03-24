@@ -345,7 +345,11 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
     # don't interpolate over some sensible duration
     # note that we limit by an integer number of timesteps, not a time
     # so our implicit assumption is that the input index is equally spaced
-    max_steps_to_fill: int = np.round(pd.Timedelta("6H") / pd.Timedelta(frequency)).astype(int)
+    max_steps_to_fill: int = int(
+        np.round(
+            pd.Timedelta("6H").total_seconds() / pd.Timedelta(frequency).total_seconds()
+        )
+    )
 
     # interpolate over numeric value of index
     interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(
