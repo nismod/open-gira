@@ -41,7 +41,7 @@ rule slice_raster:
         """
         set -ex
 
-        mkdir --parents $(dirname {output.tiff})
+        mkdir -p $(dirname {output.tiff})
 
         # pull out bounding box coords into bash array
         # bbox is [xmin, ymin, xmax, ymax]
