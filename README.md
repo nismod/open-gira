@@ -56,6 +56,8 @@ micromamba activate open-gira
 
 ### Utilities
 
+#### `wget`
+
 Some rules use the `wget` utility to download files.
 
 On Linux or MacOS, you may already have the `wget` utility available. If not,
@@ -71,10 +73,21 @@ If not, you can access binaries at [eternallybored.org](https://eternallybored.o
 Download the standalone exe and place it for example in `C:\Users\username\bin`
 or somewhere on your PATH.
 
-`exactextract` is used for zonal statistics in the tropical cyclones /
-electricity grid analysis. It is not available via the `conda` package
-management ecosystem and so must be installed separately. Please see
-installation instructions [here](https://github.com/isciences/exactextract).
+#### `exactextract`
+
+[`exactextract`](<(https://github.com/isciences/exactextract)>) is used for zonal
+statistics in the tropical cyclones / electricity grid analysis. It is not
+available via the `conda` package management ecosystem and so must be installed
+separately. Please see [exactextract installation
+instructions](https://isciences.github.io/exactextract/installation.html).
+
+#### `imagemagick`
+
+[`imagemagick`](https://imagemagick.org) is used for approximate comparison of
+image files produced by the automated tests. Imagemagick is available for
+[download and installation](https://imagemagick.org/script/download.php). On
+Linux, it is likely available through your package manager. On Mac, run `brew
+install imagemagick`.
 
 You are now ready to request result files, triggering analysis jobs in the
 process.
@@ -173,5 +186,5 @@ government's official policies.
 
 This research has also been supported by funding from: the World Bank
 Group; the UK Natural Environment Research Council (NERC) through
-the UK Centre for Greening Finance and Investment (CGFI); and Global 
+the UK Centre for Greening Finance and Investment (CGFI); and Global
 Center on Adaptation (GCA).
