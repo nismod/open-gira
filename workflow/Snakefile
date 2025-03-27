@@ -166,6 +166,8 @@ include: "transport-flood/aggregate_to_admin_area.smk"
 
 include: "transport-landslide/damages.smk"
 
+include: "power-flood/network_raster_intersection.smk"
+
 include: "power-tc/network_raster_intersection.smk"
 include: "power-tc/intersection.smk"
 include: "power-tc/exposure.smk"
