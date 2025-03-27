@@ -25,8 +25,8 @@ rule download_ghsl:
     output:
         "{OUTPUT_DIR}/input/ghsl/GHS_POP_E{YEAR}_GLOBE_{RELEASE}_54009_{RESOLUTION}_V1_0.tif"
     wildcard_constraints:
-        YEAR=range(1975, 2031, 5),
-        RESOLUTION="100|1000"
+        YEAR="1975|1980|1985|1990|1995|2000|2005|2010|2015|2020|2025|2030",
+        RESOLUTION="100|1000",
     shell:
         """
         output_dir=$(dirname {output})
@@ -51,5 +51,5 @@ rule download_ghsl_all:
             ),
             resolution=(100, 1000),
             year=(2020, ),
-            release="R2022A" # TODO bump to R2023A
+            release="R2023A"
         )
