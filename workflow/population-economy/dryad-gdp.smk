@@ -1,5 +1,12 @@
 """Download Dryad gridded GDP
 
+See API docs at https://datadryad.org/api
+
+- dataset record https://datadryad.org/api/v2/datasets/doi:10.5061%2Fdryad.dk1j0
+  - find latest version id
+- version files https://datadryad.org/api/v2/versions/52523/files
+  - find list of files with links and ids
+
 Reference
 ---------
 https://doi.org/10.5061/dryad.dk1j0
@@ -16,11 +23,14 @@ rule download_GDP:
         hdi_pedigree = "{OUTPUT_DIR}/input/GDP/pedigree_HDI_1990_2015_v2.nc",
     shell:
         """
-        mkdir -p {wildcards.OUTPUT_DIR}/input/GDP
-        cd {wildcards.OUTPUT_DIR}/input/GDP
-        wget https://datadryad.org/api/v2/datasets/doi%3A10.5061%2Fdryad.dk1j0/download \
-            --content-disposition
-        unzip -o doi_10.5061_dryad.dk1j0__v2.zip
+        output_dir=$(dirname {output.admin})
+
+        for file_id in 241946 241947 241948 241949 241950 241951 241953 241958
+        do
+            wget https://datadryad.org/api/v2/files/$file_id/download \
+                -nc \
+                --content-disposition \
+                --directory-prefix=$output_dir
         """
 
 """
