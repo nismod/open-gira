@@ -2,60 +2,49 @@
 # micromamba create -f environment.yml -y
 name: open-gira
 channels:
-  - conda-forge  # majority of dependencies
+  - conda-forge # majority of dependencies
   - nodefaults
 dependencies:
-  - python=3.10
+  - python=3.12
   - pip
-  - pip:  # delegate to pip for non-conda packages
-    - nismod-snail==0.5.2 # vector-raster intersections
-    - osmium==3.2.0       # OpenStreetMap protobuf handling
-    - snkit==1.8.1        # spatial network cleaning
-    # required zenodo_get version not available via conda-forge
-    - zenodo_get>=1.5.1   # data download client, zenodo API broken w/ <1.5.1
-    - irv-datapkg==0.1.2  # data package helper
-    - -e .                # open_gira helper package
-  - black               # formatter
-  - cython==0.29.28     # c--python interface
-  - contextily          # basemaps for plots
-  - datashader          # plotting large datasets
-  # test_grid_exposure_by_admin_region.py fails with 2024.3.0
-  - dask<2024.3.0       # larger-than-memory computing
-  - flake8              # linter
-  - gdal>=3.3           # command-line tools for spatial data
-  - geopandas==0.14.4   # geospatial dataframes
-  - geopy               # geocoding client
-  - igraph              # graph algorithms and data structures
-  - ipykernel           # notebook support
-  - jupyter             # notebook support
-  - jq                  # JSON processing tool
-  - matplotlib==3.7.1   # basic plotting
-  - nb_conda_kernels    # notebook support
-  - nbstripout          # notebooks in git
-  - netCDF4             # NetCDF file format
-  - networkx            # networks
-  - numpy               # data arrays
-  - openpyxl            # Excel file format
+  - pip: # delegate to pip for non-conda packages
+      - nismod-snail==0.5.2 # vector-raster intersections
+      #     - osmium==3.2.0 # OpenStreetMap protobuf handling  # TODO fix pip install
+      - snkit==1.8.1 # spatial network cleaning
+      # required zenodo_get version not available via conda-forge
+      - zenodo_get>=1.5.1 # data download client, zenodo API broken w/ <1.5.1
+      - irv-datapkg==0.1.2 # data package helper
+      - -e . # open_gira helper package
+  - black # formatter
+  - datashader # plotting large datasets
+  - dask # larger-than-memory computing # TODO check test_grid_exposure_by_admin_region.py fails with 2024.3.0
+  - flake8 # linter
+  - gdal # command-line tools for spatial data # TODO check >=3.3
+  - geopandas # geospatial dataframes # TODO check ==0.14.4
+  - igraph # graph algorithms and data structures
+  - ipykernel # notebook support
+  - jupyter # notebook support
+  - jq # JSON processing tool
+  - matplotlib # basic plotting # check ==3.7.1
+  - nbstripout # notebooks in git
+  - netCDF4 # NetCDF file format
+  - networkx # networks
+  - numpy # data arrays
   - osmium-tool==1.14.0 # openstreetmap extracts
-  - pathos              # multiprocessing
-  # test_network_components.py fails with pandas 2.1.0, see commit msg
-  - pandas==2.0.3       # tabular data
-  - pyarrow>=13.0.0     # parquet file format, Arrow data exchange
-  - pyogrio             # vectorised geospatial file i/o
-  - pyproj>=3.3.1       # geographic projections
-  - pyrosm              # python OpenStreetMap network reader
-  - pytest              # testing
-  - pytest-xdist        # parallelise testing across CPUs
-  - rasterio            # raster file formats
-  - rasterstats         # raster statistics
-  - requests            # make HTTP requests
-  - rioxarray           # xarray datasets from raster files
-  - scipy               # scientific computing library
-  - spatialpandas       # plotting large datasets
-  - bioconda::snakemake==7.18.2   # workflow management
-  # https://github.com/snakemake/snakemake/issues/1891
-  - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
-  - tqdm==4.62.3        # progress bars
-  # pin xarray as suspect 2023.11.0 duplicates/nisnames coords when concatenating
-  - xarray==2023.10.1   # named n-dimensional arrays
-  - zarr                # zarr ndarray/raster store
+  - pandas # tabular data # TODO check # test_network_components.py fails with pandas 2.1.0, see commit msg, was pinned ==2.0.3
+  - pyarrow # parquet file format, Arrow data exchange # TODO check >=13.0.0
+  - pyogrio # vectorised geospatial file i/o
+  - pyproj # geographic projections # TODO check >=3.3.1
+  - pytest # testing
+  - pytest-xdist # parallelise testing across CPUs
+  - rasterio # raster file formats
+  - rasterstats # raster statistics
+  - requests # make HTTP requests
+  - rioxarray # xarray datasets from raster files
+  - scipy # scientific computing library
+  - spatialpandas # plotting large datasets
+  - bioconda::snakemake==9.1.3 # workflow management # TODO check ==7.18.2, was due to # https://github.com/snakemake/snakemake/issues/1891
+  # TODO - tabulate==0.8.10    # snakemake dependency with bug in 9.0.0, pin previous
+  - tqdm # progress bars # TODO check ==4.62.3
+  - xarray # named n-dimensional arrays # TODO check # ==2023.10.1 pin xarray as suspect 2023.11.0 duplicates/nisnames coords when concatenating
+  - zarr # zarr ndarray/raster store
