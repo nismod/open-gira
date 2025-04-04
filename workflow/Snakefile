@@ -78,7 +78,7 @@ if not config["best_estimate_windspeed_failure_threshold"] in config["transmissi
 wildcard_constraints:
     ADMIN_SLUG="admin-level-[0-4]",
     AGG_FUNC_SLUG="agg-sum",
-    CHUNK_SLUG="chunk-[\d]+",
+    CHUNK_SLUG="chunk-[\\d]+",
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP|EAD_and_cost_per_trigger",
@@ -98,10 +98,10 @@ wildcard_constraints:
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_RP="[0-9]+",
-    STORM_SET="(?:IBTrACS|STORM|IRIS)[^\/]*",
-    SAMPLE="\d+",
+    STORM_SET="(?:IBTrACS|STORM|IRIS)[^\\/]*",
+    SAMPLE="\\d+",
     # may be upper or lower, one 'f' or two
-    TIFF_FILE="[^\/\.\s]+\.[tT][iI][fF][fF]?",
+    TIFF_FILE="[^\\/\\.\\s]+\\.[tT][iI][fF][fF]?",
 
 # how many samples is each storm track dataset split into?
 SAMPLES_PER_TRACKSET = {
