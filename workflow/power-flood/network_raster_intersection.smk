@@ -12,8 +12,8 @@ rule network_intersection:
         edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/edges.geoparquet",
         tif_paths=rules.trim_hazard_data.input.trimmed_rasters,
     output:
-        nodes="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/{HAZARD_SLUG}/nodes.geoparquet",
-        edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/{HAZARD_SLUG}/edges.geoparquet",
+        nodes="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/{HAZARD_SLUG}_{DATASET}/nodes.geoparquet",
+        edges="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/{HAZARD_SLUG}_{DATASET}/edges.geoparquet",
     run:
         import geopandas
         from snail.intersection import (
@@ -52,5 +52,5 @@ rule network_intersection:
 
 """
 Test with:
-snakemake --cores all results/power/by_country/TZA/hazard-aqueduct-river/nodes.geoparquet
+snakemake --cores all results/power/by_country/TZA/hazard-aqueduct-river_planet-latest/nodes.geoparquet
 """
