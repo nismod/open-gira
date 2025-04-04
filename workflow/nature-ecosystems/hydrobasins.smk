@@ -150,3 +150,28 @@ rule hydrobasins_add_admin_codes:
             .set_index("HYBAS_ID")
         hb_adm = hb_geoms.join(hb_adm)
         hb_adm.to_parquet(output.hydrobasins_adm)
+
+rule hydrobasins_add_population:
+    input:
+        hydrobasins="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes.geoparquet",
+        population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2023A_54009_1000_V1_0.tif"
+    output:
+        hydrobasins="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes_pop.geoparquet",
+    run:
+        import geopandas
+        from rasterstats import gen_zonal_stats
+        from tqdm import tqdm
+
+        hydrobasins = geopandas.read_parquet(input.hydrobasins, columns=["HYBAS_ID", "geometry"]).to_crs("+proj=moll")
+        zone_pops = [
+            p['sum']
+            for p in gen_zonal_stats(
+                hydrobasins.geometry,
+                input.population,
+                stats=['sum']
+            )
+        ]
+        del hydrobasins
+        hydrobasins = geopandas.read_parquet(input.hydrobasins)
+        hydrobasins['population'] = zone_pops
+        hydrobasins.to_parquet(output.hydrobasins)
