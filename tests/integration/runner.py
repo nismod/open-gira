@@ -87,7 +87,6 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
             "-m",
             "snakemake",
             "-c1",  # single core
-            "--reason",  # show snakemake's reasoning, helps with debugging
             "--configfile",  # use test specific configuration
             "tests/config/config.yaml",
             "--allowed-rules",  # only run the specified rule, no precursors
