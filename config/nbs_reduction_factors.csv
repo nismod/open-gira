@@ -1,0 +1,8 @@
+planting_option,classes,factor
+basin_scale_tree_planting,,0.2,"Bradshaw et al. (2007) - Global evidence that deforestation amplifies flood risk and severity in the developing world - Global Change Biology"
+mangroves,accreting,0.5,"Narayan et al. (2016) - The Effectiveness, Costs and Coastal Protection Benefits of Natural and Nature-Based Defences - PNAS"
+mangroves,retreating,0.3,"McIvor et al. (2012) - The response of mangrove soil surface elevation to sea level rise - Nature Climate Change"
+mangroves,retreating_fast,0.15,"Alongi (2008) - Mangrove forests: Resilience, protection from tsunamis, and responses to global climate change - Estuarine, Coastal and Shelf Science"
+slope_vegetation,bare,0.35,"Sidle et al. (2006) - Erosion processes in steep terrain—Truths, myths, and uncertainties related to forest management in Southeast Asia - Forest Ecology and Management"
+slope_vegetation,other,0.35,"Sidle et al. (2006) - Erosion processes in steep terrain—Truths, myths, and uncertainties related to forest management in Southeast Asia - Forest Ecology and Management"
+slope_vegetation,crops,0.2,"Stokes et al. (2009) - Eco-engineering for soil stabilization: Bioengineering works - Ecological Engineering"
