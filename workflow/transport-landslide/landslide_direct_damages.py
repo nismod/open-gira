@@ -87,6 +87,12 @@ if __name__ == "__main__":
     initial_hazard_columns = [
         col for col in exposure.columns if col.startswith(fields.HAZARD_PREFIX)
     ]
+    # avoid hard-coding names but check there are exactly two (rainfall and earthquake triggers)
+    assert (
+        len(initial_hazard_columns) == 2
+    ), "Expected two landslide hazard columns, got {}".format(initial_hazard_columns)
+
+    # sum over trigger probabilities to make `hazard-_landslide_sum` column
     exposure[f"{fields.HAZARD_PREFIX}_{HAZARD_TYPE}_sum"] = exposure[
         initial_hazard_columns
     ].sum(axis=1)
@@ -108,8 +114,12 @@ if __name__ == "__main__":
         for damage_curve_key, damage_curve in damage_curves.items():
             # damage curves are step functions based on 0-1 occurrence
             damage_fraction = damage_curve.damage_fraction(exposure_intensity)
-            # damage cost is calculated directly from damage fraction
-            damage_cost = damage_fraction * exposure[fields.REHAB_COST]
+            # damage cost is calculated directly from damage fraction and length
+            damage_cost = (
+                damage_fraction
+                * exposure[fields.REHAB_COST]
+                * exposure[fields.SPLIT_LENGTH]
+            )
             # and so expected damage is (exposed value * damage fraction * probability of occurrence)
             expected_damage = damage_cost * hazard_probability
             direct_damages[f"{hazard_probability_column}__{damage_curve_key}_EAD"] = (

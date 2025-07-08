@@ -173,7 +173,7 @@ rule landslide_with_ead:
 
         for fname in input.risks:
             sector = fname_sector(fname)
-            ead = read_ead(fname, sector)
+            ead = read_ead(fname, sector).reset_index(drop=True)
             joined = buf.sjoin(ead, how="left").drop(columns=["geometry", "index_right"])
             options_damages = joined.groupby("feature_id").sum()
             options = options.join(options_damages)
