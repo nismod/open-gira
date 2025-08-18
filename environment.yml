@@ -20,6 +20,7 @@ dependencies:
   - gdal                       # command-line tools for spatial data
   - geopandas                  # geospatial dataframes
   - igraph                     # graph algorithms and data structures
+  - imagemagick                # image comparison "identify" tool for testing
   - ipykernel                  # notebook support
   - jupyter                    # notebook support
   - jq                         # JSON processing tool

@@ -21,7 +21,6 @@ jobs:
         shell: bash -l {0}
         # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
         run: |
-          sudo apt update && sudo apt install osmium-tool imagemagick
           osmium --version
           identify --version
 
