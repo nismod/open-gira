@@ -1,0 +1,56 @@
+# Table from https://taginfo.openstreetmap.org/keys/surface#values
+# last updated August 2025 - taking the top ~50 accounts for 99.9% of values
+# then annotated with "paved" column to classify material as paved/unpaved
+value,count,fraction,paved,description
+asphalt,32844217,0.4564,TRUE,Specifies that object is paved with asphalt concrete.
+unpaved,12543926,0.1743,FALSE,"Indicates that the feature has an unpaved surface, such as gravel or grass."
+concrete,4459043,0.062,TRUE,"A surface of cement based concrete, cast in place."
+paved,4360344,0.0606,TRUE,"Describes the surface of a feature roughly as predominantly paved over the whole surface area; i.e., covered with paving stones, concrete, bitumen or asphalt. This value gives only a rough description; use a more precise value if possible."
+paving_stones,4314944,0.06,TRUE,"A surface paved with artificial blocks (block pavers, bricks) or natural stones (flagstones), with a flat top."
+ground,3552609,0.0494,FALSE,"No special surface, the ground itself has marks of human or animal usage. This value gives only a rough description; if possible, use a more precise value such as grass, clay, sand, earth, gravel or pebblestone."
+gravel,2292670,0.0319,FALSE,"This tag has very large meaning range. Used for cases ranging from huge gravel pieces like track ballast used as surface, through small pieces of gravel to compacted surface."
+dirt,1800831,0.025,FALSE,Used for where surface is exposed earth/soil/dirt but it is not sand or gravel or rock.
+grass,1367178,0.019,FALSE,Specifies that object has grass as a surface.
+compacted,1307111,0.0182,FALSE,Describes the surface of a feature as unpaved compacted.
+sand,600141,0.0083,FALSE,Specifies that object has sand as a surface.
+sett,551825,0.0077,TRUE,"Sett paving, formed from natural stones cut to have a flat top (with regular or irregular shape)."
+fine_gravel,500120,0.0069,FALSE,"Loose, small gravel, not compacted, typically used on paths and driveways with minimal traffic."
+wood,257489,0.0036,FALSE,"Object with wooden surface. Used for bridges, plank walkways, and garden decking."
+concrete:plates,213725,0.003,TRUE,A surface made of heavy duty prefabricated concrete plates.
+earth,152738,0.0021,FALSE,Used for where surface is exposed earth/soil/dirt but it is not sand or gravel or rock.
+pebblestone,148729,0.0021,FALSE,Surface that consists of loose rounded medium sized stones.
+cobblestone,143786,0.002,TRUE,"Generic value for cobblestone, used for both sett and true cobblestone."
+grass_paver,53135,0.0007,TRUE,Specifies that object is paved with grass paver – paving with large deliberate voids in it.
+metal,52012,0.0007,TRUE,"Used for metal-surfaced bridges, or for temporary tracks over fields for normal road vehicles or site traffic."
+artificial_turf,47933,0.0007,TRUE,"A surface made from synthetic materials to look and feel like natural grass. Often used for tracks and pitches of sports such as football, baseball, etc."
+unhewn_cobblestone,45901,0.0006,TRUE,"Raw cobblestone of natural, uncut, rounded stones."
+tartan,43896,0.0006,TRUE,"A synthetic, all-weather surface typically used in running."
+clay,39131,0.0005,TRUE,"A tennis court surface made of crushed stone, brick, shale, or other unbound mineral aggregate."
+concrete:lanes,31859,0.0004,TRUE,Narrow concrete elements placed in lanes for a two-tracked vehicle (motorcars) so that the tires always hit the concrete.
+mud,31722,0.0004,FALSE,Specifies that object has mud as a surface – all the time or at least very frequently.
+rock,29413,0.0004,FALSE,Rocky surface of path or other similar object
+woodchips,14681,0.0002,FALSE,Specifies that object has woodchips as a surface.
+stone,14427,0.0002,TRUE,Specifies that object is paved with stone
+dirt/sand,8648,0.0001,FALSE,
+bricks,8484,0.0001,TRUE,A surface paved with dried clay bricks.
+brick,7470,0.0001,TRUE,
+soil,7187,0.0001,FALSE,Used for where surface is exposed earth/soil/dirt but it is not sand or gravel or rock.
+acrylic,6613,0.0001,TRUE,"Textured, pigmented, resin-bound coating surface."
+chipseal,6329,0.0001,TRUE,Describes the surface of a feature as chipseal - fine gravel pressed into substrate such as tar.
+rubber,6174,0.0001,TRUE,Playground surfacing made of recycled rubber tyre products.
+trail,5501,0.0001,FALSE,Surface value without clear or known meaning.
+plastic,5146,0.0001,TRUE,
+cobblestone:flattened,4873,0.0001,TRUE,
+metal_grid,4252,0.0001,TRUE,Used for where surface is metal grid.
+stepping_stones,2949,0,FALSE,"Individually placed stones set at regular intervals for stepping from one to the next, to avoid walking on the ground below. Commonly used for river or creek crossings, muddy crossings, or areas to preserve the grass from being trampled."
+cement,2695,0,TRUE,
+ice,2591,0,FALSE,
+tiles,2308,0,TRUE,The surface of the object is paved with ceramic tiles.
+hard,2289,0,TRUE,This surface tag is used basically only for tennis courts
+rocky,1424,0,FALSE,
+interlock,1311,0,FALSE,
+shells,1201,0,TRUE,Describes the surface of a feature as covered in small (parts of) seashells; commonly seen on footways and cycleways in the Netherlands.
+bitmac,1193,0,TRUE,"Specifies that object is paved with bitmac, surface=asphalt is usually used for that"
+bare_rock,1070,0,FALSE,
+rocks,1050,0,FALSE,"Using this tag is discouraged, use tag:natural=bare_rock or tag:surface=rock instead."
+paving_stones:lanes,1003,0,TRUE,paving_stones placed in lanes for a two-tracked vehicle (motorcars) so that the tires always run on the paving.
