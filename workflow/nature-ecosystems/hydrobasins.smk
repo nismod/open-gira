@@ -157,6 +157,7 @@ rule hydrobasins_add_population:
         population="{OUTPUT_DIR}/input/ghsl/GHS_POP_E2020_GLOBE_R2023A_54009_1000_V1_0.tif"
     output:
         hydrobasins="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes_pop.geoparquet",
+        csv="{OUTPUT_DIR}/input/hydrobasins/hybas_lev12_v1c_with_gadm_codes_pop.csv",
     run:
         import geopandas
         from rasterstats import gen_zonal_stats
@@ -175,3 +176,6 @@ rule hydrobasins_add_population:
         hydrobasins = geopandas.read_parquet(input.hydrobasins)
         hydrobasins['population'] = zone_pops
         hydrobasins.to_parquet(output.hydrobasins)
+
+        hydrobasins_table = hydrobasins[["GID_0", "population"]]
+        hydrobasins_table.to_csv(output.csv)
