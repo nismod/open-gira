@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import sys
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
@@ -52,14 +53,23 @@ if __name__ == "__main__":
         sys.exit("Please run from snakemake")
 
     if not isinstance(raster_paths, list):
-        raise ValueError(f"input tif_paths object is not a list, quitting.")
+        # Handle case where input function passes the directory, not the unpacked list of filenames
+        raw_folder = Path(raster_paths)
+        print(f"{raw_folder=}")
+        # where the trimmed tiffs for a given DATASET go
+        dataset_folder: Path = raw_folder.parent / snakemake.wildcards.DATASET
+        print(f"{dataset_folder=}")
 
-    if len(raster_paths) == 0:
-        raise ValueError("The list of TIFF files is empty, quitting.")
+        # file basenames to create (trimmed) full paths for
+        raster_paths = []
+        for raw_fname in raw_folder.glob("*.tif"):
+            raster_paths.append(dataset_folder / raw_fname.name)
 
     raster_basenames = [
         re.sub("\\.tif$", "", os.path.basename(tif)) for tif in raster_paths
     ]
+    if len(raster_paths) == 0:
+        raise ValueError("The list of TIFF files is empty, quitting.")
 
     # Read network edges
     logging.info("Read edges")
