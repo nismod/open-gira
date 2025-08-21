@@ -23,7 +23,6 @@ import geopandas
 import osmium
 import pandas
 import shapely.ops as shape_ops
-from shapely.errors import GeometryTypeError
 from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
 from shapely.geometry import box as shapely_box
 from shapely.geometry.collection import GeometryCollection
@@ -124,12 +123,14 @@ class WaySlicer(osmium.SimpleHandler):
                 else:
                     node_index[n.lon] = {n.lat: n}
 
-        # generate linestring and constrain to bounding box
-        cut_to_bbox: Union[Point, Linestring, MultiLineString] = bbox.intersection(LineString(locations))
-        if not isinstance(cut_to_bbox, (LineString, MultiLineString)):
-            # the intersection can return a point when the way has one end
+        # Generate linestring and constrain to bounding box
+        cut_to_bbox: Union[Point, LineString, MultiLineString] = bbox.intersection(LineString(locations))
+        if cut_to_bbox.is_empty or not isinstance(cut_to_bbox, (LineString, MultiLineString)):
+            # The intersection can return a point when the way has one end
             # outside the bbox, and its other end on the bbox edge
-            # in this case, discard the way
+            # There are also degenerate ways with two co-located nodes which
+            # are returned from intersection as an empty LineString
+            # In either case, discard the way
             return
 
         # split by shared nodes
@@ -231,7 +232,6 @@ if __name__ == "__main__":
     logging.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings
-    # NB though that .geoparquet is not the format to use for archiving.
     import warnings
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
