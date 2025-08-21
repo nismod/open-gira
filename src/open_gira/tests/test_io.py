@@ -87,7 +87,7 @@ class TestPackingFloatsAsInts:
         Round trip values using the core function, netcdf_packing_parameters directly.
         """
         arrays_to_test = [
-            np.array([0]),
+            np.array([0.0]),
             np.array([-23.32, -2.2, 1, np.nan, 24.21, 69.25293649, 128.3, 243.1245]),
             np.array([np.nan, np.nan, 1, np.nan, 24.21, np.nan, 128.3, np.nan]),
             np.linspace(0.138, 78.234, 500),
@@ -145,7 +145,7 @@ class TestPackingFloatsAsInts:
             np.array([]),
             np.array([np.nan]),
             np.array([np.nan, np.nan, np.nan]),
-            np.array([0]),
+            np.array([0.0]),
             np.array([-23.32, -2.2, 1, np.nan, 24.21, 69.25293649, 128.3, 243.1245]),
             np.array([np.nan, np.nan, 1, np.nan, 24.21, np.nan, 128.3, np.nan]),
             np.linspace(0.138, 78.234, 500),

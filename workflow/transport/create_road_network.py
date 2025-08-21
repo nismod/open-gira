@@ -57,11 +57,13 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return edges
 
 
-def get_road_condition(row: pd.Series) -> Tuple[str, str]:
-    """
-    Given a series with 'surface' and 'highway' labels, infer road:
-        - paved status (boolean)
-        - surface category from {'asphalt', 'gravel', 'concrete'}
+def get_road_surface(row: pd.Series) -> str:
+    """Clean and infer road surface category
+
+    Given a series with 'surface' and 'highway' labels:
+    - infer missing surface categories from highway class
+    - reclassify paved/unpaved to asphalt/gravel
+    - pass any existing surface category unmodified
 
     N.B. There are several surface categories not considered in this function.
     Here are the major roads recorded for OSM in Tanzania as of June 2022:
@@ -83,22 +85,26 @@ def get_road_condition(row: pd.Series) -> Tuple[str, str]:
         row: Must have surface (nullable) and highway attributes.
 
     Returns:
-        Boolean paved status and surface category string
+        surface category string
     """
-
     if not row.tag_surface:
         if row.tag_highway in {"motorway", "trunk", "primary"}:
-            return True, "asphalt"
+            return "asphalt"
         else:
-            return False, "gravel"
+            return "gravel"
     elif row.tag_surface == "paved":
-        return True, "asphalt"
+        return "asphalt"
     elif row.tag_surface == "unpaved":
-        return False, "gravel"
-    elif row.tag_surface in {"asphalt", "concrete"}:
-        return True, row.tag_surface
+        return "gravel"
     else:
-        return True, row.tag_surface
+        return row.tag_surface
+
+
+def get_road_is_paved(surface: pd.Series, surface_to_paved: pd.DataFrame) -> pd.Series:
+    """Given a series of "surface" categories as strings, infer paved status
+    (boolean), default False"""
+    dict_ = surface_to_paved.set_index("value").to_dict(orient="dict")["paved"]
+    return surface.map(dict_).fillna(False)
 
 
 def get_road_lanes(row: pd.Series) -> int:
@@ -128,19 +134,16 @@ def get_road_lanes(row: pd.Series) -> int:
             return 1
 
 
-def annotate_condition(network: snkit.network.Network) -> snkit.network.Network:
+def annotate_condition(
+    network: snkit.network.Network, highway_surface_mapping: pd.DataFrame
+) -> snkit.network.Network:
+    # infer material type from 'surface' and 'highway' columns
+    network.edges["material"] = network.edges.apply(get_road_surface, axis=1)
 
-    # infer paved status and material type from 'surface' column
-    network.edges["paved_material"] = network.edges.apply(
-        lambda x: get_road_condition(x), axis=1
+    # categories materials as paved (true/false)
+    network.edges["paved"] = get_road_is_paved(
+        network.edges.material, highway_surface_mapping
     )
-    # unpack 2 item iterable into two columns
-    network.edges[["paved", "material"]] = network.edges["paved_material"].apply(
-        pd.Series
-    )
-
-    # drop the now redundant columns
-    network.edges.drop(["paved_material"], axis=1, inplace=True)
 
     # add number of lanes
     network.edges["lanes"] = network.edges.apply(lambda x: get_road_lanes(x), axis=1)
@@ -153,6 +156,7 @@ if __name__ == "__main__":
     osm_edges_path = snakemake.input["edges"]
     osm_nodes_path = snakemake.input["nodes"]
     administrative_data_path = snakemake.input["admin"]
+    highway_surface_mapping_path = snakemake.input["highway_surface_mapping"]
     dataset_name = snakemake.wildcards.DATASET
     nodes_output_path = snakemake.output["nodes"]
     edges_output_path = snakemake.output["edges"]
@@ -205,7 +209,10 @@ if __name__ == "__main__":
     )
 
     logging.info("Annotating network with road type and condition data")
-    network = annotate_condition(network)
+    highway_surface_mapping = pd.read_csv(
+        highway_surface_mapping_path, usecols=["value", "paved"], comment="#"
+    )
+    network = annotate_condition(network, highway_surface_mapping)
 
     # select and label assets with their type
     # the asset_type is used to later select a damage curve
