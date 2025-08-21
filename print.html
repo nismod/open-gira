@@ -1,0 +1,653 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title></title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="user-guide/installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/installation/linux-mac.html"><strong aria-hidden="true">2.1.</strong> Linux / Mac</a></li><li class="chapter-item expanded "><a href="user-guide/installation/windows.html"><strong aria-hidden="true">2.2.</strong> Windows</a></li><li class="chapter-item expanded "><a href="user-guide/installation/docker.html"><strong aria-hidden="true">2.3.</strong> Docker</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/usage.html"><strong aria-hidden="true">3.</strong> Usage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/usage/network-creation.html"><strong aria-hidden="true">3.1.</strong> Network creation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/usage/network-creation/road.html"><strong aria-hidden="true">3.1.1.</strong> Road</a></li><li class="chapter-item expanded "><a href="user-guide/usage/network-creation/rail.html"><strong aria-hidden="true">3.1.2.</strong> Rail</a></li><li class="chapter-item expanded "><a href="user-guide/usage/network-creation/grid.html"><strong aria-hidden="true">3.1.3.</strong> Electricity grid</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/usage/risk-analysis.html"><strong aria-hidden="true">3.2.</strong> Risk analysis</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-guide/usage/risk-analysis/transport-flooding.html"><strong aria-hidden="true">3.2.1.</strong> Transport / flooding</a></li><li class="chapter-item expanded "><a href="user-guide/usage/risk-analysis/grid-cyclone.html"><strong aria-hidden="true">3.2.2.</strong> Electricity grid / tropical cyclone</a></li></ol></li><li class="chapter-item expanded "><a href="user-guide/usage/utilities.html"><strong aria-hidden="true">3.3.</strong> Utilities</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <div style="break-before: page; page-break-before: always;"></div><h1 id="open-gira"><a class="header" href="#open-gira">open-gira</a></h1>
+<p>This open-source <a href="https://snakemake.readthedocs.io/en/stable/">snakemake</a>
+workflow can be used to analyse environmental risks to infrastructure
+networks using global open data.</p>
+<p>We can use <code>open-gira</code> to analyse open data on roads, railways and
+their exposure to river flooding, or electricity transmission lines and how
+they're affected by tropical cyclones.</p>
+<p><code>open-gira</code> is a work in progress.</p>
+<h2 id="goals"><a class="header" href="#goals">Goals</a></h2>
+<ul>
+<li>Automated pipeline for reproducible analysis anywhere in the world</li>
+<li>Maps per-country and of larger areas</li>
+<li>Charts/stats of exposure per admin region, per hazard type, scenario, epoch</li>
+<li>Consider transport, electricity, water, communications systems</li>
+<li>Consider river flooding, storm surge coastal flooding, tropical cyclones</li>
+<li>Estimate direct damages to physical networks</li>
+<li>Estimate indirect effects of disruption - people affected, economic activity disrupted</li>
+</ul>
+<h2 id="non-goals"><a class="header" href="#non-goals">Non-goals</a></h2>
+<ul>
+<li>Using closed data, which may be appropriate for other projects or use-cases</li>
+<li>Detailed operational/engineering level simulation</li>
+<li>Long-term planning</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>This guide will help you to install <code>open-gira</code> and its dependencies on your computer.</p>
+<h2 id="tests"><a class="header" href="#tests">Tests</a></h2>
+<p>Once everything is installed, run the tests to ensure everything is linked up
+properly:</p>
+<pre><code class="language-bash">python -m pytest tests
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="linux--mac"><a class="header" href="#linux--mac">Linux / Mac</a></h1>
+<p>The major installation steps are to:</p>
+<ol>
+<li>Download <code>open-gira</code></li>
+<li>Set up a Python environment</li>
+<li>Install additional command-line tools</li>
+</ol>
+<h2 id="clone-repository"><a class="header" href="#clone-repository">Clone repository</a></h2>
+<p>Install open-gira by cloning the repository:</p>
+<pre><code class="language-bash">git clone https://github.com/nismod/open-gira.git
+</code></pre>
+<h2 id="software-environment"><a class="header" href="#software-environment">Software environment</a></h2>
+<p>This repository comes with a <code>environment.yml</code> file describing almost all of the
+software dependencies required to run <code>open-gira</code>.</p>
+<p>There are several ways to manage Python versions and install libraries.</p>
+<ul>
+<li><a href="https://docs.conda.io/en/latest/"><code>conda</code></a> lets you install different versions of Python
+and Python libraries and other dependencies.</li>
+<li><a href="https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba"><code>micrombamba</code></a> 
+a replacement for <code>conda</code>, and what the <code>open-gira</code> developers use.</li>
+</ul>
+<p>The recommended approach for <code>open-gira</code> is to install <code>micromamba</code> then use it
+to create and manage environments.</p>
+<h3 id="local"><a class="header" href="#local">Local</a></h3>
+<p>To install the required dependencies on a local machine, create the <code>open-gira</code>
+conda environment:</p>
+<pre><code class="language-bash">micromamba create -f environment.yml -y
+</code></pre>
+<p>Then activate it:</p>
+<pre><code class="language-bash">micromamba activate open-gira
+</code></pre>
+<p>You're now ready to configure workflows and request outputs.</p>
+<h3 id="cluster"><a class="header" href="#cluster">Cluster</a></h3>
+<p>If installing on a cluster, you can work as above, or, create a seperate
+orchestrating environment containing only snakemake, e.g.</p>
+<pre><code class="language-bash">micromamba create -n snakemake python=3.9 snakemake
+</code></pre>
+<p>In this context, <code>snakemake</code> itself can manage the other required dependencies,
+creating other environments as necessary. To activate the orchestration
+environment:</p>
+<pre><code class="language-bash">micromamba activate snakemake
+</code></pre>
+<p>To run the workflow on a <a href="https://snakemake.readthedocs.io/en/stable/executing/cluster.html">cluster</a>
+you will need to provide a <a href="https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles">profile</a>,
+requesting targets as follows:</p>
+<pre><code class="language-bash">snakemake --profile &lt;path_to_cluster_config&gt; -- &lt;target_file&gt;
+</code></pre>
+<h2 id="other-command-line-tools"><a class="header" href="#other-command-line-tools">Other command-line tools</a></h2>
+<p>The following tools are not available through <code>conda</code> and must be installed separately.</p>
+<h3 id="exactextract"><a class="header" href="#exactextract">exactextract</a></h3>
+<p>exactextract is used for zonal statistics. Please see installation instructions <a href="https://github.com/isciences/exactextract">here</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="windows"><a class="header" href="#windows">Windows</a></h1>
+<p>Native installation on Windows is extremely difficult because of the difficulty building the
+tools that open-gira relies on (binaries are not available for Windows).</p>
+<p>To avoid this issue, we recommend Windows users install via Windows Subsystems for Linux (WSL).
+To install WSL, follow the <a href="https://docs.microsoft.com/en-us/windows/wsl/install">install
+instructions</a>.</p>
+<p>Once WSL is installed, open-gira can be installed inside the Linux subsystem by following the
+<a href="user-guide/installation/linux-mac.html">Linux install instructions</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="docker"><a class="header" href="#docker">Docker</a></h1>
+<p>It is possible to run <code>open-gira</code> within a container using Docker. You must have <a href="https://docs.docker.com/engine/install/">Docker
+installed</a>.</p>
+<ol>
+<li>Clone this repository</li>
+</ol>
+<pre><code class="language-shell">git clone https://github.com/nismod/open-gira.git
+</code></pre>
+<ol start="2">
+<li>Build container image</li>
+</ol>
+<pre><code class="language-shell">docker build -t open-gira .
+</code></pre>
+<ol start="3">
+<li>Run container</li>
+</ol>
+<p>We use the <code>-it</code> options to make the container interactive and give it a terminal,
+and the <code>-d</code> option to keep it running in the background (daemon mode).
+We give it a nice name we can refer to later, and make sure it is created using the
+image we just built.
+We tell it to run <code>bash</code> so that it has something to do and doesn't close immediately.</p>
+<pre><code class="language-shell">docker run -itd --name og open-gira bash
+</code></pre>
+<ol start="4">
+<li>Enter container</li>
+</ol>
+<p>We can now lauch a bash shell in our new container:</p>
+<pre><code class="language-shell">docker exec -it og /bin/bash
+</code></pre>
+<p>And once inside we can navigate to the open-gira folder.</p>
+<pre><code class="language-shell">cd open-gira
+</code></pre>
+<p>We're now ready to run snakemake, launch a python prompt, or do whatever else we like inside
+the container.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="usage"><a class="header" href="#usage">Usage</a></h1>
+<p><code>open-gira</code> is comprised of a set of <code>snakemake</code> rules which call scripts and
+library code to request data, process it and produce results.</p>
+<h2 id="snakemake"><a class="header" href="#snakemake">Snakemake</a></h2>
+<p>The key idea of <code>snakemake</code> is similar to <code>make</code> in that the workflow is
+determined from the end (the files users want) to the beginning (the files
+users have, if any) by applying general rules with pattern matching on file and
+folder names.</p>
+<p>A example invocation looks like:</p>
+<pre><code class="language-bash">snakemake --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
+</code></pre>
+<p>Here, we ask <code>snakemake</code> to use up to 2 CPUs to produce a target file, in this
+case, the edges of the Welsh road network. <code>snakemake</code> pattern matches
+<code>wales-latest</code> as the OSM dataset name and <code>filter-road</code> as the network type we
+want to filter for.</p>
+<p>To check what work we're going to request before commencing, use the <code>-n</code> flag:</p>
+<pre><code class="language-bash">snakemake -n --cores 2 -- results/wales-latest_filter-road-primary/edges.gpq
+</code></pre>
+<p>This will explain which rules will be required to run to produce the target
+file. It may be helpful to <a href="https://snakemake.readthedocs.io/en/stable/executing/cli.html#visualization">visualise</a>
+which rules are expected to run, too.</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>The snakemake configuration details are in <code>config/config.yml</code>. You can edit
+this to set the target OSM infrastructure datasets, number of spatial slices, and
+hazard datasets. See
+<a href="https://github.com/nismod/open-gira/blob/main/config/README.md">config/README.md</a>
+and the documentation for each workflow for more details on the configuration
+variables.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="network-creation"><a class="header" href="#network-creation">Network creation</a></h1>
+<p><code>open-gira</code> can currently create connected road, rail and electricity grid
+networks from open data.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="road"><a class="header" href="#road">Road</a></h1>
+<p>We can create a topologically connected road network for a given area from
+<a href="https://www.openstreetmap.org">OpenStreetMap</a> (OSM) data. The resulting
+network can be annotated with data retrieved from OSM (e.g. highway
+classification, surface type), along with data looked up from user-supplied
+sources (e.g. rehabilitation costs).</p>
+<h2 id="description"><a class="header" href="#description">Description</a></h2>
+<ol>
+<li>Download or copy <code>.osm.pbf</code> file to input data directory.</li>
+<li>Filter OSM file with <code>osmium tags-filter</code> for elements matching the filter file (see configuration, below).</li>
+<li>Define a bounding box for the OSM file, write to disk as JSON.</li>
+<li>Define a grid partitioning the bounding box into a square number of 'slices' as a series of JSON files, one for each slice.</li>
+<li>Cut the OSM file into these slices.</li>
+<li>Convert the sliced OSM files into geoparquet, retaining the <code>keep_tags</code> as configured.</li>
+<li>Clean and annotate features in the geoparquet files (joining additional data such as country, rehabiliation costs, etc.).</li>
+<li>Join sliced network components together.</li>
+</ol>
+<h2 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h2>
+<p>To specify a desired network:</p>
+<ul>
+<li>Review and amend the spreadsheets in <code>bundled_data/transport</code>, these supply
+information that is used to gap-fill or extend what can be determined from OSM alone.</li>
+<li>Review and amend <code>config/config.yaml</code>:
+<ul>
+<li>The <code>infrastructure_datasets</code> map should contain a key pointing to an <code>.osm.pbf</code>
+file URL for desired area. There are currently entries for the planet,
+for (some definition of) continents and several countries. We use
+the <a href="http://download.geofabrik.de/">geofabrik</a> service for continent and
+country-level OSM extracts.</li>
+<li>Check the OSM filter file pointed to by <code>network_filters.road</code>.
+This file specifies which <a href="https://wiki.openstreetmap.org/wiki/Elements">elements</a>
+(nodes, ways or relations) to keep (or reject) from the multitude of data
+in an OSM file. See the filter expressions section
+<a href="https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html">here</a>
+for more information on the syntax of these files.</li>
+<li>Check and amend <code>keep_tags.road</code>. This list of strings specifies which
+<code>tags</code> (attributes) to retain on the filtered elements we extract from
+the <code>.osm.pbf</code> file.</li>
+<li>Review <code>slice_count</code>. This controls the degree of parallelism possible.
+With it set to 1, there is no spatial slicing (we create the network in
+a single chunk). To speed network creation for large domains, it can be
+set to a larger square number. The first square number greater than your
+number of available CPUs is a good heuristic.</li>
+</ul>
+</li>
+</ul>
+<h2 id="creation"><a class="header" href="#creation">Creation</a></h2>
+<p>And to create the network, by way of example:</p>
+<pre><code class="language-bash">snakemake --cores all -- results/egypt-latest_filter-road-primary/edges.gpq
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rail"><a class="header" href="#rail">Rail</a></h1>
+<p>The process for creating a rail network is essentially the same as for road.</p>
+<p>We can create a topologically connected rail network for a given area from
+<a href="https://www.openstreetmap.org">OpenStreetMap</a> (OSM) data. The resulting
+network can be annotated with data retrieved from OSM, along with data looked up
+from user-supplied sources (e.g. rehabilitation costs).</p>
+<h2 id="description-1"><a class="header" href="#description-1">Description</a></h2>
+<ol>
+<li>Download or copy <code>.osm.pbf</code> file to input data directory.</li>
+<li>Filter OSM file with <code>osmium tags-filter</code> for elements matching the filter file (see configuration, below).</li>
+<li>Define a bounding box for the OSM file, write to disk as JSON.</li>
+<li>Define a grid partitioning the bounding box into a square number of 'slices' as a series of JSON files, one for each slice.</li>
+<li>Cut the OSM file into these slices.</li>
+<li>Convert the sliced OSM files into geoparquet, retaining the <code>keep_tags</code> as configured.</li>
+<li>Clean and annotate features in the geoparquet files (joining additional data such as country, rehabiliation costs, etc.).</li>
+<li>Join sliced network components together.</li>
+</ol>
+<h2 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h2>
+<p>To specify a desired network:</p>
+<ul>
+<li>Review and amend the spreadsheets in <code>bundled_data/transport</code>, these supply
+information that is used to gap-fill or extend what can be determined from OSM alone.</li>
+<li>Review and amend <code>config/config.yaml</code>:
+<ul>
+<li>The <code>infrastructure_datasets</code> map should contain a key pointing to an <code>.osm.pbf</code>
+file URL for desired area. There are currently entries for the planet,
+for (some definition of) continents and several countries. We use
+the <a href="http://download.geofabrik.de/">geofabrik</a> service for continent and
+country-level OSM extracts.</li>
+<li>Check the OSM filter file pointed to by <code>network_filters.rail</code>.
+This file specifies which <a href="https://wiki.openstreetmap.org/wiki/Elements">elements</a>
+(nodes, ways or relations) to keep (or reject) from the multitude of data
+in an OSM file. See the filter expressions section
+<a href="https://docs.osmcode.org/osmium/latest/osmium-tags-filter.html">here</a>
+for more information on the syntax of these files.</li>
+<li>Check and amend <code>keep_tags.rail</code>. This list of strings specifies which
+<code>tags</code> (attributes) to retain on the filtered elements we extract from
+the <code>.osm.pbf</code> file.</li>
+<li>Review <code>slice_count</code>. This controls the degree of parallelism possible.
+With it set to 1, there is no spatial slicing (we create the network in
+a single chunk). To speed network creation for large domains, it can be
+set to a larger square number. The first square number greater than your
+number of available CPUs is a good heuristic.</li>
+</ul>
+</li>
+</ul>
+<h2 id="creation-1"><a class="header" href="#creation-1">Creation</a></h2>
+<p>And to create the network, by way of example:</p>
+<pre><code class="language-bash">snakemake --cores all -- results/egypt-latest_filter-rail/edges.gpq
+</code></pre>
+<p>Note that the nodes file, <code>results/egypt-latest_filter-rail/nodes.gpq</code>
+will by default contain the stations and their names as recorded in OSM.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="electricity-grid"><a class="header" href="#electricity-grid">Electricity grid</a></h1>
+<p>To create an electricity grid we rely heavily on <a href="https://gridfinder.rdrn.me/">gridfinder</a>
+data. This dataset provides transmission and distribution edges with
+substantial global coverage. It also contains a set of 'targets' or electricity
+consuming areas, derived from <a href="https://www.earthdata.nasa.gov/learn/backgrounders/nighttime-lights">Night Time Lights</a>
+(NTL) satellite imagery. Our other major data source for electricity grid creation is the World Resources Institute's (WRI)
+<a href="https://datasets.wri.org/dataset/globalpowerplantdatabase">powerplants database</a>.</p>
+<p>The workflow currently divides network creation by country. One may request one
+country, or several. Note that neighbouring countries' networks are <em>not</em>
+connected with one another.</p>
+<h2 id="description-2"><a class="header" href="#description-2">Description</a></h2>
+<ul>
+<li>Download gridfinder electricity grid data (line edges, 'target' consuming polygons)</li>
+<li>Create global 'targets' file, where each electricity consuming target is annotated with the population and GDP of the enclosed area.</li>
+<li>Download WRI powerplant data</li>
+<li>Download GDP per capita data</li>
+<li>Download population data</li>
+<li>Construct an electricity grid for each country to be studied where nodes are power generators or target consumers. Power consumption is proportional to the GDP enclosed by each target polygon.</li>
+</ul>
+<h2 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h2>
+<p>There aren't currently any options to configure when creating an electricity
+grid.</p>
+<h2 id="creation-2"><a class="header" href="#creation-2">Creation</a></h2>
+<p>Here's an example grid creation command for Puerto Rico:</p>
+<pre><code class="language-bash">snakemake --cores all -- results/power/by_country/PRI/network/edges.geoparquet
+</code></pre>
+<p>Note that the folder name under <code>by_county</code> is an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements">ISO 3166 Alpha-3 country
+code</a>,
+specifying the country in question.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="risk-analysis"><a class="header" href="#risk-analysis">Risk analysis</a></h1>
+<p>Having created networks, we can analyse the risks that certain hazards
+(currently tropical cyclones and flooding) may present to these networks.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="transport--flooding"><a class="header" href="#transport--flooding">Transport / flooding</a></h1>
+<p>The flooding risk analysis pipeline starts by creating an infrastructure
+network (road or rail) as described previously. Please refer to this section to
+configure the network creation.</p>
+<h2 id="description-3"><a class="header" href="#description-3">Description</a></h2>
+<p>The pipeline has the following core steps:</p>
+<ol>
+<li>Download the raster files for the hazard dataset.</li>
+<li>Crop the raster files to the extent of the network in question.</li>
+<li>Split the network edges on the raster grid, so no edge resides in more than one pixel.</li>
+<li>Find the pixel value / hazard intensity (e.g. flood depth) for every hazard raster, for each split edge.</li>
+<li>For each asset type (e.g. unpaved road) where a damage curve is defined,
+calculate the damage fraction for each split edge, for each raster. </li>
+<li>Using rehabilitation cost estimates, calculate the expected monetary loss due to the calculated damage fraction.</li>
+<li>Concatenate the previously split edges, summing the expected monetary loss.</li>
+<li>Given hazard rasters at various return periods, calculate the Expected Annual Damages (EAD).</li>
+<li>Aggregate EAD to desired regional level.</li>
+</ol>
+<h2 id="configuration-4"><a class="header" href="#configuration-4">Configuration</a></h2>
+<p>The hazard component of the analysis is configurable in <code>config/config.yaml</code>:</p>
+<ul>
+<li><code>hazard_datasets</code> contains hazard names pointing to files of hazard layers.
+These layers are currently flood rasters (inundation depths for a given return
+period). Add or amend an entry pointing to file containing the rasters you
+wish to consider.</li>
+<li>Ensure <code>hazard_types</code> contains an identical key referencing the hazard types.
+This is currently limited to <code>flood</code> only.</li>
+<li>Configure the damage curves:
+<ul>
+<li>Check and amend <code>direct_damages.asset_types</code> contains any assets you wish
+to calcuate direct damage costs for. Currently implemented assets are
+available in <code>src/open_gira/assets.py</code> as the classes inheriting from
+<code>Assets</code>.</li>
+<li>Ensure <code>direct_damages.curves_dir</code> is set to a path containing damages
+functions per asset type, organised by hazard type. See
+<code>bundled_data/damage_curves</code> for an example.</li>
+<li>These damage function files should be named <code>&lt;asset_type&gt;.csv</code>, e.g.
+<code>road_unpaved.csv</code>. Their format is exemplified by
+<code>bundled_data/damage_curves/flood/road_unpaved.csv</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="outputs"><a class="header" href="#outputs">Outputs</a></h2>
+<h3 id="rasterised-network-per-slice"><a class="header" href="#rasterised-network-per-slice">Rasterised network (per slice)</a></h3>
+<p>To generate a network, split by the hazard raster grid we might issue something like:</p>
+<pre><code class="language-bash">snakemake --cores all -- results/splits/&lt;dataset_name&gt;_filter-&lt;network_type&gt;/hazard-&lt;hazard_name&gt;/slice-&lt;slice_number&gt;.geoparquet
+</code></pre>
+<p>For the <code>egypt-latest</code> OSM dataset, <code>road</code> network, <code>aqueduct-river</code> hazard set and slice <code>0</code>, that would be:</p>
+<pre><code class="language-bash">snakemake --cores all -- results/splits/egypt-latest_filter-road/hazard-aqueduct-river/slice-0.geoparquet
+</code></pre>
+<h3 id="expected-annual-damages-per-slice"><a class="header" href="#expected-annual-damages-per-slice">Expected Annual Damages (per slice)</a></h3>
+<p>To request an evaluation of Expected Annual Damages (EAD) as a function of
+hazard Return Period (RP) for a given <code>slice</code>, we can request something like:</p>
+<p>For example (with a <code>config.slice_count</code> of 9):</p>
+<pre><code class="language-bash">snakemake --cores all -- results/direct_damages/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/slice-5.geoparquet
+</code></pre>
+<h3 id="expected-annual-damages-per-admin-region"><a class="header" href="#expected-annual-damages-per-admin-region">Expected Annual Damages (per admin region)</a></h3>
+<p>And to compute all the slices for a given domain and then aggregate to country level (admin level 0):</p>
+<pre><code class="language-bash">snakemake --cores all -- results/egypt-latest_filter-road/hazard-aqueduct-river/EAD_and_cost_per_RP/agg-sum/admin-level-0.geoparquet
+</code></pre>
+<p>For more possible outputs please refer to the detailed documentation and the
+rules defined in <code>workflow/rules/</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="electricity-grids---tropical-cyclones"><a class="header" href="#electricity-grids---tropical-cyclones">Electricity grids - tropical cyclones</a></h1>
+<p>This analysis intersects electricity grids with tropical cyclone wind speed
+risk. Network creation is described previously. The hazards are event-based (as
+opposed to return period map based).</p>
+<h2 id="description-4"><a class="header" href="#description-4">Description</a></h2>
+<ol>
+<li>Download storm track data.</li>
+<li>Process storm track data into common geoparquet format, ensure meterological variables are consistent.</li>
+<li>Define a wind speed grid, with an extent equal to the network bounding box, plus a buffer.</li>
+<li>Given a storm track, estimate the resulting wind speed field as a function of time using a modified Holland model.</li>
+<li>Downscale the wind speeds from free-atmosphere to surface level, using a power law. The downscaling exponent is a function of the surface roughnesses, derived from a land surface categorisation.</li>
+<li>Take the maximum wind speed across time for each pixel in the wind grid.</li>
+<li>For a certain defined threshold or set of thresholds, we then fail electricity grid edges (transmission and distribution lines) that experience
+wind in excess of the threshold.</li>
+<li>Allocate power across the newly degraded grid and see how it differs to the nominal allocation.</li>
+<li>Report on change in power supply and numbers of people affected.</li>
+</ol>
+<h2 id="configuration-5"><a class="header" href="#configuration-5">Configuration</a></h2>
+<ul>
+<li>Review and amend <code>config/config.yaml</code>:
+<ul>
+<li><code>storm_sets</code> should contain a storm set name, pointing to a JSON file.
+This JSON file should contain an empty list to process all storms for
+this storm set, or a list of string storm IDs if only a subset is
+required.</li>
+<li>Specify <code>transmission_windspeed_failure</code> as a list of wind speeds in
+meters per second at which to fail edges.</li>
+</ul>
+</li>
+</ul>
+<p>See comments in the <code>config/config.yaml</code> file for other less crucial
+configuration options.</p>
+<h2 id="outputs-1"><a class="header" href="#outputs-1">Outputs</a></h2>
+<p>Below you will find example commands necessary to create outputs for the case of
+<strong>PRI</strong> (Puerto Rico) and the storm <strong>2017242N16333</strong> (Irma, 2017) from the
+<strong>IBTrACS</strong> historic cyclone dataset. Later steps will trigger earlier,
+dependent steps if necessary.</p>
+<h3 id="networks-at-risk"><a class="header" href="#networks-at-risk">Networks at risk</a></h3>
+<ul>
+<li>Identify which storms are likely to impact which countries
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/storms_by_country_impacted.json</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="maximum-wind-speed-fields"><a class="header" href="#maximum-wind-speed-fields">Maximum wind speed fields</a></h3>
+<ul>
+<li>Download storm track data (historic or synthetic)</li>
+<li>Preprocess data into a (mostly) common event-set format.
+<ul>
+<li><code>snakemake --cores 1 -- results/storm_tracks/IBTrACS/tracks.geoparquet</code></li>
+</ul>
+</li>
+<li>Download land surface categorical data</li>
+<li>Estimate surface roughness for the grid region
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_country/PRI/storms/surface_roughness.tiff</code></li>
+</ul>
+</li>
+<li>Any storm tracks within some proximity of the grid in question are processed into maximum wind speed footprints for the electricity grid region. This is by means of a modified Holland wind field model. Downscale the winds to the surface by a power law, using the surface roughness data.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_country/PRI/storms/IBTrACS/max_wind_field.nc</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="network-exposure"><a class="header" href="#network-exposure">Network exposure</a></h2>
+<ul>
+<li>Rasterise the electricity grid (split line segments such that no segment extends beyond a wind cell boundary).
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_country/PRI/exposure/edges_split.geoparquet</code></li>
+</ul>
+</li>
+<li>For a given storm and country, remove edges from the grid which exceed a given wind speed damage threshold. Reallocate power from powerplants to targets, by GDP, on the degraded network. Store the ratio between the original power supplied and the degraded power supplied to each target.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/2017242N16333.nc</code></li>
+</ul>
+</li>
+<li>Perform the above calculations for a single storm in a cyclone dataset and all the countries its track intersects.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/by_storm/2017242N16333/exposure_by_target.nc</code></li>
+</ul>
+</li>
+<li>Perform the above calculations for an entire cyclone dataset and all the countries its tracks intersect.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure.txt</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="further-analysis"><a class="header" href="#further-analysis">Further analysis</a></h2>
+<p>TODO: Add additional rules to facilitate comparison across countries and cyclone datasets.</p>
+<p>TODO: Document these additional rules.</p>
+<ul>
+<li>Map how electricity supply is impacted by a given storm for a variety of different damage thresholds.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/by_storm/2017242N16333/outage_map/outage_map_by_threshold.gif</code></li>
+</ul>
+</li>
+<li>Map the maximum wind speed experienced across the area impacted by a storm.
+<ul>
+<li><code>snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/by_storm/2017242N16333/wind_field.png</code></li>
+</ul>
+</li>
+</ul>
+<p>There also exist other plotting and mapping steps to visualise intermediate and final outputs. Refer to <code>workflow/rules/analysis</code> for a description of these.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="utilities"><a class="header" href="#utilities">Utilities</a></h1>
+<p><code>open-gira</code> comes with a few small utilities for data processing and file management.</p>
+<h2 id="removing-intermediate-files"><a class="header" href="#removing-intermediate-files">Removing intermediate files</a></h2>
+<p>You can remove intermediate files by running the <code>clean</code> rule.</p>
+<pre><code class="language-bash">snakemake --cores 1 -R clean
+</code></pre>
+<h2 id="geoparquet---geopackage"><a class="header" href="#geoparquet---geopackage">Geoparquet -&gt; Geopackage</a></h2>
+<p>As standard we use the <a href="https://geoparquet.org/">GeoParquet</a> (<code>.geoparquet</code> or
+<code>.gpq</code>) format to store vector data on disk. Unfortunately common GIS software
+such as QGIS may not yet support this file format. To convert file(s) to
+geopackage, use:</p>
+<pre><code>python workflow/scripts/pq_to_gpkg.py &lt;path_to_geoparquet_1&gt; &lt;path_to_geoparquet_2&gt; &lt;...&gt;
+</code></pre>
+<p>This will write <code>.gpkg</code> files beside their source <code>.geoparquet</code>.</p>
+<h2 id="unpickling-interactive-plots"><a class="header" href="#unpickling-interactive-plots">Unpickling interactive plots</a></h2>
+<p><code>matplotlib</code> plots can be interactive (zoom, pan, etc.), but not as static
+images. Some rules produce pickled plot files. To view these, use:</p>
+<pre><code>python workflow/scripts/unpickle_plot.py &lt;path_to_pickled_plot&gt;
+</code></pre>
+<h2 id="archiving-results"><a class="header" href="#archiving-results">Archiving results</a></h2>
+<p>The bash script <code>archive_results.sh</code> can be used to back up analysis results.
+Here's an example usage:</p>
+<pre><code class="language-bash">./archive_results.sh results/ /mnt/backup/open-gira
+</code></pre>
+<p>This will create a timestamped folder in path of the second argument, e.g.
+<code>/mnt/backup/open-gira/2023-07-24T101756+0100</code>, containing an archive of results
+(excluding input files downloaded from the internet) and a README describing the
+state of the repository at the time of archive creation.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>
