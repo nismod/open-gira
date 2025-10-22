@@ -15,13 +15,13 @@ The process is as follows:
 """
 
 import logging
-import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Union
 
 import geopandas
 import osmium
 import pandas
+import shapely
 import shapely.ops as shape_ops
 from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
 from shapely.geometry import box as shapely_box
@@ -38,48 +38,77 @@ class WayParser(osmium.SimpleHandler):
         self.node_list = []
         self.shared_nodes = None
 
-    def way(self, w):
-        [self.node_list.append(n.ref) for n in w.nodes]
+    def way(self, way: osmium.osm.Way) -> None:
+        """
+        Add the node references from `way` to `self.node_list`. This method is
+        called from `self.apply_file` for each way in the file.
 
-    def find_shared_nodes(self, file_path, locations=False, **kwargs):
+        Args:
+            way: Way to store node references for.
+        """
+        [self.node_list.append(node.ref) for node in way.nodes]
+
+    def find_shared_nodes(
+        self, file_path: str, locations: bool = False, **kwargs
+    ) -> dict[int, int]:
+        """
+        Determine which nodes have a degree of 2 or greater.
+
+        Args:
+            file_path: Path to .osm.pbf file.
+            locations: If locations is true, then a location handler will be
+                used in `self.apply_file`, returning the node positions.
+
+        Returns:
+            Mapping from node ID to node degree for all 'shared_nodes'.
+        """
+
         if self.shared_nodes is not None:
             return self.shared_nodes
+
         self.shared_nodes = {}
         self.apply_file(file_path, locations=locations, **kwargs)
+
         node_counts = Counter(self.node_list)
-        for k, v in node_counts.items():
-            if v > 1:
-                self.shared_nodes[k] = v
+        for node_id, degree in node_counts.items():
+            if degree > 1:
+                self.shared_nodes[node_id] = degree
+
         return self.shared_nodes
 
 
 class NodeParser(osmium.SimpleHandler):
     """
-    Extract nodes from OSM data
+    Extract nodes from OSM data.
     """
 
-    def __init__(self, tags_to_preserve):
+    def __init__(self, tags_to_preserve: tuple[str]):
         osmium.SimpleHandler.__init__(self)
         self.output_data = []
         self.tags_to_preserve = tags_to_preserve
 
-    def node(self, n):
+    def node(self, node: osmium.osm.Node) -> None:
         """
-        Process an individual node and add it to the output list
+        Process an individual node and add it to the output list. This method
+        is called from `self.apply_file` for each node in the file.
+
+        Args:
+            node: Node to process.
         """
 
         base_input = {}
-        for k in self.tags_to_preserve:
-            base_input[f"tag_{k}"] = n.tags[k] if k in n.tags else None
+        for tag_name in self.tags_to_preserve:
+            base_input[f"tag_{tag_name}"] = (
+                node.tags[tag_name] if tag_name in node.tags else None
+            )
 
-        # create shapely geometry from osm object
         # https://docs.osmcode.org/pyosmium/latest/ref_osm.html#osmium.osm.Location
-        point = Point(n.location.lon, n.location.lat)
+        point: shapely.Point = Point(node.location.lon, node.location.lat)
 
         self.output_data.append(
             {
                 "geometry": point,
-                "osm_node_id": n.id,
+                "osm_node_id": node.id,
                 **base_input,
             }
         )
@@ -87,118 +116,179 @@ class NodeParser(osmium.SimpleHandler):
 
 class WaySlicer(osmium.SimpleHandler):
     """
-    Slice up ways into segments by shared nodes
-    @param List<int> shared_nodes - list of nodes that are shared with other ways in the network
-    @param List<string> tags_to_preserve - list of osmium tags to keep in the output
+    Slice up OSM ways into segments, split at junctions. Clip ways to bounding box.
+
+    Args:
+        shared_nodes: Nodes with degree greater than or equal to two.
+        tags_to_preserve: Way attributes we wish to retain.
+        bounding_box: Bounding box to slice ways to. Any way extending beyond
+            the bounding box will be lost from this slice.
     """
 
-    def __init__(self, shared_nodes, tags_to_preserve):
+    def __init__(
+        self,
+        shared_nodes: dict[int, int],
+        tags_to_preserve: tuple[str],
+        bounding_box: shapely.Polygon,
+    ):
         osmium.SimpleHandler.__init__(self)
         self.output_data = []
         self.shared_nodes = shared_nodes
         self.tags_to_preserve = tags_to_preserve
+        self.bounding_box = bounding_box
 
-    def way(self, w):
-        if len(w.nodes) < 2:
+    def way(self, way: osmium.osm.Way) -> None:
+        """
+        Slice given way into segments, splitting at junctions. Append processed
+        way to `self.output_data`.
+
+        Note that this method is called from `self.apply_file`.
+
+        Args:
+            way: Way to process.
+        """
+
+        if len(way.nodes) < 2:
             # not enough points in this way to create a linestring, short circuit
             return
 
-        # Prepare information for all segments
+        # extract tags for way
         base_input = {}
-        for k in self.tags_to_preserve:
-            base_input[f"tag_{k}"] = w.tags[k] if k in w.tags else None
+        for tag_name in self.tags_to_preserve:
+            base_input[f"tag_{tag_name}"] = (
+                way.tags[tag_name] if tag_name in way.tags else None
+            )
 
-        # Parse nodes for relevant properties (one pass)
-        locations = []
-        shared_nodes_used = []
-        node_index = {}
-        for n in w.nodes:
-            locations.append((n.lon, n.lat))
-            if n.ref in self.shared_nodes.keys():
+        node_locations: tuple[float, float] = []
+        shared_nodes_used: list[dict] = []
+        # create parallel data structure to enable lookup by location
+        nodes_indexed_by_location: defaultdict[
+            float, dict[float, osmium.osm.NodeRef]
+        ] = defaultdict(dict)
+
+        # step through all nodes in way, check if any are shared with other ways
+        for node in way.nodes:
+            node_locations.append((node.lon, node.lat))
+
+            # add it to the nodes dict indexed by longitude and latitude
+            nodes_indexed_by_location[node.lon][node.lat] = node
+
+            # node is shared between this way and another neighbouring way
+            if node.ref in self.shared_nodes.keys():
+
+                # add it to the 'used' shared nodes dict
                 shared_nodes_used.append(
-                    {"node": n, "point": Point((n.lon, n.lat))}
+                    {"node": node, "point": Point((node.lon, node.lat))}
                 )
-                if n.lon in node_index.keys():
-                    node_index[n.lon][n.lat] = n
-                else:
-                    node_index[n.lon] = {n.lat: n}
 
         # Generate linestring and constrain to bounding box
-        cut_to_bbox: Union[Point, LineString, MultiLineString] = bbox.intersection(LineString(locations))
-        if cut_to_bbox.is_empty or not isinstance(cut_to_bbox, (LineString, MultiLineString)):
-            # The intersection can return a point when the way has one end
+        way_linestring_cut_to_bbox: Union[Point, LineString, MultiLineString] = (
+            self.bounding_box.intersection(LineString(node_locations))
+        )
+
+        if way_linestring_cut_to_bbox.is_empty or (
+            not isinstance(way_linestring_cut_to_bbox, (LineString, MultiLineString))
+        ):
+            # the intersection can return a point when the way has one end
             # outside the bbox, and its other end on the bbox edge
             # There are also degenerate ways with two co-located nodes which
             # are returned from intersection as an empty LineString
             # In either case, discard the way
             return
 
-        # split by shared nodes
-        # GEOMETRYCOLLECTION of LINESTRINGS
-        shared_points = MultiPoint([n["point"] for n in shared_nodes_used])
-        if cut_to_bbox.intersects(shared_points):
-            segments = shape_ops.split(cut_to_bbox, shared_points)
+        # split at shared nodes, so we always have edges ending at junctions
+        junction_points = MultiPoint([n["point"] for n in shared_nodes_used])
+
+        if way_linestring_cut_to_bbox.intersects(junction_points):
+            way_segments: shapely.GeometryCollection = shape_ops.split(
+                way_linestring_cut_to_bbox, junction_points
+            )
         else:
             try:
-                segments = GeometryCollection(cut_to_bbox.geoms)
+                way_segments = GeometryCollection(way_linestring_cut_to_bbox.geoms)
             except AttributeError:  # Single line
-                segments = GeometryCollection([cut_to_bbox])
-        s_id = 0
-        for line in segments.geoms:
-            # Determine start and end nodes from shared nodes or invent if bbox clipping
-            prefixes = ["start_node_", "end_node_"]
-            nodes = []
-            for i in range(2):
-                n = line.coords[i]
-                try:
-                    node = self.get_node_by_coords(n, prefixes[i], node_index)
-                except KeyError:
-                    # Not found, must be a node we created by clipping to bbox
-                    # TODO: investigate possible bug: these nodes not just at bbox!
-                    node = {
-                        f"{prefixes[i]}reference": pandas.NA,
-                        f"{prefixes[i]}longitude": n[0],
-                        f"{prefixes[i]}latitude": n[1],
-                        f"{prefixes[i]}degree": 1,
-                    }
-                nodes.append(node)
+                way_segments = GeometryCollection([way_linestring_cut_to_bbox])
 
+        # loop through segments in way
+        # note that many ways will only have a single segment
+        for segment_id, segment in enumerate(way_segments.geoms):
+
+            # determine start and end nodes from shared nodes or invent if bbox has clipped way
+            termini = []
+            for terminus_index, prefix in ((0, "start_node_"), (-1, "end_node_")):
+
+                longitude, latitude = segment.coords[terminus_index]
+
+                try:
+                    # an end of this segment is an existing shared node
+                    terminus_data = self.get_node_by_coords(
+                        longitude, latitude, prefix, nodes_indexed_by_location
+                    )
+                except KeyError:
+                    # no record of a node at this location, must be a way clipped by the bounding box
+                    logging.debug(
+                        f"Clipped way {way.id} to bounding box at ({longitude:.2f}, {latitude:.2f})"
+                    )
+                    terminus_data = {
+                        f"{prefix}reference": pandas.NA,
+                        f"{prefix}longitude": longitude,
+                        f"{prefix}latitude": latitude,
+                        f"{prefix}degree": 1,
+                    }
+
+                termini.append(terminus_data)
+
+            start, end = termini
             self.output_data.append(
                 {
-                    "geometry": line,
-                    "osm_way_id": w.id,
-                    "segment_id": s_id,
+                    "geometry": segment,
+                    "osm_way_id": way.id,
+                    "segment_id": segment_id,
                     **base_input,
-                    **nodes[0],
-                    **nodes[1],
+                    **start,
+                    **end,
                 }
             )
-            s_id += 1
 
-    def get_node_by_coords(self, coords, prefix, node_list):
+    def get_node_by_coords(
+        self,
+        longitude: float,
+        latitude: float,
+        prefix: str,
+        nodes_indexed_by_location: dict[float, dict[float, osmium.osm.NodeRef]],
+    ) -> dict:
         """
-        Return a dictionary of node information with entries prefixed by prefix
-        Parameters
-        ----------
-        coords :Node: node to process
-        prefix :str: prefix to use for dictionary entries
-        node_list :Dict<Node>: dict of candidate nodes that shared_node might match, indexed by lon, lat
+        Create a dictionary of node attributes, where keys are prefixed by `prefix`.
 
-        Returns
-        -------
-        dictionary of node reference, longitude, latitude, and degree
+        Args:
+            longitude: Node longitude.
+            latitude: Node latitude.
+            prefix: Prefix to use for dictionary keys.
+            nodes_indexed_by_location: Node objects, indexed by longitude, latitude.
+
+        Raises:
+            KeyError: If `nodes_indexed_by_location` does not contain node at
+                `longitude` and `latitude`.
+
+        Returns:
+            Node reference, longitude, latitude, and degree.
         """
-        node = node_list[coords[0]][coords[1]]  # KeyError is caught by parent function
-        if (
-            node.ref not in self.shared_nodes.keys()
-        ):  # The shared_nodes should all have degree > 1
-            raise RuntimeError(f"Node {node.ref} not found in shared_nodes keys.")
-        degree = self.shared_nodes[node.ref]
+
+        # note that we're indexing with floats here, which _should_ still be safe
+        # given that they're immutable and we don't perform any operations on the floats
+        node: osmium.osm.NodeRef = nodes_indexed_by_location[longitude][latitude]
+
+        try:
+            node_degree: int = self.shared_nodes[node.ref]
+        except KeyError:
+            # nodes that aren't shared should all have degree 1
+            node_degree: int = 1
+
         return {
             f"{prefix}reference": node.ref,
             f"{prefix}longitude": node.lon,
             f"{prefix}latitude": node.lat,
-            f"{prefix}degree": degree,
+            f"{prefix}degree": node_degree,
         }
 
 
@@ -211,24 +301,14 @@ def empty_gdf() -> geopandas.GeoDataFrame:
 
 
 if __name__ == "__main__":
-    try:
-        pbf_path = snakemake.input["pbf"]  # type: ignore
-        edges_path = snakemake.output["edges"]  # type: ignore
-        nodes_path = snakemake.output["nodes"]  # type: ignore
-        keep_tags = snakemake.params["keep_tags"]  # type: ignore
-    except NameError:
-        # If "snakemake" doesn't exist then must be running from the
-        # command line.
-        pbf_path, edges_path, nodes_path, keep_tags = sys.argv[1:]
-        # pbf_path = 'results/slices/tanzania-mini_filter-road/slice-2.osm.pbf'
-        # edges_path = 'results/slice-2.geoparquet'
-        # nodes_path = 'results/slice-2.geoparquet'
-        # keep_tags = 'highway, railway'
+    pbf_path: str = snakemake.input["pbf"]
+    edges_path: str = snakemake.output["edges"]
+    nodes_path: str = snakemake.output["nodes"]
+    keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])
 
-        # process comma separated string into list of strings
-        keep_tags: list = keep_tags.replace(" ", "").split(",")
-
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.DEBUG
+    )
     logging.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings
@@ -241,36 +321,44 @@ if __name__ == "__main__":
         box.bottom_left.lon, box.bottom_left.lat, box.top_right.lon, box.top_right.lat
     )
 
-    p = WayParser()
-    shared_nodes = p.find_shared_nodes(pbf_path)
+    # EDGES
 
-    h = WaySlicer(
-        shared_nodes=shared_nodes,
-        tags_to_preserve=keep_tags,
+    # node ID -> node degree
+    shared_nodes: dict[int, int] = WayParser().find_shared_nodes(pbf_path)
+
+    way_slicer = WaySlicer(
+        shared_nodes=shared_nodes, tags_to_preserve=keep_tags, bounding_box=bbox
     )
-    h.apply_file(pbf_path, locations=True)
+    way_slicer.apply_file(pbf_path, locations=True)
 
-    if len(h.output_data) != 0:
-        edges = geopandas.GeoDataFrame(h.output_data)
+    if len(way_slicer.output_data) != 0:
+        edges = geopandas.GeoDataFrame(way_slicer.output_data)
         edges = edges.set_crs(epsg=4326)
     else:
         edges = empty_gdf()
+
     logging.info(
-        f"Complete: {len(h.output_data)} segments from {len(Counter(w['osm_way_id'] for w in h.output_data))} ways."
+        f"Complete: {len(way_slicer.output_data)} segments from "
+        f"{len(Counter(way['osm_way_id'] for way in way_slicer.output_data))} ways."
     )
 
-    n = NodeParser(
-        tags_to_preserve=keep_tags,
-    )
-    n.apply_file(pbf_path, locations=True)
-    if len(n.output_data) != 0:
-        nodes = geopandas.GeoDataFrame(n.output_data)
+    # NODES
+
+    node_parser = NodeParser(tags_to_preserve=keep_tags)
+    node_parser.apply_file(pbf_path, locations=True)
+
+    if len(node_parser.output_data) != 0:
+        nodes = geopandas.GeoDataFrame(node_parser.output_data)
         nodes = nodes.set_crs(epsg=4326)
+
+        # some nodes belong to ways which extended beyond the bounding box
+        # we have sliced the ends off these ways, and now we discard their nodes
+        nodes = nodes[nodes.intersects(bbox)]
     else:
         nodes = empty_gdf()
 
-    logging.info(f"Complete: {len(n.output_data)} nodes.")
+    logging.info(f"Complete: {len(node_parser.output_data)} nodes.")
 
-    # write to disk -- even if empty
+    # write to disk, empty or not
     edges.to_parquet(edges_path)
     nodes.to_parquet(nodes_path)
