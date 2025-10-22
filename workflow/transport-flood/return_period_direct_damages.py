@@ -22,8 +22,7 @@ from open_gira.direct_damages import (
 from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_costs
 
 
-if __name__ == "__main__":
-
+if __name__ == "__main__":  # noqa: C901
     try:
         unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]
@@ -139,7 +138,6 @@ if __name__ == "__main__":
     expected_annual_damages = {}
     logging.info(f"Integrating {len(rp_map_families)} damage-probability curves")
     for family_name, family_rp_maps in rp_map_families.items():
-
         # sort by least to most probable
         sorted_rp_maps: list[ReturnPeriodMap] = sorted(family_rp_maps)
 

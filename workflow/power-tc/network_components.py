@@ -3,7 +3,6 @@ Plotting tools for analysing network connectedness
 """
 
 import os
-import re
 import sys
 from collections import defaultdict
 from typing import Iterable
@@ -76,7 +75,6 @@ def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt
     for i, n_large_components in enumerate(
         thresholds[thresholds < len(components)].astype(int)
     ):
-
         largest_components = component_sizes[-n_large_components:]
         pct_nodes_largest_comp = 100 * sum(largest_components) / sum(component_sizes)
         ax.text(
@@ -91,7 +89,6 @@ def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt
 
 
 if __name__ == "__main__":
-
     try:
         nodes_path = snakemake.input["nodes"]  # type: ignore
         edges_path = snakemake.input["edges"]  # type: ignore
@@ -116,19 +113,24 @@ if __name__ == "__main__":
 
     # build a network from files on disk
     network = snkit.network.Network(
-        edges=gpd.read_parquet(edges_path),
-        nodes=gpd.read_parquet(nodes_path)
+        edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
 
     # extract the component data
     # 'edge_ids' or 'node_ids' -> component_id -> set of element ids
-    component_map: dict[int, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    component_map: dict[int, dict[str, set[str]]] = defaultdict(
+        lambda: defaultdict(set)
+    )
 
     # N.B. sort the entries to make testing easier
     for component_id in sorted(set(network.edges.component_id)):
         component_mask = network.edges.component_id == component_id
-        component_map["edge_ids"][component_id] = natural_sort(network.edges.id[component_mask])
-        node_ids = set(network.edges.from_id[component_mask]) | set(network.edges.to_id[component_mask])
+        component_map["edge_ids"][component_id] = natural_sort(
+            network.edges.id[component_mask]
+        )
+        node_ids = set(network.edges.from_id[component_mask]) | set(
+            network.edges.to_id[component_mask]
+        )
         component_map["node_ids"][component_id] = natural_sort(node_ids)
 
     # build a pandas dataframe from the components

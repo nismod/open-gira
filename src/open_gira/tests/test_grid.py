@@ -5,7 +5,6 @@ from open_gira.grid import weighted_allocation
 
 
 class Test_allocate_power_to_targets:
-
     def test_weighted_allocation(self):
         df = pd.DataFrame(
             index=range(5),
@@ -14,7 +13,7 @@ class Test_allocate_power_to_targets:
                 "asset_type": ["source", "target", "target", "target", "source"],
                 "power_mw": [20, np.nan, np.nan, np.nan, 10],
                 "gdp": [np.nan, 3, 1, 1, np.nan],
-            }
+            },
         )
 
         generated = weighted_allocation(

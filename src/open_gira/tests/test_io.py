@@ -6,8 +6,11 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from open_gira.io import netcdf_packing_parameters, \
-    bit_pack_dataarray_encoding, bit_pack_dataset_encoding
+from open_gira.io import (
+    netcdf_packing_parameters,
+    bit_pack_dataarray_encoding,
+    bit_pack_dataset_encoding,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -23,7 +26,7 @@ class TestScaleFactorAndOffset:
 
         np.allclose(
             np.array([scale_factor, offset, fill_value]),
-            np.array([0.0012207, 40.000610, -2**15])
+            np.array([0.0012207, 40.000610, -(2**15)]),
         )
 
     def test_all_zeros(self):
@@ -33,8 +36,7 @@ class TestScaleFactorAndOffset:
         scale_factor, offset, fill_value = netcdf_packing_parameters(0, 0, 16)
 
         np.allclose(
-            np.array([scale_factor, offset, fill_value]),
-            np.array([1, 0, -2**15])
+            np.array([scale_factor, offset, fill_value]), np.array([1, 0, -(2**15)])
         )
 
     def test_all_fill_value(self):
@@ -42,11 +44,12 @@ class TestScaleFactorAndOffset:
         No variance in the data, and all the values are the typical fill_value. How awkward!
         Should return a fill_value at the other end of the integer range.
         """
-        scale_factor, offset, fill_value = netcdf_packing_parameters(-2**15, -2**15, 16)
+        scale_factor, offset, fill_value = netcdf_packing_parameters(
+            -(2**15), -(2**15), 16
+        )
 
         np.allclose(
-            np.array([scale_factor, offset, fill_value]),
-            np.array([1, 0, 2**15])
+            np.array([scale_factor, offset, fill_value]), np.array([1, 0, 2**15])
         )
 
 
@@ -61,7 +64,9 @@ class TestPackingFloatsAsInts:
     np.random.seed(0)
 
     @staticmethod
-    def round_trip_within_tolerance(da: xr.DataArray, encoding: dict, relative_tolerance: float) -> bool:
+    def round_trip_within_tolerance(
+        da: xr.DataArray, encoding: dict, relative_tolerance: float
+    ) -> bool:
         """
         Given a DataArray, write it to disk with a stretch and scale integer
         encoding scheme, read it back and compare to the copy in-memory.
@@ -71,7 +76,13 @@ class TestPackingFloatsAsInts:
             da.to_netcdf(serialised_path, encoding=encoding)
 
             from_disk = xr.load_dataset(serialised_path)
-            result = np.allclose(da.data, from_disk.data.values, rtol=relative_tolerance, atol=0, equal_nan=True)
+            result = np.allclose(
+                da.data,
+                from_disk.data.values,
+                rtol=relative_tolerance,
+                atol=0,
+                equal_nan=True,
+            )
 
         if result:
             return True
@@ -95,44 +106,40 @@ class TestPackingFloatsAsInts:
             np.linspace(-999.34, 10012.21, 40),
             np.random.rand(100),
             np.exp(np.random.rand(100)),
-            np.logspace(-2, 7, 10, base=2) + 1/7
+            np.logspace(-2, 7, 10, base=2) + 1 / 7,
         ]
         for data in arrays_to_test:
             da = xr.DataArray(
-                data,
-                name="data",
-                coords={"x": range(len(data))},
-                dims=["x"]
+                data, name="data", coords={"x": range(len(data))}, dims=["x"]
             )
-            scale_factor, offset, fill_value = netcdf_packing_parameters(np.nanmin(data), np.nanmax(data), 16)
-            encoding={
+            scale_factor, offset, fill_value = netcdf_packing_parameters(
+                np.nanmin(data), np.nanmax(data), 16
+            )
+            encoding = {
                 "data": {
                     "dtype": "int16",
                     "scale_factor": scale_factor,
                     "add_offset": offset,
-                    "_FillValue": fill_value
+                    "_FillValue": fill_value,
                 }
             }
-            assert self.round_trip_within_tolerance(da, encoding, self.relative_tolerance) == True
+            assert self.round_trip_within_tolerance(
+                da, encoding, self.relative_tolerance
+            )
 
     def test_bit_pack_dataarray_encoding(self):
         """
         Check DataArray encoding dict doesn't regress.
         """
         data = np.array([-4, 67.12, 80, 1800.2])
-        da = xr.DataArray(
-            data,
-            name="data",
-            coords={"x": range(len(data))},
-            dims=["x"]
-        )
+        da = xr.DataArray(data, name="data", coords={"x": range(len(data))}, dims=["x"])
         encoding = bit_pack_dataarray_encoding(da, 16)
         expected = {
-            'data': {
-                'dtype': 'int16',
-                'scale_factor': 0.030758811256559746,
-                'add_offset': 898.1,
-                '_FillValue': -32768
+            "data": {
+                "dtype": "int16",
+                "scale_factor": 0.030758811256559746,
+                "add_offset": 898.1,
+                "_FillValue": -32768,
             }
         }
         assert encoding == expected
@@ -153,17 +160,16 @@ class TestPackingFloatsAsInts:
             np.linspace(-999.34, 10012.21, 40),
             np.random.rand(100),
             np.exp(np.random.rand(100)),
-            np.logspace(-2, 7, 10, base=2) + 1/7
+            np.logspace(-2, 7, 10, base=2) + 1 / 7,
         ]
         for data in arrays_to_test:
             da = xr.DataArray(
-                data,
-                name="data",
-                coords={"x": range(len(data))},
-                dims=["x"]
+                data, name="data", coords={"x": range(len(data))}, dims=["x"]
             )
             encoding = bit_pack_dataarray_encoding(da, 16)
-            assert self.round_trip_within_tolerance(da, encoding, self.relative_tolerance) == True
+            assert self.round_trip_within_tolerance(
+                da, encoding, self.relative_tolerance
+            )
 
     def test_bit_pack_dataarray_encoding_non_finite(self):
         """
@@ -176,10 +182,7 @@ class TestPackingFloatsAsInts:
         ]
         for data in arrays_to_test:
             da = xr.DataArray(
-                data,
-                name="data",
-                coords={"x": range(len(data))},
-                dims=["x"]
+                data, name="data", coords={"x": range(len(data))}, dims=["x"]
             )
             with pytest.raises(AssertionError):
                 bit_pack_dataarray_encoding(da, 16)
@@ -188,18 +191,13 @@ class TestPackingFloatsAsInts:
         """
         Test for 0 length input array.
         """
-        da = xr.DataArray(
-            np.array([]),
-            name="data",
-            coords={"x": []},
-            dims=["x"]
-        )
+        da = xr.DataArray(np.array([]), name="data", coords={"x": []}, dims=["x"])
         expected = {
             "data": {
                 "dtype": "int16",
                 "scale_factor": 1,
                 "add_offset": 0,
-                "_FillValue": -1
+                "_FillValue": -1,
             }
         }
         assert bit_pack_dataarray_encoding(da, 16) == expected
@@ -225,18 +223,18 @@ class TestPackingFloatsAsInts:
             ),
         )
         expected = {
-            'temperature': {
-                'dtype': 'int16',
-                'scale_factor': 0.0002510535457941546,
-                'add_offset': 25.564201630274724,
-                '_FillValue': -32768
+            "temperature": {
+                "dtype": "int16",
+                "scale_factor": 0.0002510535457941546,
+                "add_offset": 25.564201630274724,
+                "_FillValue": -32768,
             },
-            'precipitation': {
-                'dtype': 'int16',
-                'scale_factor': 7.980689171904907e-05,
-                'add_offset': 6.577139000604922,
-                '_FillValue': -32768
-            }
+            "precipitation": {
+                "dtype": "int16",
+                "scale_factor": 7.980689171904907e-05,
+                "add_offset": 6.577139000604922,
+                "_FillValue": -32768,
+            },
         }
 
         assert bit_pack_dataset_encoding(ds, 16) == expected

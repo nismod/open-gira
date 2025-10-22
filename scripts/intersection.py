@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
@@ -39,16 +38,16 @@ def write_empty_files(columns, outputs_path):
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
     tqdm.pandas()
     try:
-        network_edges_path: str = snakemake.input.network
-        raster_paths: list[str] = snakemake.input.tif_paths
-        copy_raster_values: bool = snakemake.params.copy_raster_values
-        output_path: str = snakemake.output.geoparquet
+        network_edges_path: str = snakemake.input.network  # noqa: F821
+        raster_paths: list[str] = snakemake.input.tif_paths  # noqa: F821
+        copy_raster_values: bool = snakemake.params.copy_raster_values  # noqa: F821
+        output_path: str = snakemake.output.geoparquet  # noqa: F821
     except NameError:
         sys.exit("Please run from snakemake")
 
@@ -57,7 +56,9 @@ if __name__ == "__main__":
         raw_folder = Path(raster_paths)
         print(f"{raw_folder=}")
         # where the trimmed tiffs for a given DATASET go
-        dataset_folder: Path = raw_folder.parent / snakemake.wildcards.DATASET
+        dataset_folder: Path = (
+            raw_folder.parent / snakemake.wildcards.DATASET  # noqa: F821
+        )
         print(f"{dataset_folder=}")
 
         # file basenames to create (trimmed) full paths for

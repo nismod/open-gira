@@ -5,6 +5,7 @@ roughness raster.
 
 import logging
 import os
+import sys
 
 import numpy as np
 import rasterio
@@ -15,8 +16,9 @@ from open_gira.wind import power_law_scale_factors
 from open_gira.wind_plotting import plot_downscale_factors
 
 if __name__ == "__main__":
-
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # wind speed altitudes
 
@@ -31,13 +33,17 @@ if __name__ == "__main__":
 
     # surface roughness raster for downscaling winds with
     try:
-        surface_roughness_raster: xr.DataArray = rioxarray.open_rasterio(snakemake.input.surface_roughness)
+        surface_roughness_raster: xr.DataArray = rioxarray.open_rasterio(
+            snakemake.input.surface_roughness  # noqa: F821
+        )
     except rasterio.errors.RasterioIOError:
-        logging.info("Surface roughness raster is empty, writing empty downscaling factors matrix.")
+        logging.info(
+            "Surface roughness raster is empty, writing empty downscaling factors matrix."
+        )
 
         # assure (empty) files exist
-        np.save(snakemake.output.downscale_factors, np.array([]))
-        os.system(f"touch {snakemake.output.downscale_factors_plot}")
+        np.save(snakemake.output.downscale_factors, np.array([]))  # noqa: F821
+        os.system(f"touch {snakemake.output.downscale_factors_plot}")  # noqa: F821
 
         sys.exit(0)
 
@@ -48,19 +54,17 @@ if __name__ == "__main__":
     # calculate factors to scale wind speeds from gradient-level to surface level,
     # taking into account surface roughness as defined by the raster
     downscaling_factors = power_law_scale_factors(
-        surface_roughness,
-        SURFACE_LEVEL_METRES,
-        GRADIENT_LEVEL_METRES
+        surface_roughness, SURFACE_LEVEL_METRES, GRADIENT_LEVEL_METRES
     )
 
     logging.info("Saving downscaling factors to disk")
-    np.save(snakemake.output.downscale_factors, downscaling_factors)
+    np.save(snakemake.output.downscale_factors, downscaling_factors)  # noqa: F821
 
     logging.info("Mapping downscaling factors and saving to disk")
     plot_downscale_factors(
         downscaling_factors,
         "Wind downscaling factors",
-        snakemake.output.downscale_factors_plot
+        snakemake.output.downscale_factors_plot,  # noqa: F821
     )
 
     logging.info("Done estimating downscaling factors")

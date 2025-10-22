@@ -17,7 +17,6 @@ from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_cost
 
 
 if __name__ == "__main__":
-
     try:
         unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]
@@ -53,9 +52,9 @@ if __name__ == "__main__":
         damage_curves_dir, HAZARD_TYPE, set((network_type,))
     )
     damage_curve_data = damage_curves_all[network_type]
-    assert (
-        "occurrence" in damage_curve_data.columns
-    ), "Expected 'occurrence' column in landslide damage curve"
+    assert "occurrence" in damage_curve_data.columns, (
+        "Expected 'occurrence' column in landslide damage curve"
+    )
 
     # Parse damage curve data into dict of DamageCurve objects
     damage_curves = {}

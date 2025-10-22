@@ -23,7 +23,7 @@ for fn in tqdm(list(p.glob(f"slice-*/{fname}"))):
     try:
         pq.read_schema(fn)
         act.append(fn.parent.name)
-    except:
+    except:  # noqa: E722
         print("Error reading", fn)
         continue
 

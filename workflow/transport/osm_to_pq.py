@@ -137,7 +137,7 @@ class WaySlicer(osmium.SimpleHandler):
         self.tags_to_preserve = tags_to_preserve
         self.bounding_box = bounding_box
 
-    def way(self, way: osmium.osm.Way) -> None:
+    def way(self, way: osmium.osm.Way) -> None:  # noqa: C901
         """
         Slice given way into segments, splitting at junctions. Append processed
         way to `self.output_data`.
@@ -175,7 +175,6 @@ class WaySlicer(osmium.SimpleHandler):
 
             # node is shared between this way and another neighbouring way
             if node.ref in self.shared_nodes.keys():
-
                 # add it to the 'used' shared nodes dict
                 shared_nodes_used.append(
                     {"node": node, "point": Point((node.lon, node.lat))}
@@ -212,11 +211,9 @@ class WaySlicer(osmium.SimpleHandler):
         # loop through segments in way
         # note that many ways will only have a single segment
         for segment_id, segment in enumerate(way_segments.geoms):
-
             # determine start and end nodes from shared nodes or invent if bbox has clipped way
             termini = []
             for terminus_index, prefix in ((0, "start_node_"), (-1, "end_node_")):
-
                 longitude, latitude = segment.coords[terminus_index]
 
                 try:
@@ -301,10 +298,10 @@ def empty_gdf() -> geopandas.GeoDataFrame:
 
 
 if __name__ == "__main__":
-    pbf_path: str = snakemake.input["pbf"]
-    edges_path: str = snakemake.output["edges"]
-    nodes_path: str = snakemake.output["nodes"]
-    keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])
+    pbf_path: str = snakemake.input["pbf"]  # noqa: F821
+    edges_path: str = snakemake.output["edges"]  # noqa: F821
+    nodes_path: str = snakemake.output["nodes"]  # noqa: F821
+    keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])  # noqa: F821
 
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.DEBUG

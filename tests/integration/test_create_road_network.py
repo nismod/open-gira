@@ -13,5 +13,5 @@ def test_create_road_network():
         (
             "results/geoparquet/djibouti-latest_filter-road/processed/slice-0_nodes.geoparquet",
             "results/geoparquet/djibouti-latest_filter-road/processed/slice-0_edges.geoparquet",
-        )
+        ),
     )

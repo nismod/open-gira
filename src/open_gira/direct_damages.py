@@ -163,7 +163,7 @@ class AqueductFlood(ReturnPeriodMap):
     WITH_SUBSIDENCE = "wtsub"
     WITHOUT_SUBSIDENCE = "nosub"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str):  # noqa: C901
         """
         Infer attributes from name.
 
@@ -184,7 +184,6 @@ class AqueductFlood(ReturnPeriodMap):
         map_type, *split_name = name.split("_")
 
         if map_type == self.RIVERINE:
-
             # unpack rest of name
             scenario, climate_model, year, return_period_years = split_name
 
@@ -440,7 +439,6 @@ def direct_damage(
     for asset_type in natural_sort(
         set(exposure.asset_type) & set(damage_curves.keys())
     ):
-
         damage_curve: pd.DataFrame = damage_curves[asset_type]
 
         # pick out rows of asset type and columns of hazard intensity

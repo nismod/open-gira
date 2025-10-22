@@ -18,13 +18,18 @@ import xarray as xr
 
 from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
-    estimate_wind_field, interpolate_track, empty_wind_da, WIND_COORDS,
-    ENV_PRESSURE
+    estimate_wind_field,
+    interpolate_track,
+    empty_wind_da,
+    WIND_COORDS,
+    ENV_PRESSURE,
 )
 from open_gira.wind_plotting import plot_contours, animate_track
 
 
-logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+)
 
 
 def cleanup(output_path: str):
@@ -43,7 +48,7 @@ def process_track(
     downscaling_factors: np.ndarray,
     plot_max_wind: bool,
     plot_animation: bool,
-    plot_dir: Optional[str]
+    plot_dir: Optional[str],
 ) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
@@ -66,7 +71,7 @@ def process_track(
         np.ndarray: 2D array of maximum wind speed experienced at each grid pixel
     """
 
-    track_id, = set(track.track_id)
+    (track_id,) = set(track.track_id)
 
     logging.info(track_id)
 
@@ -108,7 +113,6 @@ def process_track(
     wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
     for track_i, track_point in enumerate(track.itertuples()):
-
         try:
             wind_field[track_i, :] = estimate_wind_field(
                 longitude,  # degrees
@@ -123,47 +127,47 @@ def process_track(
                 track_point.eye_speed_ms,
             )
         except AssertionError:
-            logging.warning(f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros")
+            logging.warning(
+                f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros"
+            )
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
 
     # find vector magnitude, then take max along timestep axis, giving (y, x)
     # N.B. np.max([np.nan, 1]) = np.nan, so use np.nanmax
-    max_wind_speeds: np.ndarray[float] = np.nanmax(np.abs(downscaled_wind_field), axis=0)
+    max_wind_speeds: np.ndarray[float] = np.nanmax(
+        np.abs(downscaled_wind_field), axis=0
+    )
 
     # any dimensions with a single cell will break the plotting routines
     if 1 not in grid_shape:
-
         if plot_max_wind:
             plot_contours(
                 max_wind_speeds,
                 f"{track_id} max wind speed",
                 "Wind speed [m/s]",
-                os.path.join(plot_dir, f"{track_id}_max_contour.png")
+                os.path.join(plot_dir, f"{track_id}_max_contour.png"),
             )
 
         if plot_animation:
             animate_track(
-                downscaled_wind_field,
-                track,
-                os.path.join(plot_dir, f"{track_id}.gif")
+                downscaled_wind_field, track, os.path.join(plot_dir, f"{track_id}.gif")
             )
 
     return track_id, max_wind_speeds
 
 
 if __name__ == "__main__":
-
-    storm_file_path: str = snakemake.input.storm_file
-    wind_grid_path: str = snakemake.input.wind_grid
-    downscale_factors_path: str = snakemake.input.downscaling_factors
-    storm_set: set[str] = set(snakemake.params.storm_set)
-    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
-    plot_animation: bool = snakemake.config["plot_wind"]["animation"]
-    n_proc: int = snakemake.threads
-    plot_dir_path: str = snakemake.output.plot_dir
-    output_path: str = snakemake.output.wind_speeds
+    storm_file_path: str = snakemake.input.storm_file  # noqa: F821
+    wind_grid_path: str = snakemake.input.wind_grid  # noqa: F821
+    downscale_factors_path: str = snakemake.input.downscaling_factors  # noqa: F821
+    storm_set: set[str] = set(snakemake.params.storm_set)  # noqa: F821
+    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]  # noqa: F821
+    plot_animation: bool = snakemake.config["plot_wind"]["animation"]  # noqa: F821
+    n_proc: int = snakemake.threads  # noqa: F821
+    plot_dir_path: str = snakemake.output.plot_dir  # noqa: F821
+    output_path: str = snakemake.output.wind_speeds  # noqa: F821
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
@@ -195,7 +199,18 @@ if __name__ == "__main__":
     downscaling_factors = np.load(downscale_factors_path)
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
-    args = ((track[1], grid.x, grid.y, downscaling_factors, plot_max_wind, plot_animation, plot_dir_path) for track in grouped_tracks)
+    args = (
+        (
+            track[1],
+            grid.x,
+            grid.y,
+            downscaling_factors,
+            plot_max_wind,
+            plot_animation,
+            plot_dir_path,
+        )
+        for track in grouped_tracks
+    )
 
     logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
@@ -236,9 +251,6 @@ if __name__ == "__main__":
     da = da.rio.write_crs("EPSG:4326")
 
     # pack floating point data as integers on disk
-    da.to_netcdf(
-        output_path,
-        encoding=bit_pack_dataarray_encoding(da)
-    )
+    da.to_netcdf(output_path, encoding=bit_pack_dataarray_encoding(da))
 
     logging.info("Done estimating wind fields")

@@ -2,7 +2,6 @@
 Reusable functionality that doesn't clearly fit anywhere else.
 """
 
-
 import re
 from typing import Iterable
 
@@ -20,7 +19,7 @@ def natural_sort(to_sort: Iterable) -> list:
         key=lambda entry: [
             int(fragment) if fragment.isdigit() else fragment.lower()
             for fragment in re.split(r"(\d+)", entry)
-        ]
+        ],
     )
 
 
@@ -35,7 +34,7 @@ def str_to_bool(series: pd.Series) -> pd.Series:
         pd.Series: Boolean series of whether or not strings are truthy (by our logic).
     """
 
-    FALSE_VALUES = {'n', 'no', 'false', 'f', ''}
+    FALSE_VALUES = {"n", "no", "false", "f", ""}
 
     def str_parser(s: str) -> bool:
         """
@@ -49,6 +48,6 @@ def str_to_bool(series: pd.Series) -> pd.Series:
 
     # set our null values to the empty string
     new_series = series.copy(deep=True)
-    new_series.loc[series.isnull()] = ''
+    new_series.loc[series.isnull()] = ""
 
     return new_series.apply(str_parser)

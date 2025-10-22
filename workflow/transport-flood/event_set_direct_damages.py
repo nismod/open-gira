@@ -15,7 +15,6 @@ from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_cost
 
 
 if __name__ == "__main__":
-
     try:
         unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]

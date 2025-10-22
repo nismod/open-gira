@@ -9,7 +9,9 @@ import rasterio.mask
 import shapely
 
 
-def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon, crs=None) -> gpd.GeoDataFrame:
+def polygonise_targets(
+    targets_path: str, extent: shapely.geometry.Polygon, crs=None
+) -> gpd.GeoDataFrame:
     """
     Take a raster of electricity consuming 'targets' and a geometry extent and
     return a set of target polygons with computed areas.
@@ -36,10 +38,14 @@ def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon, crs=
 
         # Read the dataset's valid data mask as a ndarray.
         try:
-            box_dataset, box_transform = rasterio.mask.mask(dataset, [extent], crop=True)
+            box_dataset, box_transform = rasterio.mask.mask(
+                dataset, [extent], crop=True
+            )
 
             # Extract feature shapes and values from the array.
-            for geom, val in rasterio.features.shapes(box_dataset, transform=box_transform):
+            for geom, val in rasterio.features.shapes(
+                box_dataset, transform=box_transform
+            ):
                 if val > 0:
                     feature = shapely.geometry.shape(geom)
                     geoms.append(feature)
@@ -50,13 +56,7 @@ def polygonise_targets(targets_path: str, extent: shapely.geometry.Polygon, crs=
             logging.info("Extent may not overlap targets", ex)
             pass
 
-    targets = gpd.GeoDataFrame(
-        data={
-            "area_km2": areas_km2,
-            "geometry": geoms
-        },
-        crs=crs
-    )
+    targets = gpd.GeoDataFrame(data={"area_km2": areas_km2, "geometry": geoms}, crs=crs)
 
     # this is the globally unique integer id of each target
     targets["id"] = targets.index
@@ -93,35 +93,44 @@ def weighted_allocation(
     """
 
     # find the sum of variable for each component
-    c_variable_sum = nodes.loc[
-        nodes[asset_col] == source_name,
-        [variable_col, component_col]
-    ].groupby(component_col).sum().reset_index()
+    c_variable_sum = (
+        nodes.loc[nodes[asset_col] == source_name, [variable_col, component_col]]
+        .groupby(component_col)
+        .sum()
+        .reset_index()
+    )
 
     # subset to sinks
     sinks = nodes[nodes[asset_col] == sink_name]
 
     # find the sum of weights for each component
-    c_weight_sum = sinks.loc[:, [weight_col, component_col]].groupby(component_col).sum().reset_index()
+    c_weight_sum = (
+        sinks.loc[:, [weight_col, component_col]]
+        .groupby(component_col)
+        .sum()
+        .reset_index()
+    )
 
     # merge in the component sums for variable and weight
     c_variable_col = f"_component_{variable_col}"
     sinks = sinks.merge(
         c_variable_sum.rename(columns={variable_col: c_variable_col}),
         how="left",
-        on=component_col
+        on=component_col,
     )
     c_weight_col = f"_component_{weight_col}"
     sinks = sinks.merge(
         c_weight_sum.rename(columns={weight_col: c_weight_col}),
         how="left",
-        on=component_col
+        on=component_col,
     )
 
     # ensure every sink has a numeric (non-NaN) entry for the component sum of variable
     sinks[c_variable_col] = sinks[c_variable_col].fillna(0)
 
     # reallocate variable to sinks, by weight within components
-    sinks[variable_col] = -1 * sinks[c_variable_col] * sinks[weight_col] / sinks[c_weight_col]
+    sinks[variable_col] = (
+        -1 * sinks[c_variable_col] * sinks[weight_col] / sinks[c_weight_col]
+    )
 
     return sinks

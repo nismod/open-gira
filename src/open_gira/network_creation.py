@@ -12,9 +12,7 @@ import snkit
 
 
 def create_network(
-    edges: gpd.GeoDataFrame,
-    nodes: gpd.GeoDataFrame = None,
-    id_prefix: str = ""
+    edges: gpd.GeoDataFrame, nodes: gpd.GeoDataFrame = None, id_prefix: str = ""
 ) -> snkit.network.Network:
     """
     Create snkit network from edges and (optional) nodes and clean the result.
@@ -57,7 +55,7 @@ def create_network(
             message=(
                 ".*GeometryTypeError will derive from ShapelyError "
                 "and not TypeError or ValueError in Shapely 2.0*"
-            )
+            ),
         )
         network.nodes = snkit.network.drop_duplicate_geometries(network.nodes)
 
@@ -74,7 +72,9 @@ def create_network(
     assert set(network.edges.geometry.type.values) == {"LineString"}
 
     logging.info("Renaming nodes and edges")
-    network = snkit.network.add_ids(network, edge_prefix=id_prefix, node_prefix=id_prefix)
+    network = snkit.network.add_ids(
+        network, edge_prefix=id_prefix, node_prefix=id_prefix
+    )
 
     logging.info("Creating network topology")
     network = snkit.network.add_topology(network, id_col="id")
@@ -101,7 +101,7 @@ def duplicate_reverse_and_append_edges(edges: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([edges, reversed_edges])
 
 
-def clean_maxspeed(value: str, default_km_h: float, min_km_h = 20, max_km_h = 140) -> float:
+def clean_maxspeed(value: str, default_km_h: float, min_km_h=20, max_km_h=140) -> float:
     """
     Cast, check and return the value of OSM maxspeed tag.
 
@@ -156,17 +156,30 @@ def preprocess_road_network(
 
     edges = gpd.read_parquet(edges_path)
     # at least one foot in the countries in question
-    edges = edges[edges.from_iso_a3.isin(filter_iso_a3) | edges.to_iso_a3.isin(filter_iso_a3)]
-    edges["distance_km"] = edges.geometry.to_crs(edges.estimate_utm_crs()).length / 1_000
+    edges = edges[
+        edges.from_iso_a3.isin(filter_iso_a3) | edges.to_iso_a3.isin(filter_iso_a3)
+    ]
+    edges["distance_km"] = (
+        edges.geometry.to_crs(edges.estimate_utm_crs()).length / 1_000
+    )
 
     edges["mode"] = "road"
-    edges["max_speed_km_h"] = edges.tag_maxspeed.apply(clean_maxspeed, args=(default_max_speed_km_h,))
-    edges["avg_speed_km_h"] = edges.max_speed_km_h.apply(lambda x: np.clip(2/3 * x, None, default_max_speed_km_h))
+    edges["max_speed_km_h"] = edges.tag_maxspeed.apply(
+        clean_maxspeed, args=(default_max_speed_km_h,)
+    )
+    edges["avg_speed_km_h"] = edges.max_speed_km_h.apply(
+        lambda x: np.clip(2 / 3 * x, None, default_max_speed_km_h)
+    )
 
-    edges["cost_USD_t"] = cost_USD_t_km * edges["distance_km"] + cost_USD_t_h * edges["distance_km"] * 1 / edges["avg_speed_km_h"]
+    edges["cost_USD_t"] = (
+        cost_USD_t_km * edges["distance_km"]
+        + cost_USD_t_h * edges["distance_km"] * 1 / edges["avg_speed_km_h"]
+    )
     edges["id"] = edges.apply(lambda row: f"{row['mode']}_{row['id']}", axis=1)
     edges["to_id"] = edges.apply(lambda row: f"{row['mode']}_{row['to_id']}", axis=1)
-    edges["from_id"] = edges.apply(lambda row: f"{row['mode']}_{row['from_id']}", axis=1)
+    edges["from_id"] = edges.apply(
+        lambda row: f"{row['mode']}_{row['from_id']}", axis=1
+    )
 
     if directional:
         edges = duplicate_reverse_and_append_edges(edges)
@@ -206,15 +219,24 @@ def preprocess_rail_network(
 
     edges = gpd.read_parquet(edges_path)
     # at least one foot in the countries in question
-    edges = edges[edges.from_iso_a3.isin(filter_iso_a3) | edges.to_iso_a3.isin(filter_iso_a3)]
-    edges["distance_km"] = edges.geometry.to_crs(edges.estimate_utm_crs()).length / 1_000
+    edges = edges[
+        edges.from_iso_a3.isin(filter_iso_a3) | edges.to_iso_a3.isin(filter_iso_a3)
+    ]
+    edges["distance_km"] = (
+        edges.geometry.to_crs(edges.estimate_utm_crs()).length / 1_000
+    )
 
     edges["mode"] = "rail"
 
-    edges["cost_USD_t"] = cost_USD_t_km * edges["distance_km"] + cost_USD_t_h * edges["distance_km"] * 1 / avg_speed_km_h
+    edges["cost_USD_t"] = (
+        cost_USD_t_km * edges["distance_km"]
+        + cost_USD_t_h * edges["distance_km"] * 1 / avg_speed_km_h
+    )
     edges["id"] = edges.apply(lambda row: f"{row['mode']}_{row['id']}", axis=1)
     edges["to_id"] = edges.apply(lambda row: f"{row['mode']}_{row['to_id']}", axis=1)
-    edges["from_id"] = edges.apply(lambda row: f"{row['mode']}_{row['from_id']}", axis=1)
+    edges["from_id"] = edges.apply(
+        lambda row: f"{row['mode']}_{row['from_id']}", axis=1
+    )
 
     if directional:
         edges = duplicate_reverse_and_append_edges(edges)
@@ -226,7 +248,9 @@ def preprocess_rail_network(
     return nodes, edges
 
 
-def preprocess_maritime_network(nodes_path: str, edges_path: str) -> tuple[gpd.GeoDataFrame, pd.DataFrame]:
+def preprocess_maritime_network(
+    nodes_path: str, edges_path: str
+) -> tuple[gpd.GeoDataFrame, pd.DataFrame]:
     """
     Preprocess maritime network data into a suitable format for multi-modal routing.
     Relabel IDs so they're unique across networks.
@@ -238,7 +262,9 @@ def preprocess_maritime_network(nodes_path: str, edges_path: str) -> tuple[gpd.G
     Returns:
         Nodes GeoDataFrame and edges DataFrame.
     """
-    edges = pd.read_parquet(edges_path).rename(columns={"from_iso3": "from_iso_a3", "to_iso3": "to_iso_a3"})
+    edges = pd.read_parquet(edges_path).rename(
+        columns={"from_iso3": "from_iso_a3", "to_iso3": "to_iso_a3"}
+    )
     edges["mode"] = "maritime"
     edges["cost_USD_t"] = edges["distance_km"] * edges["cost_USD_t_km"]
 
@@ -247,8 +273,10 @@ def preprocess_maritime_network(nodes_path: str, edges_path: str) -> tuple[gpd.G
     nodes = nodes.drop(columns=["Continent_Code"])
     ports_mask = nodes.infra == "port"
 
-    # we want to connect our road and rail nodes to the port_land node of the port_in, port_out, port_land trifecta
-    nodes.loc[ports_mask, "id"] = nodes.loc[ports_mask, :].apply(lambda row: f"{row.id}_land", axis=1)
+    # we want to connect our road and rail nodes to the port_land node of the port_in, port_out, port_land trifecta
+    nodes.loc[ports_mask, "id"] = nodes.loc[ports_mask, :].apply(
+        lambda row: f"{row.id}_land", axis=1
+    )
 
     return nodes, edges
 
@@ -275,16 +303,19 @@ def find_nearest_points(
     # find nearest point in b for each and every point in a
     tree = cKDTree(b.geometry.get_coordinates().to_numpy())
     distances, indicies = tree.query(a.geometry.get_coordinates().to_numpy(), k=1)
-    nearest_points = b.iloc[indicies][[b_id_col, "geometry"]] \
-        .reset_index(drop=True).rename(columns={"geometry": "nearest_node_geometry"})
+    nearest_points = (
+        b.iloc[indicies][[b_id_col, "geometry"]]
+        .reset_index(drop=True)
+        .rename(columns={"geometry": "nearest_node_geometry"})
+    )
 
     return pd.concat(
         [
             a.reset_index(drop=True),
             nearest_points,
-            pd.Series(data=distances, name='distance')
+            pd.Series(data=distances, name="distance"),
         ],
-        axis=1
+        axis=1,
     )
 
 
@@ -314,7 +345,7 @@ def create_edges_to_nearest_nodes(
     point_pairs = find_nearest_points(
         a.to_crs(projected_coordinate_system),
         b.to_crs(projected_coordinate_system).rename(columns={"id": "nearest_node_id"}),
-        "nearest_node_id"
+        "nearest_node_id",
     ).rename(columns={"distance": "distance_m"})
 
     point_pairs = point_pairs[point_pairs.distance_m < max_distance_m]
@@ -326,13 +357,17 @@ def create_edges_to_nearest_nodes(
             "from_iso_a3": row.iso_a3,
             "to_iso_a3": row.iso_a3,  # assume link does not cross a border
             "geometry": LineString([row.geometry, row.nearest_node_geometry]),
-            "distance_m": row.distance_m
+            "distance_m": row.distance_m,
         },
         axis=1,
-        result_type="expand"
+        result_type="expand",
     )
 
-    return gpd.GeoDataFrame(edges).reset_index(drop=True).set_crs(projected_coordinate_system)
+    return (
+        gpd.GeoDataFrame(edges)
+        .reset_index(drop=True)
+        .set_crs(projected_coordinate_system)
+    )
 
 
 def find_importing_node_id(row: pd.Series, exporting_country: str) -> str:
@@ -357,7 +392,7 @@ def find_importing_node_id(row: pd.Series, exporting_country: str) -> str:
 def create_edges_to_destination_countries(
     origin_nodes: gpd.GeoDataFrame,
     destination_country_nodes: gpd.GeoDataFrame,
-    cost_USD_t: float = 1E6,
+    cost_USD_t: float = 1e6,
 ) -> gpd.GeoDataFrame:
     """
     Create edges between nodes within the same country of zero cost.
@@ -373,7 +408,9 @@ def create_edges_to_destination_countries(
         Table of edges of same length as origin_nodes, connecting these to destination_country_nodes
     """
 
-    assert len(destination_country_nodes.iso_a3) == len(destination_country_nodes.iso_a3.unique())
+    assert len(destination_country_nodes.iso_a3) == len(
+        destination_country_nodes.iso_a3.unique()
+    )
     assert origin_nodes.crs == destination_country_nodes.crs
 
     def make_edge(row: pd.Series) -> dict:
@@ -384,25 +421,18 @@ def create_edges_to_destination_countries(
             "from_iso_a3": row.iso_a3,
             "to_iso_a3": row.iso_a3,
             "mode": "imaginary",
-            "geometry": LineString(
-                [
-                    row.geometry,
-                    destination.geometry
-                ]
-            ),
-            "cost_USD_t": cost_USD_t
+            "geometry": LineString([row.geometry, destination.geometry]),
+            "cost_USD_t": cost_USD_t,
         }
 
-    edges = origin_nodes.apply(
-        make_edge,
-        axis=1,
-        result_type="expand"
-    )
+    edges = origin_nodes.apply(make_edge, axis=1, result_type="expand")
 
     return gpd.GeoDataFrame(edges).reset_index(drop=True).set_crs(origin_nodes.crs)
 
 
-def path_edges_from_ordered_id_list(path_node_ids: list[str], edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def path_edges_from_ordered_id_list(
+    path_node_ids: list[str], edges: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
     """
     If `path_node_ids` are sequential nodes forming a path through a graph made of `edges`,
     return the subset of ordered edges connecting these nodes.

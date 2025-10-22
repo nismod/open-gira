@@ -4,17 +4,21 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Python environment
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           environment-name: open-gira
           cache-environment: true
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
 
       - name: Test with pytest
         # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba

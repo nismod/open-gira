@@ -19,14 +19,13 @@ from open_gira.utils import str_to_bool
 
 
 if __name__ == "__main__":
-
-    osm_edges_path = snakemake.input["edges"]
-    osm_nodes_path = snakemake.input["nodes"]
-    administrative_data_path = snakemake.input["admin"]
-    dataset_name = snakemake.wildcards.DATASET
-    nodes_output_path = snakemake.output["nodes"]
-    edges_output_path = snakemake.output["edges"]
-    slice_number = int(snakemake.params["slice_number"])
+    osm_edges_path = snakemake.input["edges"]  # noqa: F821
+    osm_nodes_path = snakemake.input["nodes"]  # noqa: F821
+    administrative_data_path = snakemake.input["admin"]  # noqa: F821
+    dataset_name = snakemake.wildcards.DATASET  # noqa: F821
+    nodes_output_path = snakemake.output["nodes"]  # noqa: F821
+    edges_output_path = snakemake.output["edges"]  # noqa: F821
+    slice_number = int(snakemake.params["slice_number"])  # noqa: F821
 
     osm_epsg = 4326
 
@@ -81,14 +80,14 @@ if __name__ == "__main__":
     # select and label assets with their type
     # we will use the `asset_type` field to select damage curves
     # bridge overrides railway as asset class, tag last
-    network.nodes.loc[network.nodes.station == True, "asset_type"] = RailAssets.STATION
+    network.nodes.loc[network.nodes.station, "asset_type"] = RailAssets.STATION
     network.edges.loc[network.edges.tag_railway == "rail", "asset_type"] = (
         RailAssets.RAILWAY
     )
     network.edges.loc[network.edges.tag_railway == "narrow_gauge", "asset_type"] = (
         RailAssets.RAILWAY_NARROW
     )
-    network.edges.loc[network.edges.bridge == True, "asset_type"] = RailAssets.BRIDGE
+    network.edges.loc[network.edges.bridge, "asset_type"] = RailAssets.BRIDGE
 
     # manually set crs using geopandas rather than snkit to avoid 'init' style proj crs
     # and permit successful CRS deserializiation and methods such as edges.crs.to_epsg()

@@ -13,5 +13,5 @@ def test_create_rail_network():
         (
             "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_nodes.geoparquet",
             "results/geoparquet/djibouti-latest_filter-rail/processed/slice-0_edges.geoparquet",
-        )
+        ),
     )

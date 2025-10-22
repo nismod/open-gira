@@ -159,6 +159,13 @@ See the [documentation](https://nismod.github.io/open-gira/)
 and [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)
 for more details on usage in general and on configuration.
 
+## Development
+
+```bash
+black .  # run black to autoformat Python files
+flake8 .  # run flake8 for further linting - prefer black styles if they conflict
+```
+
 ## Documentation
 
 Documentation is written using the [`mdbook`](https://rust-lang.github.io/mdBook/index.html)

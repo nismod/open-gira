@@ -16,20 +16,20 @@ class TestNaturalSort:
 class TestStrToBool:
     def test_str_mapping(self):
         truth_table = (
-            ('N', False),
-            ('n', False),
-            ('NO', False),
-            ('no', False),
-            ('FALSE', False),
-            ('false', False),
-            ('F', False),
-            ('f', False),
-            ('', False),
+            ("N", False),
+            ("n", False),
+            ("NO", False),
+            ("no", False),
+            ("FALSE", False),
+            ("false", False),
+            ("F", False),
+            ("f", False),
+            ("", False),
             # N.B. null values are transformed to empty strings
             # then mapped to false
             (None, False),
             (np.nan, False),
-            ('any other string', True),
+            ("any other string", True),
         )
         strings, bools = zip(*truth_table)
         expected = pd.Series(bools)

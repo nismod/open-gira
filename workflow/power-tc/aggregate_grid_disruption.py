@@ -68,36 +68,59 @@ def disruption_by_target(file_path: str, schema: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     logging.info("Compiling disruption per target per storm")
 
     # we're using dask so we can concatenate on disk rather than in memory
     # (pd.concat is a disaster in terms of memory usage)
     # for 10,000 years of storms impacting Japan, a single thread will take ~7min
-    dask.config.set(scheduler='single-threaded')
+    dask.config.set(scheduler="single-threaded")
 
     # construct a dataframe with no data, but the appropriate columns and dtypes for output
     # disruption_by_target will coerce the data to match this schema
-    threshold_cols: list[str] = [f"{value:.1f}" for value in snakemake.params.thresholds]
-    column_dtypes: dict[str, type] = {"event_id": str, "target": int, **dict(zip(threshold_cols, [float] * len(threshold_cols)))}
+    threshold_cols: list[str] = [
+        f"{value:.1f}"
+        for value in snakemake.params.thresholds  # noqa: F821
+    ]
+    column_dtypes: dict[str, type] = {
+        "event_id": str,
+        "target": int,
+        **dict(zip(threshold_cols, [float] * len(threshold_cols))),
+    }
     schema: pd.DataFrame = make_schema(column_dtypes)
 
     # create list of data read and transform tasks
     tasks = []
-    for file_path in sorted(glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")):
+    for file_path in sorted(
+        glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")  # noqa: F821
+    ):
         tasks.append(disruption_by_target(file_path, schema))
 
     # write out to disk as parquet
     if tasks:
         disruption_all_storms = dask.dataframe.from_delayed(tasks)
-        disruption_all_storms.drop(columns=["target"]).groupby("event_id").sum().to_parquet(snakemake.output.by_event)
-        disruption_all_storms.drop(columns=["event_id"]).groupby("target").sum().to_parquet(snakemake.output.by_target)
+        disruption_all_storms.drop(columns=["target"]).groupby(
+            "event_id"
+        ).sum().to_parquet(
+            snakemake.output.by_event  # noqa: F821
+        )
+        disruption_all_storms.drop(columns=["event_id"]).groupby(
+            "target"
+        ).sum().to_parquet(
+            snakemake.output.by_target  # noqa: F821
+        )
     else:
-        # we have declared to snakemake that this output will be a directory (when there's data, it's sharded)
-        # write out the schema as a pretend directory parquet dataset
-        os.makedirs(snakemake.output.by_event)
-        os.makedirs(snakemake.output.by_target)
-        schema.drop(columns=["target"]).groupby("event_id").sum().to_parquet(os.path.join(snakemake.output.by_event, "part.0.parquet"))
-        schema.drop(columns=["event_id"]).groupby("target").sum().to_parquet(os.path.join(snakemake.output.by_target, "part.0.parquet"))
+        # we have declared to snakemake that this output will be a directory
+        # (when there's data, it's sharded) write out the schema as a pretend
+        # directory parquet dataset
+        os.makedirs(snakemake.output.by_event)  # noqa: F821
+        os.makedirs(snakemake.output.by_target)  # noqa: F821
+        schema.drop(columns=["target"]).groupby("event_id").sum().to_parquet(
+            os.path.join(snakemake.output.by_event, "part.0.parquet")  # noqa: F821
+        )
+        schema.drop(columns=["event_id"]).groupby("target").sum().to_parquet(
+            os.path.join(snakemake.output.by_target, "part.0.parquet")  # noqa: F821
+        )

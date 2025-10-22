@@ -2,7 +2,6 @@
 Functions for creating animations and static plots of wind fields.
 """
 
-
 import geopandas as gpd
 import matplotlib
 import matplotlib.pyplot as plt
@@ -41,18 +40,22 @@ def size_plot(i: int, j: int) -> tuple[float, float]:
     return logistic_min(i, L, m, k, x_0), logistic_min(j, L, m, k, x_0)
 
 
-def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
+def plot_quivers(
+    field: np.ndarray, title: str, colorbar_label: str, file_path: str
+) -> None:
     """Plot a 2D numpy array of complex numbers as vector field and save to disk."""
 
     fig, ax = plt.subplots(figsize=size_plot(*field.shape[::-1]))
 
-    ax.quiver(field.real, field.imag, angles='xy', scale=QUIVER_SCALE, color='white')
+    ax.quiver(field.real, field.imag, angles="xy", scale=QUIVER_SCALE, color="white")
 
     mag = np.abs(field)
     img = ax.imshow(mag, vmin=0, vmax=80, origin=WIND_PLOT_ORIGIN, cmap=WIND_CMAP)
     fig.colorbar(img, ax=ax, location="right", label=colorbar_label, shrink=0.81)
 
-    stats_str = fr"min: {mag.min():.2f}, max: {mag.max():.2f}, $\sigma:$ {mag.std():.2f}"
+    stats_str = (
+        rf"min: {mag.min():.2f}, max: {mag.max():.2f}, $\sigma:$ {mag.std():.2f}"
+    )
     ax.set_title(title + "\n" + stats_str)
 
     fig.savefig(file_path)
@@ -61,7 +64,9 @@ def plot_quivers(field: np.ndarray, title: str, colorbar_label: str, file_path: 
     return
 
 
-def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path: str) -> None:
+def plot_contours(
+    field: np.ndarray, title: str, colorbar_label: str, file_path: str
+) -> None:
     """Plot a numpy array of a 2D field wind field and save to disk."""
 
     y, x = field.shape
@@ -70,7 +75,7 @@ def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path:
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.1)
-    ax.axes.set_aspect('equal')
+    ax.axes.set_aspect("equal")
 
     da = xr.DataArray(field.T, coords={"i": range(x), "j": range(y)})
 
@@ -85,10 +90,12 @@ def plot_contours(field: np.ndarray, title: str, colorbar_label: str, file_path:
         vmin=MIN,
         vmax=MAX,
         cmap=cmap,
-        cbar_ax=cax
+        cbar_ax=cax,
     )
 
-    stats_str = fr"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
+    stats_str = (
+        rf"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
+    )
     ax.set_title(title + "\n" + stats_str)
 
     fig.savefig(file_path)
@@ -106,13 +113,25 @@ def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> Non
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.1)
-    ax.axes.set_aspect('equal')
+    ax.axes.set_aspect("equal")
 
     da = xr.DataArray(field.T, coords={"i": range(x), "j": range(y)})
 
-    xr.plot.pcolormesh(da, levels=11, x="i", y="j", ax=ax, vmin=0.5, vmax=1, cmap="inferno", cbar_ax=cax)
+    xr.plot.pcolormesh(
+        da,
+        levels=11,
+        x="i",
+        y="j",
+        ax=ax,
+        vmin=0.5,
+        vmax=1,
+        cmap="inferno",
+        cbar_ax=cax,
+    )
 
-    stats_str = fr"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
+    stats_str = (
+        rf"min: {field.min():.2f}, mean: {field.mean():.2f}, max: {field.max():.2f}"
+    )
     ax.set_title(title + "\n" + stats_str)
 
     fig.savefig(file_path)
@@ -121,10 +140,12 @@ def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> Non
     return
 
 
-def animate_track(wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: str) -> None:
+def animate_track(
+    wind_field: np.ndarray, track: gpd.GeoDataFrame, file_path: str
+) -> None:
     """Animate a storm track and save to disk."""
 
-    track_name, = set(track[~track["track_id"].isna()].track_id)
+    (track_name,) = set(track[~track["track_id"].isna()].track_id)
     track_length, *grid_shape = wind_field.shape
 
     fig, ax = plt.subplots(figsize=size_plot(*grid_shape[::-1]))

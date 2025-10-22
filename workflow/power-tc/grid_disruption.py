@@ -7,7 +7,6 @@ For each storm (maximum wind speed field) in storm list:
 - Estimate number of customers affected
 """
 
-import json
 import logging
 import os
 import multiprocessing
@@ -37,7 +36,7 @@ def process_event(
     speed_thresholds: list[float],
     network: snkit.network.Network,
     exposure_dir: str,
-    disruption_dir: str
+    disruption_dir: str,
 ) -> None:
     """
     File handling, filtering, logging and serialisation to disk for the exposure
@@ -56,20 +55,29 @@ def process_event(
     """
 
     logging.info(storm_id)
-    exposure, disruption = degrade_grid_with_storm(storm_id, wind_fields, splits, speed_thresholds, network)
+    exposure, disruption = degrade_grid_with_storm(
+        storm_id, wind_fields, splits, speed_thresholds, network
+    )
 
     # filter out values (and coordinate values) that are not of interest
     # this helps keep output file sizes manageable (especially for large networks)
     exposure = exposure.sel(event_id=storm_id)
     exposure = exposure.where(exposure.length_m > 0, drop=True)
     disruption = disruption.sel(event_id=storm_id)
-    disruption = disruption.where(disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True)
+    disruption = disruption.where(
+        disruption.supply_factor < MAX_SUPPLY_FACTOR, drop=True
+    )
 
-    exposure_summary = exposure.length_m.sum(dim='edge')
+    exposure_summary = exposure.length_m.sum(dim="edge")
     exposure_summary_str = (
-        "Exposure summary" +
-        "\nThreshold [m s-1], Grid exposed [m]\n" +
-        "\n".join([f"{exposure.threshold:.1f}, {exposure:.2E}" for exposure in exposure_summary])
+        "Exposure summary"
+        + "\nThreshold [m s-1], Grid exposed [m]\n"
+        + "\n".join(
+            [
+                f"{exposure.threshold:.1f}, {exposure:.2E}"
+                for exposure in exposure_summary
+            ]
+        )
     )
     logging.info(exposure_summary_str)
 
@@ -78,7 +86,7 @@ def process_event(
     # pack floating point data into 16 bit integer types to save space on disk
     exposure.to_netcdf(
         os.path.join(exposure_dir, f"{storm_id}.nc"),
-        encoding=bit_pack_dataset_encoding(exposure)
+        encoding=bit_pack_dataset_encoding(exposure),
     )
 
     # supply factor is a float between 0 and 1, can reasonably pack into 16 bit integer space
@@ -89,8 +97,7 @@ def process_event(
     disruption_encoding["customers_affected"] = {"dtype": "float32"}
 
     disruption.to_netcdf(
-        os.path.join(disruption_dir, f"{storm_id}.nc"),
-        encoding=disruption_encoding
+        os.path.join(disruption_dir, f"{storm_id}.nc"), encoding=disruption_encoding
     )
 
     return
@@ -100,7 +107,7 @@ def subset_network(
     nominal_network: snkit.network.Network,
     failed_edge_ids: np.ndarray,
     surviving_edge_ids: np.ndarray,
-    id_col: str = "component_id"
+    id_col: str = "component_id",
 ) -> snkit.network.Network:
     """
     Take `nominal_network`, remove failed edges. Relabel nodes and edges of the
@@ -126,10 +133,12 @@ def subset_network(
     # construct network from what remains
     degraded_network = snkit.network.Network(
         edges=nominal_network.edges.loc[surviving_edge_ids].copy(),
-        nodes=nominal_network.nodes.copy()
+        nodes=nominal_network.nodes.copy(),
     )
 
-    connected_components: list[set] = list(snkit.network.get_connected_components(degraded_network))
+    connected_components: list[set] = list(
+        snkit.network.get_connected_components(degraded_network)
+    )
 
     edge_component_ids: np.ndarray = np.zeros(n_edges_nominal, dtype=int)
     node_component_ids: np.ndarray = np.zeros(len(nominal_network.nodes), dtype=int)
@@ -141,17 +150,20 @@ def subset_network(
     checked_edges[failed_edge_ids] = True
 
     for count, component in enumerate(connected_components):
-
         component_id: int = count + 1
 
         # boolean series of component membership
-        component_edge_mask: pd.Series = nominal_network.edges.loc[~checked_edges, "from_id"].isin(component)
+        component_edge_mask: pd.Series = nominal_network.edges.loc[
+            ~checked_edges, "from_id"
+        ].isin(component)
 
         # update our record of which edges we've checked
         checked_edges[component_edge_mask.index.values] = component_edge_mask.values
 
         # indicies of all edges in this component
-        component_member_indicies: np.ndarray = component_edge_mask[component_edge_mask].index.values
+        component_member_indicies: np.ndarray = component_edge_mask[
+            component_edge_mask
+        ].index.values
 
         # assign the component id
         edge_component_ids[component_member_indicies] = component_id
@@ -169,7 +181,9 @@ def subset_network(
     return degraded_network
 
 
-def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) -> xr.Dataset:
+def build_dataset(
+    var_names: tuple[str], dim_type: dict[str, type], **kwargs
+) -> xr.Dataset:
     """
     Build an empty (NaN filled) xarray Dataset given names, types and coordinate values.
 
@@ -204,17 +218,18 @@ def build_dataset(var_names: tuple[str], dim_type: dict[str, type], **kwargs) ->
 
     return xr.Dataset(
         data_vars={
-            var_name:
-            (
+            var_name: (
                 dim_type.keys(),
-                np.full(tuple(len(coord) for coord in dim_coords.values()), np.nan)
+                np.full(tuple(len(coord) for coord in dim_coords.values()), np.nan),
             )
             for var_name in var_names
         },
         coords={
-            dim_name: np.array(np.atleast_1d(dim_coords[dim_name]), dtype=dim_type[dim_name])
+            dim_name: np.array(
+                np.atleast_1d(dim_coords[dim_name]), dtype=dim_type[dim_name]
+            )
             for dim_name in dim_type
-        }
+        },
     )
 
 
@@ -223,7 +238,7 @@ def degrade_grid_with_storm(
     wind_fields: xr.DataArray,
     splits: gpd.GeoDataFrame,
     speed_thresholds: list,
-    network: snkit.network.Network
+    network: snkit.network.Network,
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """
     Use a maximum wind speed field and a electricity grid representation,
@@ -252,12 +267,24 @@ def degrade_grid_with_storm(
     # be set for target nodes -- it is globally unique and corresponds to the
     # global targets file (which contains their vector geometry)
     try:
-        target_ids = network.nodes[network.nodes.asset_type == "target"].target_id.astype(int).values
+        target_ids = (
+            network.nodes[network.nodes.asset_type == "target"]
+            .target_id.astype(int)
+            .values
+        )
     except AttributeError:
         logging.info("No viable network available, returning null result.")
         return (
-            build_dataset(("length_m",), {"event_id": str, "threshold": float, "edge": int}, event_id=[storm_id]),
-            build_dataset(("supply_factor", "customers_affected"), {"event_id": str, "threshold": float, "target": int}, event_id=[storm_id])
+            build_dataset(
+                ("length_m",),
+                {"event_id": str, "threshold": float, "edge": int},
+                event_id=[storm_id],
+            ),
+            build_dataset(
+                ("supply_factor", "customers_affected"),
+                {"event_id": str, "threshold": float, "target": int},
+                event_id=[storm_id],
+            ),
         )
 
     exposure = build_dataset(
@@ -265,7 +292,7 @@ def degrade_grid_with_storm(
         {"event_id": str, "threshold": float, "edge": int},
         event_id=[storm_id],
         threshold=speed_thresholds,
-        edge=network.edges.id.astype(int).values
+        edge=network.edges.id.astype(int).values,
     )
 
     disruption = build_dataset(
@@ -273,7 +300,7 @@ def degrade_grid_with_storm(
         {"event_id": str, "threshold": float, "target": int},
         event_id=[storm_id],
         threshold=speed_thresholds,
-        target=target_ids
+        target=target_ids,
     )
 
     try:
@@ -282,19 +309,21 @@ def degrade_grid_with_storm(
         # https://docs.xarray.dev/en/stable/user-guide/indexing.html#vectorized-indexing
         max_wind_speeds: xr.DataArray = wind_fields.sel(event_id=storm_id).isel(
             longitude=splits[fields.RASTER_I].to_xarray(),
-            latitude=splits[fields.RASTER_J].to_xarray()
+            latitude=splits[fields.RASTER_J].to_xarray(),
         )
     except KeyError:
         logging.info("No wind field available, returning null result.")
         return exposure, disruption
 
-    # index and `id` column need to match as we will select rows by indexing with ids
+    # index and `id` column need to match as we will select rows by indexing with ids
     assert all(network.edges.index == network.edges.id)
 
     # sort into ascending order; if no damage at a given threshold,
     # more resilient thresholds are guaranteed to be safe
     for threshold in sorted(speed_thresholds):
-        survival_mask: pd.Series = (max_wind_speeds < threshold).to_pandas().loc[:, "max_wind_speed"]
+        survival_mask: pd.Series = (
+            (max_wind_speeds < threshold).to_pandas().loc[:, "max_wind_speed"]
+        )
 
         try:
             n_failed: int = survival_mask.value_counts()[False]
@@ -308,16 +337,26 @@ def degrade_grid_with_storm(
         ############
 
         # all splits above threshold
-        failed_splits: gpd.GeoDataFrame = splits.set_index("id", drop=True).loc[~survival_mask].copy()
+        failed_splits: gpd.GeoDataFrame = (
+            splits.set_index("id", drop=True).loc[~survival_mask].copy()
+        )
         if failed_splits.empty is True:
             return exposure, disruption
         # label failed splits with length
-        failed_splits["length_m"] = failed_splits.to_crs(failed_splits.estimate_utm_crs()).geometry.length
+        failed_splits["length_m"] = failed_splits.to_crs(
+            failed_splits.estimate_utm_crs()
+        ).geometry.length
         # sum across edge id to find exposed length in case where line split
         # reset_index gives us our edge id column back
-        exposed_edge_lengths = failed_splits[["length_m"]].groupby("id").sum().reset_index()
+        exposed_edge_lengths = (
+            failed_splits[["length_m"]].groupby("id").sum().reset_index()
+        )
         # store result in dataset
-        indicies = dict(event_id=storm_id, threshold=threshold, edge=exposed_edge_lengths.id.astype(int).values)
+        indicies = dict(
+            event_id=storm_id,
+            threshold=threshold,
+            edge=exposed_edge_lengths.id.astype(int).values,
+        )
         exposure.length_m.loc[indicies] = exposed_edge_lengths.length_m
 
         ##############
@@ -326,23 +365,38 @@ def degrade_grid_with_storm(
 
         # edge ids containing a split below wind speed threshold
         failed_edge_ids: np.ndarray = splits.loc[~survival_mask, "id"].unique()
-        surviving_edge_ids: np.ndarray = network.edges.loc[~network.edges.id.isin(failed_edge_ids), "id"].values
+        surviving_edge_ids: np.ndarray = network.edges.loc[
+            ~network.edges.id.isin(failed_edge_ids), "id"
+        ].values
 
         # construct network from what remains, relabel connectedness
-        surviving_network: snkit.network.Network = subset_network(network, failed_edge_ids, surviving_edge_ids)
+        surviving_network: snkit.network.Network = subset_network(
+            network, failed_edge_ids, surviving_edge_ids
+        )
         c_nominal: int = len(set(network.nodes.component_id))
         c_surviving: int = len(set(surviving_network.nodes.component_id))
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(failure_str.format(str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving))
+        logging.info(
+            failure_str.format(
+                str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving
+            )
+        )
 
         # about to mutate power_mw column, make a copy first
-        surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes["power_mw"]
+        surviving_network.nodes["power_nominal_mw"] = surviving_network.nodes[
+            "power_mw"
+        ]
 
         # if there's no gdp data available at all, use the population as a weight
         # this should have be used when creating the network in create_electricity_network.py
-        if surviving_network.nodes[surviving_network.nodes.asset_type == "target"].gdp.sum() == 0:
+        if (
+            surviving_network.nodes[
+                surviving_network.nodes.asset_type == "target"
+            ].gdp.sum()
+            == 0
+        ):
             weight_col = "population"
         else:
             weight_col = "gdp"
@@ -364,10 +418,16 @@ def degrade_grid_with_storm(
         # calculate the number of customers affect in each target
         # N.B. supply_factor can be > 1
         # so clip to zero to prevent negative customers_affected in areas with 'oversupply'
-        targets["customers_affected"] = np.clip(1 - targets.supply_factor, 0, None) * targets.population
+        targets["customers_affected"] = (
+            np.clip(1 - targets.supply_factor, 0, None) * targets.population
+        )
 
         # assign data to dataset
-        indicies = dict(event_id=storm_id, threshold=threshold, target=targets.target_id.astype(int).values)
+        indicies = dict(
+            event_id=storm_id,
+            threshold=threshold,
+            target=targets.target_id.astype(int).values,
+        )
         disruption.supply_factor.loc[indicies] = targets.supply_factor
         disruption.customers_affected.loc[indicies] = targets.customers_affected
 
@@ -375,20 +435,23 @@ def degrade_grid_with_storm(
 
 
 if __name__ == "__main__":
-
-    edges_path: str = snakemake.input.grid_edges
-    nodes_path: str = snakemake.input.grid_nodes
-    splits_path: str = snakemake.input.grid_splits
-    wind_speeds_path: str = snakemake.input.wind_speeds
-    speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    exposure_dir: str = snakemake.output.exposure
-    disruption_dir: str = snakemake.output.disruption
-    n_proc: int = int(snakemake.threads)
+    edges_path: str = snakemake.input.grid_edges  # noqa: F821
+    nodes_path: str = snakemake.input.grid_nodes  # noqa: F821
+    splits_path: str = snakemake.input.grid_splits  # noqa: F821
+    wind_speeds_path: str = snakemake.input.wind_speeds  # noqa: F821
+    speed_thresholds: list[float] = snakemake.config[  # noqa: F821
+        "transmission_windspeed_failure"
+    ]
+    exposure_dir: str = snakemake.output.exposure  # noqa: F821
+    disruption_dir: str = snakemake.output.disruption  # noqa: F821
+    n_proc: int = int(snakemake.threads)  # noqa: F821
 
     os.makedirs(exposure_dir)
     os.makedirs(disruption_dir)
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     logging.info("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
@@ -401,8 +464,7 @@ if __name__ == "__main__":
 
     logging.info("Loading network data")
     network = snkit.network.Network(
-        edges=gpd.read_parquet(edges_path),
-        nodes=gpd.read_parquet(nodes_path)
+        edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
     logging.info(f"{len(network.edges)} network edges")
@@ -411,7 +473,15 @@ if __name__ == "__main__":
     logging.info(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
     args = (
-        (storm_id.item(), wind_fields, splits, speed_thresholds, network, exposure_dir, disruption_dir)
+        (
+            storm_id.item(),
+            wind_fields,
+            splits,
+            speed_thresholds,
+            network,
+            exposure_dir,
+            disruption_dir,
+        )
         for storm_id in wind_fields.event_id
     )
     if n_proc > 1:

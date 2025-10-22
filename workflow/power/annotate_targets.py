@@ -36,14 +36,16 @@ def annotate_gdp_pc(targets: gpd.GeoDataFrame, gdp_path: str) -> pd.Series:
     return df.gdp_pc
 
 
-if __name__ == '__main__':
-    admin_path: str = snakemake.input.admin
-    population_path: str = snakemake.input.population
-    gdp_path: str = snakemake.input.gdp
-    targets_path: str = snakemake.input.targets
-    output_path: str = snakemake.output.targets
+if __name__ == "__main__":
+    admin_path: str = snakemake.input.admin  # noqa: F821
+    population_path: str = snakemake.input.population  # noqa: F821
+    gdp_path: str = snakemake.input.gdp  # noqa: F821
+    targets_path: str = snakemake.input.targets  # noqa: F821
+    output_path: str = snakemake.output.targets  # noqa: F821
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     logging.info("Reading targets file")
     targets = gpd.read_parquet(targets_path)
@@ -51,7 +53,9 @@ if __name__ == '__main__':
 
     logging.info("Annotating population per target")
     population = pd.read_csv(population_path)
-    targets = targets.merge(population, on="id").rename(columns={"population_sum": "population"})
+    targets = targets.merge(population, on="id").rename(
+        columns={"population_sum": "population"}
+    )
 
     logging.info("Extracting GDP per target")
     # ~3 minutes CPU time for the globe
@@ -60,7 +64,9 @@ if __name__ == '__main__':
     # if we can't find a GDP per capita figure, set it to zero
     # we require a number for every target, so we can allocate power from sources to sinks
     nan_gdp_mask = targets["gdp_pc"].isna()
-    logging.info(f"Setting GDP per capita to 0 for {len(targets[nan_gdp_mask])} targets")
+    logging.info(
+        f"Setting GDP per capita to 0 for {len(targets[nan_gdp_mask])} targets"
+    )
     targets.loc[nan_gdp_mask, "gdp_pc"] = 0
 
     targets["gdp"] = targets.population * targets.gdp_pc
@@ -78,7 +84,9 @@ if __name__ == '__main__':
 
     # do the join to find the containing country (or at least, one of them for border cases)
     target_country_join = rep_targets.sjoin(admin, predicate="within")
-    target_country_join = target_country_join[["id", "GID_0"]].rename(columns={"GID_0": "iso_a3"})
+    target_country_join = target_country_join[["id", "GID_0"]].rename(
+        columns={"GID_0": "iso_a3"}
+    )
 
     # merge the iso_a3 column back into the polygon geodataframe
     targets = targets.merge(target_country_join, on="id")

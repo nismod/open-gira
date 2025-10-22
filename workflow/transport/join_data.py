@@ -31,11 +31,8 @@ import sys
 import warnings
 
 import geopandas as gpd
-import pandas
-from tqdm import tqdm
 
 from open_gira.io import concat_geoparquet
-from open_gira.utils import natural_sort
 
 
 if __name__ == "__main__":
@@ -46,7 +43,9 @@ if __name__ == "__main__":
         slice_files = sys.argv[1:-1]
         output_file = sys.argv[-1]
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     logging.info(f"Reading {len(slice_files)=} files")

@@ -7,5 +7,5 @@ def test_osm_to_geoparquet():
         (
             "results/geoparquet/djibouti-latest_filter-road/raw/slice-0_edges.geoparquet",
             "results/geoparquet/djibouti-latest_filter-road/raw/slice-0_nodes.geoparquet",
-        )
+        ),
     )

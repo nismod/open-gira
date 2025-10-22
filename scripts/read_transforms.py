@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-import snail.intersection
 from osgeo import gdal
 
 
