@@ -62,7 +62,6 @@ def near_square_layout(n: int) -> tuple[int, int]:
 
 
 if __name__ == "__main__":  # noqa: C901
-
     try:
         damages_path = snakemake.input["damages"]
         plots_dir = snakemake.output["plots"]
@@ -84,7 +83,6 @@ if __name__ == "__main__":  # noqa: C901
         os.makedirs(plots_dir)
 
     for asset_type in set(damages.asset_type):
-
         # subset
         asset_damages = damages[damages.asset_type == asset_type]
 
@@ -99,7 +97,6 @@ if __name__ == "__main__":  # noqa: C901
         bin_width = (bins[1:] - bins[:-1]).mean()
 
         for i, ax in enumerate(fig.axes):
-
             try:
                 hazard_name = hazard_cols[i]
             except IndexError:

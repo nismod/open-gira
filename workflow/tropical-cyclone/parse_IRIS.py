@@ -37,7 +37,6 @@ IRIS_FREQUENCY = "3H"
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
@@ -48,7 +47,6 @@ if __name__ == "__main__":
 
     data = []
     for path in natural_sort(glob(f"{csv_dir}/*_1000Y_n{sample}.txt")):
-
         logging.info(path)
 
         df = pd.read_csv(

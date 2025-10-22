@@ -190,12 +190,10 @@ def animate_outage_by_threshold(
 
     plot_paths = []
     for threshold in thresholds:
-
         threshold_str = f"{threshold:.2f}".replace(".", "p")
         plot_filepath = os.path.join(event_dir, f"{threshold_str}.png")
 
         if not os.path.exists(plot_filepath):
-
             # draw map at given threshold
             fig = map_outage(
                 event_id, threshold, exposure, aoi, aoi_targets, borders, track

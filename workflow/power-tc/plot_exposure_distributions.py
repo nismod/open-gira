@@ -47,7 +47,6 @@ def plot_event_distributions(
     y_max *= 5
 
     for threshold in thresholds:
-
         # filter out zero values
         data = exposure_by_event[threshold]
         non_zero_data = data[data > 0]
@@ -91,7 +90,6 @@ def plot_event_distributions(
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )

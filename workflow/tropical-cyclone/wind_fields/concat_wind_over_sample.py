@@ -9,7 +9,6 @@ from open_gira.wind import empty_wind_da
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )

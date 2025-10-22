@@ -21,7 +21,6 @@ logging.basicConfig(
 
 
 if __name__ == "__main__":
-
     global_tracks_path: str = snakemake.input.global_tracks  # noqa: F821
     grid_hull_path: str = snakemake.input.grid_hull  # noqa: F821
     track_slicing_buffer_deg: float = snakemake.config[  # noqa: F821

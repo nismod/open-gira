@@ -75,7 +75,6 @@ def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt
     for i, n_large_components in enumerate(
         thresholds[thresholds < len(components)].astype(int)
     ):
-
         largest_components = component_sizes[-n_large_components:]
         pct_nodes_largest_comp = 100 * sum(largest_components) / sum(component_sizes)
         ax.text(
@@ -90,7 +89,6 @@ def plot_component_size(components: Iterable[set[str]]) -> tuple[plt.Figure, plt
 
 
 if __name__ == "__main__":
-
     try:
         nodes_path = snakemake.input["nodes"]  # type: ignore
         edges_path = snakemake.input["edges"]  # type: ignore

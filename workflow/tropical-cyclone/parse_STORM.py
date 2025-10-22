@@ -44,7 +44,6 @@ STORM_FREQUENCY = "3H"
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
@@ -56,7 +55,6 @@ if __name__ == "__main__":
     data = []
     # loop over basins for given sample, processing tracks into a common format
     for path in natural_sort(glob(f"{csv_dir}/*_1000_YEARS_{sample}*.csv")):
-
         logging.info(path)
 
         df = pd.read_csv(path, names=STORM_CSV_SCHEMA.keys(), dtype=STORM_CSV_SCHEMA)

@@ -74,7 +74,6 @@ def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:  # noq
 
 
 if __name__ == "__main__":
-
     ibtracs_csv_path = snakemake.input.ibtracs_csv  # noqa: F821
     ibtracs_parquet_path = snakemake.output.ibtracs_parquet  # noqa: F821
 

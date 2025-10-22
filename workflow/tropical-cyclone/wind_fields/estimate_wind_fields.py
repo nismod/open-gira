@@ -113,7 +113,6 @@ def process_track(
     wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
     for track_i, track_point in enumerate(track.itertuples()):
-
         try:
             wind_field[track_i, :] = estimate_wind_field(
                 longitude,  # degrees
@@ -143,7 +142,6 @@ def process_track(
 
     # any dimensions with a single cell will break the plotting routines
     if 1 not in grid_shape:
-
         if plot_max_wind:
             plot_contours(
                 max_wind_speeds,
@@ -161,7 +159,6 @@ def process_track(
 
 
 if __name__ == "__main__":
-
     storm_file_path: str = snakemake.input.storm_file  # noqa: F821
     wind_grid_path: str = snakemake.input.wind_grid  # noqa: F821
     downscale_factors_path: str = snakemake.input.downscaling_factors  # noqa: F821

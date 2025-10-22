@@ -27,7 +27,6 @@ def subset_file_by_intersection(
 
 
 if __name__ == "__main__":
-
     gridfinder_path: str = snakemake.input.gridfinder  # noqa: F821
     targets_path: str = snakemake.input.targets  # noqa: F821
     powerplants_path: str = snakemake.input.powerplants  # noqa: F821

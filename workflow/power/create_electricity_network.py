@@ -193,20 +193,16 @@ if __name__ == "__main__":
 
     # check power has been allocated appropriately
     for c_id, c_nodes in network.nodes.groupby(network.nodes.component_id):
-
         power_balance: float = c_nodes.power_mw.sum()
         if power_balance > 1e-6:
-
             # in the case where there is a generator in a component
             # but no targets, the power balance will be positive
             target_mask: pd.Series = c_nodes.asset_type == "target"
             n_targets: int = len(c_nodes[target_mask])
             if n_targets != 0:
-
                 # sometimes targets don't have population, in which case they won't be allocated power
                 population: float = c_nodes[target_mask].population.sum()
                 if population != 0:
-
                     raise ValueError(
                         f"Network component {c_id} has {n_targets} targets, \n"
                         f"positive {population} population but a non-zero \n"

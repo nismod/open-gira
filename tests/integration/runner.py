@@ -274,7 +274,6 @@ class OutputChecker:
                     mismatch_cols.add(col)
 
             for col in mismatch_cols:
-
                 # is the column numeric?
                 if np.issubdtype(expected[col].values.dtype, np.number):
                     if np.allclose(generated[col].values, expected[col].values):

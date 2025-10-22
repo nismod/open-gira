@@ -6,7 +6,6 @@ from open_gira.routing import route_from_all_nodes, RouteResult
 
 
 if __name__ == "__main__":
-
     print("Reading network...")
     # read in global multi-modal transport network
     edges = gpd.read_parquet(snakemake.input.edges)  # noqa: F821
@@ -34,7 +33,9 @@ if __name__ == "__main__":
     )
 
     routes: RouteResult = route_from_all_nodes(
-        od, edges, snakemake.threads  # noqa: F821
+        od,
+        edges,
+        snakemake.threads,  # noqa: F821
     )
 
     print("Writing routes to disk as parquet...")

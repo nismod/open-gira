@@ -18,7 +18,6 @@ from open_gira.routing import DESTINATION_LINK_COST_USD_T
 matplotlib.use("Agg")
 
 if __name__ == "__main__":
-
     study_country: str = snakemake.config["study_country_iso_a3"]  # noqa: F821
 
     print("Preprocessing road network...")

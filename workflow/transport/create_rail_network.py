@@ -19,7 +19,6 @@ from open_gira.utils import str_to_bool
 
 
 if __name__ == "__main__":
-
     osm_edges_path = snakemake.input["edges"]  # noqa: F821
     osm_nodes_path = snakemake.input["nodes"]  # noqa: F821
     administrative_data_path = snakemake.input["admin"]  # noqa: F821

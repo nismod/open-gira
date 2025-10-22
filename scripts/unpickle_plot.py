@@ -28,7 +28,6 @@ def show_figure(fig: Figure) -> None:
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
@@ -37,7 +36,6 @@ if __name__ == "__main__":
         logging.info(f"Usage:\n{sys.argv[0]} path/to/plot.pickle")
 
     for path in sys.argv[1:]:
-
         if path.lower().endswith(".pickle"):
             with open(path, "rb") as fp:
                 fig: Figure = pickle.load(fp)

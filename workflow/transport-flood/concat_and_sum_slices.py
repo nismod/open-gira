@@ -38,7 +38,6 @@ if __name__ == "__main__":
 
     dataframes: list[gpd.GeoDataFrame] = []
     for i, slice_path in tqdm(enumerate(slice_files)):
-
         gdf = gpd.read_parquet(slice_path)
 
         if gdf.empty is True:

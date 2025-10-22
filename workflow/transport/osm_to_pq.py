@@ -175,7 +175,6 @@ class WaySlicer(osmium.SimpleHandler):
 
             # node is shared between this way and another neighbouring way
             if node.ref in self.shared_nodes.keys():
-
                 # add it to the 'used' shared nodes dict
                 shared_nodes_used.append(
                     {"node": node, "point": Point((node.lon, node.lat))}
@@ -212,11 +211,9 @@ class WaySlicer(osmium.SimpleHandler):
         # loop through segments in way
         # note that many ways will only have a single segment
         for segment_id, segment in enumerate(way_segments.geoms):
-
             # determine start and end nodes from shared nodes or invent if bbox has clipped way
             termini = []
             for terminus_index, prefix in ((0, "start_node_"), (-1, "end_node_")):
-
                 longitude, latitude = segment.coords[terminus_index]
 
                 try:

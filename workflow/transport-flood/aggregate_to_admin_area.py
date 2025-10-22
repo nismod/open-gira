@@ -31,7 +31,6 @@ WGS84_EPSG = 4326
 
 
 if __name__ == "__main__":
-
     try:
         admin_areas_path: str = snakemake.input["admin_areas"]
         slice_bounds_path: str = snakemake.input["slice_bounds"]

@@ -187,7 +187,6 @@ def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
 
     # sort paths for reproducibility
     for i, path in tqdm(enumerate(natural_sort(paths))):
-
         try:
             gdf = gpd.read_parquet(path)
 

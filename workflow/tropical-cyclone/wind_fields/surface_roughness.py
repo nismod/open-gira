@@ -17,7 +17,6 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-
     try:
         land_cover = rioxarray.open_rasterio(snakemake.input.land_cover)  # noqa: F821
     except RasterioIOError:
@@ -28,7 +27,8 @@ if __name__ == "__main__":
         sys.exit(0)
     wind_grid = rioxarray.open_rasterio(snakemake.input.wind_grid)  # noqa: F821
     cover_roughness = pd.read_csv(
-        snakemake.input.land_cover_roughness_mapping, comment="#"  # noqa: F821
+        snakemake.input.land_cover_roughness_mapping,  # noqa: F821
+        comment="#",
     )
 
     # build a lookup array where the category is the index

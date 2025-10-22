@@ -14,7 +14,6 @@ import pandas as pd
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
@@ -32,7 +31,8 @@ if __name__ == "__main__":
     # load tracks (we will lookup storm dates from here)
     logging.info("Loading tracks")
     tracks: pd.DataFrame = pd.read_parquet(
-        snakemake.input.tracks, columns=["track_id", "year"]  # noqa: F821
+        snakemake.input.tracks,  # noqa: F821
+        columns=["track_id", "year"],
     )
     track_year: pd.DataFrame = tracks.drop_duplicates("track_id").set_index("track_id")
 

@@ -16,7 +16,6 @@ from open_gira.wind import power_law_scale_factors
 from open_gira.wind_plotting import plot_downscale_factors
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )

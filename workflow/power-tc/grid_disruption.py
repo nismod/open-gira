@@ -150,7 +150,6 @@ def subset_network(
     checked_edges[failed_edge_ids] = True
 
     for count, component in enumerate(connected_components):
-
         component_id: int = count + 1
 
         # boolean series of component membership
@@ -436,7 +435,6 @@ def degrade_grid_with_storm(
 
 
 if __name__ == "__main__":
-
     edges_path: str = snakemake.input.grid_edges  # noqa: F821
     nodes_path: str = snakemake.input.grid_nodes  # noqa: F821
     splits_path: str = snakemake.input.grid_splits  # noqa: F821

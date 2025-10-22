@@ -68,7 +68,6 @@ def disruption_by_target(file_path: str, schema: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
