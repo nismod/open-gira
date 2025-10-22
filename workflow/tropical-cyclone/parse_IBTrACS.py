@@ -84,9 +84,15 @@ if __name__ == "__main__":
     with open(ibtracs_csv_path, "r") as fp:
         columns: list[str] = fp.readline().split(",")
 
-    WIND_COLS = list(filter(lambda s: s.endswith("_WIND"), columns))  # maximum wind speeds in knots
-    RMW_COLS = list(filter(lambda s: s.endswith("_RMW"), columns))  # radius from eye to maximum winds in nautical miles
-    PRESSURE_COLS = list(filter(lambda s: s.endswith("_PRES"), columns))  # eye / minimum pressures in mb / hPa
+    WIND_COLS = list(
+        filter(lambda s: s.endswith("_WIND"), columns)
+    )  # maximum wind speeds in knots
+    RMW_COLS = list(
+        filter(lambda s: s.endswith("_RMW"), columns)
+    )  # radius from eye to maximum winds in nautical miles
+    PRESSURE_COLS = list(
+        filter(lambda s: s.endswith("_PRES"), columns)
+    )  # eye / minimum pressures in mb / hPa
     OTHER_COLS = {
         "ISO_TIME": str,
         "LON": float,
@@ -106,7 +112,7 @@ if __name__ == "__main__":
         dtype=OTHER_COLS | {col: float for col in WIND_COLS + RMW_COLS + PRESSURE_COLS},
         header=0,
         keep_default_na=False,  # otherwise 'NA' (North Atlantic basin) is treated as a NaN value!
-        na_values=['', ' ']  # missing data value for IBTrACS CSV is a single space
+        na_values=["", " "],  # missing data value for IBTrACS CSV is a single space
     )
     df = df.rename(
         columns={
@@ -123,12 +129,15 @@ if __name__ == "__main__":
     )
 
     for agency, (scale, shift) in IBTRACS_AGENCY_1MIN_WIND_FACTOR.items():
-        df[f'{agency}_WIND'] -= shift
-        df[f'{agency}_WIND'] /= scale
+        df[f"{agency}_WIND"] -= shift
+        df[f"{agency}_WIND"] /= scale
 
     # average wind columns from various agencies
     METERS_PER_SECOND_PER_KNOT = 0.5144
-    df["max_wind_speed_ms"] = df.loc[:, WIND_COLS].apply(np.nanmean, axis="columns") * METERS_PER_SECOND_PER_KNOT
+    df["max_wind_speed_ms"] = (
+        df.loc[:, WIND_COLS].apply(np.nanmean, axis="columns")
+        * METERS_PER_SECOND_PER_KNOT
+    )
     # there are some tens of negative valued wind observations
     df.loc[df.loc[:, "max_wind_speed_ms"] < 0, "max_wind_speed_ms"] = 0
 
@@ -137,7 +146,9 @@ if __name__ == "__main__":
 
     # average radius values from agencies
     KM_PER_NAUTICAL_MILE = 1.852
-    df["radius_to_max_winds_km"] = df.loc[:, RMW_COLS].apply(np.nanmean, axis="columns") * KM_PER_NAUTICAL_MILE
+    df["radius_to_max_winds_km"] = (
+        df.loc[:, RMW_COLS].apply(np.nanmean, axis="columns") * KM_PER_NAUTICAL_MILE
+    )
 
     # again, average values from agencies
     df["min_pressure_hpa"] = df.loc[:, PRESSURE_COLS].apply(np.nanmean, axis="columns")
@@ -145,12 +156,16 @@ if __name__ == "__main__":
     df.loc[df.loc[:, "min_pressure_hpa"] < 800, "min_pressure_hpa"] = 1000
 
     # filter dataset by presence of variables necessary for computing wind field
-    df = df[~df["max_wind_speed_ms"].isna() & ~df["min_pressure_hpa"].isna() & ~df["radius_to_max_winds_km"].isna()]
+    df = df[
+        ~df["max_wind_speed_ms"].isna()
+        & ~df["min_pressure_hpa"].isna()
+        & ~df["radius_to_max_winds_km"].isna()
+    ]
 
     # rest of processing is to match STORM synthetic track output
 
     for track_id in set(df.track_id):
-        mask = (df.track_id == track_id)
+        mask = df.track_id == track_id
         df.loc[mask, "timestep"] = range(len(df[mask]))
     df["timestep"] = df["timestep"].astype(int)
 
@@ -174,8 +189,7 @@ if __name__ == "__main__":
 
     # construct geometry from lat and long
     df = gpd.GeoDataFrame(
-        data=df,
-        geometry=gpd.points_from_xy(df["lon"], df["lat"], crs=4326)
+        data=df, geometry=gpd.points_from_xy(df["lon"], df["lat"], crs=4326)
     )
     df = df.drop(columns=["lon", "lat"])
 

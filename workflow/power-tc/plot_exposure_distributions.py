@@ -15,7 +15,7 @@ def plot_event_distributions(
     exposure_by_event: pd.DataFrame,
     plot_dir: str,
     storm_set: str,
-    geography_name: str
+    geography_name: str,
 ) -> None:
     """
     Given exposure data (lengths of edge exposed to wind speed in excess of a
@@ -40,7 +40,9 @@ def plot_event_distributions(
     # find y (frequency) maxima across thresholds
     y_max = 0
     for threshold in thresholds:
-        frequency, bin_edges = np.histogram(exposure_by_event.loc[:, threshold], bins=bins)
+        frequency, bin_edges = np.histogram(
+            exposure_by_event.loc[:, threshold], bins=bins
+        )
         y_max = max([y_max, max(frequency)])
     y_max *= 5
 
@@ -53,18 +55,20 @@ def plot_event_distributions(
         f, ax = plt.subplots()
 
         ax.hist(
-            non_zero_data,
-            bins=bins,
-            color="green",
-            alpha=0.5,
-            label="Distribution"
+            non_zero_data, bins=bins, color="green", alpha=0.5, label="Distribution"
         )
         p90 = np.quantile(non_zero_data, 0.9)
         p95 = np.quantile(non_zero_data, 0.95)
         p99 = np.quantile(non_zero_data, 0.99)
-        ax.axvline(p90, label=r"$p_{90}$ = " + f"{p90:.2E}", ls="--", color="pink", alpha=0.7)
-        ax.axvline(p95, label=r"$p_{95}$ = " + f"{p95:.2E}", ls="--", color="red", alpha=0.7)
-        ax.axvline(p99, label=r"$p_{99}$ = " + f"{p99:.2E}", ls="--", color="purple", alpha=0.7)
+        ax.axvline(
+            p90, label=r"$p_{90}$ = " + f"{p90:.2E}", ls="--", color="pink", alpha=0.7
+        )
+        ax.axvline(
+            p95, label=r"$p_{95}$ = " + f"{p95:.2E}", ls="--", color="red", alpha=0.7
+        )
+        ax.axvline(
+            p99, label=r"$p_{99}$ = " + f"{p99:.2E}", ls="--", color="purple", alpha=0.7
+        )
         ax.set_ylim(0.1, y_max)
         ax.set_xlim(10**x_min_log10, 5 * 10**x_max_log10)
         ax.set_xscale("log")
@@ -88,7 +92,9 @@ def plot_event_distributions(
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     logging.info("Reading exposure data")
     exposure_by_event = pd.read_parquet(snakemake.input.exposure_by_event)
@@ -100,5 +106,5 @@ if __name__ == "__main__":
         exposure_by_event,
         snakemake.output.country_event_distributions,
         snakemake.wildcards.STORM_SET,
-        snakemake.wildcards.COUNTRY_ISO_A3
+        snakemake.wildcards.COUNTRY_ISO_A3,
     )

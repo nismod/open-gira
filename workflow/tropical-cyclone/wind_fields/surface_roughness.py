@@ -11,18 +11,24 @@ import rioxarray
 from rasterio.errors import RasterioIOError
 import numpy as np
 
-logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+)
 
 if __name__ == "__main__":
 
     try:
         land_cover = rioxarray.open_rasterio(snakemake.input.land_cover)
     except RasterioIOError:
-        logging.info("Found empty land cover map, creating empty surface roughness raster...")
+        logging.info(
+            "Found empty land cover map, creating empty surface roughness raster..."
+        )
         os.system(f"touch {snakemake.output.surface_roughness}")
         sys.exit(0)
     wind_grid = rioxarray.open_rasterio(snakemake.input.wind_grid)
-    cover_roughness = pd.read_csv(snakemake.input.land_cover_roughness_mapping, comment="#")
+    cover_roughness = pd.read_csv(
+        snakemake.input.land_cover_roughness_mapping, comment="#"
+    )
 
     # build a lookup array where the category is the index
     # and the value for a given index/category is the surface roughness in metres

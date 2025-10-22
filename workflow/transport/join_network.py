@@ -30,7 +30,9 @@ if __name__ == "__main__":
     nodes_output_file = snakemake.output["nodes"]
     edges_output_file = snakemake.output["edges"]
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 

@@ -14,7 +14,7 @@ import numpy as np
 def forward_azimuth(
     Δλ: Union[float, np.ndarray],
     φ1: Union[float, np.ndarray],
-    φ2: Union[float, np.ndarray]
+    φ2: Union[float, np.ndarray],
 ):
     """
     Calculate forward azimuth as part of inverse geodesy problem (find azimuths
@@ -41,7 +41,7 @@ def bearing_and_great_circle_distance(
     longitude1: Union[float, np.ndarray],
     latitude1: Union[float, np.ndarray],
     longitude2: Union[float, np.ndarray],
-    latitude2: Union[float, np.ndarray]
+    latitude2: Union[float, np.ndarray],
 ):
     """
     Given pairs of points in decimal degrees, calculate forward azimuth in
@@ -76,7 +76,9 @@ def bearing_and_great_circle_distance(
     Δφ = φ2 - φ1
 
     # squares of half the chord lengths
-    a = np.power(np.sin(Δφ / 2.0), 2) + np.cos(φ1) * np.cos(φ2) * np.power(np.sin(Δλ / 2.0), 2)
+    a = np.power(np.sin(Δφ / 2.0), 2) + np.cos(φ1) * np.cos(φ2) * np.power(
+        np.sin(Δλ / 2.0), 2
+    )
 
     # angles separating points
     θ = 2 * np.arcsin(np.sqrt(a))

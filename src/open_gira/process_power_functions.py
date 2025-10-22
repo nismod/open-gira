@@ -1,5 +1,4 @@
-"""Common functions required to perform preprocessing
-"""
+"""Common functions required to perform preprocessing"""
 
 
 def adj(idx: int, ncols: int, tot_boxes: int) -> list[int]:

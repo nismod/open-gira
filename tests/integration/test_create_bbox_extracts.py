@@ -9,5 +9,5 @@ def test_create_bbox_extracts():
             "results/json/djibouti-latest_extracts/slice-1.geojson",
             "results/json/djibouti-latest_extracts/slice-2.geojson",
             "results/json/djibouti-latest_extracts/slice-3.geojson",
-        )
+        ),
     )

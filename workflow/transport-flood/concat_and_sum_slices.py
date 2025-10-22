@@ -27,7 +27,9 @@ if __name__ == "__main__":
     except NameError:
         raise RuntimeError("Must be run via snakemake.")
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
     logging.info(f"Reading {len(slice_files)} slice files")
@@ -53,7 +55,9 @@ if __name__ == "__main__":
     admin_level = int(admin_level_slug.replace("admin-level-", ""))
     area_unique_id_col = f"GID_{admin_level}"
     logging.info(f"Grouping on {area_unique_id_col=}")
-    columns_to_aggregate = [col for col in concatenated.columns if re.match(columns_to_aggregate_regex, col)]
+    columns_to_aggregate = [
+        col for col in concatenated.columns if re.match(columns_to_aggregate_regex, col)
+    ]
     grouped = concatenated.groupby(by=area_unique_id_col)[columns_to_aggregate].sum()
     # after grouping area_unique_id_col is the index -- now move it back to being a non-index column
     grouped = grouped.reset_index(drop=False)

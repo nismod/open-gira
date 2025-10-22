@@ -6,10 +6,7 @@ import snail.intersection
 
 
 def filter_edges_by_raster(
-    edges: gpd.GeoDataFrame,
-    raster_path: str,
-    failure_threshold: float,
-    band: int = 1
+    edges: gpd.GeoDataFrame, raster_path: str, failure_threshold: float, band: int = 1
 ) -> gpd.GeoDataFrame:
     """
     Remove edges from a network that are exposed to gridded values in excess of
@@ -54,14 +51,22 @@ def filter_edges_by_raster(
         raster = dataset.read(band)
 
     print("Lookup raster value for splits...")
-    values = snail.intersection.get_raster_values_for_splits(splits_with_indices, raster)
+    values = snail.intersection.get_raster_values_for_splits(
+        splits_with_indices, raster
+    )
     splits_with_values = splits_with_indices.copy()
     splits_with_values["raster_value"] = values
 
-    print(f"Filter out edges with splits experiencing values in excess of {failure_threshold} threshold...")
+    print(
+        f"Filter out edges with splits experiencing values in excess of {failure_threshold} threshold..."
+    )
     failed_splits_mask = splits_with_values.raster_value > failure_threshold
     failed_edge_ids = set(splits_with_values[failed_splits_mask].edge_id.unique())
     surviving_edges_with_geom = edges.loc[~edges.edge_id.isin(failed_edge_ids), :]
 
     print("Done filtering edges...")
-    return pd.concat([no_geom_edges, surviving_edges_with_geom]).sort_index().drop(columns=["edge_id"])
+    return (
+        pd.concat([no_geom_edges, surviving_edges_with_geom])
+        .sort_index()
+        .drop(columns=["edge_id"])
+    )

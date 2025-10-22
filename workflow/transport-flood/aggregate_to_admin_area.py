@@ -17,7 +17,6 @@ This means there is some 'double counting' especially when aggregating to
 smaller administrative subdivisions such as levels 2, 3 and 4.
 """
 
-
 import json
 import logging
 import warnings
@@ -45,7 +44,9 @@ if __name__ == "__main__":
     except NameError:
         raise ValueError("Must be run via snakemake.")
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # N.B. geoparquet spec is not currently stable, and therefore not a suitable format for archiving
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     data_to_aggregate: gpd.GeoDataFrame = gpd.read_parquet(data_to_aggregate_path)
 
     with open(slice_bounds_path, "r") as fp:
-        extracts, = json.load(fp)["extracts"]
+        (extracts,) = json.load(fp)["extracts"]
         minx, miny, maxx, maxy = extracts["bbox"]
     assert minx < maxx
     assert miny < maxy
@@ -67,12 +68,16 @@ if __name__ == "__main__":
     area_name_col = f"NAME_{admin_level}"
     # retain the names of larger, encompassing administrative units
     contextual_name_cols = [f"NAME_{i}" for i in range(0, admin_level)]
-    admin_areas = admin_areas[[area_name_col, area_unique_id_col, *contextual_name_cols, "geometry"]]
+    admin_areas = admin_areas[
+        [area_name_col, area_unique_id_col, *contextual_name_cols, "geometry"]
+    ]
     slice_admin_areas = admin_areas[admin_areas.intersects(slice_bbox)]
     logging.info(f"Found {len(slice_admin_areas)} admin areas intersecting slice bbox")
 
     if data_to_aggregate.empty:
-        logging.info("No damage data; writing admin areas contained slice but no damages")
+        logging.info(
+            "No damage data; writing admin areas contained slice but no damages"
+        )
         slice_admin_areas.to_parquet(aggregated_path)
         sys.exit(0)
 
@@ -83,11 +88,15 @@ if __name__ == "__main__":
 
     logging.info(f"Aggregating to {len(slice_admin_areas)} admin boundaries")
     # we only want to groupby certain columns... use the column_regex for this
-    columns_to_aggregate = [col for col in joined.columns if re.match(column_regex, col)]
+    columns_to_aggregate = [
+        col for col in joined.columns if re.match(column_regex, col)
+    ]
     grouped = joined.groupby(by=area_unique_id_col)[columns_to_aggregate]
     agg_func: str = agg_func_slug.replace("agg-", "")
     aggregated = getattr(grouped, agg_func)()
-    aggregated_with_geometry = slice_admin_areas.merge(aggregated, on=area_unique_id_col)
+    aggregated_with_geometry = slice_admin_areas.merge(
+        aggregated, on=area_unique_id_col
+    )
 
     logging.info(f"Writing {aggregated_with_geometry.shape} to disk")
     aggregated_with_geometry.to_parquet(aggregated_path)

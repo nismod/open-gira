@@ -2,7 +2,6 @@
 Plotting utilities.
 """
 
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -10,7 +9,9 @@ import shapely
 from shapely.ops import split
 
 
-def chop_at_antimeridian(gdf: gpd.GeoDataFrame, drop_null_geometry: bool = False) -> gpd.GeoDataFrame:
+def chop_at_antimeridian(
+    gdf: gpd.GeoDataFrame, drop_null_geometry: bool = False
+) -> gpd.GeoDataFrame:
     """
     Cut LineStrings either side of antimeridian, then drop the fragments that
         intersect with antimeridian.
@@ -28,16 +29,24 @@ def chop_at_antimeridian(gdf: gpd.GeoDataFrame, drop_null_geometry: bool = False
     if drop_null_geometry:
         gdf = gdf.loc[~gdf.geometry.isna(), :]
 
-    assert set(gdf.geometry.type) == {'LineString'}
+    assert set(gdf.geometry.type) == {"LineString"}
 
-    def split_on_meridian(gdf: gpd.GeoDataFrame, meridian: shapely.geometry.LineString) -> gpd.GeoDataFrame:
-        return gdf.assign(geometry=gdf.apply(lambda row: split(row.geometry, meridian), axis=1)).explode(index_parts=False)
+    def split_on_meridian(
+        gdf: gpd.GeoDataFrame, meridian: shapely.geometry.LineString
+    ) -> gpd.GeoDataFrame:
+        return gdf.assign(
+            geometry=gdf.apply(lambda row: split(row.geometry, meridian), axis=1)
+        ).explode(index_parts=False)
 
     xlim = 179.9
     ylim = 90
 
-    split_e = split_on_meridian(gdf, shapely.geometry.LineString([(xlim, ylim), (xlim, -ylim)]))
-    split_e_and_w = split_on_meridian(split_e, shapely.geometry.LineString([(-xlim, ylim), (-xlim, -ylim)]))
+    split_e = split_on_meridian(
+        gdf, shapely.geometry.LineString([(xlim, ylim), (xlim, -ylim)])
+    )
+    split_e_and_w = split_on_meridian(
+        split_e, shapely.geometry.LineString([(-xlim, ylim), (-xlim, -ylim)])
+    )
 
     def crosses_antimeridian(row: pd.Series) -> bool:
         """
@@ -45,7 +54,9 @@ def chop_at_antimeridian(gdf: gpd.GeoDataFrame, drop_null_geometry: bool = False
             (i.e. -180) and both sides of it. If so, return true.
         """
         x, _ = row.geometry.coords.xy
-        longitudes_near_antimeridian = np.array(x)[np.argwhere(np.abs(np.abs(x) - 180) < xlim).ravel()]
+        longitudes_near_antimeridian = np.array(x)[
+            np.argwhere(np.abs(np.abs(x) - 180) < xlim).ravel()
+        ]
         if len(longitudes_near_antimeridian) == 0:
             return False
         hemispheres = np.unique(np.sign(longitudes_near_antimeridian))
@@ -63,7 +74,7 @@ def figure_size(
     max_x: float,
     max_y: float,
     max_plot_width_in: float = 16,
-    max_plot_height_in: float = 9
+    max_plot_height_in: float = 9,
 ) -> tuple[float, float]:
     """
     Given bounding box, calculate size of figure in inches for equal aspect ratio.

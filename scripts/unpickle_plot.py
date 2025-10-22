@@ -29,7 +29,9 @@ def show_figure(fig: Figure) -> None:
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     if len(sys.argv) == 1:
         logging.info(f"Usage:\n{sys.argv[0]} path/to/plot.pickle")

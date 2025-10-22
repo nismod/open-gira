@@ -6,5 +6,5 @@ def test_rasterise_osm_network():
         "rasterise_osm_network",
         (
             "results/splits/djibouti-latest_filter-road/hazard-aqueduct-river/slice-0.geoparquet",
-        )
+        ),
     )

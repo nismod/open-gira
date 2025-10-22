@@ -14,7 +14,7 @@ class Test_allocate_power_to_targets:
                 "asset_type": ["source", "target", "target", "target", "source"],
                 "power_mw": [20, np.nan, np.nan, np.nan, 10],
                 "gdp": [np.nan, 3, 1, 1, np.nan],
-            }
+            },
         )
 
         generated = weighted_allocation(

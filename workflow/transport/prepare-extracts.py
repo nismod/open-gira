@@ -64,7 +64,7 @@ extract_paths = natural_sort(extract_paths)
 
 # check inputs
 # fail if we have more than one out dir in the supplied paths
-out_dir, = set(map(os.path.dirname, extract_paths))
+(out_dir,) = set(map(os.path.dirname, extract_paths))
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 
@@ -81,7 +81,7 @@ else:
 # read the initial bbox
 with open(input_json_path, "r") as fp:
     # fail if more than one initial bounding box
-    extract, = json.load(fp)["extracts"]
+    (extract,) = json.load(fp)["extracts"]
 
 # generate all slice bboxes given sqrt(slice_count)
 slice_bboxes: list[list[float]] = slice_subextracts(extract["bbox"], n)
@@ -89,16 +89,16 @@ slice_bboxes: list[list[float]] = slice_subextracts(extract["bbox"], n)
 # write out slice sub-extracts for the paths we've been given
 for extract_path in extract_paths:
     extract_filename = os.path.basename(extract_path)
-    i, = re.match(r"slice-(\d+)", extract_filename).groups()
+    (i,) = re.match(r"slice-(\d+)", extract_filename).groups()
 
     slice_json = {
         "directory": ".",
         "extracts": [
             {
                 "bbox": slice_bboxes[int(i)],
-                "output": extract_filename.replace(".geojson", ".osm.pbf")
+                "output": extract_filename.replace(".geojson", ".osm.pbf"),
             }
-        ]
+        ],
     }
 
     with open(extract_path, "w") as fp:

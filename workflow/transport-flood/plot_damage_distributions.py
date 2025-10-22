@@ -75,7 +75,9 @@ if __name__ == "__main__":
     # get length information for each edge
     if not "length_km" in damages.columns:
         damages = damages.set_crs(epsg=4326)
-        damages["length_km"] = damages.to_crs(damages.estimate_utm_crs()).geometry.length / 1_000
+        damages["length_km"] = (
+            damages.to_crs(damages.estimate_utm_crs()).geometry.length / 1_000
+        )
 
     hazard_cols = natural_sort([c for c in damages.columns if c.startswith("hazard-")])
 
@@ -90,9 +92,7 @@ if __name__ == "__main__":
         x, y = near_square_layout(len(hazard_cols))
         inches_per_subplot = 5
         fig, _ = plt.subplots(
-            x,
-            y,
-            figsize=(1.5 * x * inches_per_subplot, y * inches_per_subplot)
+            x, y, figsize=(1.5 * x * inches_per_subplot, y * inches_per_subplot)
         )
 
         n_bins = 10
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 hazard_name = hazard_cols[i]
             except IndexError:
                 # empty cells in the grid, turn off axes labels, ticks, etc.
-                ax.axis('off')
+                ax.axis("off")
                 continue
 
             # find the index of the bin each damage fraction falls into
@@ -116,18 +116,21 @@ if __name__ == "__main__":
             for i in range(n_bins):
                 segment_lengths = asset_damages.iloc[
                     np.where(bin_indicies_by_row == i)[0],
-                    asset_damages.columns.get_loc("length_km")
+                    asset_damages.columns.get_loc("length_km"),
                 ]
                 length_by_bin.append(segment_lengths.sum())
 
             # make a histogram of sorts with the length of exposed edges
-            ax.bar(bins[:-1], length_by_bin, width=bin_width, align='edge')
+            ax.bar(bins[:-1], length_by_bin, width=bin_width, align="edge")
             ax.set_yscale("log")
             ax.set_title(hazard_name)
             ax.grid()
 
         total_asset_length = asset_damages.length_km.sum()
-        fig.suptitle(f"Damage fraction distributions for {total_asset_length:.0f} km of {asset_type}", fontsize=16)
+        fig.suptitle(
+            f"Damage fraction distributions for {total_asset_length:.0f} km of {asset_type}",
+            fontsize=16,
+        )
         fig.supylabel("Length of asset at damage fraction (km)", fontsize=16)
         fig.supxlabel(f"Damage fraction", fontsize=16)
         fig.savefig(os.path.join(plots_dir, f"{asset_type}_damage_fraction.pdf"))

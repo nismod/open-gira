@@ -5,7 +5,9 @@ import geopandas as gpd
 import shapely
 
 
-def subset_file_by_intersection(geoms: gpd.GeoDataFrame, in_path: str, out_path: str) -> None:
+def subset_file_by_intersection(
+    geoms: gpd.GeoDataFrame, in_path: str, out_path: str
+) -> None:
     """
     Subset some geoparquet data on disk by a set of geometries and write to
     disk again.
@@ -36,7 +38,9 @@ if __name__ == "__main__":
     powerplants_out_path: str = snakemake.output.powerplants
     country_iso_a3: str = snakemake.wildcards.COUNTRY_ISO_A3
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     # read admin bounds for country in question
     countries = gpd.read_parquet(admin_bounds_path).rename(columns={"GID_0": "iso_a3"})

@@ -18,7 +18,7 @@ class TestBearingAndGreatCircleDistance:
 
         assert np.allclose(
             bearing_and_great_circle_distance(*pts),
-            (76.40617746089684, 71707.82335842062)
+            (76.40617746089684, 71707.82335842062),
         )
 
     def test_coincident_points(self):
@@ -51,13 +51,13 @@ class TestBearingAndGreatCircleDistance:
             np.array([-78.85524587, 45.46099115, -28.3258711]),
             np.array([28.92715285, 79.39721556, -44.00797675]),
             np.array([-156.00968598, -84.57826798, 158.38471011]),
-            np.array([-54.79011992, 15.13498674, 72.21865346])
+            np.array([-54.79011992, 15.13498674, 72.21865346]),
         ]
 
         assert np.allclose(
             bearing_and_great_circle_distance(*pts),
             (
                 np.array([-144.11891165, -48.30133907, -4.30392061]),
-                np.array([11835578.78885653, 9097391.66244342, 16857981.86371326])
-            )
+                np.array([11835578.78885653, 9097391.66244342, 16857981.86371326]),
+            ),
         )

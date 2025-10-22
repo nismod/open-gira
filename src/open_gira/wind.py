@@ -44,11 +44,8 @@ def empty_wind_da() -> xr.DataArray:
     """
     da = xr.DataArray(
         data=np.full((0,) * len(WIND_COORDS), np.nan),
-        coords={
-            name: np.array([], dtype=dtype)
-            for name, dtype in WIND_COORDS.items()
-        },
-        name="max_wind_speed"
+        coords={name: np.array([], dtype=dtype) for name, dtype in WIND_COORDS.items()},
+        name="max_wind_speed",
     )
     return da
 
@@ -126,8 +123,7 @@ def holland_wind_model(
 
     # beta parameter, how sharp the V(r) profile around the eye wall is
     B = (
-        np.power(V_max_ms, 2) * np.e * rho
-        + f * V_max_ms * RMW_m * np.e * rho
+        np.power(V_max_ms, 2) * np.e * rho + f * V_max_ms * RMW_m * np.e * rho
     ) / Delta_P
 
     V = (
@@ -270,7 +266,9 @@ def estimate_wind_field(
 
     # decay effect of advective field from maximum at storm eye out to zero at 1,000km radius
     # we shouldn't claim any authority on winds outside the vicinity of the storm
-    adv_field: np.ndarray = adv_vector * sigmoid_decay(distance_to_eye_grid_m / 1_000, 500, 0.004)
+    adv_field: np.ndarray = adv_vector * sigmoid_decay(
+        distance_to_eye_grid_m / 1_000, 500, 0.004
+    )
 
     # magnitude of rotational wind component
     mag_v_r: np.ndarray = holland_wind_model(
@@ -279,11 +277,13 @@ def estimate_wind_field(
         min_pressure_pa,
         env_pressure_pa,
         distance_to_eye_grid_m,
-        eye_lat
+        eye_lat,
     )
 
     # azimuth of rotational component is tangent to radius, with direction set by hemisphere
-    phi_r: np.ndarray = np.radians(grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90)
+    phi_r: np.ndarray = np.radians(
+        grid_to_eye_azimuth_deg.reshape(grid_shape) + np.sign(eye_lat) * 90
+    )
 
     # find components of vector at each pixel
     rot_field = mag_v_r * np.sin(phi_r) + mag_v_r * np.cos(phi_r) * 1j
@@ -291,7 +291,9 @@ def estimate_wind_field(
     return adv_field + rot_field
 
 
-def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.GeoDataFrame:
+def interpolate_track(
+    track: gpd.GeoDataFrame, frequency: str = "1H"
+) -> gpd.GeoDataFrame:
     """
     Interpolate storm track data.
 
@@ -353,8 +355,7 @@ def interpolate_track(track: gpd.GeoDataFrame, frequency: str = "1H") -> gpd.Geo
 
     # interpolate over numeric value of index
     interp_track.loc[:, interp_cols] = interp_track.loc[:, interp_cols].interpolate(
-        method=interp_method,
-        limit=max_steps_to_fill
+        method=interp_method, limit=max_steps_to_fill
     )
 
     # fail if we still have NaN values (probably the time gaps exceed `max_steps_to_fill`

@@ -23,7 +23,12 @@ if box:
     content = {
         "extracts": [
             {
-                "bbox": [min_long, max(min_lat, MIN_LAT), max_long, min(max_lat, MAX_LAT)],
+                "bbox": [
+                    min_long,
+                    max(min_lat, MIN_LAT),
+                    max_long,
+                    min(max_lat, MAX_LAT),
+                ],
                 "output": os.path.basename(osm_file),
             }
         ],

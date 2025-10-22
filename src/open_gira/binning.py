@@ -7,7 +7,9 @@ import numpy as np
 import shapely
 
 
-def grid_point_data(point_data: gpd.GeoDataFrame, col_name: str, agg_func_name: str, delta: float) -> gpd.GeoDataFrame:
+def grid_point_data(
+    point_data: gpd.GeoDataFrame, col_name: str, agg_func_name: str, delta: float
+) -> gpd.GeoDataFrame:
     """
     Generate regular rectilinear grid and bin GeoDataFrame point data,
     applying some aggregation function `agg_func_name` per grid cell.
@@ -29,7 +31,9 @@ def grid_point_data(point_data: gpd.GeoDataFrame, col_name: str, agg_func_name: 
     # create grid
 
     # unpack and snap extrema to integer number of cells from CRS reference
-    min_x, min_y, max_x, max_y = map(lambda x: np.ceil(x / delta) * delta, point_data.total_bounds)
+    min_x, min_y, max_x, max_y = map(
+        lambda x: np.ceil(x / delta) * delta, point_data.total_bounds
+    )
 
     cells = []
     for x0 in np.linspace(min_x, max_x, n_cells(min_x, max_x, delta) + 1):
@@ -48,7 +52,9 @@ def grid_point_data(point_data: gpd.GeoDataFrame, col_name: str, agg_func_name: 
     aggregated = agg_func(col_name)
 
     # merge geometry back in, how="right" for every grid cell, empty or not
-    rebinned = aggregated.merge(grid[["geometry"]], left_index=True, right_index=True, how="right")
+    rebinned = aggregated.merge(
+        grid[["geometry"]], left_index=True, right_index=True, how="right"
+    )
     rebinned = rebinned.drop(columns=["index_right"])
 
     # cast to GeoDataFrame again (merge reverted to DataFrame) and return

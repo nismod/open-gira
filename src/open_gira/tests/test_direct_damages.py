@@ -47,6 +47,14 @@ class TestAqueductFlood:
         assert afm.without_RP == "inuncoast_rcp8p5_wtsub_2080_0_perc_50"
 
     def test_coastal_map_sea_level_rise_parsing(self):
-        assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_05").slr_percentile == 5.0
-        assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_50").slr_percentile == 50.0
-        assert AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0").slr_percentile == 95.0
+        assert (
+            AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_05").slr_percentile
+            == 5.0
+        )
+        assert (
+            AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0_perc_50").slr_percentile
+            == 50.0
+        )
+        assert (
+            AqueductFlood("inuncoast_rcp8p5_wtsub_2080_rp1000_0").slr_percentile == 95.0
+        )

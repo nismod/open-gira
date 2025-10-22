@@ -34,7 +34,7 @@ RouteResult = dict[tuple[str, str], FlowResult]
 
 # When calculating the total cost of a route, we want to be able to identify
 # these imaginary links and remove them.
-DESTINATION_LINK_COST_USD_T: float = 1E6
+DESTINATION_LINK_COST_USD_T: float = 1e6
 
 
 def init_worker(graph_filepath: str, od_filepath: str) -> None:
@@ -70,15 +70,14 @@ def route_from_node(from_node: str) -> RouteResult:
     print(f"Process {os.getpid()} routing {from_node}...")
 
     from_node_od = od[od.id == from_node]
-    destination_nodes: list[str] = [f"GID_0_{iso_a3}" for iso_a3 in from_node_od.partner_GID_0.unique()]
+    destination_nodes: list[str] = [
+        f"GID_0_{iso_a3}" for iso_a3 in from_node_od.partner_GID_0.unique()
+    ]
 
     routes_edge_list = []
     try:
         routes_edge_list: list[list[int]] = graph.get_shortest_paths(
-            f"road_{from_node}",
-            destination_nodes,
-            weights="cost_USD_t",
-            output="epath"
+            f"road_{from_node}", destination_nodes, weights="cost_USD_t", output="epath"
         )
     except ValueError as error:
         if "no such vertex" in str(error):
@@ -101,20 +100,22 @@ def route_from_node(from_node: str) -> RouteResult:
         route = from_node_od[
             (from_node_od.id == from_node) & (from_node_od.partner_GID_0 == iso_a3)
         ]
-        value_kusd, = route.value_kusd
-        volume_tons, = route.volume_tons
+        (value_kusd,) = route.value_kusd
+        (volume_tons,) = route.volume_tons
 
         routes[(from_node, destination_node)] = {
             "value_kusd": value_kusd,
             "volume_tons": volume_tons,
-            "edge_indices": routes_edge_list[i]
+            "edge_indices": routes_edge_list[i],
         }
 
     print(f"Process {os.getpid()} finished routing {from_node}...")
     return routes
 
 
-def route_from_all_nodes(od: pd.DataFrame, edges: gpd.GeoDataFrame, n_cpu: int) -> RouteResult:
+def route_from_all_nodes(
+    od: pd.DataFrame, edges: gpd.GeoDataFrame, n_cpu: int
+) -> RouteResult:
     """
     Route flows from origins to destinations across graph.
 
@@ -171,7 +172,7 @@ def route_from_all_nodes(od: pd.DataFrame, edges: gpd.GeoDataFrame, n_cpu: int) 
 def lookup_route_costs(
     routes_path: str,
     edges_path: str,
-    destination_link_cost_USD_t: float = DESTINATION_LINK_COST_USD_T
+    destination_link_cost_USD_t: float = DESTINATION_LINK_COST_USD_T,
 ) -> pd.DataFrame:
     """
     For each route (source -> destination pair), lookup the edges
@@ -195,13 +196,22 @@ def lookup_route_costs(
     edges: gpd.GeoDataFrame = gpd.read_parquet(edges_path)
     cost_col_id = edges.columns.get_loc("cost_USD_t")
     routes = []
-    for index, route_data in tqdm(routes_with_edge_indices.iterrows(), total=len(routes_with_edge_indices)):
+    for index, route_data in tqdm(
+        routes_with_edge_indices.iterrows(), total=len(routes_with_edge_indices)
+    ):
         source_node, destination_node = index
-        cost_including_destination_link_USD_t = edges.iloc[route_data.edge_indices, cost_col_id].sum()
+        cost_including_destination_link_USD_t = edges.iloc[
+            route_data.edge_indices, cost_col_id
+        ].sum()
 
-        cost_USD_t: float = cost_including_destination_link_USD_t % destination_link_cost_USD_t
+        cost_USD_t: float = (
+            cost_including_destination_link_USD_t % destination_link_cost_USD_t
+        )
 
-        if int(cost_including_destination_link_USD_t // destination_link_cost_USD_t) != 1:
+        if (
+            int(cost_including_destination_link_USD_t // destination_link_cost_USD_t)
+            != 1
+        ):
             # must have exactly 1 destination link, otherwise not a valid route
             continue
 
@@ -212,11 +222,17 @@ def lookup_route_costs(
                     destination_node.split("_")[-1],
                     route_data.value_kusd,
                     route_data.volume_tons,
-                    cost_USD_t
+                    cost_USD_t,
                 )
             )
 
     return pd.DataFrame(
         routes,
-        columns=["source_node", "destination_node", "value_kusd", "volume_tons", "cost_USD_t"]
+        columns=[
+            "source_node",
+            "destination_node",
+            "value_kusd",
+            "volume_tons",
+            "cost_USD_t",
+        ],
     )

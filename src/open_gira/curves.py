@@ -2,11 +2,12 @@
 Functions describing mathematical curves.
 """
 
-
 import numpy as np
 
 
-def logistic_min(x: float | np.ndarray, L: float, m: float, k: float, x_0: float) -> float | np.ndarray:
+def logistic_min(
+    x: float | np.ndarray, L: float, m: float, k: float, x_0: float
+) -> float | np.ndarray:
     """
     Logistic function with a minimum value, m.
 

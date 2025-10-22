@@ -7,5 +7,5 @@ def test_join_network():
         (
             "results/djibouti-latest_filter-road/nodes.gpq",
             "results/djibouti-latest_filter-road/edges.gpq",
-        )
+        ),
     )

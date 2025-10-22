@@ -18,7 +18,9 @@ from open_gira.grid import weighted_allocation
 MAX_LINK_DISTANCE = 20_000
 
 
-def node_to_edge_distance(node: Point, edge: LineString, geoid: Geod = Geod(ellps="WGS84")) -> float:
+def node_to_edge_distance(
+    node: Point, edge: LineString, geoid: Geod = Geod(ellps="WGS84")
+) -> float:
     """
     Calculate the great circle distance from node to nearest point on edge,
     given a geoid.
@@ -49,7 +51,9 @@ def get_proximity_condition(asset_type: str, edge_limit: float | int) -> Callabl
 
     def closure(node: pd.Series, edge: pd.Series) -> bool:
         """Return true if node is a target and within distance limit."""
-        return (node.asset_type == asset_type) and (node_to_edge_distance(node.geometry, edge.geometry, geoid) < edge_limit)
+        return (node.asset_type == asset_type) and (
+            node_to_edge_distance(node.geometry, edge.geometry, geoid) < edge_limit
+        )
 
     return closure
 
@@ -69,7 +73,9 @@ if __name__ == "__main__":
     import snkit
     import snkit.network
 
-    logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
+    )
 
     logging.info("Read node data (plants and targets)")
     plants = gpd.read_parquet(plants_path)
@@ -83,8 +89,7 @@ if __name__ == "__main__":
     targets["target_id"] = targets["id"]
 
     nodes = gpd.GeoDataFrame(
-        pd.concat([plants, targets], ignore_index=True),
-        crs=plants.crs
+        pd.concat([plants, targets], ignore_index=True), crs=plants.crs
     )
 
     logging.info("Read edge data (transmission and distribution lines)")
@@ -116,8 +121,7 @@ if __name__ == "__main__":
     logging.info("Connect targets to grid")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.link_nodes_to_nearest_edge(
-        network,
-        get_proximity_condition("target", MAX_LINK_DISTANCE)
+        network, get_proximity_condition("target", MAX_LINK_DISTANCE)
     )
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_target"
 
@@ -125,8 +129,7 @@ if __name__ == "__main__":
     logging.info("Connect power plants to grid")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.link_nodes_to_nearest_edge(
-        network,
-        get_proximity_condition("source", MAX_LINK_DISTANCE)
+        network, get_proximity_condition("source", MAX_LINK_DISTANCE)
     )
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 
@@ -136,7 +139,9 @@ if __name__ == "__main__":
     network = snkit.network.add_endpoints(network)
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "intermediate"
 
-    logging.info(f"Cleaned network contains: {len(network.nodes)} nodes and {len(network.edges)} edges")
+    logging.info(
+        f"Cleaned network contains: {len(network.nodes)} nodes and {len(network.edges)} edges"
+    )
 
     # overwrite ids to int type (grid_disruption.py needs integer ids for fast pandas isin ops)
     network.nodes["id"] = range(len(network.nodes))
@@ -157,14 +162,16 @@ if __name__ == "__main__":
 
     # check we have a GDP figure for every target, even if it's 0
     if any(targets.gdp.isna()):
-        raise ValueError("Cannot allocate power without a GDP figure to weight by for every target.")
+        raise ValueError(
+            "Cannot allocate power without a GDP figure to weight by for every target."
+        )
 
     # if there's no gdp data available at all, use the population as a weight
     # this weight must then be used when allocating after failure in grid_disruption.py
     if targets.gdp.sum() == 0:
-        weight_col="population"
+        weight_col = "population"
     else:
-        weight_col="gdp"
+        weight_col = "gdp"
 
     powered_targets: pd.DataFrame = weighted_allocation(
         network.nodes,
@@ -179,10 +186,7 @@ if __name__ == "__main__":
     # merge the target power allocation back into the nodes table
     # first get the target power in a table of the same length as network.nodes
     intermediate = network.nodes[["id", "power_mw"]].merge(
-        powered_targets[["id", "power_mw"]],
-        how="left",
-        on="id",
-        suffixes=["_x", ""]
+        powered_targets[["id", "power_mw"]], how="left", on="id", suffixes=["_x", ""]
     )
     # then use combine_first to overwrite the NaN target power values in network.nodes
     network.nodes = network.nodes.combine_first(intermediate[["power_mw"]])
@@ -191,7 +195,7 @@ if __name__ == "__main__":
     for c_id, c_nodes in network.nodes.groupby(network.nodes.component_id):
 
         power_balance: float = c_nodes.power_mw.sum()
-        if power_balance > 1E-6:
+        if power_balance > 1e-6:
 
             # in the case where there is a generator in a component
             # but no targets, the power balance will be positive
@@ -214,5 +218,7 @@ if __name__ == "__main__":
     network.nodes.to_parquet(nodes_path)
 
     logging.info("Writing network's convex hull to disk")
-    grid_hull = gpd.GeoDataFrame({"geometry": [network.edges.geometry.unary_union.convex_hull]})
+    grid_hull = gpd.GeoDataFrame(
+        {"geometry": [network.edges.geometry.unary_union.convex_hull]}
+    )
     grid_hull.to_file(grid_hull_path)
