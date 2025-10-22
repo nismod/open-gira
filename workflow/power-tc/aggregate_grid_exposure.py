@@ -83,7 +83,8 @@ if __name__ == "__main__":
     # construct a dataframe with no data, but the appropriate columns and dtypes
     # exposure_by_edge will coerce the data to match this schema
     threshold_cols: list[str] = [
-        f"{value:.1f}" for value in snakemake.params.thresholds  # noqa: F821
+        f"{value:.1f}"
+        for value in snakemake.params.thresholds  # noqa: F821
     ]
     column_dtypes: dict[str, type] = {
         "event_id": str,
