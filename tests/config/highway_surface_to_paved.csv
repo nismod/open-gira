@@ -1,0 +1,8 @@
+# Table from https://taginfo.openstreetmap.org/keys/surface#values
+# last updated August 2025 - taking the top ~50 accounts for 99.9% of values
+# then annotated with "paved" column to classify material as paved/unpaved
+value,count,fraction,paved,description
+asphalt,32844217,0.4564,TRUE,Specifies that object is paved with asphalt concrete.
+unpaved,12543926,0.1743,FALSE,"Indicates that the feature has an unpaved surface, such as gravel or grass."
+paved,4360344,0.0606,TRUE,"Describes the surface of a feature roughly as predominantly paved over the whole surface area; i.e., covered with paving stones, concrete, bitumen or asphalt. This value gives only a rough description; use a more precise value if possible."
+gravel,2292670,0.0319,FALSE,"This tag has very large meaning range. Used for cases ranging from huge gravel pieces like track ballast used as surface, through small pieces of gravel to compacted surface."
