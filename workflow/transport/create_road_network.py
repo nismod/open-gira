@@ -91,7 +91,7 @@ def get_road_surface(row: pd.Series) -> str:
         if row.tag_highway in {"motorway", "trunk", "primary"}:
             return "asphalt"
         else:
-            return "gravel"
+            return None
     elif row.tag_surface == "paved":
         return "asphalt"
     elif row.tag_surface == "unpaved":

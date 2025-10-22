@@ -20,12 +20,12 @@ concrete:plates,213725,0.003,TRUE,A surface made of heavy duty prefabricated con
 earth,152738,0.0021,FALSE,Used for where surface is exposed earth/soil/dirt but it is not sand or gravel or rock.
 pebblestone,148729,0.0021,FALSE,Surface that consists of loose rounded medium sized stones.
 cobblestone,143786,0.002,TRUE,"Generic value for cobblestone, used for both sett and true cobblestone."
-grass_paver,53135,0.0007,TRUE,Specifies that object is paved with grass paver – paving with large deliberate voids in it.
-metal,52012,0.0007,TRUE,"Used for metal-surfaced bridges, or for temporary tracks over fields for normal road vehicles or site traffic."
-artificial_turf,47933,0.0007,TRUE,"A surface made from synthetic materials to look and feel like natural grass. Often used for tracks and pitches of sports such as football, baseball, etc."
+grass_paver,53135,0.0007,FALSE,Specifies that object is paved with grass paver – paving with large deliberate voids in it.
+metal,52012,0.0007,FALSE,"Used for metal-surfaced bridges, or for temporary tracks over fields for normal road vehicles or site traffic."
+artificial_turf,47933,0.0007,FALSE,"A surface made from synthetic materials to look and feel like natural grass. Often used for tracks and pitches of sports such as football, baseball, etc."
 unhewn_cobblestone,45901,0.0006,TRUE,"Raw cobblestone of natural, uncut, rounded stones."
-tartan,43896,0.0006,TRUE,"A synthetic, all-weather surface typically used in running."
-clay,39131,0.0005,TRUE,"A tennis court surface made of crushed stone, brick, shale, or other unbound mineral aggregate."
+tartan,43896,0.0006,FALSE,"A synthetic, all-weather surface typically used in running."
+clay,39131,0.0005,FALSE,"A tennis court surface made of crushed stone, brick, shale, or other unbound mineral aggregate."
 concrete:lanes,31859,0.0004,TRUE,Narrow concrete elements placed in lanes for a two-tracked vehicle (motorcars) so that the tires always hit the concrete.
 mud,31722,0.0004,FALSE,Specifies that object has mud as a surface – all the time or at least very frequently.
 rock,29413,0.0004,FALSE,Rocky surface of path or other similar object
@@ -41,7 +41,7 @@ rubber,6174,0.0001,TRUE,Playground surfacing made of recycled rubber tyre produc
 trail,5501,0.0001,FALSE,Surface value without clear or known meaning.
 plastic,5146,0.0001,TRUE,
 cobblestone:flattened,4873,0.0001,TRUE,
-metal_grid,4252,0.0001,TRUE,Used for where surface is metal grid.
+metal_grid,4252,0.0001,FALSE,Used for where surface is metal grid.
 stepping_stones,2949,0,FALSE,"Individually placed stones set at regular intervals for stepping from one to the next, to avoid walking on the ground below. Commonly used for river or creek crossings, muddy crossings, or areas to preserve the grass from being trampled."
 cement,2695,0,TRUE,
 ice,2591,0,FALSE,
