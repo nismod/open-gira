@@ -132,7 +132,7 @@ def map_outage(
         for status, colour in cmap
         if isinstance(status, str)
     ]
-    status_legend = ax.legend(
+    ax.legend(
         handles=status_handles,
         ncol=1,
         title="Node supply factor, $s$",

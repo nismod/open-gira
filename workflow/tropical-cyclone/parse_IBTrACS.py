@@ -4,7 +4,6 @@ Parse and clean IBTrACS historic storm CSV records into geoparquet
 The output schema is a superset of the STORM synthetic track data
 """
 
-import logging
 import os
 from typing import Union
 
@@ -44,7 +43,7 @@ IBTRACS_AGENCY_1MIN_WIND_FACTOR = {
 }
 
 
-def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:
+def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:  # noqa: C901
     """
     Identify the Saffir-Simpson storm category given a wind speed in m/s.
 
@@ -76,8 +75,8 @@ def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:
 
 if __name__ == "__main__":
 
-    ibtracs_csv_path = snakemake.input.ibtracs_csv
-    ibtracs_parquet_path = snakemake.output.ibtracs_parquet
+    ibtracs_csv_path = snakemake.input.ibtracs_csv  # noqa: F821
+    ibtracs_parquet_path = snakemake.output.ibtracs_parquet  # noqa: F821
 
     # read the header line to assemble a list of wind and pressure columns to read
     # https://www.ncei.noaa.gov/sites/default/files/2021-07/IBTrACS_v04_column_documentation.pdf

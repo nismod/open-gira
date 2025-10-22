@@ -137,7 +137,7 @@ class WaySlicer(osmium.SimpleHandler):
         self.tags_to_preserve = tags_to_preserve
         self.bounding_box = bounding_box
 
-    def way(self, way: osmium.osm.Way) -> None:
+    def way(self, way: osmium.osm.Way) -> None:  # noqa: C901
         """
         Slice given way into segments, splitting at junctions. Append processed
         way to `self.output_data`.
@@ -301,10 +301,10 @@ def empty_gdf() -> geopandas.GeoDataFrame:
 
 
 if __name__ == "__main__":
-    pbf_path: str = snakemake.input["pbf"]
-    edges_path: str = snakemake.output["edges"]
-    nodes_path: str = snakemake.output["nodes"]
-    keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])
+    pbf_path: str = snakemake.input["pbf"]  # noqa: F821
+    edges_path: str = snakemake.output["edges"]  # noqa: F821
+    nodes_path: str = snakemake.output["nodes"]  # noqa: F821
+    keep_tags: tuple[str] = tuple(snakemake.params["keep_tags"])  # noqa: F821
 
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.DEBUG

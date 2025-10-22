@@ -24,7 +24,6 @@ import re
 import sys
 
 import geopandas as gpd
-import pyproj
 import shapely
 
 

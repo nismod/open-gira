@@ -123,9 +123,8 @@ class TestPackingFloatsAsInts:
                     "_FillValue": fill_value,
                 }
             }
-            assert (
-                self.round_trip_within_tolerance(da, encoding, self.relative_tolerance)
-                == True
+            assert self.round_trip_within_tolerance(
+                da, encoding, self.relative_tolerance
             )
 
     def test_bit_pack_dataarray_encoding(self):
@@ -168,9 +167,8 @@ class TestPackingFloatsAsInts:
                 data, name="data", coords={"x": range(len(data))}, dims=["x"]
             )
             encoding = bit_pack_dataarray_encoding(da, 16)
-            assert (
-                self.round_trip_within_tolerance(da, encoding, self.relative_tolerance)
-                == True
+            assert self.round_trip_within_tolerance(
+                da, encoding, self.relative_tolerance
             )
 
     def test_bit_pack_dataarray_encoding_non_finite(self):

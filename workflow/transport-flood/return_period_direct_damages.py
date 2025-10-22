@@ -22,7 +22,7 @@ from open_gira.direct_damages import (
 from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_costs
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
 
     try:
         unsplit_path: str = snakemake.input["unsplit"]

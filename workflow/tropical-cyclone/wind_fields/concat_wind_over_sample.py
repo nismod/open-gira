@@ -1,7 +1,6 @@
 import logging
 import sys
 
-import dask
 from dask.delayed import Delayed
 import xarray as xr
 
@@ -22,7 +21,7 @@ if __name__ == "__main__":
     all_samples = xr.concat(
         [
             xr.open_dataset(path, chunks={"max_wind_speed": 1}).sortby("event_id")
-            for path in snakemake.input.sample_paths
+            for path in snakemake.input.sample_paths  # noqa: F821
         ],
         dim="event_id",
     ).sortby("event_id")
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     if all_samples.event_id.size == 0:
         logging.info("Input data empty, writing empty file to disk")
         # write empty netcdf (with appropriate schema) and exit
-        empty_wind_da().to_netcdf(snakemake.output.concat)
+        empty_wind_da().to_netcdf(snakemake.output.concat)  # noqa: F821
         sys.exit(0)
 
     logging.info("Computing packing factors for all samples")
@@ -49,7 +48,7 @@ if __name__ == "__main__":
 
     logging.info("Writing pooled wind fields to disk")
     serialisation_task: Delayed = all_samples.to_netcdf(
-        snakemake.output.concat,
+        snakemake.output.concat,  # noqa: F821
         encoding={
             "max_wind_speed": {
                 "dtype": "int16",

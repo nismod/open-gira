@@ -97,14 +97,14 @@ if __name__ == "__main__":
     )
 
     logging.info("Reading exposure data")
-    exposure_by_event = pd.read_parquet(snakemake.input.exposure_by_event)
+    exposure_by_event = pd.read_parquet(snakemake.input.exposure_by_event)  # noqa: F821
 
     logging.info("Plotting event distributions")
-    os.makedirs(snakemake.output.country_event_distributions)
+    os.makedirs(snakemake.output.country_event_distributions)  # noqa: F821
     plot_event_distributions(
         list(exposure_by_event.columns),
         exposure_by_event,
-        snakemake.output.country_event_distributions,
-        snakemake.wildcards.STORM_SET,
-        snakemake.wildcards.COUNTRY_ISO_A3,
+        snakemake.output.country_event_distributions,  # noqa: F821
+        snakemake.wildcards.STORM_SET,  # noqa: F821
+        snakemake.wildcards.COUNTRY_ISO_A3,  # noqa: F821
     )

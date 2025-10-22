@@ -22,10 +22,12 @@ logging.basicConfig(
 
 if __name__ == "__main__":
 
-    global_tracks_path: str = snakemake.input.global_tracks
-    grid_hull_path: str = snakemake.input.grid_hull
-    track_slicing_buffer_deg: float = snakemake.config["max_track_search_radius_deg"]
-    sliced_tracks_path: str = snakemake.output.sliced_tracks
+    global_tracks_path: str = snakemake.input.global_tracks  # noqa: F821
+    grid_hull_path: str = snakemake.input.grid_hull  # noqa: F821
+    track_slicing_buffer_deg: float = snakemake.config[  # noqa: F821
+        "max_track_search_radius_deg"
+    ]
+    sliced_tracks_path: str = snakemake.output.sliced_tracks  # noqa: F821
 
     # use a hull to reject tracks which would intersect a bounding box
     # but not impact the grid

@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     print("Reading network...")
     # read in global multi-modal transport network
-    edges = gpd.read_parquet(snakemake.input.edges)
+    edges = gpd.read_parquet(snakemake.input.edges)  # noqa: F821
     available_destinations = edges[edges["mode"] == "imaginary"].to_id.unique()
     available_country_destinations = [
         d.split("_")[-1] for d in available_destinations if d.startswith("GID_")
@@ -17,11 +17,11 @@ if __name__ == "__main__":
 
     print("Reading OD matrix...")
     # read in trade OD matrix
-    od = pd.read_parquet(snakemake.input.od)
+    od = pd.read_parquet(snakemake.input.od)  # noqa: F821
     print(f"OD has {len(od):,d} flows")
 
     # 5t threshold drops THL road -> GID_0 OD from ~21M -> ~2M
-    minimum_flow_volume_tons = snakemake.config["minimum_flow_volume_t"]
+    minimum_flow_volume_tons = snakemake.config["minimum_flow_volume_t"]  # noqa: F821
     od = od[od.volume_tons > minimum_flow_volume_tons]
     print(
         f"After dropping flows with volume < {minimum_flow_volume_tons}t, OD has {len(od):,d} flows"
@@ -33,10 +33,12 @@ if __name__ == "__main__":
         f"After dropping unrouteable destination countries, OD has {len(od):,d} flows"
     )
 
-    routes: RouteResult = route_from_all_nodes(od, edges, snakemake.threads)
+    routes: RouteResult = route_from_all_nodes(
+        od, edges, snakemake.threads  # noqa: F821
+    )
 
     print("Writing routes to disk as parquet...")
-    pd.DataFrame(routes).T.to_parquet(snakemake.output.routes)
+    pd.DataFrame(routes).T.to_parquet(snakemake.output.routes)  # noqa: F821
 
     print("Assigning route flows to edges...")
     edges["value_kusd"] = 0
@@ -50,6 +52,6 @@ if __name__ == "__main__":
         ]
 
     print("Writing edge flows to disk as geoparquet...")
-    edges.to_parquet(snakemake.output.edges_with_flows)
+    edges.to_parquet(snakemake.output.edges_with_flows)  # noqa: F821
 
     print("Done")

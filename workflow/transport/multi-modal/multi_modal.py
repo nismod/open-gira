@@ -19,44 +19,44 @@ matplotlib.use("Agg")
 
 if __name__ == "__main__":
 
-    study_country: str = snakemake.config["study_country_iso_a3"]
+    study_country: str = snakemake.config["study_country_iso_a3"]  # noqa: F821
 
     print("Preprocessing road network...")
     road_nodes, road_edges = preprocess_road_network(
-        snakemake.input.road_network_nodes,
-        snakemake.input.road_network_edges,
+        snakemake.input.road_network_nodes,  # noqa: F821
+        snakemake.input.road_network_edges,  # noqa: F821
         {
             study_country,
         },
-        snakemake.config["road_cost_USD_t_km"],
-        snakemake.config["road_cost_USD_t_h"],
+        snakemake.config["road_cost_USD_t_km"],  # noqa: F821
+        snakemake.config["road_cost_USD_t_h"],  # noqa: F821
         True,
-        snakemake.config["road_default_speed_limit_km_h"],
+        snakemake.config["road_default_speed_limit_km_h"],  # noqa: F821
     )
 
     print("Preprocessing rail network...")
     rail_nodes, rail_edges = preprocess_rail_network(
-        snakemake.input.rail_network_nodes,
-        snakemake.input.rail_network_edges,
+        snakemake.input.rail_network_nodes,  # noqa: F821
+        snakemake.input.rail_network_edges,  # noqa: F821
         {
             study_country,
         },
-        snakemake.config["rail_cost_USD_t_km"],
-        snakemake.config["rail_cost_USD_t_h"],
+        snakemake.config["rail_cost_USD_t_km"],  # noqa: F821
+        snakemake.config["rail_cost_USD_t_h"],  # noqa: F821
         True,
-        snakemake.config["rail_average_freight_speed_km_h"],
+        snakemake.config["rail_average_freight_speed_km_h"],  # noqa: F821
     )
 
     print("Reading maritime network...")
-    maritime_nodes = gpd.read_parquet(snakemake.input.maritime_nodes)
-    maritime_edges = gpd.read_parquet(snakemake.input.maritime_edges)
+    maritime_nodes = gpd.read_parquet(snakemake.input.maritime_nodes)  # noqa: F821
+    maritime_edges = gpd.read_parquet(snakemake.input.maritime_edges)  # noqa: F821
 
     maximum_intermodal_connection_metres = 2_000
 
     print("Making intermodal connections...")
     # road-rail
     rail_road_edges = create_edges_to_nearest_nodes(
-        rail_nodes.loc[rail_nodes.station == True, ["id", "iso_a3", "geometry"]],
+        rail_nodes.loc[rail_nodes.station, ["id", "iso_a3", "geometry"]],
         road_nodes.loc[:, ["id", "geometry"]],
         maximum_intermodal_connection_metres,
         rail_nodes.estimate_utm_crs(),
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             (maritime_nodes.infra == "port") & (maritime_nodes.iso_a3 == study_country),
             ["id", "iso_a3", "geometry"],
         ],
-        rail_nodes.loc[rail_nodes.station == True, ["id", "geometry"]],
+        rail_nodes.loc[rail_nodes.station, ["id", "geometry"]],
         maximum_intermodal_connection_metres,
         road_nodes.estimate_utm_crs(),
     ).to_crs(epsg=4326)
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # as the maritime edges are directional, we're making road, rail and intermodal directional too (so duplicate)
     intermodal_edges = duplicate_reverse_and_append_edges(intermodal_edges)
 
-    intermodal_cost_USD_t = snakemake.config["intermodal_cost_USD_t"]
+    intermodal_cost_USD_t = snakemake.config["intermodal_cost_USD_t"]  # noqa: F821
     intermodal_edges["cost_USD_t"] = intermodal_edges["mode"].map(intermodal_cost_USD_t)
 
     # concatenate different kinds of nodes and edges
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     countries = set(countries)
     countries.remove(study_country)
 
-    admin_boundaries = gpd.read_parquet(snakemake.input.admin_boundaries)
+    admin_boundaries = gpd.read_parquet(snakemake.input.admin_boundaries)  # noqa: F821
     country_nodes = (
         admin_boundaries.set_index("GID_0")
         .loc[list(countries), ["geometry"]]
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         for label, colour in colour_map.items()
     ]
     ax.legend(handles=patches)
-    f.savefig(snakemake.output.border_crossing_plot)
+    f.savefig(snakemake.output.border_crossing_plot)  # noqa: F821
 
     print("Making terminal connections to destination countries...")
     # connect foreign ports to their country with new edges
@@ -219,6 +219,6 @@ if __name__ == "__main__":
     # reset indicies to 0-start integers
     # these will correspond to igraph's internal edge/vertex ids
     nodes = nodes.reset_index(drop=True)
-    nodes.to_parquet(snakemake.output.nodes)
+    nodes.to_parquet(snakemake.output.nodes)  # noqa: F821
     edges = edges.reset_index(drop=True)
-    edges.to_parquet(snakemake.output.edges)
+    edges.to_parquet(snakemake.output.edges)  # noqa: F821

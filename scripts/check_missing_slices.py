@@ -1,7 +1,8 @@
 """Check missing slices from a directory
 
 Example usage:
-    python check_missing_slices.py results/direct_damages/planet-latest_filter-rail/hazard-landslide-arup/EAD_and_cost_per_trigger/
+    python check_missing_slices.py \
+        results/direct_damages/planet-latest_filter-rail/hazard-landslide-arup/EAD_and_cost_per_trigger/
 
 """
 
@@ -22,7 +23,7 @@ for fn in tqdm(list(p.glob("*.geoparquet"))):
     try:
         pq.read_schema(fn)
         act.append(fn.name)
-    except:
+    except:  # noqa: E722
         print("Error reading", fn)
         continue
 

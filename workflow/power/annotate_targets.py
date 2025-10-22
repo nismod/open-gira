@@ -37,11 +37,11 @@ def annotate_gdp_pc(targets: gpd.GeoDataFrame, gdp_path: str) -> pd.Series:
 
 
 if __name__ == "__main__":
-    admin_path: str = snakemake.input.admin
-    population_path: str = snakemake.input.population
-    gdp_path: str = snakemake.input.gdp
-    targets_path: str = snakemake.input.targets
-    output_path: str = snakemake.output.targets
+    admin_path: str = snakemake.input.admin  # noqa: F821
+    population_path: str = snakemake.input.population  # noqa: F821
+    gdp_path: str = snakemake.input.gdp  # noqa: F821
+    targets_path: str = snakemake.input.targets  # noqa: F821
+    output_path: str = snakemake.output.targets  # noqa: F821
 
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

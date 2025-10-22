@@ -8,13 +8,11 @@ Output format shares columns with IBTrACS.
 from glob import glob
 import logging
 import os
-import re
 from typing import List
 
 import numpy as np
 import geopandas as gpd
 import pandas as pd
-from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
@@ -51,9 +49,9 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    csv_dir = snakemake.input.csv_dir
-    parquet_path = snakemake.output.parquet
-    sample = snakemake.wildcards.SAMPLE
+    csv_dir = snakemake.input.csv_dir  # noqa: F821
+    parquet_path = snakemake.output.parquet  # noqa: F821
+    sample = snakemake.wildcards.SAMPLE  # noqa: F821
 
     data = []
     # loop over basins for given sample, processing tracks into a common format

@@ -3,7 +3,6 @@ Plotting tools for analysing network connectedness
 """
 
 import os
-import re
 import sys
 from collections import defaultdict
 from typing import Iterable

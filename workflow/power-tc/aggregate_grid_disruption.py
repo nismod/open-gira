@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # construct a dataframe with no data, but the appropriate columns and dtypes for output
     # disruption_by_target will coerce the data to match this schema
     threshold_cols: list[str] = [
-        f"{value:.1f}" for value in snakemake.params.thresholds
+        f"{value:.1f}" for value in snakemake.params.thresholds  # noqa: F821
     ]
     column_dtypes: dict[str, type] = {
         "event_id": str,
@@ -94,7 +94,9 @@ if __name__ == "__main__":
 
     # create list of data read and transform tasks
     tasks = []
-    for file_path in sorted(glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")):
+    for file_path in sorted(
+        glob.glob(f"{snakemake.input.disruption_by_event}/*.nc")  # noqa: F821
+    ):
         tasks.append(disruption_by_target(file_path, schema))
 
     # write out to disk as parquet
@@ -102,18 +104,23 @@ if __name__ == "__main__":
         disruption_all_storms = dask.dataframe.from_delayed(tasks)
         disruption_all_storms.drop(columns=["target"]).groupby(
             "event_id"
-        ).sum().to_parquet(snakemake.output.by_event)
+        ).sum().to_parquet(
+            snakemake.output.by_event  # noqa: F821
+        )
         disruption_all_storms.drop(columns=["event_id"]).groupby(
             "target"
-        ).sum().to_parquet(snakemake.output.by_target)
+        ).sum().to_parquet(
+            snakemake.output.by_target  # noqa: F821
+        )
     else:
-        # we have declared to snakemake that this output will be a directory (when there's data, it's sharded)
-        # write out the schema as a pretend directory parquet dataset
-        os.makedirs(snakemake.output.by_event)
-        os.makedirs(snakemake.output.by_target)
+        # we have declared to snakemake that this output will be a directory
+        # (when there's data, it's sharded) write out the schema as a pretend
+        # directory parquet dataset
+        os.makedirs(snakemake.output.by_event)  # noqa: F821
+        os.makedirs(snakemake.output.by_target)  # noqa: F821
         schema.drop(columns=["target"]).groupby("event_id").sum().to_parquet(
-            os.path.join(snakemake.output.by_event, "part.0.parquet")
+            os.path.join(snakemake.output.by_event, "part.0.parquet")  # noqa: F821
         )
         schema.drop(columns=["event_id"]).groupby("target").sum().to_parquet(
-            os.path.join(snakemake.output.by_target, "part.0.parquet")
+            os.path.join(snakemake.output.by_target, "part.0.parquet")  # noqa: F821
         )

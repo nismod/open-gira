@@ -162,15 +162,15 @@ def process_track(
 
 if __name__ == "__main__":
 
-    storm_file_path: str = snakemake.input.storm_file
-    wind_grid_path: str = snakemake.input.wind_grid
-    downscale_factors_path: str = snakemake.input.downscaling_factors
-    storm_set: set[str] = set(snakemake.params.storm_set)
-    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]
-    plot_animation: bool = snakemake.config["plot_wind"]["animation"]
-    n_proc: int = snakemake.threads
-    plot_dir_path: str = snakemake.output.plot_dir
-    output_path: str = snakemake.output.wind_speeds
+    storm_file_path: str = snakemake.input.storm_file  # noqa: F821
+    wind_grid_path: str = snakemake.input.wind_grid  # noqa: F821
+    downscale_factors_path: str = snakemake.input.downscaling_factors  # noqa: F821
+    storm_set: set[str] = set(snakemake.params.storm_set)  # noqa: F821
+    plot_max_wind: bool = snakemake.config["plot_wind"]["max_speed"]  # noqa: F821
+    plot_animation: bool = snakemake.config["plot_wind"]["animation"]  # noqa: F821
+    n_proc: int = snakemake.threads  # noqa: F821
+    plot_dir_path: str = snakemake.output.plot_dir  # noqa: F821
+    output_path: str = snakemake.output.wind_speeds  # noqa: F821
 
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)

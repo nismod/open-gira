@@ -5,6 +5,7 @@ specification
 
 import logging
 import os
+import sys
 
 import pandas as pd
 import rioxarray
@@ -18,16 +19,16 @@ logging.basicConfig(
 if __name__ == "__main__":
 
     try:
-        land_cover = rioxarray.open_rasterio(snakemake.input.land_cover)
+        land_cover = rioxarray.open_rasterio(snakemake.input.land_cover)  # noqa: F821
     except RasterioIOError:
         logging.info(
             "Found empty land cover map, creating empty surface roughness raster..."
         )
-        os.system(f"touch {snakemake.output.surface_roughness}")
+        os.system(f"touch {snakemake.output.surface_roughness}")  # noqa: F821
         sys.exit(0)
-    wind_grid = rioxarray.open_rasterio(snakemake.input.wind_grid)
+    wind_grid = rioxarray.open_rasterio(snakemake.input.wind_grid)  # noqa: F821
     cover_roughness = pd.read_csv(
-        snakemake.input.land_cover_roughness_mapping, comment="#"
+        snakemake.input.land_cover_roughness_mapping, comment="#"  # noqa: F821
     )
 
     # build a lookup array where the category is the index
@@ -50,4 +51,6 @@ if __name__ == "__main__":
 
     # write out surface roughness values on wind grid
     logging.info("Save to disk...")
-    downsampled_roughness.rio.to_raster(snakemake.output.surface_roughness)
+    downsampled_roughness.rio.to_raster(
+        snakemake.output.surface_roughness  # noqa: F821
+    )

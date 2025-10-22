@@ -54,14 +54,14 @@ if __name__ == "__main__":
                 "mangrove_regen_cost_usd_per_ha",
             ],
             "path": [
-                snakemake.input.biodiversity_benefit_tif,
-                snakemake.input.carbon_benefit_tif,
-                snakemake.input.planting_cost_tif,
-                snakemake.input.regeneration_cost_tif,
-                snakemake.input.mangrove_planting_cost_tif,
-                snakemake.input.mangrove_regeneration_cost_tif,
+                snakemake.input.biodiversity_benefit_tif,  # noqa: F821
+                snakemake.input.carbon_benefit_tif,  # noqa: F821
+                snakemake.input.planting_cost_tif,  # noqa: F821
+                snakemake.input.regeneration_cost_tif,  # noqa: F821
+                snakemake.input.mangrove_planting_cost_tif,  # noqa: F821
+                snakemake.input.mangrove_regeneration_cost_tif,  # noqa: F821
             ],
         }
     )
-    stack(rasters, snakemake.output.zarr)
-    stack_to_points(snakemake.output.zarr, "EPSG:4326")
+    stack(rasters, snakemake.output.zarr)  # noqa: F821
+    stack_to_points(snakemake.output.zarr, "EPSG:4326")  # noqa: F821

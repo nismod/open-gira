@@ -5,6 +5,7 @@ roughness raster.
 
 import logging
 import os
+import sys
 
 import numpy as np
 import rasterio
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     # surface roughness raster for downscaling winds with
     try:
         surface_roughness_raster: xr.DataArray = rioxarray.open_rasterio(
-            snakemake.input.surface_roughness
+            snakemake.input.surface_roughness  # noqa: F821
         )
     except rasterio.errors.RasterioIOError:
         logging.info(
@@ -42,8 +43,8 @@ if __name__ == "__main__":
         )
 
         # assure (empty) files exist
-        np.save(snakemake.output.downscale_factors, np.array([]))
-        os.system(f"touch {snakemake.output.downscale_factors_plot}")
+        np.save(snakemake.output.downscale_factors, np.array([]))  # noqa: F821
+        os.system(f"touch {snakemake.output.downscale_factors_plot}")  # noqa: F821
 
         sys.exit(0)
 
@@ -58,13 +59,13 @@ if __name__ == "__main__":
     )
 
     logging.info("Saving downscaling factors to disk")
-    np.save(snakemake.output.downscale_factors, downscaling_factors)
+    np.save(snakemake.output.downscale_factors, downscaling_factors)  # noqa: F821
 
     logging.info("Mapping downscaling factors and saving to disk")
     plot_downscale_factors(
         downscaling_factors,
         "Wind downscaling factors",
-        snakemake.output.downscale_factors_plot,
+        snakemake.output.downscale_factors_plot,  # noqa: F821
     )
 
     logging.info("Done estimating downscaling factors")

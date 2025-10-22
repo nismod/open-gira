@@ -7,7 +7,6 @@ For each storm (maximum wind speed field) in storm list:
 - Estimate number of customers affected
 """
 
-import json
 import logging
 import os
 import multiprocessing
@@ -438,14 +437,16 @@ def degrade_grid_with_storm(
 
 if __name__ == "__main__":
 
-    edges_path: str = snakemake.input.grid_edges
-    nodes_path: str = snakemake.input.grid_nodes
-    splits_path: str = snakemake.input.grid_splits
-    wind_speeds_path: str = snakemake.input.wind_speeds
-    speed_thresholds: list[float] = snakemake.config["transmission_windspeed_failure"]
-    exposure_dir: str = snakemake.output.exposure
-    disruption_dir: str = snakemake.output.disruption
-    n_proc: int = int(snakemake.threads)
+    edges_path: str = snakemake.input.grid_edges  # noqa: F821
+    nodes_path: str = snakemake.input.grid_nodes  # noqa: F821
+    splits_path: str = snakemake.input.grid_splits  # noqa: F821
+    wind_speeds_path: str = snakemake.input.wind_speeds  # noqa: F821
+    speed_thresholds: list[float] = snakemake.config[  # noqa: F821
+        "transmission_windspeed_failure"
+    ]
+    exposure_dir: str = snakemake.output.exposure  # noqa: F821
+    disruption_dir: str = snakemake.output.disruption  # noqa: F821
+    n_proc: int = int(snakemake.threads)  # noqa: F821
 
     os.makedirs(exposure_dir)
     os.makedirs(disruption_dir)

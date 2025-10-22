@@ -9,9 +9,9 @@ import subprocess
 MIN_LAT = -60
 MAX_LAT = 72
 
-osm_file = snakemake.input.osm_pbf
-results_dir = snakemake.wildcards.OUTPUT_DIR
-out_file = snakemake.output.bbox
+osm_file = snakemake.input.osm_pbf  # noqa: F821
+results_dir = snakemake.wildcards.OUTPUT_DIR  # noqa: F821
+out_file = snakemake.output.bbox  # noqa: F821
 
 bboxes = subprocess.check_output(["osmium", "fileinfo", osm_file, "-g", "header.boxes"])
 

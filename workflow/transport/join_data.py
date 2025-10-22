@@ -31,11 +31,8 @@ import sys
 import warnings
 
 import geopandas as gpd
-import pandas
-from tqdm import tqdm
 
 from open_gira.io import concat_geoparquet
-from open_gira.utils import natural_sort
 
 
 if __name__ == "__main__":

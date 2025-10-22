@@ -21,32 +21,34 @@ if __name__ == "__main__":
 
     # load aggregation regions for level and country in question
     logging.info("Loading regions")
-    admin: gpd.GeoDataFrame = gpd.read_parquet(snakemake.input.admin_areas)
-    admin_level = int(snakemake.wildcards.ADMIN_SLUG.split("-")[-1])
+    admin: gpd.GeoDataFrame = gpd.read_parquet(
+        snakemake.input.admin_areas  # noqa: F821
+    )
+    admin_level = int(snakemake.wildcards.ADMIN_SLUG.split("-")[-1])  # noqa: F821
     regions: gpd.GeoDataFrame = admin[
-        admin.GID_0 == snakemake.wildcards.COUNTRY_ISO_A3
+        admin.GID_0 == snakemake.wildcards.COUNTRY_ISO_A3  # noqa: F821
     ][[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]]
 
     # load tracks (we will lookup storm dates from here)
     logging.info("Loading tracks")
     tracks: pd.DataFrame = pd.read_parquet(
-        snakemake.input.tracks, columns=["track_id", "year"]
+        snakemake.input.tracks, columns=["track_id", "year"]  # noqa: F821
     )
     track_year: pd.DataFrame = tracks.drop_duplicates("track_id").set_index("track_id")
 
     # load country targets file
     logging.info("Loading targets")
-    targets: gpd.GeoDataFrame = gpd.read_parquet(snakemake.input.targets).set_index(
-        "id", drop=True
-    )
+    targets: gpd.GeoDataFrame = gpd.read_parquet(
+        snakemake.input.targets  # noqa: F821
+    ).set_index("id", drop=True)
 
     # event rows, threshold value columns, values are population affected summed across all targets
     disruption_by_event: pd.DataFrame = pd.read_parquet(
-        snakemake.input.disruption_by_event
+        snakemake.input.disruption_by_event  # noqa: F821
     )
     if len(disruption_by_event.index) == 0:
         logging.info("No disruption data, write out empty disruption")
-        regions.to_parquet(snakemake.output.expected_annual_disruption)
+        regions.to_parquet(snakemake.output.expected_annual_disruption)  # noqa: F821
         sys.exit(0)
 
     # calculate number of years between first and last storm event, necessary for expected annual disruption
@@ -57,7 +59,7 @@ if __name__ == "__main__":
 
     # target rows, threshold value columns, values are population affected summed across all events
     disruption_by_target: pd.DataFrame = pd.read_parquet(
-        snakemake.input.disruption_by_target
+        snakemake.input.disruption_by_target  # noqa: F821
     )
 
     # create a lookup between target id and the region to which the target's representative point lies within
@@ -98,5 +100,5 @@ if __name__ == "__main__":
     # write out to disk
     logging.info("Writing out with region geometry")
     gpd.GeoDataFrame(disruption_with_geometry).to_parquet(
-        snakemake.output.expected_annual_disruption
+        snakemake.output.expected_annual_disruption  # noqa: F821
     )

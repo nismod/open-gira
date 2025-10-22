@@ -1,13 +1,12 @@
 import logging
-import sys
 import warnings
 from typing import Iterable
 
 import geopandas as gpd
+import pandas as pd
 import snkit
 
 from open_gira.io import concat_geoparquet
-from open_gira.utils import natural_sort
 
 
 def concat_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
@@ -25,10 +24,10 @@ def concat_slices(slice_files: Iterable[str]) -> gpd.GeoDataFrame:
 
 
 if __name__ == "__main__":
-    node_slice_files = snakemake.input["nodes"]
-    edge_slice_files = snakemake.input["edges"]
-    nodes_output_file = snakemake.output["nodes"]
-    edges_output_file = snakemake.output["edges"]
+    node_slice_files = snakemake.input["nodes"]  # noqa: F821
+    edge_slice_files = snakemake.input["edges"]  # noqa: F821
+    nodes_output_file = snakemake.output["nodes"]  # noqa: F821
+    edges_output_file = snakemake.output["edges"]  # noqa: F821
 
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

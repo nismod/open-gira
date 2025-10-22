@@ -163,7 +163,7 @@ class AqueductFlood(ReturnPeriodMap):
     WITH_SUBSIDENCE = "wtsub"
     WITHOUT_SUBSIDENCE = "nosub"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str):  # noqa: C901
         """
         Infer attributes from name.
 

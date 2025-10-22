@@ -3,7 +3,6 @@ Plot distributions of damage fraction values by asset type
 """
 
 import os
-import re
 import sys
 
 import numpy as np
@@ -62,7 +61,7 @@ def near_square_layout(n: int) -> tuple[int, int]:
     return tuple(sorted(optimum, reverse=True))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
 
     try:
         damages_path = snakemake.input["damages"]
@@ -73,7 +72,7 @@ if __name__ == "__main__":
     damages = gpd.read_parquet(damages_path)
 
     # get length information for each edge
-    if not "length_km" in damages.columns:
+    if "length_km" not in damages.columns:
         damages = damages.set_crs(epsg=4326)
         damages["length_km"] = (
             damages.to_crs(damages.estimate_utm_crs()).geometry.length / 1_000
@@ -132,5 +131,5 @@ if __name__ == "__main__":
             fontsize=16,
         )
         fig.supylabel("Length of asset at damage fraction (km)", fontsize=16)
-        fig.supxlabel(f"Damage fraction", fontsize=16)
+        fig.supxlabel("Damage fraction", fontsize=16)
         fig.savefig(os.path.join(plots_dir, f"{asset_type}_damage_fraction.pdf"))

@@ -59,13 +59,13 @@ def get_proximity_condition(asset_type: str, edge_limit: float | int) -> Callabl
 
 
 if __name__ == "__main__":
-    plants_path: str = snakemake.input.plants
-    targets_path: str = snakemake.input.targets
-    gridfinder_path: str = snakemake.input.gridfinder
-    snkit_processes: int = snakemake.threads
-    nodes_path: str = snakemake.output.nodes
-    edges_path: str = snakemake.output.edges
-    grid_hull_path: str = snakemake.output.grid_hull
+    plants_path: str = snakemake.input.plants  # noqa: F821
+    targets_path: str = snakemake.input.targets  # noqa: F821
+    gridfinder_path: str = snakemake.input.gridfinder  # noqa: F821
+    snkit_processes: int = snakemake.threads  # noqa: F821
+    nodes_path: str = snakemake.output.nodes  # noqa: F821
+    edges_path: str = snakemake.output.edges  # noqa: F821
+    grid_hull_path: str = snakemake.output.grid_hull  # noqa: F821
 
     # set the environment variable governing how many threads snkit will use for parallel operations
     os.environ["SNKIT_PROCESSES"] = str(snkit_processes)

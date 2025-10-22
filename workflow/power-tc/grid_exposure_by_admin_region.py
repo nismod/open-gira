@@ -2,8 +2,8 @@
 For a given country and storm set, aggregate storm exposure estimates to some
 administrative level.
 
-Write out expected annual exposure (fraction of region's grid edges total
-length exposed to winds in excess of a threshold).
+Write out expected annual exposure (fraction of region's grid edges total length
+exposed to winds in excess of a threshold).
 """
 
 import logging
@@ -26,11 +26,11 @@ if __name__ == "__main__":
 
     # load network edges
     logging.info("Loading edges")
-    edges: gpd.GeoDataFrame = gpd.read_parquet(snakemake.input.grid_edges)
+    edges: gpd.GeoDataFrame = gpd.read_parquet(snakemake.input.grid_edges)  # noqa: F821
     if edges.empty is True:
         logging.info("No grid representation, write out empty exposure")
         gpd.GeoDataFrame({"geometry": []}, crs=4326).to_parquet(
-            snakemake.output.expected_annual_exposure
+            snakemake.output.expected_annual_exposure  # noqa: F821
         )
         sys.exit(0)
 
@@ -42,30 +42,36 @@ if __name__ == "__main__":
 
     # load aggregation regions for level and country in question
     logging.info("Loading regions")
-    admin: gpd.GeoDataFrame = gpd.read_parquet(snakemake.input.admin_areas)
-    admin_level = int(snakemake.wildcards.ADMIN_SLUG.split("-")[-1])
+    admin: gpd.GeoDataFrame = gpd.read_parquet(
+        snakemake.input.admin_areas  # noqa: F821
+    )
+    admin_level = int(snakemake.wildcards.ADMIN_SLUG.split("-")[-1])  # noqa: F821
     regions: gpd.GeoDataFrame = admin[
-        admin.GID_0 == snakemake.wildcards.COUNTRY_ISO_A3
+        admin.GID_0 == snakemake.wildcards.COUNTRY_ISO_A3  # noqa: F821
     ][[f"NAME_{admin_level}", f"GID_{admin_level}", "geometry"]]
 
     # load tracks (we will lookup storm dates from here)
     logging.info("Loading tracks")
     tracks: pd.DataFrame = pd.read_parquet(
-        snakemake.input.tracks, columns=["track_id", "year"]
+        snakemake.input.tracks, columns=["track_id", "year"]  # noqa: F821
     )
     track_year: pd.DataFrame = tracks.drop_duplicates("track_id").set_index("track_id")
 
     logging.info("Reading exposure by edge")
     # edge rows, threshold value columns, values are exposed length in meters for a given edge
-    exposure_by_edge = dask.dataframe.read_parquet(snakemake.input.exposure_by_edge)
+    exposure_by_edge = dask.dataframe.read_parquet(
+        snakemake.input.exposure_by_edge  # noqa: F821
+    )
     if len(exposure_by_edge.index) == 0:
         logging.info("No exposure data, write out empty exposure")
-        regions.to_parquet(snakemake.output.expected_annual_exposure)
+        regions.to_parquet(snakemake.output.expected_annual_exposure)  # noqa: F821
         sys.exit(0)
 
     logging.info("Reading exposure by storm")
     # storm rows, threshold value columns, values are exposed length in meters for a given storm
-    exposure_by_event = dask.dataframe.read_parquet(snakemake.input.exposure_by_event)
+    exposure_by_event = dask.dataframe.read_parquet(
+        snakemake.input.exposure_by_event  # noqa: F821
+    )
 
     # calculate number of years between first and last storm event, necessary for expected annual exposure
 
@@ -114,9 +120,10 @@ if __name__ == "__main__":
     # collapse the task graph, summing across edges and region
     exposure_by_region: pd.DataFrame = exposure_by_region.compute()
 
-    # take the exposure lengths and divide by the product of original, undamaged lengths and years passing between first and last storm
-    # this division is aligned on the indicies (both set to edge ids)
-    # we now have an expected annual exposure
+    # take the exposure lengths and divide by the product of original, undamaged
+    # lengths and years passing between first and last storm this division is
+    # aligned on the indicies (both set to edge ids) we now have an expected
+    # annual exposure
     logging.info("Calculating expected annual exposure")
     exposure_fraction_by_region = exposure_by_region.drop(
         columns=["nominal_length_m"]
@@ -135,5 +142,5 @@ if __name__ == "__main__":
     # write out to disk
     logging.info("Writing out with region geometry")
     gpd.GeoDataFrame(exposure_with_length).to_parquet(
-        snakemake.output.expected_annual_exposure
+        snakemake.output.expected_annual_exposure  # noqa: F821
     )

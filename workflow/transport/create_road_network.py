@@ -7,7 +7,6 @@ Read OSM geoparquet, create network, clean it, write out as geopackage.
 import logging
 import sys
 import warnings
-from typing import Tuple
 
 import geopandas as gpd
 import pandas as pd
@@ -153,14 +152,16 @@ def annotate_condition(
 
 if __name__ == "__main__":
 
-    osm_edges_path = snakemake.input["edges"]
-    osm_nodes_path = snakemake.input["nodes"]
-    administrative_data_path = snakemake.input["admin"]
-    highway_surface_mapping_path = snakemake.input["highway_surface_mapping"]
-    dataset_name = snakemake.wildcards.DATASET
-    nodes_output_path = snakemake.output["nodes"]
-    edges_output_path = snakemake.output["edges"]
-    slice_number = int(snakemake.params["slice_number"])
+    osm_edges_path = snakemake.input["edges"]  # noqa: F821
+    osm_nodes_path = snakemake.input["nodes"]  # noqa: F821
+    administrative_data_path = snakemake.input["admin"]  # noqa: F821
+    highway_surface_mapping_path = snakemake.input[  # noqa: F821
+        "highway_surface_mapping"
+    ]
+    dataset_name = snakemake.wildcards.DATASET  # noqa: F821
+    nodes_output_path = snakemake.output["nodes"]  # noqa: F821
+    edges_output_path = snakemake.output["edges"]  # noqa: F821
+    slice_number = int(snakemake.params["slice_number"])  # noqa: F821
 
     osm_epsg = 4326
 
@@ -217,8 +218,8 @@ if __name__ == "__main__":
     # select and label assets with their type
     # the asset_type is used to later select a damage curve
     # note that order is important here, if an edge is paved, motorway and a bridge, it will be tagged as a bridge only
-    network.edges.loc[network.edges.paved == False, "asset_type"] = RoadAssets.UNPAVED
-    network.edges.loc[network.edges.paved == True, "asset_type"] = RoadAssets.PAVED
+    network.edges.loc[~network.edges.paved, "asset_type"] = RoadAssets.UNPAVED
+    network.edges.loc[network.edges.paved, "asset_type"] = RoadAssets.PAVED
     network.edges.loc[network.edges.tag_highway == "unclassified", "asset_type"] = (
         RoadAssets.UNCLASSIFIED
     )
@@ -240,7 +241,7 @@ if __name__ == "__main__":
     network.edges.loc[network.edges.tag_highway == "motorway", "asset_type"] = (
         RoadAssets.MOTORWAY
     )
-    network.edges.loc[network.edges.bridge == True, "asset_type"] = RoadAssets.BRIDGE
+    network.edges.loc[network.edges.bridge, "asset_type"] = RoadAssets.BRIDGE
 
     logging.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)
