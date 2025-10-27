@@ -66,7 +66,7 @@ keep_tags:
   rail: ["railway", "bridge", "name", "gauge", "usage", "electrified", "passenger_lines", "voltage", "maxspeed"]
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 64
+slice_count: 2025
 
 ####################################
 ### MULTI-MODAL NETWORK CREATION ###
