@@ -27,7 +27,7 @@ http://data.europa.eu/89h/jrc-floods-floodmapgl_rp50y-tif
 
 rule download_river_jrc:
     output:
-        zip="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip"
+        zip="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip",
     shell:
         """
         output_dir=$(dirname {output.zip})
@@ -39,9 +39,9 @@ rule download_river_jrc:
 
 rule extract_river_jrc:
     input:
-        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip"
+        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.zip",
     output:
-        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.tif"
+        tiff="{OUTPUT_DIR}/input/hazard-river-jrc/raw/floodMapGL_rp{RP}y.tif",
     shell:
         """
         output_dir=$(dirname {output.tiff})
@@ -60,3 +60,68 @@ Current step is to run this explicitly:
 Before asking for any risk results, so the checkpoint download_hazard_datasets
 will pick up the TIFFs in the directory.
 """
+
+rule download_river_jrc_2024_list:
+    output:
+        geojson="{OUTPUT_DIR}/input/hazard-river-jrc/2024/tile_extents.geojson",
+    shell:
+        """
+        output_dir=$(dirname {output.geojson})
+
+        wget -q -nc \
+            --directory-prefix=$output_dir \
+            https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/CEMS-GLOFAS/flood_hazard/tile_extents.geojson
+        """
+
+rule parse_river_jrc_2024_list:
+    input:
+        geojson="{OUTPUT_DIR}/input/hazard-river-jrc/2024/tile_extents.geojson",
+    output:
+        txt="{OUTPUT_DIR}/input/hazard-river-jrc/2024/links.txt",
+    run:
+        import json
+        RPS = ["10", "20", "50", "75", "100", "200", "500"]
+        BASE_URL = "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/CEMS-GLOFAS/flood_hazard"
+        with (open(output.txt, 'w') as out_fh, open(input.geojson, 'r') as in_fh):
+            collection = json.load(in_fh)
+            for f in collection['features']:
+                tile_name = f['properties']["name"]  # e.g., "N80_W170"
+                tile_id = f['properties']["id"]
+                for rp in RPS:
+                    file_name = f"ID{tile_id}_{tile_name}_RP{rp}_depth.tif"
+                    file_url = f"{BASE_URL}/RP{rp}/{file_name}\n"
+                    out_fh.write(file_url)
+
+rule download_river_jrc_2024:
+    input:
+        txt="{OUTPUT_DIR}/input/hazard-river-jrc/2024/links.txt",
+    output:
+        dir=directory("{OUTPUT_DIR}/input/hazard-river-jrc/2024/raw"),
+    shell:
+        """
+        mkdir -p {output.dir}
+        pushd {output.dir}
+            cat ../links.txt | parallel wget {{}}
+        popd
+        """
+
+rule river_jrc_2024_vrt:
+    input:
+        dir=directory("{OUTPUT_DIR}/input/hazard-river-jrc/2024/raw"),
+        geojson="{OUTPUT_DIR}/input/hazard-river-jrc/2024/tile_extents.geojson",
+    output:
+        vrt="{OUTPUT_DIR}/input/hazard-river-jrc/2024/river_jrc_2024_RP{RP}_depth.vrt",
+    shell:
+        """
+        pushd $(dirname {output.vrt})
+            fnames=$(cat links.txt | grep _RP{wildcards.RP}_ | cut -d '/' -f 9 | sed 's/^/raw\//')
+            gdalbuildvrt $(basename {output.vrt}) $fnames
+        popd
+        """
+
+rule river_jrc_2024_vrt_all:
+    input:
+        expand(
+            "results/input/hazard-river-jrc/2024/river_jrc_2024_RP{RP}_depth.vrt",
+            RP=["10", "20", "50", "75", "100", "200", "500"]
+        )
