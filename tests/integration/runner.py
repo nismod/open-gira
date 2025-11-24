@@ -86,6 +86,8 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
             "python",
             "-m",
             "snakemake",
+            "--verbose",
+            "--debug",
             "-c1",  # single core
             "--configfile",  # use test specific configuration
             "tests/config/config.yaml",
