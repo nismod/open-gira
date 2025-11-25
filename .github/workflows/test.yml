@@ -30,14 +30,8 @@ jobs:
           args: "format --check --diff"
 
       - name: Test with pytest
-        # Use a login shell to permit aliases
-        shell: bash -l {0}
         run: |
           osmium --version
-
-          # Imagemagick v7 introduces a change to CLI with a single parent
-          # 'magick' command -- introduce alias here until v7 widespread
-          alias identify="magick identify"
-          identify --version
+          magick --version
 
           python -m pytest -n auto
