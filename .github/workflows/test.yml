@@ -7,6 +7,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install ImageMagick
+        uses: mfinelli/setup-imagemagick@v6
+        with:
+          cache: true
+
+      - name: Cache Latest ImageMagick
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/bin/magick
+          key: ${{ runner.os }}-imagemagick-latest
+          restore-keys: |
+            ${{ runner.os }}-imagemagick-latest
+
+      - name: debug path
+        run: |
+          echo $GITHUB_PATH
+          echo $(which magick)
+          ls /home/runner
+
+      - name: Symlink ImageMagick
+        run: |
+          if ! [ -x "$(command -v identify)" ]; then
+            sudo ln -s $(which magick) /usr/bin/identify
+          fi
+
+      - name: Update PATH for ImageMagick
+        run: echo "/home/runner/bin" >> $GITHUB_PATH
+
       - uses: actions/checkout@v5
 
       - name: Install Python environment
@@ -24,6 +52,6 @@ jobs:
       - name: Test with pytest
         run: |
           osmium --version
-          magick --version
+          identify --version
 
           python -m pytest -n auto
