@@ -1,0 +1,33 @@
+BootStrap: docker
+From: registry-1.docker.io/mambaorg/micromamba:2.0.2-ubuntu22.04
+
+%labels
+    Author Fred Thomas <fred.thomas@eci.ox.ac.uk>
+    Version 0.1
+
+%files
+    environment.yml /home/mambauser/environment.yml
+    config /home/mambauser/config
+    environment.yml /home/mambauser/environment.yml
+    pyproject.toml /home/mambauser/pyproject.toml
+    scripts /home/mambauser/scripts
+    src /home/mambauser/src
+    workflow /home/mambauser/workflow
+
+%post
+    apt-get update && apt-get install vim -y
+    micromamba create --file /home/mambauser/environment.yml -y
+    micromamba clean --all -y
+
+%runscript
+    cd /open-gira
+    micromamba run --name open-gira "$@"
+
+%help
+    This is a container for running open-gira snakemake workflows.
+
+    Build with:
+    singularity build <image path> <def path>
+
+    Launch with:
+    singularity run --bind <host open-gira dir>:/open-gira <image path> <snakemake command>
