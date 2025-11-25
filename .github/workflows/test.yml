@@ -8,32 +8,9 @@ jobs:
 
     steps:
       - name: Install ImageMagick
-        uses: mfinelli/setup-imagemagick@v6
+        uses: mfinelli/setup-imagemagick@v7
         with:
           cache: true
-
-      - name: Cache Latest ImageMagick
-        uses: actions/cache@v3
-        with:
-          path: /home/runner/bin/magick
-          key: ${{ runner.os }}-imagemagick-latest
-          restore-keys: |
-            ${{ runner.os }}-imagemagick-latest
-
-      - name: debug path
-        run: |
-          echo $GITHUB_PATH
-          echo $(which magick)
-          ls /home/runner
-
-      - name: Symlink ImageMagick
-        run: |
-          if ! [ -x "$(command -v identify)" ]; then
-            sudo ln -s $(which magick) /usr/bin/identify
-          fi
-
-      - name: Update PATH for ImageMagick
-        run: echo "/home/runner/bin" >> $GITHUB_PATH
 
       - uses: actions/checkout@v5
 
@@ -52,6 +29,10 @@ jobs:
       - name: Test with pytest
         run: |
           osmium --version
+
+          # Imagemagick v7 introduces a change to CLI with a single parent
+          # 'magick' command -- introduce alias here until v7 widespread
+          alias identify="magick identify"
           identify --version
 
           python -m pytest -n auto
