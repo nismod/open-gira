@@ -30,6 +30,8 @@ jobs:
           args: "format --check --diff"
 
       - name: Test with pytest
+        # Use a login shell to permit aliases
+        shell: bash -l {0}
         run: |
           osmium --version
 
