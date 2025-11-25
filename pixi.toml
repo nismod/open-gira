@@ -1,0 +1,61 @@
+[workspace]
+authors = ["Fred Thomas <fred.thomas@eci.ox.ac.uk>"]
+channels = ["conda-forge", "bioconda", "nodefaults"]
+name = "open-gira"
+platforms = ["linux-64", "osx-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "==3.12"
+pip = "*"
+cython = "*"
+black = "*"
+flake8 = "*"
+ipykernel = "*"
+jupyter = "*"
+nb_conda_kernels = "*"
+nbstripout = "*"
+snakemake = "*"
+snakemake-executor-plugin-slurm = "*"
+gdal = "*"
+geopandas = "*"
+geopy = "*"
+contextily = "*"
+osmium-tool = "==1.14.0"
+pyogrio = "*"
+pyproj = "*"
+pyrosm = "*"
+rasterio = "*"
+rasterstats = "*"
+rioxarray = "*"
+snkit = "*"
+dask = "*"
+datashader = "*"
+igraph = "*"
+matplotlib = "*"
+netcdf4 = "*"
+networkx = "*"
+numpy = "*"
+openpyxl = "*"
+pandas = "*"
+pathos = "*"
+pyarrow = "*"
+scipy = "*"
+spatialpandas = "*"
+xarray = "*"
+zarr = "*"
+jq = "*"
+requests = "*"
+tabulate = "*"
+tqdm = "*"
+zenodo_get = "*"
+pytest = "*"
+pytest-xdist = "*"
+
+[pypi-dependencies]
+nismod-snail = "*"
+osmium = "*"
+irv-datapkg = "*"
+open_gira = { path = ".", editable = true }
