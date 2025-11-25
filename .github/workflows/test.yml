@@ -12,9 +12,6 @@ jobs:
         with:
           cache: true
 
-      - name: Update PATH for ImageMagick
-        run: echo "/home/runner/bin" >> $GITHUB_PATH
-
       - uses: actions/checkout@v5
 
       - name: Install Python environment
