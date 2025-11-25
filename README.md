@@ -35,6 +35,8 @@ Install `open-gira` by cloning the repository:
 git clone https://github.com/nismod/open-gira.git
 ```
 
+### Conda install
+
 The repository comes with a `environment.yml` file describing the `conda` and
 `PyPI` packages required to run `open-gira`. The `open-gira` developers
 recommend using either [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba)
@@ -48,7 +50,7 @@ Having installed one of the suggested package managers, to create the
 micromamba create -f environment.yml -y
 ```
 
-### MacOS
+#### MacOS
 
 On MacOS with Apple silicon chips, the `osmium` and `osmium-tool` packages are
 not yet available for the `osx-arm64` [conda
@@ -67,6 +69,20 @@ And to activate the environment:
 
 ```bash
 micromamba activate open-gira
+```
+
+### Pixi install
+
+An alternative to `micromamba` or `mamba` is the `pixi` package manager. It can build from a lock file for more reproducible builds. Installation instructions for `pixi` are [here](https://pixi.sh/dev/installation/).
+
+To install the `open-gira` environment using pixi, change directory to this one and then:
+```bash
+pixi install
+```
+
+To get a shell with this environment, run the following from this directory:
+```bash
+pixi shell
 ```
 
 ### Utilities
