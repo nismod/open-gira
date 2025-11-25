@@ -22,6 +22,7 @@ jobs:
           args: "format --check --diff"
 
       - name: Test with pytest
+        shell: bash -l {0}
         run: |
           osmium --version
           identify --version
