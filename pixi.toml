@@ -53,6 +53,7 @@ tqdm = "*"
 zenodo_get = "*"
 pytest = "*"
 pytest-xdist = "*"
+pulp = ">=2.8.0,<3"
 
 [pypi-dependencies]
 nismod-snail = "*"

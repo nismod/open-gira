@@ -53,6 +53,7 @@ docs/book/
 
 # Cluster
 slurm
+
 # pixi environments
 .pixi/*
 !.pixi/config.toml
