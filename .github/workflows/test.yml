@@ -26,6 +26,11 @@ jobs:
           activate-environment: true
           log-level: vv
 
+      - name: Check environment.yml is consistent with pixi
+        run: |
+          pixi workspace export conda-environment --name open-gira  > environment.yml
+          git diff --exit-code environment.yml
+
       - name: Test with pytest
         run: |
           osmium --version

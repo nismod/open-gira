@@ -73,16 +73,36 @@ micromamba activate open-gira
 
 ### Pixi install
 
-An alternative to `micromamba` or `mamba` is the `pixi` package manager. It can build from a lock file for more reproducible builds. Installation instructions for `pixi` are [here](https://pixi.sh/dev/installation/).
+An alternative to `micromamba` or `mamba` is the `pixi` package manager. It can
+build from a lock file for more reproducible builds. Installation instructions
+for `pixi` are [here](https://pixi.sh/dev/installation/).
+
+It is possible to configure `pixi` to install environments in a global location
+using
+[`detached-environments`](https://pixi.sh/latest/switching_from/conda/#global-environments).
+For example, in some server/HPC filesystems, you may wish to ensure packages are
+installed in an SSD-backed $HOME directory.
+
+```bash
+pixi config set detached-environments $HOME/.local/share/pixi_envs
+```
 
 To install the `open-gira` environment using pixi, change directory to this one and then:
+
 ```bash
 pixi install
 ```
 
 To get a shell with this environment, run the following from this directory:
+
 ```bash
 pixi shell
+```
+
+To keep the `environment.yml` in sync following `pixi` package updates:
+
+```bash
+pixi workspace export conda-environment --name open-gira  > environment.yml
 ```
 
 ### Utilities

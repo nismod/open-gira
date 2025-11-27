@@ -1,6 +1,6 @@
 [workspace]
 authors = ["Fred Thomas <fred.thomas@eci.ox.ac.uk>"]
-channels = ["conda-forge", "bioconda", "nodefaults"]
+channels = ["conda-forge", "bioconda"]
 name = "open-gira"
 platforms = ["linux-64", "osx-64"]
 version = "0.1.0"
