@@ -35,6 +35,8 @@ Install `open-gira` by cloning the repository:
 git clone https://github.com/nismod/open-gira.git
 ```
 
+### Conda install
+
 The repository comes with a `environment.yml` file describing the `conda` and
 `PyPI` packages required to run `open-gira`. The `open-gira` developers
 recommend using either [micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html#micromamba)
@@ -48,7 +50,7 @@ Having installed one of the suggested package managers, to create the
 micromamba create -f environment.yml -y
 ```
 
-### MacOS
+#### MacOS
 
 On MacOS with Apple silicon chips, the `osmium` and `osmium-tool` packages are
 not yet available for the `osx-arm64` [conda
@@ -67,6 +69,40 @@ And to activate the environment:
 
 ```bash
 micromamba activate open-gira
+```
+
+### Pixi install
+
+An alternative to `micromamba` or `mamba` is the `pixi` package manager. It can
+build from a lock file for more reproducible builds. Installation instructions
+for `pixi` are [here](https://pixi.sh/dev/installation/).
+
+It is possible to configure `pixi` to install environments in a global location
+using
+[`detached-environments`](https://pixi.sh/latest/switching_from/conda/#global-environments).
+For example, in some server/HPC filesystems, you may wish to ensure packages are
+installed in an SSD-backed $HOME directory.
+
+```bash
+pixi config set detached-environments $HOME/.local/share/pixi_envs
+```
+
+To install the `open-gira` environment using pixi, change directory to this one and then:
+
+```bash
+pixi install
+```
+
+To get a shell with this environment, run the following from this directory:
+
+```bash
+pixi shell
+```
+
+To keep the `environment.yml` in sync following `pixi` package updates:
+
+```bash
+pixi workspace export conda-environment --name open-gira  > environment.yml
 ```
 
 ### Utilities

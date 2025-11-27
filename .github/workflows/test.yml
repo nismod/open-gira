@@ -9,23 +9,31 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Python environment
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-file: environment.yml
-          environment-name: open-gira
-          cache-environment: true
-
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
 
+      - name: Install ImageMagick
+        uses: mfinelli/setup-imagemagick@v7
+        with:
+          cache: true
+
+      - name: Install Python environment
+        uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          pixi-version: v0.59.0
+          cache: true
+          activate-environment: true
+          log-level: vv
+
+      - name: Check environment.yml is consistent with pixi
+        run: |
+          pixi workspace export conda-environment --name open-gira  > environment.yml
+          git diff --exit-code environment.yml
+
       - name: Test with pytest
-        # use a 'login shell', thereforce sourcing .bashrc, necessary for umamba
-        shell: bash -l {0}
-        # uses pytest-xdist to parallelise (2 CPUs on standard GH Actions runner)
         run: |
           osmium --version
-          identify --version
+          magick --version
 
           python -m pytest -n auto

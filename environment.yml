@@ -1,49 +1,59 @@
-# to install this environment:
-# micromamba create -f environment.yml -y
 name: open-gira
 channels:
-  - conda-forge # majority of dependencies
-  - nodefaults
+- conda-forge
+- bioconda
+- nodefaults
 dependencies:
-  - python=3.12
-  - pip
-  - pip:                       # delegate to pip for non-conda packages
-    - nismod-snail==0.5.2      # vector-raster intersections
-    - osmium==4.0.2            # OpenStreetMap protobuf handling
-    - snkit==1.8.1             # spatial network cleaning
-    - irv-datapkg==0.1.2       # data package helper
-    - -e .                     # open_gira helper package
-  - black                      # formatter
-  - datashader                 # plotting large datasets
-  - dask                       # larger-than-memory computing
-  - flake8                     # linter
-  - gdal                       # command-line tools for spatial data
-  - geopandas                  # geospatial dataframes
-  - igraph                     # graph algorithms and data structures
-  - imagemagick                # image comparison "identify" tool for testing
-  - ipykernel                  # notebook support
-  - jupyter                    # notebook support
-  - jq                         # JSON processing tool
-  - matplotlib                 # basic plotting
-  - nbstripout                 # notebooks in git
-  - netCDF4                    # NetCDF file format
-  - networkx                   # networks
-  - numpy                      # data arrays
-  - osmium-tool==1.14.0        # openstreetmap extracts
-  - pandas                     # tabular data
-  - pyarrow                    # parquet file format, Arrow data exchange
-  - pyogrio                    # vectorised geospatial file i/o
-  - pyproj                     # geographic projections
-  - pytest                     # testing
-  - pytest-xdist               # parallelise testing across CPUs
-  - rasterio                   # raster file formats
-  - rasterstats                # raster statistics
-  - requests                   # make HTTP requests
-  - rioxarray                  # xarray datasets from raster files
-  - scipy                      # scientific computing library
-  - spatialpandas              # plotting large datasets
-  - bioconda::snakemake==9.1.3 # workflow management
-  - tqdm                       # progress bars
-  - xarray                     # named n-dimensional arrays
-  - zarr                       # zarr ndarray/raster store
-  - zenodo_get>=1.5.1          # data download client, zenodo API broken w/ <1.5.1
+- python ==3.12
+- pip *
+- cython *
+- black *
+- flake8 *
+- ipykernel *
+- jupyter *
+- nb_conda_kernels *
+- nbstripout *
+- snakemake *
+- snakemake-executor-plugin-slurm *
+- gdal *
+- geopandas *
+- geopy *
+- contextily *
+- osmium-tool ==1.14.0
+- pyogrio *
+- pyproj *
+- pyrosm *
+- rasterio *
+- rasterstats *
+- rioxarray *
+- snkit *
+- dask *
+- datashader *
+- igraph *
+- matplotlib *
+- netcdf4 *
+- networkx *
+- numpy *
+- openpyxl *
+- pandas *
+- pathos *
+- pyarrow *
+- scipy *
+- spatialpandas *
+- xarray *
+- zarr *
+- jq *
+- requests *
+- tabulate *
+- tqdm *
+- zenodo_get *
+- pytest *
+- pytest-xdist *
+- pulp >=2.8.0,<3
+- pip
+- pip:
+  - nismod-snail
+  - osmium
+  - irv-datapkg
+  - -e .
+
