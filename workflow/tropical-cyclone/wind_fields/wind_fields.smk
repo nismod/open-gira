@@ -186,10 +186,13 @@ def read_storm_set(wildcards) -> list[str]:
     """
     Read file containing a list of storm IDs that constitute the storm set.
 
-    N.B. An empty file (and set) will be interpreted as process all storms in
+    N.B. An empty or non-existent file will be interpreted as process all storms in
     the dataset.
     """
-    storm_set_path = config["storm_sets"][wildcards.STORM_SET]
+    try:
+        storm_set_path = config["storm_sets"][wildcards.STORM_SET]
+    except KeyError:
+        return []
     with open(storm_set_path, "r") as fp:
         storm_set = json.load(fp)
     return storm_set
