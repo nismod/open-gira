@@ -292,7 +292,7 @@ def estimate_wind_field(
 
 
 def interpolate_track(
-    track: gpd.GeoDataFrame, frequency: str = "1H"
+    track: gpd.GeoDataFrame, frequency: str = "1h"
 ) -> gpd.GeoDataFrame:
     """
     Interpolate storm track data.
@@ -349,7 +349,7 @@ def interpolate_track(
     # so our implicit assumption is that the input index is equally spaced
     max_steps_to_fill: int = int(
         np.round(
-            pd.Timedelta("6H").total_seconds() / pd.Timedelta(frequency).total_seconds()
+            pd.Timedelta("6h").total_seconds() / pd.Timedelta(frequency).total_seconds()
         )
     )
 
