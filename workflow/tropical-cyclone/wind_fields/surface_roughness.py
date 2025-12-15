@@ -32,20 +32,18 @@ if __name__ == "__main__":
         comment="#",
     )
 
-    # Build a lookup array where the category is the index
-    # and the value for a given index/category is the surface roughness in metres
     logging.info("Build land cover -> surface roughness mapping...")
     lookup_length = max(set(cover_roughness.glob_cover_2009_id)) + 1
     roughness_lookup: np.ndarray = np.zeros(lookup_length)
     for row in cover_roughness.itertuples():
         roughness_lookup[row.glob_cover_2009_id] = row.roughness_length_m
 
-    # Create surface roughness field, modally interpolated to wind grid
     logging.info("Create surface roughness field...")
-    land_cover_reprojected = land_cover.rio.reproject_match(wind_grid, resampling="mode")
-    surface_roughness = land_cover_reprojected.copy()
-    surface_roughness.values = roughness_lookup[land_cover_reprojected.values]
+    input_roughness = land_cover.copy()
+    input_roughness.values = roughness_lookup[land_cover.values.astype(int)]
 
-    # Write out surface roughness values on wind grid
+    logging.info("Aggregate roughness to wind grid...")
+    output_roughness = input_roughness.rio.reproject_match(wind_grid, resampling="average")
+
     logging.info("Save to disk...")
-    surface_roughness.rio.to_raster(snakemake.output.surface_roughness)  # noqa: F821
+    output_roughness.rio.to_raster(snakemake.output.surface_roughness)  # noqa: F821
