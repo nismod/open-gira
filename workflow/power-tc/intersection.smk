@@ -14,16 +14,19 @@ def storm_tracks_file_from_storm_set(wildcards) -> str:
 
 checkpoint countries_intersecting_storm_set:
     """
-    Find all countries which are likely to be affected by some storm set (as
-    defined by a config["storm_sets"] JSON file).
+    Find all countries which are likely to be affected by some storm set.
 
     N.B. For a large set of tracks (> 1M) the spatial join can take a while.
     Currently the approach is to buffer the track points and not the countries.
     I have tried the inverse but it is much slower. Simplifying the country
     polygons does help (~10x faster), so that is implemented also.
+
+    Test with:
+    snakemake -c1 results/power/by_storm_set/IBTrACS/countries_impacted.json
     """
     input:
         tracks = storm_tracks_file_from_storm_set,
+        permitted_countries = "config/tc_grid/permitted_countries.json",
         gadm_path = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
     resources:
         mem_mb=60000
@@ -49,10 +52,13 @@ checkpoint countries_intersecting_storm_set:
         logging.info("Reading tracks for storm set")
         tracks = gpd.read_parquet(input.tracks)
 
-        # load storm ids of interest from file
-        storm_set_path = config["storm_sets"][wildcards.STORM_SET]
-        with open(storm_set_path, "r") as fp:
-            storm_set = set(json.load(fp))
+        # If filtering to a specific subset of storms, load storm ids of interest from file
+        try:
+            storm_set_path = config["storm_sets"][wildcards.STORM_SET]
+            with open(storm_set_path, "r") as fp:
+                storm_set = set(json.load(fp))
+        except KeyError:
+            storm_set = None
 
         if storm_set:
             logging.info(f"Filtering to {len(storm_set)} tracks of {wildcards.STORM_SET}")
@@ -71,17 +77,11 @@ checkpoint countries_intersecting_storm_set:
         tracks.geometry = tracks.geometry.buffer(search_radius_deg)
 
         logging.info("Read country geometries")
-        # combine natural earth (simple geom, 176 states) and GADM (detailed geom, 260 states)
-        # for full country list, but without too much polygon detail for most countries
-        # this speeds the later spatial join by ~10x
         gadm = gpd.read_parquet(input.gadm_path)[["GID_0", "geometry"]].rename(columns={"GID_0": "iso_a3"})
-        natural_earth = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))[["iso_a3", "geometry"]]
-        only_in_gadm_iso_a3 = list(set(gadm.iso_a3) - set(natural_earth.iso_a3))
-        only_in_gadm = gadm.set_index("iso_a3", drop=True).loc[only_in_gadm_iso_a3].reset_index()
-        only_in_gadm_copy = only_in_gadm.copy()
-        # roughly simplify the remaining gadm geometries
-        only_in_gadm_copy.geometry = only_in_gadm_copy.geometry.to_crs(epsg=3857).simplify(1000).to_crs(epsg=4326)
-        countries = gpd.GeoDataFrame(pd.concat([natural_earth, only_in_gadm_copy]))
+        # Load a set of ISO alpha-3 country codes. Only use countries on this list.
+        with open(input.permitted_countries, "r") as fp:
+            permitted_countries = set(json.load(fp))
+        countries = gadm[gadm.iso_a3.isin(permitted_countries)]
 
         # join track points to buffered country polygons
         logging.info("Perform spatial join of countries and filtered tracks")
