@@ -153,7 +153,7 @@ rule create_surface_roughness_raster:
 
 """
 Test with:
-snakemake -c1 results/power/by_country/CUB/surface_roughness.tiff
+snakemake -c1 results/power/by_country/CUB/storms/surface_roughness.tiff
 """
 
 
