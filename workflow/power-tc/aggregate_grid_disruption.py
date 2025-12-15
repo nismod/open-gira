@@ -5,6 +5,7 @@ Take per-event disruption files with per-target rows and aggregate into a per-ta
 import glob
 import logging
 import os
+import warnings
 
 import dask
 import dask.dataframe
@@ -55,14 +56,22 @@ def disruption_by_target(file_path: str, schema: pd.DataFrame) -> pd.DataFrame:
     # N.B. arrow specification requires string column names (but threshold column names are float)
     df.columns = [f"{value:.1f}" for value in df.columns.values]
 
-    # take the netCDF target dimension (currently the dataframe index) and store as data
+    # Take the netCDF target dimension (currently the dataframe index) and store as data
     df: pd.DataFrame = df.reset_index()
 
-    # repeat the event id for each target
+    # Repeat the event id for each target
     df["event_id"] = event_id
 
-    # in the case of missing columns, add them by concatenating with schema
-    df: pd.DataFrame = pd.concat([schema, df])
+    # FutureWarning: The behavior of DataFrame concatenation with empty or
+    # all-NA entries is deprecated. In a future version, this will no longer
+    # exclude empty or all-NA columns when determining the result dtypes. To
+    # retain the old behavior, exclude the relevant entries before the concat
+    # operation.
+    with warnings.catch_warnings():
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+
+        # In the case of missing columns, add them by concatenating with schema
+        df: pd.DataFrame = pd.concat([schema, df])
 
     return df
 
