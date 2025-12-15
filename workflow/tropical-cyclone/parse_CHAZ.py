@@ -13,11 +13,11 @@ if __name__ == "__main__":
     df = gpd.read_parquet(snakemake.input.raw)
 
     logging.info("Relabelling track_id")
-    df["track_id"] = \
-        df["sample"].map(lambda x: f"S{x:03d}") \
-        + df["year"].map(lambda x: f"Y{x:04d}") \
-        + df["tc_number"].map(lambda x: f"N{x:03d}") \
-
+    df["track_id"] = (
+        df["sample"].map(lambda x: f"S{x:03d}")
+        + df["year"].map(lambda x: f"Y{x:04d}")
+        + df["tc_number"].map(lambda x: f"N{x:03d}")
+    )
     logging.info("Wrapping longitudes to -180, 180")
     df["lon"] = df.geometry.x
     df["lat"] = df.geometry.y
@@ -28,7 +28,9 @@ if __name__ == "__main__":
     df = df.drop(columns=["lon", "lat"])
 
     result = df.drop_duplicates()
-    logging.info(f"Dropped {len(df) - len(result)} duplicate points: {len(df)} -> {len(result)}")
+    logging.info(
+        f"Dropped {len(df) - len(result)} duplicate points: {len(df)} -> {len(result)}"
+    )
 
     logging.info("Writing out to disk")
     os.makedirs(os.path.dirname(snakemake.output.processed), exist_ok=True)

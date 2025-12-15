@@ -43,7 +43,9 @@ if __name__ == "__main__":
     input_roughness.values = roughness_lookup[land_cover.values.astype(int)]
 
     logging.info("Aggregate roughness to wind grid...")
-    output_roughness = input_roughness.rio.reproject_match(wind_grid, resampling="average")
+    output_roughness = input_roughness.rio.reproject_match(
+        wind_grid, resampling="average"
+    )
 
     logging.info("Save to disk...")
     output_roughness.rio.to_raster(snakemake.output.surface_roughness)  # noqa: F821
