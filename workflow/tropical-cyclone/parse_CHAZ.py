@@ -27,6 +27,9 @@ if __name__ == "__main__":
     )
     df = df.drop(columns=["lon", "lat"])
 
+    result = df.drop_duplicates()
+    logging.info(f"Dropped {len(df) - len(result)} duplicate points: {len(df)} -> {len(result)}")
+
     logging.info("Writing out to disk")
     os.makedirs(os.path.dirname(snakemake.output.processed), exist_ok=True)
-    df.to_parquet(snakemake.output.processed)
+    result.to_parquet(snakemake.output.processed)
