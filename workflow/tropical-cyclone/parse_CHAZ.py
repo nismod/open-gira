@@ -18,6 +18,7 @@ if __name__ == "__main__":
         + df["year"].map(lambda x: f"Y{x:04d}")
         + df["tc_number"].map(lambda x: f"N{x:03d}")
     )
+
     logging.info("Wrapping longitudes to -180, 180")
     df["lon"] = df.geometry.x
     df["lat"] = df.geometry.y
