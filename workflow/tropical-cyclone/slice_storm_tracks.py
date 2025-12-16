@@ -46,32 +46,45 @@ if __name__ == "__main__":
     tracks = gpd.read_parquet(global_tracks_path)
 
     logging.info("Subsetting tracks to those which intersect with grid (+ buffer)")
-    # adding the buffer reduces the likelihood we construct wind fields where a
-    # storm suddenly appears well inside the domain
-    AOI_points = tracks[tracks.intersects(hull.buffer(track_slicing_buffer_deg))]
-    logging.info(
-        f"Found {len(AOI_points.track_id.unique())} tracks passing within buffer"
+    aoi_points = tracks[tracks.intersects(hull.buffer(track_slicing_buffer_deg))]
+
+    logging.info("Slicing tracks' first arrival to last departure")
+    aoi_grouped = (
+        aoi_points.reset_index()
+        .groupby("track_id")
+        .agg({aoi_points.index.name: ["min", "max"]})
     )
+    aoi_grouped.columns = aoi_grouped.columns.droplevel(0)
+    aoi_grouped.columns = ["arrival_index", "departure_index"]
 
-    # some storms impact a country, wander off outside our AOI, then return some days later
-    # want time continuity in our tracks (so we don't interpolate wildly, so our eye speed estimates are reasonable)
-    logging.info(
-        "Indexing tracks' first arrival to last departure (for time continuity)"
-    )
-    sliced_tracks_by_track: list[pd.DataFrame] = []
-    for track_id in tqdm(AOI_points.track_id.unique()):
-        df = AOI_points[AOI_points.track_id == track_id]
+    # Filter to tracks that have more than one point in AOI
+    valid_aoi_tracks = aoi_grouped[
+        aoi_grouped["departure_index"] > aoi_grouped["arrival_index"]
+    ]
 
-        # we need at least two track points to calculate the eye velocity and advective winds
-        if len(df) > 1:
-            arrival, *_, departure = df.index
-            sliced = tracks[tracks.track_id == track_id].loc[arrival:departure]
-            assert sliced.timestep.is_monotonic_increasing
-            assert np.all(np.diff(sliced.timestep) == 1)
-            sliced_tracks_by_track.append(sliced)
+    if len(valid_aoi_tracks) > 0:
+        sliced_tracks_list = []
+        tracks_grouped = tracks.groupby("track_id")
 
-    if len(sliced_tracks_by_track) > 0:
-        sliced_tracks = pd.concat(sliced_tracks_by_track)
+        for track_id, row in valid_aoi_tracks.iterrows():
+            full_track = tracks_grouped.get_group(track_id)
+            sliced_track = full_track.loc[row["arrival_index"] : row["departure_index"]]
+
+            try:
+                assert sliced_track.timestep.is_monotonic_increasing
+            except AssertionError:
+                logging.info(f"{track_id} without monotonically increasing timestep")
+                continue
+            try:
+                assert np.all(np.diff(sliced_track.timestep) == 1)
+            except AssertionError:
+                logging.info(f"{track_id} has gaps, dropping")
+                continue
+
+            sliced_tracks_list.append(sliced_track)
+
+        sliced_tracks = pd.concat(sliced_tracks_list)
+
         logging.info(
             f"Filtered to {len(sliced_tracks.track_id.unique())} "
             f"valid (n > 1) tracks, with {len(sliced_tracks)} points"
