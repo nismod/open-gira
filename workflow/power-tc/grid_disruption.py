@@ -130,48 +130,28 @@ def subset_network(
     n_edges_nominal = len(failed_edge_ids) + len(surviving_edge_ids)
     assert n_edges_nominal == len(nominal_network.edges)
 
-    # construct network from what remains
+    # Construct degraded network
     degraded_network = snkit.network.Network(
         edges=nominal_network.edges.loc[surviving_edge_ids].copy(),
         nodes=nominal_network.nodes.copy(),
     )
 
+    # Build lookup for node_id to component_id
     connected_components: list[set] = list(
         snkit.network.get_connected_components(degraded_network)
     )
+    node_components = {}
+    for component_id, component in enumerate(connected_components, start=1):
+        for node in component:
+            node_components[node] = component_id
+    n_nodes = len(nominal_network.nodes)
+    node_component_ids = np.zeros(n_nodes, dtype=int)
+    for node_id, component_id in node_components.items():
+        node_component_ids[node_id] = component_id
 
-    edge_component_ids: np.ndarray = np.zeros(n_edges_nominal, dtype=int)
-    node_component_ids: np.ndarray = np.zeros(len(nominal_network.nodes), dtype=int)
-
-    # record which edges we've already checked, so we can reduce the size of our `isin` query
-    checked_edges = np.full(n_edges_nominal, False)
-
-    # don't want to check any edge that's not in the surviving network
-    checked_edges[failed_edge_ids] = True
-
-    for count, component in enumerate(connected_components):
-        component_id: int = count + 1
-
-        # boolean series of component membership
-        component_edge_mask: pd.Series = nominal_network.edges.loc[
-            ~checked_edges, "from_id"
-        ].isin(component)
-
-        # update our record of which edges we've checked
-        checked_edges[component_edge_mask.index.values] = component_edge_mask.values
-
-        # indicies of all edges in this component
-        component_member_indicies: np.ndarray = component_edge_mask[
-            component_edge_mask
-        ].index.values
-
-        # assign the component id
-        edge_component_ids[component_member_indicies] = component_id
-
-        # index into node component ids using the ids from the component, set to component id
-        node_component_ids[np.fromiter(component, int, len(component))] = component_id
-
-    # assign results
+    # Label edges and nodes with component_id
+    from_ids = nominal_network.edges["from_id"].values
+    edge_component_ids = node_component_ids[from_ids]
     degraded_network.edges[id_col] = edge_component_ids[surviving_edge_ids]
     degraded_network.nodes[id_col] = node_component_ids
 
