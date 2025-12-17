@@ -336,22 +336,18 @@ def degrade_grid_with_storm(
         # EXPOSURE #
         ############
 
-        # all splits above threshold
+        # All splits above threshold
         failed_splits: gpd.GeoDataFrame = (
             splits.set_index("id", drop=True).loc[~survival_mask].copy()
         )
         if failed_splits.empty is True:
             return exposure, disruption
-        # label failed splits with length
-        failed_splits["length_m"] = failed_splits.to_crs(
-            failed_splits.estimate_utm_crs()
-        ).geometry.length
-        # sum across edge id to find exposed length in case where line split
-        # reset_index gives us our edge id column back
+        # Sum across edge id to find exposed length in case where line split
+        # reset_index to restore edge id column
         exposed_edge_lengths = (
             failed_splits[["length_m"]].groupby("id").sum().reset_index()
         )
-        # store result in dataset
+        # Store result in dataset
         indicies = dict(
             event_id=storm_id,
             threshold=threshold,
@@ -467,6 +463,7 @@ if __name__ == "__main__":
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
+    splits["length_m"] = splits["length_km"] * 1_000
     logging.info(f"{len(network.edges)} network edges")
     logging.info(f"{len(network.nodes)} network nodes")
 
