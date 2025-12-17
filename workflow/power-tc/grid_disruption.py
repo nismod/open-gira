@@ -54,7 +54,7 @@ def process_event(
             number of people disconnected)
     """
 
-    logging.info(storm_id)
+    logging.debug(storm_id)
     exposure, disruption = degrade_grid_with_storm(
         storm_id, wind_fields, splits, speed_thresholds, network
     )
@@ -79,9 +79,9 @@ def process_event(
             ]
         )
     )
-    logging.info(exposure_summary_str)
+    logging.debug(exposure_summary_str)
 
-    logging.info("Writing results to disk")
+    logging.debug("Writing results to disk")
 
     # pack floating point data into 16 bit integer types to save space on disk
     exposure.to_netcdf(
@@ -253,7 +253,7 @@ def degrade_grid_with_storm(
             .values
         )
     except AttributeError:
-        logging.info("No viable network available, returning null result.")
+        logging.debug("No viable network available, returning null result.")
         return (
             build_dataset(
                 ("length_m",),
@@ -292,7 +292,7 @@ def degrade_grid_with_storm(
             latitude=splits[fields.RASTER_J].to_xarray(),
         )
     except KeyError:
-        logging.info("No wind field available, returning null result.")
+        logging.debug("No wind field available, returning null result.")
         return exposure, disruption
 
     # index and `id` column need to match as we will select rows by indexing with ids
@@ -309,7 +309,7 @@ def degrade_grid_with_storm(
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
             # there is no damage, return early
-            logging.info(f"No damage detected at {threshold} ms-1")
+            logging.debug(f"No damage detected at {threshold} ms-1")
             return exposure, disruption
 
         ############
@@ -354,7 +354,7 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(
+        logging.debug(
             failure_str.format(
                 str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving
             )
@@ -429,26 +429,25 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Loading wind speed metadata")
+    logging.debug("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
 
     if len(wind_fields.variables) == 0:
-        logging.info("Empty wind speed file, skipping...")
+        logging.debug("Empty wind speed file, skipping...")
         sys.exit(0)
 
-    logging.info(wind_fields.max_wind_speed)
-
-    logging.info("Loading network data")
+    logging.debug("Loading network data")
     network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
     splits["length_m"] = splits["length_km"] * 1_000
-    logging.info(f"{len(network.edges)} network edges")
-    logging.info(f"{len(network.nodes)} network nodes")
+    logging.debug(f"{len(network.edges)} network edges")
+    logging.debug(f"{len(network.nodes)} network nodes")
 
-    logging.info(f"Using damage thresholds: {speed_thresholds} [m s-1]")
+    logging.debug(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
+    logging.debug(f"Processing {len(wind_fields.event_id)} storms")
     args = (
         (
             storm_id.item(),
