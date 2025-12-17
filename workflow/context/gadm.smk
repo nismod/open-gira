@@ -34,11 +34,11 @@ rule simplify_admin_bounds:
 
         df = gpd.read_file(input.all_admin_bounds, layer=wildcards.ADMIN_SLUG.replace("admin-level-", "level"))
 
-        TOLERANCE_METRES = 50
+        TOLERANCE_DEGREES = 0.01
         # GADM geometry is very precise -- drop some precision to save on memory and disk
         # https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html
         original_crs = df.crs
-        df["geometry"] = df["geometry"].to_crs(epsg=3857).simplify(TOLERANCE_METRES).to_crs(crs=original_crs)
+        df["geometry"] = df["geometry"].to_crs(epsg=4326).simplify(TOLERANCE_DEGREES).to_crs(crs=original_crs)
 
         df.to_parquet(output.simplified_layer)
 

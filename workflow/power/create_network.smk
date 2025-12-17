@@ -64,10 +64,6 @@ rule subset_gridfinder:
     """
     Subset the gridfinder dataset to a country boundary. Can be quite a heavy
     operation depending on the size of the country.
-
-    N.B. Should take around an hour for the USA/gridfinder case. Could be
-    reduced by using dask workers from spatialpandas, but probably not worth
-    the complexity?
     """
     input:
         gridfinder=rules.gridfinder_to_geoparquet.output.linestring,
