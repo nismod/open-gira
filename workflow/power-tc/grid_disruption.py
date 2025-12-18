@@ -140,14 +140,10 @@ def subset_network(
     connected_components: list[set] = list(
         snkit.network.get_connected_components(degraded_network)
     )
-    node_components = {}
+    node_component_ids = np.zeros(len(nominal_network.nodes), dtype=int)
     for component_id, component in enumerate(connected_components, start=1):
-        for node in component:
-            node_components[node] = component_id
-    n_nodes = len(nominal_network.nodes)
-    node_component_ids = np.zeros(n_nodes, dtype=int)
-    for node_id, component_id in node_components.items():
-        node_component_ids[node_id] = component_id
+        for node_id in component:
+            node_component_ids[node_id] = component_id
 
     # Label edges and nodes with component_id
     from_ids = nominal_network.edges["from_id"].values
