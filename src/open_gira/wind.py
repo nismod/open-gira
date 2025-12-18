@@ -207,6 +207,7 @@ def estimate_wind_field(
     env_pressure_pa: float,
     advection_azimuth_deg: float,
     eye_speed_ms: float,
+    grid_coords: tuple[np.ndarray, np.ndarray] = None,
 ) -> np.ndarray:
     """
     Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.
@@ -227,6 +228,7 @@ def estimate_wind_field(
         env_pressure_pa: Environmental pressure, typical for this locale, in Pascals
         eye_heading_deg: Heading of eye in degrees clockwise from north
         eye_speed_ms: Speed of eye in metres per second
+        grid_coords: Optional pre-computed meshgrid result
 
     Returns:
         Grid of wind vectors
@@ -251,15 +253,20 @@ def estimate_wind_field(
     # this is the maximum tangential wind speed in the eye's non-rotating reference frame
     max_wind_speed_relative_to_eye_ms: float = max_wind_speed_ms - np.abs(adv_vector)
 
-    X, Y = np.meshgrid(longitude, latitude)
+    # Use pre-computed meshgrid if provided, otherwise compute it
+    if grid_coords is not None:
+        X, Y = grid_coords
+    else:
+        X, Y = np.meshgrid(longitude, latitude)
+
     grid_shape = X.shape  # or Y.shape
 
     # forward azimuth angle and distances from grid points to track eye
     grid_to_eye_azimuth_deg, radius_m = bearing_and_great_circle_distance(
         X.ravel(),
         Y.ravel(),
-        np.full(len(X.ravel()), eye_long),
-        np.full(len(Y.ravel()), eye_lat),
+        eye_long,
+        eye_lat,
     )
 
     distance_to_eye_grid_m = radius_m.reshape(grid_shape)
