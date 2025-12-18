@@ -49,6 +49,7 @@ def process_track(
     plot_max_wind: bool,
     plot_animation: bool,
     plot_dir: Optional[str],
+    grid_coords: tuple[np.ndarray, np.ndarray],
 ) -> tuple[str, np.ndarray]:
     """
     Interpolate a track, reconstruct the advective and rotational vector wind
@@ -65,6 +66,7 @@ def process_track(
         plot_max_wind: Whether to plot max wind fields
         plot_animation: Whether to plot wind field evolution
         plot_dir: Where to save optional plots.
+        grid_coords: Pre-computed meshgrid result
 
     Returns:
         str: Track identifier
@@ -125,6 +127,7 @@ def process_track(
                 ENV_PRESSURE[basin] * 100,  # convert to Pascals
                 track_point.advection_azimuth_deg,
                 track_point.eye_speed_ms,
+                grid_coords,
             )
         except AssertionError:
             logging.warning(
@@ -197,6 +200,7 @@ if __name__ == "__main__":
 
     logging.info("Reading wind downscaling factors")
     downscaling_factors = np.load(downscale_factors_path)
+    grid_coords = np.meshgrid(grid.x, grid.y)
 
     # track is a tuple of track_id and the tracks subset, we only want the latter
     args = (
@@ -208,6 +212,7 @@ if __name__ == "__main__":
             plot_max_wind,
             plot_animation,
             plot_dir_path,
+            grid_coords,
         )
         for track in grouped_tracks
     )
