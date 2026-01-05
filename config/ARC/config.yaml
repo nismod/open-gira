@@ -1,0 +1,48 @@
+jobs: 64
+rerun-incomplete: true
+keep-going: true
+latency-wait: 3
+
+executor: "slurm"
+slurm-no-account: true
+slurm-logdir: "./jobs/log"
+slurm-keep-successful-logs: true
+seconds-between-status-checks: 5
+slurm-init-seconds-before-status-checks: 3
+
+default-resources:
+  slurm_partition: "short"
+  mem_mb: "16000"
+  runtime: "10h"
+  slurm_extra: "'--mail-type=BEGIN,END,FAIL --mail-user=cenv0899@ox.ac.uk'"
+
+set-resources:
+  create_power_network:
+    mem_mb: None
+    threads: 40
+    mem_mb_per_cpu: 2048
+  estimate_wind_fields:
+    mem_mb: None
+    threads: 40
+    mem_mb_per_cpu: 2048
+  electricity_grid_damages:
+    mem_mb: None
+    threads: 40
+    mem_mb_per_cpu: 3072
+
+partitions:
+  short:
+    max_runtime: 720  # 12 hours
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1
+  medium:
+    max_runtime: 2880  # 48 hours
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1
+  long:
+    max_runtime: 0  # unlimited runtime, but lower priority
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1
