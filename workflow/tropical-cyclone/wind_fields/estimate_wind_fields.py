@@ -89,7 +89,7 @@ def process_track(
     # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
     try:
         track: gpd.GeoDataFrame = interpolate_track(track)
-    except AssertionError:
+    except (AssertionError, ValueError):
         logging.warning(f"Could not successfully interpolate {track_id}")
         return track_id, np.zeros_like(downscaling_factors)
 
