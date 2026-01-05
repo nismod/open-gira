@@ -54,7 +54,7 @@ def process_event(
             number of people disconnected)
     """
 
-    logging.info(storm_id)
+    logging.debug(storm_id)
     exposure, disruption = degrade_grid_with_storm(
         storm_id, wind_fields, splits, speed_thresholds, network
     )
@@ -79,9 +79,9 @@ def process_event(
             ]
         )
     )
-    logging.info(exposure_summary_str)
+    logging.debug(exposure_summary_str)
 
-    logging.info("Writing results to disk")
+    logging.debug("Writing results to disk")
 
     # pack floating point data into 16 bit integer types to save space on disk
     exposure.to_netcdf(
@@ -130,48 +130,24 @@ def subset_network(
     n_edges_nominal = len(failed_edge_ids) + len(surviving_edge_ids)
     assert n_edges_nominal == len(nominal_network.edges)
 
-    # construct network from what remains
+    # Construct degraded network
     degraded_network = snkit.network.Network(
         edges=nominal_network.edges.loc[surviving_edge_ids].copy(),
         nodes=nominal_network.nodes.copy(),
     )
 
+    # Build lookup for node_id to component_id
     connected_components: list[set] = list(
         snkit.network.get_connected_components(degraded_network)
     )
+    node_component_ids = np.zeros(len(nominal_network.nodes), dtype=int)
+    for component_id, component in enumerate(connected_components, start=1):
+        for node_id in component:
+            node_component_ids[node_id] = component_id
 
-    edge_component_ids: np.ndarray = np.zeros(n_edges_nominal, dtype=int)
-    node_component_ids: np.ndarray = np.zeros(len(nominal_network.nodes), dtype=int)
-
-    # record which edges we've already checked, so we can reduce the size of our `isin` query
-    checked_edges = np.full(n_edges_nominal, False)
-
-    # don't want to check any edge that's not in the surviving network
-    checked_edges[failed_edge_ids] = True
-
-    for count, component in enumerate(connected_components):
-        component_id: int = count + 1
-
-        # boolean series of component membership
-        component_edge_mask: pd.Series = nominal_network.edges.loc[
-            ~checked_edges, "from_id"
-        ].isin(component)
-
-        # update our record of which edges we've checked
-        checked_edges[component_edge_mask.index.values] = component_edge_mask.values
-
-        # indicies of all edges in this component
-        component_member_indicies: np.ndarray = component_edge_mask[
-            component_edge_mask
-        ].index.values
-
-        # assign the component id
-        edge_component_ids[component_member_indicies] = component_id
-
-        # index into node component ids using the ids from the component, set to component id
-        node_component_ids[np.fromiter(component, int, len(component))] = component_id
-
-    # assign results
+    # Label edges and nodes with component_id
+    from_ids = nominal_network.edges["from_id"].values
+    edge_component_ids = node_component_ids[from_ids]
     degraded_network.edges[id_col] = edge_component_ids[surviving_edge_ids]
     degraded_network.nodes[id_col] = node_component_ids
 
@@ -273,7 +249,7 @@ def degrade_grid_with_storm(
             .values
         )
     except AttributeError:
-        logging.info("No viable network available, returning null result.")
+        logging.debug("No viable network available, returning null result.")
         return (
             build_dataset(
                 ("length_m",),
@@ -312,7 +288,7 @@ def degrade_grid_with_storm(
             latitude=splits[fields.RASTER_J].to_xarray(),
         )
     except KeyError:
-        logging.info("No wind field available, returning null result.")
+        logging.debug("No wind field available, returning null result.")
         return exposure, disruption
 
     # index and `id` column need to match as we will select rows by indexing with ids
@@ -329,29 +305,25 @@ def degrade_grid_with_storm(
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
             # there is no damage, return early
-            logging.info(f"No damage detected at {threshold} ms-1")
+            logging.debug(f"No damage detected at {threshold} ms-1")
             return exposure, disruption
 
         ############
         # EXPOSURE #
         ############
 
-        # all splits above threshold
+        # All splits above threshold
         failed_splits: gpd.GeoDataFrame = (
             splits.set_index("id", drop=True).loc[~survival_mask].copy()
         )
         if failed_splits.empty is True:
             return exposure, disruption
-        # label failed splits with length
-        failed_splits["length_m"] = failed_splits.to_crs(
-            failed_splits.estimate_utm_crs()
-        ).geometry.length
-        # sum across edge id to find exposed length in case where line split
-        # reset_index gives us our edge id column back
+        # Sum across edge id to find exposed length in case where line split
+        # reset_index to restore edge id column
         exposed_edge_lengths = (
             failed_splits[["length_m"]].groupby("id").sum().reset_index()
         )
-        # store result in dataset
+        # Store result in dataset
         indicies = dict(
             event_id=storm_id,
             threshold=threshold,
@@ -378,7 +350,7 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.info(
+        logging.debug(
             failure_str.format(
                 str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving
             )
@@ -453,25 +425,25 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Loading wind speed metadata")
+    logging.debug("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
 
     if len(wind_fields.variables) == 0:
-        logging.info("Empty wind speed file, skipping...")
+        logging.debug("Empty wind speed file, skipping...")
         sys.exit(0)
 
-    logging.info(wind_fields.max_wind_speed)
-
-    logging.info("Loading network data")
+    logging.debug("Loading network data")
     network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
-    logging.info(f"{len(network.edges)} network edges")
-    logging.info(f"{len(network.nodes)} network nodes")
+    splits["length_m"] = splits["length_km"] * 1_000
+    logging.debug(f"{len(network.edges)} network edges")
+    logging.debug(f"{len(network.nodes)} network nodes")
 
-    logging.info(f"Using damage thresholds: {speed_thresholds} [m s-1]")
+    logging.debug(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
+    logging.debug(f"Processing {len(wind_fields.event_id)} storms")
     args = (
         (
             storm_id.item(),

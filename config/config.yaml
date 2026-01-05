@@ -149,26 +149,13 @@ direct_damages:
 
 # sets of storm ids to process for potentially many country networks
 storm_sets:
-  # TODO: hide this first set from user, as they shouldn't need to change them?
-  # files containing empty list, indicating to process all in dataset
-  IBTrACS: "config/storm_sets/ibtracs.json"
-  STORM-constant: "config/storm_sets/storm-constant.json"
-  STORM-CMCC-CM2-VHR4: "config/storm_sets/storm-cmcc-cm2-vhr4.json"
-  STORM-CNRM-CM6-1-HR: "config/storm_sets/storm-cnrm-cm6-1-hr.json"
-  STORM-EC-Earth3P-HR: "config/storm_sets/storm-ec-earth3p-hr.json"
-  STORM-HadGEM3-GC31-HM: "config/storm_sets/storm-hadgem3-gc31-hm.json"
-  IRIS-PRESENT: "config/storm_sets/iris-present.json"
-  IRIS-SSP1-2050: "config/storm_sets/iris-ssp1-2050.json"
-  IRIS-SSP2-2050: "config/storm_sets/iris-ssp2-2050.json"
-  IRIS-SSP5-2050: "config/storm_sets/iris-ssp5-2050.json"
-
   # files containing a list of storm id strings that constitute the storm set
   # key should follow the pattern: <dataset>_<storm_set_reference>
   # where dataset belongs to:
   # {IBTrACS, STORM-constant, STORM-CMCC-CM2-VHR4, etc.}
-  IBTrACS_maria-2017: "config/storm_sets/maria.json"
-  IBTrACS_irma-2017: "config/storm_sets/irma.json"
-  IBTrACS_black-marble-validation: "config/storm_sets/20230120_black_marble.json"
+  IBTrACS_maria-2017: "config/tc_grid/storm_sets/maria.json"
+  IBTrACS_irma-2017: "config/tc_grid/storm_sets/irma.json"
+  IBTrACS_black-marble-validation: "config/tc_grid/storm_sets/20230120_black_marble.json"
 
 # consider countries at risk of a storm if within this many degrees of any storm track point
 max_track_search_radius_deg: 3

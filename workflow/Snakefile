@@ -78,6 +78,8 @@ if not config["best_estimate_windspeed_failure_threshold"] in config["transmissi
 wildcard_constraints:
     ADMIN_SLUG="admin-level-[0-4]",
     AGG_FUNC_SLUG="agg-sum",
+    CHAZ_MODEL="GCM-CESM2|GCM-CNRM-CM6-1|GCM-EC-Earth3|GCM-IPSL-CM6A-LR|GCM-MIROC6|GCM-UKESM1-0-LL",
+    CHAZ_SCENARIO=r"CHAZ-SSP-[0-9]+-epoch-[0-9]+-GCM-[^\/]+",
     CHUNK_SLUG=r"chunk-[\d]+",
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
@@ -98,7 +100,7 @@ wildcard_constraints:
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_RP="[0-9]+",
-    STORM_SET=r"(?:IBTrACS|STORM|IRIS)[^\/]*",
+    STORM_SET=r"(?:IBTrACS|STORM|IRIS|CHAZ[^\/]*)",
     SAMPLE=r"\d+",
     # may be upper or lower, one 'f' or two
     TIFF_FILE=r"[^\/\.\s]+\.[tT][iI][fF][fF]?",
@@ -108,6 +110,7 @@ SAMPLES_PER_TRACKSET = {
     "IBTrACS": 1,
     "STORM": 10,
     "IRIS": 10,
+    "CHAZ": 5,  # Some scenarios have more, but this is the minimum
 }
 
 ##### load rules #####
@@ -154,6 +157,7 @@ include: "flood/trim_hazard_data.smk"
 
 include: "landslide/landslide_arup.smk"
 
+include: "tropical-cyclone/CHAZ.smk"
 include: "tropical-cyclone/IBTrACS.smk"
 include: "tropical-cyclone/IRIS.smk"
 include: "tropical-cyclone/STORM.smk"

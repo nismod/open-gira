@@ -12,6 +12,7 @@ import rioxarray
 from rasterio.errors import RasterioIOError
 import numpy as np
 
+
 logging.basicConfig(
     format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
 )
@@ -31,26 +32,20 @@ if __name__ == "__main__":
         comment="#",
     )
 
-    # build a lookup array where the category is the index
-    # and the value for a given index/category is the surface roughness in metres
     logging.info("Build land cover -> surface roughness mapping...")
     lookup_length = max(set(cover_roughness.glob_cover_2009_id)) + 1
     roughness_lookup: np.ndarray = np.zeros(lookup_length)
     for row in cover_roughness.itertuples():
         roughness_lookup[row.glob_cover_2009_id] = row.roughness_length_m
 
-    # create surface roughness field (same shape as land cover)
     logging.info("Create surface roughness field...")
-    surface_roughness_values: np.ndarray = roughness_lookup[land_cover.values]
-    surface_roughness = land_cover.copy()
-    surface_roughness.values = surface_roughness_values
+    input_roughness = land_cover.copy()
+    input_roughness.values = roughness_lookup[land_cover.values.astype(int)]
 
-    # surface roughness on wind grid
-    logging.info("Resample to wind grid...")
-    downsampled_roughness = surface_roughness.interp(x=wind_grid.x, y=wind_grid.y)
-
-    # write out surface roughness values on wind grid
-    logging.info("Save to disk...")
-    downsampled_roughness.rio.to_raster(
-        snakemake.output.surface_roughness  # noqa: F821
+    logging.info("Aggregate roughness to wind grid...")
+    output_roughness = input_roughness.rio.reproject_match(
+        wind_grid, resampling="average"
     )
+
+    logging.info("Save to disk...")
+    output_roughness.rio.to_raster(snakemake.output.surface_roughness)  # noqa: F821
