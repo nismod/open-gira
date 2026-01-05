@@ -75,7 +75,7 @@ def process_track(
 
     (track_id,) = set(track.track_id)
 
-    logging.info(track_id)
+    logging.debug(track_id)
 
     grid_shape: tuple[int, int] = (len(latitude), len(longitude))
 
