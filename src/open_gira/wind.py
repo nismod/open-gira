@@ -234,22 +234,23 @@ def estimate_wind_field(
         Grid of wind vectors
     """
 
-    # check inputs
+    # Check inputs
     assert 0 < max_wind_speed_ms < 130
     assert 0 < radius_to_max_winds_m < 1500000
     assert 75000 < min_pressure_pa < 102000
-    assert 0 <= eye_speed_ms < 40
+    assert 0 <= eye_speed_ms < 30
 
-    # clip eye speed to a maximum of 30ms-1
+    # Restrict eye speed to a maximum of 30ms-1
     # greater than this is non-physical, and probably the result of a data error
     # we do not want to propagate such an error to our advective wind field
+
     adv_vector: np.complex128 = advective_vector(
         advection_azimuth_deg,
         eye_speed_ms,
         np.sign(eye_lat),
     )
 
-    # maximum wind speed, less advective component
+    # Maximum wind speed, less advective component
     # this is the maximum tangential wind speed in the eye's non-rotating reference frame
     max_wind_speed_relative_to_eye_ms: float = max_wind_speed_ms - np.abs(adv_vector)
 
