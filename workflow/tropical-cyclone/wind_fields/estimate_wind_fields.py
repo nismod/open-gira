@@ -131,7 +131,7 @@ def process_track(
             )
         except AssertionError:
             logging.warning(
-                f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros"
+                f"Track {track_id} failed QA for {track_i + 1} of {len(track)}, writing zeros"
             )
 
     # take factors calculated from surface roughness of region and use to downscale speeds
