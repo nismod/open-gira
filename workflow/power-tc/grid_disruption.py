@@ -29,6 +29,17 @@ import snkit
 MAX_SUPPLY_FACTOR: float = 0.90
 
 
+def process_event_wrapper(args: tuple) -> int:
+    """
+    Wrapper for process_event
+
+    - Unpack arguments (allows the use of imap in caller, and separate arguments in callee).
+    - Signal successful return to caller
+    """
+    process_event(*args)
+    return 1
+
+
 def process_event(
     storm_id: str,
     wind_fields: xr.DataArray,
@@ -425,14 +436,14 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.debug("Loading wind speed metadata")
+    logging.info("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
 
     if len(wind_fields.variables) == 0:
         logging.debug("Empty wind speed file, skipping...")
         sys.exit(0)
 
-    logging.debug("Loading network data")
+    logging.info("Loading network data")
     network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
@@ -443,7 +454,7 @@ if __name__ == "__main__":
 
     logging.debug(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
-    logging.debug(f"Processing {len(wind_fields.event_id)} storms")
+    logging.info(f"Processing {len(wind_fields.event_id)} storms")
     args = (
         (
             storm_id.item(),
@@ -456,9 +467,25 @@ if __name__ == "__main__":
         )
         for storm_id in wind_fields.event_id
     )
+    total = len(wind_fields.event_id)
+    log_every_i = int(np.round((total + 5) / 10))  # 10%
+    i = 0
     if n_proc > 1:
         with multiprocessing.get_context("fork").Pool(processes=n_proc) as pool:
-            pool.starmap(process_event, args)
+            for _ in pool.imap_unordered(
+                process_event_wrapper,
+                args,
+                chunksize=max(1, total // (n_proc * 8))
+            ):
+                if i % log_every_i == 0:
+                    logging.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
+                i += 1
+
     else:
         for arg in args:
             process_event(*arg)
+            if i % log_every_i == 0:
+                logging.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
+            i += 1
+
+    logging.info(f"Completed {total:d} tasks ({100:.0f}%)")
