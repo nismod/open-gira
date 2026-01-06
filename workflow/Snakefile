@@ -100,7 +100,7 @@ wildcard_constraints:
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_RP="[0-9]+",
-    STORM_SET=r"(?:IBTrACS|STORM|IRIS|CHAZ[^\/]*)",
+    STORM_SET=r"(?:IBTrACS|(?:STORM|IRIS|CHAZ)[^/]*)",
     SAMPLE=r"\d+",
     # may be upper or lower, one 'f' or two
     TIFF_FILE=r"[^\/\.\s]+\.[tT][iI][fF][fF]?",
