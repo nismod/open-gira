@@ -473,9 +473,7 @@ if __name__ == "__main__":
     if n_proc > 1:
         with multiprocessing.get_context("fork").Pool(processes=n_proc) as pool:
             for _ in pool.imap_unordered(
-                process_event_wrapper,
-                args,
-                chunksize=max(1, total // (n_proc * 8))
+                process_event_wrapper, args, chunksize=max(1, total // (n_proc * 8))
             ):
                 if i % log_every_i == 0:
                     logging.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
