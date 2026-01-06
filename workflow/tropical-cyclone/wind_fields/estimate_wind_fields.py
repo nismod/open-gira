@@ -114,6 +114,7 @@ def process_track(
     # result array
     wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
+    failed_qa = False
     for track_i, track_point in enumerate(track.itertuples()):
         try:
             wind_field[track_i, :] = estimate_wind_field(
@@ -130,9 +131,10 @@ def process_track(
                 grid_coords,
             )
         except AssertionError:
-            logging.warning(
-                f"Track {track_id} failed QA for {track_i + 1} of {len(track)}, writing zeros"
-            )
+            failed_qa = True
+
+    if failed_qa:
+        logging.warning(f"Track {track_id} failed QA")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
