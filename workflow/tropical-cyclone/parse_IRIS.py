@@ -33,7 +33,7 @@ IRIS_CSV_SCHEMA = {
     "r18": float,
 }
 # temporal frequency of IRIS
-IRIS_FREQUENCY = "3H"
+IRIS_FREQUENCY = "3h"
 
 
 if __name__ == "__main__":
