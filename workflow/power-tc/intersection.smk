@@ -29,7 +29,7 @@ checkpoint countries_intersecting_storm_set:
         permitted_countries = "config/tc_grid/permitted_countries.json",
         gadm_path = "{OUTPUT_DIR}/input/admin-boundaries/admin-level-0.geoparquet",
     resources:
-        mem_mb=60000
+        mem_mb=96000
     output:
         country_set = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted.json",
         country_set_by_storm = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/countries_impacted_by_storm.json",
@@ -132,15 +132,10 @@ rule electricity_grid_damages:
     disruption estimates.
     """
     input:
-        # `threads_for_country` will fail unless this CSV is present when resources are set
-        country_target_count=country_target_count_path,
         grid_splits = rules.rasterise_electricity_grid.output.geoparquet,
         wind_speeds = rules.estimate_wind_fields.output.wind_speeds,
         grid_edges = rules.create_power_network.output.edges,
         grid_nodes = rules.create_power_network.output.nodes,
-    threads: threads_for_country
-    resources:
-        mem_mb = lambda wildcards: threads_for_country(wildcards) * 1_024 * 2.5
     output:
         exposure = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/{SAMPLE}/"),
         disruption = directory("{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/"),
