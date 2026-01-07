@@ -448,6 +448,9 @@ if __name__ == "__main__":
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
+    if network.edges.empty or splits.empty:
+        logging.debug("No network, skipping...")
+        sys.exit(0)
     splits["length_m"] = splits["length_km"] * 1_000
     logging.debug(f"{len(network.edges)} network edges")
     logging.debug(f"{len(network.nodes)} network nodes")
