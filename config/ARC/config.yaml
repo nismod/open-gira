@@ -1,4 +1,4 @@
-jobs: 64
+jobs: 128
 rerun-incomplete: true
 keep-going: true
 latency-wait: 3
@@ -6,29 +6,15 @@ latency-wait: 3
 executor: "slurm"
 slurm-no-account: true
 slurm-logdir: "./jobs/log"
-slurm-keep-successful-logs: true
+slurm-keep-successful-logs: false
 seconds-between-status-checks: 5
 slurm-init-seconds-before-status-checks: 3
 
 default-resources:
   slurm_partition: "short"
   mem_mb: "16000"
-  runtime: "10h"
-  slurm_extra: "'--mail-type=BEGIN,END,FAIL --mail-user=cenv0899@ox.ac.uk'"
-
-set-resources:
-  create_power_network:
-    mem_mb: None
-    threads: 40
-    mem_mb_per_cpu: 2048
-  estimate_wind_fields:
-    mem_mb: None
-    threads: 40
-    mem_mb_per_cpu: 2048
-  electricity_grid_damages:
-    mem_mb: None
-    threads: 40
-    mem_mb_per_cpu: 3072
+  runtime: "8h"
+  slurm_extra: "'--mail-type=FAIL --mail-user=cenv0899@ox.ac.uk'"
 
 partitions:
   short:
