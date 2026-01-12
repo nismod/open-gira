@@ -79,7 +79,7 @@ wildcard_constraints:
     ADMIN_SLUG="admin-level-[0-4]",
     AGG_FUNC_SLUG="agg-sum",
     CHAZ_MODEL="GCM-CESM2|GCM-CNRM-CM6-1|GCM-EC-Earth3|GCM-IPSL-CM6A-LR|GCM-MIROC6|GCM-UKESM1-0-LL",
-    CHAZ_SCENARIO=r"CHAZ-SSP-[0-9]+-epoch-[0-9]+-GCM-[^\/]+",
+    CHAZ_SCENARIO = r"CHAZ_SSP-[0-9]+_GCM-[^\/]+_epoch-[0-9]+",
     CHUNK_SLUG=r"chunk-[\d]+",
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",

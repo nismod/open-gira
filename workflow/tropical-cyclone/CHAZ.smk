@@ -17,15 +17,16 @@ rule parse_CHAZ:
     N.B. Only using Column Relative Humidity (CRH) (as opposed to Saturation Deficit) tracks.
 
     Test with:
-    snakemake -c1 results/storm_tracks/CHAZ-SSP-585-epoch-2050-GCM-UKESM1-0-LL/0/tracks.geoparquet
+    snakemake -c1 results/storm_tracks/CHAZ_SSP-585_GCM-UKESM1-0-LL_epoch-2050/0/tracks.geoparquet
     """
     input:
         # Zero-pad sample number to match input format
+        # Parse scenario name, e.g.: CHAZ_SSP-585_GCM-UKESM1-0-LL_epoch-2050
         raw = lambda wildcards: (
             f"{wildcards.OUTPUT_DIR}/input/CHAZ/"
-            f"CHAZ_genesis-CRH_SSP-{wildcards.CHAZ_SCENARIO.split('SSP-')[1].split('-epoch')[0]}"
-            f"_GCM-{wildcards.CHAZ_SCENARIO.split('GCM-')[1]}"
-            f"_epoch-{wildcards.CHAZ_SCENARIO.split('epoch-')[1].split('-GCM')[0]}"
+            f"CHAZ_genesis-CRH_SSP-{wildcards.CHAZ_SCENARIO.split('_SSP-')[1].split('_GCM')[0]}"
+            f"_GCM-{wildcards.CHAZ_SCENARIO.split('_GCM-')[1].split('_epoch')[0]}"
+            f"_epoch-{wildcards.CHAZ_SCENARIO.split('_epoch-')[1]}"
             f"_sample-{int(wildcards.SAMPLE):03d}.gpq"
         )
     output:
