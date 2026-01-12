@@ -26,6 +26,7 @@ dependencies:
 - rasterio *
 - rasterstats *
 - rioxarray *
+- ruff *
 - snkit *
 - dask *
 - datashader *
