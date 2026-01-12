@@ -285,7 +285,10 @@ def pop_affected_return_periods_plot_path(wildcards) -> list[str]:
     """
     import json
 
-    country_set_path = f"{wildcards.OUTPUT_DIR}/power/by_storm_set/{wildcards.STORM_SET}/countries_impacted.json"
+    country_set_path = checkpoints.countries_intersecting_storm_set.get(
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+    ).output.country_set
     with open(country_set_path, "r") as fp:
         countries = json.load(fp)
 
@@ -318,7 +321,10 @@ def pop_affected_return_period_paths(wildcards) -> list[str]:
     """
     import json
 
-    country_set_path = f"{wildcards.OUTPUT_DIR}/power/by_storm_set/{wildcards.STORM_SET}/countries_impacted.json"
+    country_set_path = checkpoints.countries_intersecting_storm_set.get(
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+    ).output.country_set
     with open(country_set_path, "r") as fp:
         countries = json.load(fp)
 
