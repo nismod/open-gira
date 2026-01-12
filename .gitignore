@@ -57,3 +57,11 @@ slurm
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+# Jobs
+jobs/log
+jobs/plugin
+# Dynamically generated job submission scripts
+jobs/tc-grid/1-core-large.sh
+jobs/tc-grid/1-core-medium.sh
+jobs/tc-grid/1-core-small.sh
