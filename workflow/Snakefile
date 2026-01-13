@@ -105,12 +105,12 @@ wildcard_constraints:
     # may be upper or lower, one 'f' or two
     TIFF_FILE=r"[^\/\.\s]+\.[tT][iI][fF][fF]?",
 
-# how many samples is each storm track dataset split into?
+# How many samples to run for each trackset?
 SAMPLES_PER_TRACKSET = {
-    "IBTrACS": 1,
-    "STORM": 10,
-    "IRIS": 10,
-    "CHAZ": 5,  # Some scenarios have more, but this is the minimum
+    "IBTrACS": 1,  # Maximum 1
+    "STORM": 1,  # Maximum 10
+    "IRIS": 1,  # Maximum 10
+    "CHAZ": 1,  # Some scenarios have more, but 5 is the minimum
 }
 
 ##### load rules #####
