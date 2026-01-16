@@ -1,10 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=tc-grid-phase0
+#SBATCH --job-name=tc-grid-0
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --mem=160G
 #SBATCH --time=12:00:00
+#SBATCH --clusters=all
 #SBATCH --partition=long
 #SBATCH --output=jobs/log/phase0_%j.out
 #SBATCH --error=jobs/log/phase0_%j.err

@@ -26,12 +26,13 @@ RESOURCES = {
 }
 
 SCRIPT_TEMPLATE = """#!/bin/bash
-#SBATCH --job-name=tc-grid-phase1-{category}
+#SBATCH --job-name=tc-grid-1-{category}
 #SBATCH --array=0-{max_array_id}%{max_concurrent}
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task={cpus}
 #SBATCH --mem={mem}
 #SBATCH --time={time}
+#SBATCH --clusters=all
 #SBATCH --partition=long
 #SBATCH --output=jobs/log/phase1_{category}_%A_%a.out
 #SBATCH --error=jobs/log/phase1_{category}_%A_%a.err
