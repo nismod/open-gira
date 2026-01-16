@@ -11,9 +11,9 @@
 #SBATCH --error=jobs/log/phase0_%j.err
 
 # Phase 0: Preprocess
-# Generate networks and downscaling factors for all nations
+# Generate networks, rasterised grids, and downscaling factors for all nations
 # Targets:
-# - results/power/by_country/<ISO_A3>/edges.geoparquet
+# - results/power/by_country/<ISO_A3>/exposure/edges_split.geoparquet
 # - results/power/by_country/<ISO_A3>/storms/downscale_factors.npy
 
 set -euo pipefail
@@ -36,7 +36,7 @@ COUNTRIES=($(jq -r '.[]' config/tc_grid/permitted_countries.json))
 # Generate targets for each country
 > "$TARGETS_FILE"  # Clear/create file
 for COUNTRY in "${COUNTRIES[@]}"; do
-    echo "results/power/by_country/${COUNTRY}/network/edges.geoparquet" >> "$TARGETS_FILE"
+    echo "results/power/by_country/${COUNTRY}/exposure/edges_split.geoparquet" >> "$TARGETS_FILE"
     echo "results/power/by_country/${COUNTRY}/storms/downscale_factors.npy" >> "$TARGETS_FILE"
 done
 
