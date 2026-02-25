@@ -49,6 +49,8 @@ if __name__ == "__main__":
     aoi_points = tracks[tracks.intersects(hull.buffer(track_slicing_buffer_deg))]
 
     logging.info("Slicing tracks' first arrival to last departure")
+    if not aoi_points.index.name:
+        aoi_points.index.name = "datetime"
     aoi_grouped = (
         aoi_points.reset_index()
         .groupby("track_id")

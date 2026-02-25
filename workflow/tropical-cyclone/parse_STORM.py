@@ -40,7 +40,7 @@ STORM_BASIN_IDS = ("EP", "NA", "NI", "SI", "SP", "WP")
 # explained here: https://library.wmo.int/doc_num.php?explnum_id=290
 STORM_1MIN_WIND_FACTOR = 0.88
 # temporal frequency of STORM synthetic tracks
-STORM_FREQUENCY = "3H"
+STORM_FREQUENCY = "3h"
 
 
 if __name__ == "__main__":

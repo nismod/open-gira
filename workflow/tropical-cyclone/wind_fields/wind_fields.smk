@@ -177,8 +177,14 @@ snakemake -c1 results/power/by_country/PRI/storms/downscale_factors.npy
 
 def storm_tracks_by_country(wildcards) -> str:
     """Return path to storm tracks"""
-    # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
-    storm_dataset = wildcards.STORM_SET.split("_")[0]
+    # IBTrACS subset storm sets (e.g., IBTrACS_maria-2017) use parent dataset name
+    # All synthetic tracksets (CHAZ, STORM, IRIS, etc.) use full STORM_SET name
+    if wildcards.STORM_SET.startswith("IBTrACS"):
+        # Extract parent dataset for subset storm sets e.g. IBTrACS for IBTrACS_maria-2017
+        storm_dataset = wildcards.STORM_SET.split("_")[0]
+    else:
+        # Use full name for synthetic tracksets
+        storm_dataset = wildcards.STORM_SET
     return f"{wildcards.OUTPUT_DIR}/power/by_country/{wildcards.COUNTRY_ISO_A3}/storms/{storm_dataset}/{wildcards.SAMPLE}/tracks.geoparquet"
 
 

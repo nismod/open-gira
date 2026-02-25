@@ -75,7 +75,7 @@ def process_track(
 
     (track_id,) = set(track.track_id)
 
-    logging.info(track_id)
+    logging.debug(track_id)
 
     grid_shape: tuple[int, int] = (len(latitude), len(longitude))
 
@@ -89,7 +89,7 @@ def process_track(
     # interpolate track (avoid 'doughnut effect' of wind field from infrequent eye observations)
     try:
         track: gpd.GeoDataFrame = interpolate_track(track)
-    except AssertionError:
+    except (AssertionError, ValueError):
         logging.warning(f"Could not successfully interpolate {track_id}")
         return track_id, np.zeros_like(downscaling_factors)
 
@@ -114,6 +114,7 @@ def process_track(
     # result array
     wind_field: np.ndarray = np.zeros((len(track), *grid_shape), dtype=complex)
 
+    failed_qa = False
     for track_i, track_point in enumerate(track.itertuples()):
         try:
             wind_field[track_i, :] = estimate_wind_field(
@@ -130,9 +131,10 @@ def process_track(
                 grid_coords,
             )
         except AssertionError:
-            logging.warning(
-                f"{track_id} failed wind field estimation for {track_i + 1} of {len(track)}, writing zeros"
-            )
+            failed_qa = True
+
+    if failed_qa:
+        logging.warning(f"Track {track_id} failed QA")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field

@@ -1,0 +1,34 @@
+jobs: 128
+rerun-incomplete: true
+keep-going: true
+latency-wait: 3
+
+executor: "slurm"
+slurm-no-account: true
+slurm-logdir: "./jobs/log"
+slurm-keep-successful-logs: false
+seconds-between-status-checks: 5
+slurm-init-seconds-before-status-checks: 3
+
+default-resources:
+  slurm_partition: "short"
+  mem_mb: "16000"
+  runtime: "8h"
+  slurm_extra: "'--mail-type=FAIL --mail-user=cenv0899@ox.ac.uk'"
+
+partitions:
+  short:
+    max_runtime: 720  # 12 hours
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1
+  medium:
+    max_runtime: 2880  # 48 hours
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1
+  long:
+    max_runtime: 0  # unlimited runtime, but lower priority
+    max_mem_mb: 384000
+    max_cpus_per_task: 48
+    max_nodes: 1

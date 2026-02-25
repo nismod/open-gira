@@ -54,6 +54,7 @@ zenodo_get = "*"
 pytest = "*"
 pytest-xdist = "*"
 pulp = ">=2.8.0,<3"
+ruff = "*"
 
 [pypi-dependencies]
 nismod-snail = "*"
