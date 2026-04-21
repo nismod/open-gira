@@ -5,7 +5,12 @@ Mapping electricity outages
 
 def storm_tracks(wildcards) -> str:
     """Return path to storm tracks"""
-    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_set_family(wildcards.STORM_SET)}/tracks.geoparquet"
+    storm_set_dir = (
+        storm_set_family(wildcards.STORM_SET)
+        if wildcards.STORM_SET.startswith("IBTrACS")
+        else wildcards.STORM_SET
+    )
+    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_set_dir}/tracks.geoparquet"
 
 
 rule animate_electricity_outages:
