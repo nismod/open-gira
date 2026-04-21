@@ -8,7 +8,10 @@ def storm_tracks_file_from_storm_set(wildcards) -> str:
 
     Given e.g. IBTrACS_maria-2017, return results/input/storm-tracks/IBTrACS/tracks.geoparquet
     """
-    storm_dataset = wildcards.STORM_SET.split("_")[0]
+    if wildcards.STORM_SET.startswith("IBTrACS"):
+        storm_dataset = storm_set_family(wildcards.STORM_SET)
+    else:
+        storm_dataset = wildcards.STORM_SET
     return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_dataset}/tracks.geoparquet"
 
 
@@ -85,7 +88,7 @@ checkpoint countries_intersecting_storm_set:
 
         # join track points to buffered country polygons
         logging.info("Perform spatial join of countries and filtered tracks")
-        # current implementation takes ~4min to sjoin for 1,000 years of STORM-HadGEM
+        # current implementation takes ~4min to sjoin for 1,000 years of STORM HadGEM
         intersecting_track_pts = pd.DataFrame(
             countries.sjoin(
                 tracks[["max_wind_speed_ms", "geometry", "track_id"]],

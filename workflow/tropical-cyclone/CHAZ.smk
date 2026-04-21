@@ -40,7 +40,7 @@ rule slice_CHAZ:
     Subset tracks to country convex hull plus a buffer.
 
     To test:
-    snakemake -c1 results/power/by_country/PRI/storms/CHAZ-SSP-585-epoch-2050-GCM-UKESM1-0-LL/0/tracks.geoparquet
+    snakemake -c1 results/power/by_country/PRI/storms/CHAZ_SSP-585_GCM-UKESM1-0-LL_epoch-2050/0/tracks.geoparquet
     """
     input:
         global_tracks="{OUTPUT_DIR}/storm_tracks/{CHAZ_SCENARIO}/{SAMPLE}/tracks.geoparquet",

@@ -181,7 +181,7 @@ def storm_tracks_by_country(wildcards) -> str:
     # All synthetic tracksets (CHAZ, STORM, IRIS, etc.) use full STORM_SET name
     if wildcards.STORM_SET.startswith("IBTrACS"):
         # Extract parent dataset for subset storm sets e.g. IBTrACS for IBTrACS_maria-2017
-        storm_dataset = wildcards.STORM_SET.split("_")[0]
+        storm_dataset = storm_set_family(wildcards.STORM_SET)
     else:
         # Use full name for synthetic tracksets
         storm_dataset = wildcards.STORM_SET
@@ -242,13 +242,12 @@ def wind_field_paths_all_samples(wildcards) -> list[str]:
     """
     Return a list of paths for every sample
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name])
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)])
     )
 
 
@@ -265,7 +264,7 @@ rule concat_wind_fields_over_sample:
 
 """
 To test:
-snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/max_wind_field.nc
+snakemake -c1 results/power/by_country/PRI/storms/STORM_constant/max_wind_field.nc
 """
 
 

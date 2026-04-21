@@ -74,7 +74,6 @@ if not config["best_estimate_windspeed_failure_threshold"] in config["transmissi
         "config.transmissions_windspeed_failure must contain config.best_estimate_windspeed_failure_threshold"
     )
 
-# Constrain wildcards to NOT use _ or /
 wildcard_constraints:
     ADMIN_SLUG="admin-level-[0-4]",
     AGG_FUNC_SLUG="agg-sum",
@@ -84,14 +83,15 @@ wildcard_constraints:
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP|EAD_and_cost_per_trigger",
+    EMANUEL_SCENARIO = r"emanuel_ssp-[0-9]+_gcm-[^\/]+_epoch-[0-9]+",
     EVENTS_OR_RASTERS="events|wind_speed_raster|RP_raster",
     FILTER_SLUG="filter-[^_/]+",
     FILENAME="[^/]+",
     HAZARD_SLUG="hazard-[^_/]+|nbs-[^_/]+",
     IRIS_SCENARIO="PRESENT|SSP1-2050|SSP2-2050|SSP5-2050",
-    # the output dir must end in 'results'
+    # The output dir must end in 'results'
     # e.g. '/data/open-gira/results', './results', '/my-results', etc.
-    # this prevents us matching past it into other folders for an incorrect OUTPUT_DIR,
+    # This prevents us matching past it into other folders for an incorrect OUTPUT_DIR,
     # but is more flexible than reading a value from, for example, config.yaml
     OUTPUT_DIR="^.*results",
     PROJECT_SLUG="project-[^_/]+",
@@ -100,9 +100,9 @@ wildcard_constraints:
     STORM_MODEL="constant|CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_MODEL_FUTURE="CMCC-CM2-VHR4|CNRM-CM6-1-HR|EC-Earth3P-HR|HadGEM3-GC31-HM",
     STORM_RP="[0-9]+",
-    STORM_SET=r"(?:IBTrACS|(?:STORM|IRIS|CHAZ)[^/]*)",
+    STORM_SET=r"(?:IBTrACS|STORM|IRIS|CHAZ|emanuel)[^/]*",
     SAMPLE=r"\d+",
-    # may be upper or lower, one 'f' or two
+    # May be upper or lower, one 'f' or two
     TIFF_FILE=r"[^\/\.\s]+\.[tT][iI][fF][fF]?",
 
 # How many samples to run for each trackset?
@@ -111,7 +111,11 @@ SAMPLES_PER_TRACKSET = {
     "STORM": 1,  # Maximum 10
     "IRIS": 1,  # Maximum 10
     "CHAZ": 1,  # Some scenarios have more, but 5 is the minimum
+    "emanuel": 1,  # Maximum 1
 }
+
+def storm_set_family(storm_set: str) -> str:
+    return storm_set.split("_")[0]
 
 ##### load rules #####
 include: "context/coastlines.smk"
@@ -160,6 +164,7 @@ include: "landslide/landslide_arup.smk"
 include: "tropical-cyclone/CHAZ.smk"
 include: "tropical-cyclone/IBTrACS.smk"
 include: "tropical-cyclone/IRIS.smk"
+include: "tropical-cyclone/emanuel.smk"
 include: "tropical-cyclone/STORM.smk"
 include: "tropical-cyclone/join_tracks.smk"
 include: "tropical-cyclone/wind_fields/wind_fields.smk"

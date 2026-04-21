@@ -11,11 +11,11 @@ def STORM_exposure_by_country_by_climate_model(wildcards):
         "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/admin-level-0.geoparquet",
         OUTPUT_DIR = wildcards.OUTPUT_DIR,
         STORM_SET = [
-            "STORM-constant",
-            "STORM-CMCC-CM2-VHR4",
-            "STORM-CNRM-CM6-1-HR",
-            "STORM-EC-Earth3P-HR",
-            "STORM-HadGEM3-GC31-HM",
+            "STORM_constant",
+            "STORM_CMCC-CM2-VHR4",
+            "STORM_CNRM-CM6-1-HR",
+            "STORM_EC-Earth3P-HR",
+            "STORM_HadGEM3-GC31-HM",
         ],
     )
 
