@@ -83,6 +83,7 @@ wildcard_constraints:
     COST_OR_FRACTION="cost|fraction",
     DATASET="[^_/]+",
     DIRECT_DAMAGE_TYPES="fraction_per_RP|cost_per_RP|EAD|EAD_and_cost_per_RP|EAD_and_cost_per_trigger",
+    EMANUEL_SCENARIO = r"emanuel_ssp-[0-9]+_gcm-[^\/]+_epoch-[0-9]+",
     EVENTS_OR_RASTERS="events|wind_speed_raster|RP_raster",
     FILTER_SLUG="filter-[^_/]+",
     FILENAME="[^/]+",
@@ -110,6 +111,7 @@ SAMPLES_PER_TRACKSET = {
     "STORM": 1,  # Maximum 10
     "IRIS": 1,  # Maximum 10
     "CHAZ": 1,  # Some scenarios have more, but 5 is the minimum
+    "emanuel": 1,  # Maximum 1
 }
 
 def storm_set_family(storm_set: str) -> str:
@@ -162,6 +164,7 @@ include: "landslide/landslide_arup.smk"
 include: "tropical-cyclone/CHAZ.smk"
 include: "tropical-cyclone/IBTrACS.smk"
 include: "tropical-cyclone/IRIS.smk"
+include: "tropical-cyclone/emanuel.smk"
 include: "tropical-cyclone/STORM.smk"
 include: "tropical-cyclone/join_tracks.smk"
 include: "tropical-cyclone/wind_fields/wind_fields.smk"
