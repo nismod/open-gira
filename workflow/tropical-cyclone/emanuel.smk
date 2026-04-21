@@ -12,7 +12,7 @@ rule parse_emanuel:
     """
     Read and parse track set.
 
-    N.B. ~200 years total, so less than one full millenium sample.
+    N.B. ~200 years total, so less than one full millennium sample.
 
     Test with:
     snakemake -c1 results/storm_tracks/emanuel_ssp-585_gcm-ukmo6_epoch-2050/0/tracks.geoparquet
