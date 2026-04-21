@@ -2,12 +2,11 @@ def all_storm_tracks_by_sample(wildcards) -> list[str]:
     """
     Return a list of every per-sample tracks file for a given STORM_SET.
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         "{OUTPUT_DIR}/storm_tracks/{STORM_SET}/{SAMPLE}/tracks.geoparquet",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name])
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)])
     )
 
 
@@ -31,5 +30,5 @@ rule concat_storm_tracks:
 
 """
 Test with:
-snakemake -c1 -- results/storm_tracks/STORM-constant/tracks.geoparquet
+snakemake -c1 -- results/storm_tracks/STORM_constant/tracks.geoparquet
 """

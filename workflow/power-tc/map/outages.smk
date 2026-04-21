@@ -5,12 +5,7 @@ Mapping electricity outages
 
 def storm_tracks(wildcards) -> str:
     """Return path to storm tracks"""
-    # TODO: this function could also be used in storm_tracks.plot_storm_tracks
-
-    # parent dataset of storm set e.g. IBTrACS for IBTrACS_maria-2017
-    storm_dataset = wildcards.STORM_SET.split("_")[0]
-
-    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_dataset}/tracks.geoparquet"
+    return f"{wildcards.OUTPUT_DIR}/storm_tracks/{storm_set_family(wildcards.STORM_SET)}/tracks.geoparquet"
 
 
 rule animate_electricity_outages:

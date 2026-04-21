@@ -85,13 +85,12 @@ def disruption_per_event_sample_files(wildcards) -> list[str]:
     """
     Return a list of paths, one for each sample.
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         rules.aggregate_disruption_within_sample.output.by_event,
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)]),
     )
 
 rule aggregate_per_event_disruption_across_samples:
@@ -208,7 +207,7 @@ rule disruption_pop_affected_return_periods:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/disruption/STORM-constant/pop_affected_RP.pq
+snakemake -c1 -- results/power/by_country/PRI/disruption/STORM_constant/pop_affected_RP.pq
 """
 
 
@@ -275,7 +274,7 @@ rule plot_pop_affected_return_periods:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_country/PRI/disruption/STORM-constant/pop_affected_RP.png
+snakemake -c1 -- results/power/by_country/PRI/disruption/STORM_constant/pop_affected_RP.png
 """
 
 
@@ -311,7 +310,7 @@ rule plot_pop_affected_return_periods_storm_set:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/STORM-constant/pop_affected_RP_plots.flag
+snakemake -c1 -- results/power/by_storm_set/STORM_constant/pop_affected_RP_plots.flag
 """
 
 
@@ -379,7 +378,7 @@ rule disruption_pop_affected_return_period_map:
 
 """
 Test with:
-snakemake -c1 -- results/power/by_storm_set/STORM-constant/disruption/pop_affected_RP
+snakemake -c1 -- results/power/by_storm_set/STORM_constant/disruption/pop_affected_RP
 """
 
 
@@ -387,13 +386,12 @@ def disruption_per_target_sample_files(wildcards) -> list[str]:
     """
     Return a list of paths, one for each sample.
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         rules.aggregate_disruption_within_sample.output.by_target,
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)]),
     )
 
 rule aggregate_per_target_disruption_across_samples:

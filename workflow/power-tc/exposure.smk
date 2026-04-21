@@ -32,13 +32,12 @@ def exposure_per_event_sample_files(wildcards) -> list[str]:
     """
     Return a list of paths, one for each sample.
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         rules.aggregate_exposure_within_sample.output.by_event,
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)]),
     )
 
 rule aggregate_per_event_exposure_across_samples:
@@ -65,13 +64,12 @@ def exposure_per_edge_sample_files(wildcards) -> list[str]:
     """
     Return a list of paths, one for each sample.
     """
-    dataset_name = wildcards.STORM_SET.split("-")[0]
     return expand(
         rules.aggregate_exposure_within_sample.output.by_edge,
         OUTPUT_DIR=wildcards.OUTPUT_DIR,
         COUNTRY_ISO_A3=wildcards.COUNTRY_ISO_A3,
         STORM_SET=wildcards.STORM_SET,
-        SAMPLE=range(0, SAMPLES_PER_TRACKSET[dataset_name]),
+        SAMPLE=range(0, SAMPLES_PER_TRACKSET[storm_set_family(wildcards.STORM_SET)]),
     )
 
 rule aggregate_per_edge_exposure_across_samples:

@@ -56,12 +56,12 @@ rule parse_storm:
     """
     Process raw CSV track data into common geoparquet format
     Test with:
-    snakemake -c1 results/storm_tracks/STORM-constant/0/tracks.geoparquet
+    snakemake -c1 results/storm_tracks/STORM_constant/0/tracks.geoparquet
     """
     input:
         csv_dir="{OUTPUT_DIR}/input/STORM/events/{STORM_MODEL}/raw"
     output:
-        parquet="{OUTPUT_DIR}/storm_tracks/STORM-{STORM_MODEL}/{SAMPLE}/tracks.geoparquet"
+        parquet="{OUTPUT_DIR}/storm_tracks/STORM_{STORM_MODEL}/{SAMPLE}/tracks.geoparquet"
     script:
         "./parse_STORM.py"
 
@@ -70,13 +70,13 @@ rule slice_storm:
     """
     Select tracks by location
     To test:
-    snakemake -c1 results/power/by_country/PRI/storms/STORM-constant/0/tracks.geoparquet
+    snakemake -c1 results/power/by_country/PRI/storms/STORM_constant/0/tracks.geoparquet
     """
     input:
-        global_tracks="{OUTPUT_DIR}/storm_tracks/STORM-{STORM_MODEL}/{SAMPLE}/tracks.geoparquet",
+        global_tracks="{OUTPUT_DIR}/storm_tracks/STORM_{STORM_MODEL}/{SAMPLE}/tracks.geoparquet",
         grid_hull="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/network/convex_hull.json"
     output:
-        sliced_tracks="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/STORM-{STORM_MODEL}/{SAMPLE}/tracks.geoparquet",
+        sliced_tracks="{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/STORM_{STORM_MODEL}/{SAMPLE}/tracks.geoparquet",
     resources:
         mem_mb=10000  # the global tracks file is fairly chunky
     script:
