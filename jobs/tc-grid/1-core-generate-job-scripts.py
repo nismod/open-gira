@@ -21,9 +21,9 @@ LARGE_THRESHOLD = 30000
 
 # Resource specifications
 RESOURCES = {
-    "small": {"cpus": 2, "mem": "6G", "time": "4:00:00", "max_concurrent": 100},
-    "medium": {"cpus": 8, "mem": "60G", "time": "16:00:00", "max_concurrent": 50},
-    "large": {"cpus": 96, "mem": "230G", "time": "48:00:00", "max_concurrent": 20},
+    "small": {"cpus": 2, "mem": "6G", "time": "4:00:00", "partition": "short", "max_concurrent": 100},
+    "medium": {"cpus": 8, "mem": "60G", "time": "16:00:00", "partition": "long", "max_concurrent": 50},
+    "large": {"cpus": 96, "mem": "230G", "time": "48:00:00", "partition": "long", "max_concurrent": 20},
 }
 
 SCRIPT_TEMPLATE = """#!/bin/bash
@@ -34,7 +34,7 @@ SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --mem={mem}
 #SBATCH --time={time}
 #SBATCH --clusters=all
-#SBATCH --partition=long
+#SBATCH --partition={partition}
 #SBATCH --output=jobs/log/phase1_{category}_%A_%a.out
 #SBATCH --error=jobs/log/phase1_{category}_%A_%a.err
 
@@ -87,8 +87,9 @@ echo "Target: $TARGET"
 # This ensures embarrassingly parallel execution with no shared file creation
 # Use --nolock to allow multiple snakemake processes in parallel
 "$SNAKEMAKE" \\
-    --allowed-rules estimate_wind_fields electricity_grid_damages \\
     --cores {cpus} \\
+    --allowed-rules estimate_wind_fields electricity_grid_damages \\
+    --set-threads estimate_wind_fields={cpus} electricity_grid_damages={cpus} \\
     --rerun-incomplete \\
     --nolock \\
     "$TARGET"
@@ -411,8 +412,8 @@ def main():
     parser.add_argument(
         "--samples",
         type=str,
-        default="0,1,2,3,4",
-        help="Comma-separated list of sample numbers (default: 0,1,2,3,4)",
+        default="0",
+        help="Comma-separated list of sample numbers (default: 0)",
     )
     parser.add_argument(
         "--output-dir",

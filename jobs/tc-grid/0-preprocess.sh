@@ -11,10 +11,11 @@
 #SBATCH --error=jobs/log/phase0_%j.err
 
 # Phase 0: Preprocess
-# Generate networks, rasterised grids, and downscaling factors for all nations
+# Generate networks, rasterised grids, downscaling factors and track subsets for all nations
 # Targets:
 # - results/power/by_country/<ISO_A3>/exposure/edges_split.geoparquet
 # - results/power/by_country/<ISO_A3>/storms/downscale_factors.npy
+# - results/power/by_country/<ISO_A3>/storms/<STORM_SET>/<SAMPLE>/tracks.geoparquet
 
 set -euo pipefail
 
@@ -25,6 +26,8 @@ echo "Start time: $(date)"
 
 # Ensure log directory exists
 mkdir -p jobs/log
+
+SAMPLES=("0")
 
 # Generate target list dynamically
 TARGETS_FILE="jobs/log/phase0_targets_${SLURM_JOB_ID}.txt"
@@ -47,20 +50,16 @@ echo "Adding sliced track targets..."
 STORM_SETS=($(jq -r '.[]' config/tc_grid/storm_sets.json))
 for COUNTRY in "${COUNTRIES[@]}"; do
     for STORM_SET in "${STORM_SETS[@]}"; do
-        for SAMPLE in 0 1 2 3 4; do
+        for SAMPLE in "${SAMPLES[@]}"; do
             echo "results/power/by_country/${COUNTRY}/storms/${STORM_SET}/${SAMPLE}/tracks.geoparquet" >> "$TARGETS_FILE"
         done
     done
 done
 
-echo "Total targets including sliced tracks: $(wc -l < "$TARGETS_FILE")"
+echo "Total target files: $(wc -l < "$TARGETS_FILE")"
 
-# Unlock snakemake directory
 pixi run snakemake --cores 1 --unlock
 
-# Run snakemake with whole node resources
-# Build all targets without rule restrictions
-# Phase 1 will be responsible for only running estimate_wind_fields and electricity_grid_damages
 pixi run snakemake \
     --cores 40 \
     --resources mem_mb=140000 \
