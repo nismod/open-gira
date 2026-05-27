@@ -4,9 +4,9 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --mem=160G
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --clusters=all
-#SBATCH --partition=long
+#SBATCH --partition=medium
 #SBATCH --output=jobs/log/phase2_%j.out
 #SBATCH --error=jobs/log/phase2_%j.err
 
@@ -47,12 +47,9 @@ pixi run snakemake --cores 1 --unlock
 
 # Run snakemake with whole node resources
 # Strictly limit to post-processing rules (everything except Phase 1 rules)
-# We use --omit-from to exclude the Phase 1 rules
 pixi run snakemake \
     --cores 40 \
     --resources mem_mb=140000 \
-    --omit-from estimate_wind_fields \
-    --omit-from electricity_grid_damages \
     --rerun-incomplete \
     $(cat "$TARGETS_FILE")
 
