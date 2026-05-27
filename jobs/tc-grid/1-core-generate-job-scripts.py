@@ -23,7 +23,7 @@ LARGE_THRESHOLD = 30000
 RESOURCES = {
     "small": {"cpus": 2, "mem": "6G", "time": "4:00:00", "partition": "short", "max_concurrent": 100},
     "medium": {"cpus": 8, "mem": "60G", "time": "16:00:00", "partition": "long", "max_concurrent": 50},
-    "large": {"cpus": 96, "mem": "230G", "time": "48:00:00", "partition": "long", "max_concurrent": 20},
+    "large": {"cpus": 64, "mem": "320G", "time": "48:00:00", "partition": "long", "max_concurrent": 20},
 }
 
 SCRIPT_TEMPLATE = """#!/bin/bash
@@ -87,7 +87,7 @@ echo "Target: $TARGET"
 # This ensures embarrassingly parallel execution with no shared file creation
 # Use --nolock to allow multiple snakemake processes in parallel
 "$SNAKEMAKE" \\
-    --cores {cpus} \\
+    {extra_flags} --cores {cpus} \\
     --allowed-rules estimate_wind_fields electricity_grid_damages \\
     --set-threads estimate_wind_fields={cpus} electricity_grid_damages={cpus} \\
     --rerun-incomplete \\
@@ -288,7 +288,7 @@ def check_missing_targets(countries, storm_sets, samples, base_dir):
 
 
 def generate_script(
-    category, countries, samples, storm_sets, output_path, check_missing=True
+    category, countries, samples, storm_sets, output_path, check_missing=True, only_touch=False
 ):
     """Generate a phase 1 script for the given category."""
     base_dir = Path(__file__).parent.parent.parent
@@ -348,12 +348,12 @@ echo "Total missing targets ({category}): {total_combinations}\""""
         array_setup = f"""# {category.capitalize()} countries (target_count {{threshold_desc}}) - permitted countries only
 COUNTRIES=({countries_str})
 
-STORM_SETS=($(jq -r '.[]' "${{{{BASE_DIR}}}}/config/tc_grid/storm_sets.json"))
+STORM_SETS=($(jq -r '.[]' "${{BASE_DIR}}/config/tc_grid/storm_sets.json"))
 SAMPLES=({samples_str})
 
-NUM_COUNTRIES=${{{{#COUNTRIES[@]}}}}
-NUM_STORM_SETS=${{{{#STORM_SETS[@]}}}}
-NUM_SAMPLES=${{{{#SAMPLES[@]}}}}
+NUM_COUNTRIES=${{#COUNTRIES[@]}}
+NUM_STORM_SETS=${{#STORM_SETS[@]}}
+NUM_SAMPLES=${{#SAMPLES[@]}}
 
 # Calculate total combinations
 TOTAL_COMBINATIONS=$((NUM_COUNTRIES * NUM_STORM_SETS * NUM_SAMPLES))
@@ -378,22 +378,42 @@ SAMPLE_IDX=$((REMAINDER % NUM_SAMPLES))"""
     else:  # large
         threshold_desc = f">= {LARGE_THRESHOLD}"
 
-    # Generate script from template
-    script_content = SCRIPT_TEMPLATE.format(
-        category=category,
-        category_title=category.capitalize(),
-        cpus=resources["cpus"],
-        mem=resources["mem"],
-        time=resources["time"],
-        max_concurrent=resources["max_concurrent"],
-        max_array_id=max_array_id,
-        threshold_desc=threshold_desc,
-        array_setup=array_setup,
-        index_calculation=index_calculation,
-        country_lookup=country_lookup,
-        storm_set_lookup=storm_set_lookup,
-        sample_lookup=sample_lookup,
-    )
+    if only_touch:
+        script_content = SCRIPT_TEMPLATE.format(
+            category=category,
+            category_title=category.capitalize(),
+            cpus="1",
+            mem="4G",
+            time="00:05:00",
+            max_concurrent="200",
+            partition="short",
+            max_array_id=max_array_id,
+            threshold_desc=threshold_desc,
+            array_setup=array_setup,
+            index_calculation=index_calculation,
+            country_lookup=country_lookup,
+            storm_set_lookup=storm_set_lookup,
+            sample_lookup=sample_lookup,
+            extra_flags="--touch",
+        )
+    else:
+        script_content = SCRIPT_TEMPLATE.format(
+            category=category,
+            category_title=category.capitalize(),
+            cpus=resources["cpus"],
+            mem=resources["mem"],
+            time=resources["time"],
+            max_concurrent=resources["max_concurrent"],
+            partition=resources["partition"],
+            max_array_id=max_array_id,
+            threshold_desc=threshold_desc,
+            array_setup=array_setup,
+            index_calculation=index_calculation,
+            country_lookup=country_lookup,
+            storm_set_lookup=storm_set_lookup,
+            sample_lookup=sample_lookup,
+            extra_flags="",
+        )
 
     # Write script
     output_path.write_text(script_content)
@@ -426,6 +446,11 @@ def main():
         action="store_true",
         help="Disable checking for missing targets (generate all combinations)",
     )
+    parser.add_argument(
+        "--only-touch",
+        action="store_true",
+        help="Generate scripts that touch existing outputs but do not create/overwrite them",
+    )
 
     args = parser.parse_args()
 
@@ -433,6 +458,7 @@ def main():
     samples = [int(s.strip()) for s in args.samples.split(",")]
     logger.info(f"Samples to process: {samples}")
     logger.info(f"Check missing targets: {not args.no_check_missing}")
+    logger.info(f"Only touch outputs: {not args.only_touch}")
     logger.info("")
 
     # Load data
@@ -481,6 +507,7 @@ def main():
             storm_sets,
             output_path,
             check_missing=not args.no_check_missing,
+            only_touch=args.only_touch,
         )
 
     logger.info("Script generation complete!")
