@@ -36,7 +36,7 @@ STORM_SETS=($(jq -r '.[]' config/tc_grid/storm_sets.json))
 # Generate targets for each storm set
 > "$TARGETS_FILE"  # Clear/create file
 for STORM_SET in "${STORM_SETS[@]}"; do
-    echo "results/power/by_storm_set/${STORM_SET}/disruption/EAPA_admin-level-2.gpq" >> "$TARGETS_FILE"
+    echo "results/power/by_storm_set/${STORM_SET}/disruption/EAPA_admin-level-2-0.gpq" >> "$TARGETS_FILE"
     echo "results/power/by_storm_set/${STORM_SET}/disruption/pop_affected_RP" >> "$TARGETS_FILE"
 done
 
