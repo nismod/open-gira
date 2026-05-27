@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --mem=160G
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --clusters=all
 #SBATCH --partition=long
 #SBATCH --output=jobs/log/phase0_%j.out
@@ -54,6 +54,12 @@ for COUNTRY in "${COUNTRIES[@]}"; do
             echo "results/power/by_country/${COUNTRY}/storms/${STORM_SET}/${SAMPLE}/tracks.geoparquet" >> "$TARGETS_FILE"
         done
     done
+done
+
+# Ensure countries_intersecting_storm_set checkpoint runs, as prerequisites and
+# outputs used in later analysis
+for STORM_SET in "${STORM_SETS[@]}"; do
+    echo "results/power/by_storm_set/${STORM_SET}/countries_impacted.json" >> "$TARGETS_FILE"
 done
 
 echo "Total target files: $(wc -l < "$TARGETS_FILE")"
