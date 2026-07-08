@@ -1,10 +1,17 @@
 version: '3.7'
 
 services:
-  app:
-    build: .
-    volumes:
-      - .:/open-gira
+  # The bundled application Dockerfile was removed; it no longer built and
+  # predated the move to the pixi lockfile. For running open-gira in a
+  # container, see docs/src/user-guide/installation/docker.md, which gives a
+  # fresh, minimal setup based on the maintained pixi image. Once you have
+  # created a Dockerfile from that guide, you can re-add an `app` service here:
+  #
+  # app:
+  #   build: .
+  #   volumes:
+  #     - .:/open-gira
+
   # https://github.com/peaceiris/docker-mdbook
   mdbook:
     container_name: mdbook
