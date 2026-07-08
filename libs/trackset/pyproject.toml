@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nismod-trackset"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Normalise tropical cyclone track sets (IBTrACS, STORM, IRIS, CHAZ, Emanuel) to a common GeoDataFrame schema"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -30,7 +30,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest"]
+chaz = ["xarray>=2023.1", "netcdf4"]  # raw CHAZ netCDF ingest
+emanuel = ["scipy"]  # raw Emanuel MATLAB ingest
+test = ["pytest", "xarray>=2023.1"]
 
 [project.urls]
 "Homepage" = "https://github.com/nismod/open-gira/tree/main/libs/trackset"

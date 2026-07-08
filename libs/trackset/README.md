@@ -16,14 +16,15 @@ Supported sources:
 | [IBTrACS](https://www.ncei.noaa.gov/products/international-best-track-archive) | observed | open (CSV) | `read_ibtracs` |
 | [STORM](https://doi.org/10.1038/s41597-020-0381-2) (Bloemendaal et al.) | synthetic | open, Zenodo (CSV) | `read_storm` |
 | [IRIS](https://doi.org/10.1038/s41597-024-03250-y) (Sparks & Toumi) | synthetic | open (text) | `read_iris` |
-| [CHAZ](https://doi.org/10.1002/2017MS001186) (Lee et al.) | synthetic | on request (netCDF) | `read_chaz` * |
-| Emanuel / WindRiskTech | synthetic | on request (MATLAB) | `read_emanuel` * |
+| [CHAZ](https://doi.org/10.1002/2017MS001186) (Lee et al.) | synthetic | on request (netCDF) | `read_chaz_netcdf` * |
+| Emanuel / WindRiskTech | synthetic | on request (MATLAB) | `read_emanuel_mat` * |
 
-\* CHAZ and Emanuel readers currently consume the tabular GeoParquet output
-of [chaz-track-parser](https://github.com/thomas-fred/chaz-track-parser) and
-[emanuel-track-parser](https://github.com/thomas-fred/emanuel-track-parser),
-which also calibrate annual track frequencies to the historical record.
-Absorbing those parsers into this package is on the roadmap.
+\* Raw CHAZ and Emanuel ingest is absorbed from
+[chaz-track-parser](https://github.com/thomas-fred/chaz-track-parser) and
+[emanuel-track-parser](https://github.com/thomas-fred/emanuel-track-parser):
+these two sets need frequency calibration against observations before use
+(see below). `read_chaz` / `read_emanuel` remain for GeoParquet already
+produced by those external tools.
 
 ## Why
 
@@ -75,6 +76,61 @@ nearby.to_parquet("PRI_tracks.geoparquet")
 again = trackset.TrackSet.read_parquet("PRI_tracks.geoparquet")
 again.source, again.years, again.synthetic_time
 ```
+
+## Raw ingest and frequency calibration (CHAZ, Emanuel)
+
+CHAZ and Emanuel tracks arrive as ragged arrays (netCDF and MATLAB) and,
+unlike STORM/IRIS, are not generated at observed storm rates -- they must be
+calibrated before their frequencies mean anything. The pipeline, previously
+spread across two external repos, is now four calls:
+
+```python
+import numpy as np
+import trackset
+from trackset import frequency
+from trackset.readers import filter_epoch, read_chaz_netcdf
+
+# 1. ingest: unravel the datacube; infer radius-to-max-winds (Willoughby
+#    2004) and minimum pressure (Holland 1980 pressure profile with a
+#    Vickery & Wadhera 2008 shape-parameter fit); tag basins
+raw = read_chaz_netcdf("CHAZ_..._sample-000.nc", genesis_method="CRH", sample=0)
+
+# 2. window to epochs (2050 +/- 15 years, and the set's own baseline)
+baseline = filter_epoch(raw, epoch=2010, half_width_years=15)
+target = filter_epoch(raw, epoch=2050, half_width_years=15)
+
+# 3. target per-basin frequency: observed rate (IBTrACS, 2002-2023) scaled
+#    by the synthetic set's own relative epoch change -- trust the generator
+#    for the climate-change signal, not the absolute rate
+observed = frequency.observed_frequency(trackset.read_ibtracs("ibtracs.csv").data)
+target_rate = observed * frequency.relative_frequency(baseline, target)
+
+# 4. re-assign tracks to years matching that rate; the calibration tells
+#    you how many years the set now represents
+calibrated, years = frequency.calibrate_frequency(
+    target, target_rate, rng=np.random.default_rng(0)
+)
+ts = frequency.finalise(
+    calibrated,
+    source="CHAZ_SSP-585_GCM-UKESM1-0-LL_epoch-2050",
+    years=years,
+    attributes={"ssp": 585, "gcm": "UKESM1-0-LL", "epoch": 2050},
+)
+```
+
+Emanuel is the same shape, starting from
+`read_emanuel_mat(path)` per input basin (no structure inference needed --
+radius and pressure are provided).
+
+Note that `calibrate_frequency` requires a *seeded* random generator: the
+year re-assignment is stochastic, and the upstream implementations drew from
+an unseeded global state, making their outputs unreproducible from source.
+Keep the seed with your provenance metadata.
+
+Supporting pieces, importable separately: `trackset.basins` (STORM basin
+polygons and point tagging), `trackset.physics` (Willoughby 2004 RMW,
+Holland 1980 pressure, Vickery & Wadhera 2008 B, Coriolis, per-basin
+environmental pressures).
 
 ## The schema
 
@@ -136,8 +192,11 @@ GeoParquet, readable by any tool.
   concatenated samples keep unique years) so open-gira can adopt the library
   without changing results. Deviations are deliberate and small: agency wind
   averaging uses pandas `mean(skipna=True)` rather than `numpy.nanmean` row
-  application (equivalent, much faster), and track lengths are counted by
-  `groupby` rather than hashing ids.
+  application (equivalent, much faster); track lengths are counted by
+  `groupby` rather than hashing ids; one exact knots-to-m/s constant
+  (1852/3600) replaces the two truncations used upstream; the plausible
+  pressure clamp lives inside `p_min_holland_1980` rather than at its call
+  site; and frequency calibration takes a mandatory seeded generator.
 - **Functions over frameworks.** A `TrackSet` is a thin, frozen container;
   everything real is a plain function on GeoDataFrames in `trackset.ops`
   (`saffir_simpson_category`, `wrap_longitude`, `subset_by_geometry`, ...).
@@ -147,10 +206,13 @@ GeoParquet, readable by any tool.
 
 ## Roadmap
 
-- absorb chaz-track-parser and emanuel-track-parser (raw netCDF / MATLAB
-  ingest and frequency calibration)
 - `trackset.interop.to_climada` — export to `climada.hazard.TCTracks`
   (stub documents the intended mapping)
+- validate absorbed CHAZ/Emanuel ingest against the published calibrated
+  track sets (requires the on-request raw data; unit tests currently cover
+  fabricated miniatures of each array layout)
+- slim chaz-track-parser / emanuel-track-parser workflows to thin calls
+  into this package
 - track interpolation to arbitrary frequency (currently lives in open-gira's
   wind field estimation; belongs here)
 - adopt in open-gira: replace `workflow/tropical-cyclone/parse_*.py` with

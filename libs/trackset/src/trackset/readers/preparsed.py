@@ -3,12 +3,13 @@ Readers for CHAZ (Lee et al., https://doi.org/10.1002/2017MS001186) and
 Kerry Emanuel / WindRiskTech track sets.
 
 Both are distributed on request as ragged arrays (netCDF and MATLAB
-respectively) and are currently pre-processed to tabular GeoParquet by
-external tools (https://github.com/thomas-fred/chaz-track-parser and
-https://github.com/thomas-fred/emanuel-track-parser), which also calibrate
-annual track frequencies to the historical record per-basin. Absorbing those
-parsers into this package is on the roadmap; until then, these readers
-normalise the pre-parsed tabular output.
+respectively). Raw ingest and frequency calibration are available in this
+package (see :mod:`trackset.readers.chaz`, :mod:`trackset.readers.emanuel`
+and :mod:`trackset.frequency`, absorbed from
+https://github.com/thomas-fred/chaz-track-parser and
+https://github.com/thomas-fred/emanuel-track-parser). These readers remain
+for files already pre-processed to tabular GeoParquet by those external
+tools.
 
 Because the raw formats do not state their simulated time span, ``years``
 must be supplied by the caller.

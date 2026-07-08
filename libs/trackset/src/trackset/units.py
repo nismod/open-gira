@@ -2,7 +2,11 @@
 Unit conversion constants and wind speed averaging-period adjustments.
 """
 
-MS_PER_KNOT = 0.5144
+# 1 international knot = 1852 m / 3600 s. N.B. the parsers this library
+# absorbs used truncations of this value (0.5144 in open-gira, 0.51444 in
+# chaz/emanuel-track-parser); outputs differ from theirs at the fifth
+# significant figure.
+MS_PER_KNOT = 1852 / 3600
 KM_PER_NAUTICAL_MILE = 1.852
 
 # Divide by this factor to 'convert' 10-minutely sustained winds to 1-minutely
