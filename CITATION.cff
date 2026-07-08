@@ -1,0 +1,42 @@
+# This CITATION.cff file describes how to cite this software.
+# Schema: https://citation-file-format.github.io/
+# DRAFT: the author list and contributor roles below should be reviewed by the
+# maintainers against the Zenodo record before this file is published.
+cff-version: 1.2.0
+title: >-
+  open-gira: Open Global Infrastructure Risk/Resilience Analysis
+message: >-
+  If you use this software, please cite both the software itself (via the
+  Zenodo DOI below) and, where relevant, the specific data release you used.
+type: software
+authors:
+  - given-names: Tom
+    family-names: Russell
+    affiliation: University of Oxford
+  - given-names: Fred
+    family-names: Thomas
+    affiliation: University of Oxford
+    email: fred.thomas@eci.ox.ac.uk
+  # Further contributors are listed in the repository history and on the
+  # Zenodo record; please add them here as appropriate.
+repository-code: 'https://github.com/nismod/open-gira'
+url: 'https://nismod.github.io/open-gira'
+abstract: >-
+  open-gira is an open-source snakemake workflow for analysing environmental
+  risks to infrastructure networks using global open data. It builds
+  infrastructure networks from OpenStreetMap and other open sources, intersects
+  them with hazard data (river and coastal flooding, tropical cyclones,
+  landslides), and estimates direct damages and disruption.
+license: MIT
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14537079
+    description: The concept DOI for all versions of open-gira.
+keywords:
+  - infrastructure
+  - climate risk
+  - natural hazards
+  - snakemake
+  - open data
+  - flooding
+  - tropical cyclones

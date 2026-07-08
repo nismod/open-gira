@@ -72,4 +72,6 @@ TODO: Document these additional rules.
 - Map the maximum wind speed experienced across the area impacted by a storm.
     - `snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/by_storm/2017242N16333/wind_field.png`
 
-There also exist other plotting and mapping steps to visualise intermediate and final outputs. Refer to `workflow/rules/analysis` for a description of these.
+There also exist other plotting and mapping steps to visualise intermediate and
+final outputs. Refer to the mapping rules under `workflow/power-tc/map/` for a
+description of these.

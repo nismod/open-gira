@@ -33,7 +33,7 @@ which rules are expected to run, too.
 
 ## Configuration
 
-The snakemake configuration details are in `config/config.yml`. You can edit
+The snakemake configuration details are in `config/config.yaml`. You can edit
 this to set the target OSM infrastructure datasets, number of spatial slices, and
 hazard datasets. See
 [config/README.md](https://github.com/nismod/open-gira/blob/main/config/README.md)

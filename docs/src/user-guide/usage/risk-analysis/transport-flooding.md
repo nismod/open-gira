@@ -72,4 +72,6 @@ snakemake --cores all -- results/egypt-latest_filter-road/hazard-aqueduct-river/
 ```
 
 For more possible outputs please refer to the detailed documentation and the
-rules defined in `workflow/rules/`.
+rules defined under `workflow/` (grouped by sector and hazard — see the
+[architecture overview](../../../understanding/architecture.md) and the
+[targets and wildcards reference](../../../reference/targets-and-wildcards.md)).
