@@ -56,49 +56,6 @@ def clean_edges(edges: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return edges
 
 
-def get_road_surface(row: pd.Series) -> str:
-    """Clean and infer road surface category
-
-    Given a series with 'surface' and 'highway' labels:
-    - infer missing surface categories from highway class
-    - reclassify paved/unpaved to asphalt/gravel
-    - pass any existing surface category unmodified
-
-    N.B. There are several surface categories not considered in this function.
-    Here are the major roads recorded for OSM in Tanzania as of June 2022:
-
-    (Pdb) df.tag_surface.value_counts()
-    unpaved           2521
-    paved             2033
-    asphalt           1355
-    ground             108
-    gravel              38
-    compacted           23
-    dirt                19
-    concrete             5
-    concrete:lanes       4
-    sand                 2
-    fine_gravel          1
-
-    Args:
-        row: Must have surface (nullable) and highway attributes.
-
-    Returns:
-        surface category string
-    """
-    if not row.tag_surface:
-        if row.tag_highway in {"motorway", "trunk", "primary"}:
-            return "asphalt"
-        else:
-            return None
-    elif row.tag_surface == "paved":
-        return "asphalt"
-    elif row.tag_surface == "unpaved":
-        return "gravel"
-    else:
-        return row.tag_surface
-
-
 def get_road_is_paved(surface: pd.Series, surface_to_paved: pd.DataFrame) -> pd.Series:
     """Given a series of "surface" categories as strings, infer paved status
     (boolean), default False"""
@@ -136,12 +93,9 @@ def get_road_lanes(row: pd.Series) -> int:
 def annotate_condition(
     network: snkit.network.Network, highway_surface_mapping: pd.DataFrame
 ) -> snkit.network.Network:
-    # infer material type from 'surface' and 'highway' columns
-    network.edges["material"] = network.edges.apply(get_road_surface, axis=1)
-
     # categories materials as paved (true/false)
     network.edges["paved"] = get_road_is_paved(
-        network.edges.material, highway_surface_mapping
+        network.edges.tag_surface, highway_surface_mapping
     )
 
     # add number of lanes
