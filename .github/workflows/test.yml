@@ -9,10 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
-
       - name: Install ImageMagick
         uses: mfinelli/setup-imagemagick@v8
         with:
@@ -25,6 +21,9 @@ jobs:
           cache: true
           activate-environment: true
           log-level: vv
+
+      - name: Ruff format check
+        run: pixi run ruff format --check --diff
 
       - name: Check environment.yml is consistent with pixi
         run: |
