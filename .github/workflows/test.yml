@@ -14,7 +14,7 @@ jobs:
           args: "format --check --diff"
 
       - name: Install ImageMagick
-        uses: mfinelli/setup-imagemagick@v7
+        uses: mfinelli/setup-imagemagick@v8
         with:
           cache: true
 
