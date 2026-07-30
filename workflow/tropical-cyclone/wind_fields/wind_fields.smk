@@ -270,16 +270,38 @@ snakemake -c1 results/power/by_country/PRI/storms/STORM_constant/max_wind_field.
 
 def wind_fields_by_country_for_storm(wildcards):
     """
-    Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
-    affects and return paths to their wind field files.
+    Given a STORM_ID and STORM_SET as a wildcard, scan the filesystem to find
+    which country wind field files actually exist for this storm.
+    
+    Uses disruption file existence as a fast proxy - if a disruption file exists,
+    the wind field must also exist since disruption depends on wind fields.
     """
+    import os
 
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    country_set_by_storm = cached_json_file_read(json_file)
-
+    # Get the list of countries that intersect with this storm set
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    countries = cached_json_file_read(json_file)
+    
+    # Find which countries have the disruption file for this storm
+    # If disruption exists, wind field must also exist (it's an input to disruption)
+    existing_countries = []
+    for country in countries:
+        disruption_file = os.path.join(
+            wildcards.OUTPUT_DIR,
+            "power/by_country",
+            country,
+            "disruption",
+            wildcards.STORM_SET,
+            wildcards.SAMPLE,
+            f"{wildcards.STORM_ID}.nc"
+        )
+        if os.path.isfile(disruption_file):
+            existing_countries.append(country)
+    
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
-        COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/{SAMPLE}/max_wind_field.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=existing_countries,  # list of str (filtered)
         STORM_SET=wildcards.STORM_SET,  # str
         SAMPLE=wildcards.SAMPLE  # str
     )
@@ -288,11 +310,14 @@ def wind_fields_by_country_for_storm(wildcards):
 rule merge_wind_fields_of_storm:
     """
     Merge wind fields generated for each country for a given storm.
+
+    Test with:
+    snakemake -c1 results/power/by_storm_set/IBTrACS/0/2017260N12310/wind_field.nc
     """
     input:
         wind_fields = wind_fields_by_country_for_storm
     output:
-        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
+        merged = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/wind_field.nc",
     run:
         import logging
         import os
@@ -310,20 +335,25 @@ rule merge_wind_fields_of_storm:
 
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-        logging.info("Reading wind fields for each country")
-        rasters = []
-        for path in input.wind_fields:
-            try:
-                ds = xr.open_dataset(path).sel(event_id=wildcards.STORM_ID)
-                rasters.append(ds.to_dataframe().reset_index()[["latitude", "longitude", "max_wind_speed"]])
-            except KeyError:
-                pass
-
-        try:
-            data = pd.concat(rasters)
-        except ValueError:
-            # no data in rasters
+        if not input.wind_fields:
+            logging.warning(f"No wind field files found for storm {wildcards.STORM_ID}")
+            # Create an empty dataset
             data = pd.DataFrame({"max_wind_speed": []})
+        else:
+            logging.info("Reading wind fields for each country")
+            rasters = []
+            for path in input.wind_fields:
+                try:
+                    ds = xr.open_dataset(path).sel(event_id=wildcards.STORM_ID)
+                    rasters.append(ds.to_dataframe().reset_index()[["latitude", "longitude", "max_wind_speed"]])
+                except KeyError:
+                    pass
+
+            try:
+                data = pd.concat(rasters)
+            except ValueError:
+                # no data in rasters
+                data = pd.DataFrame({"max_wind_speed": []})
 
         logging.info(f"Filtering out areas with wind speed < {MIN_WIND_SPEED} ms-1")
         data = data[data.max_wind_speed > MIN_WIND_SPEED]
@@ -361,27 +391,66 @@ rule merge_wind_fields_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/0/by_storm/2017260N12310/wind_field.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/0/2017260N12310/wind_field.nc
 """
 
 
 def merged_wind_fields_for_all_storms_in_storm_set(wildcards):
     """
-    Given STORM_SET as a wildcard, lookup the storms in the set.
+    Given STORM_SET and SAMPLE as wildcards, scan the filesystem to find which
+    storms have been successfully processed.
 
-    Return a list of the merged wind_field.nc file paths for every storm in the set.
+    Uses disruption files as a fast proxy - scans .nc filenames instead of
+    opening files. This is faster than reading NetCDF metadata.
     """
+    import glob
+    import os
 
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    country_set_by_storm = cached_json_file_read(json_file)
+    # Get the list of countries that intersect with this storm set
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    countries = cached_json_file_read(json_file)
 
-    storms = list(country_set_by_storm.keys())
+    # Force Snakemake to create disruption files before scanning filesystem
+    # Reference checkpoint for each country to ensure files exist
+    for country in countries:
+        checkpoints.aggregate_disruption_within_sample.get(
+            OUTPUT_DIR=wildcards.OUTPUT_DIR,
+            COUNTRY_ISO_A3=country,
+            STORM_SET=wildcards.STORM_SET,
+            SAMPLE=wildcards.SAMPLE
+        ).output[0]
+
+    # Collect all storms by scanning disruption filenames
+    storms_found = set()
+    
+    for country in countries:
+        # Get the disruption directory for this country/storm_set/sample
+        disruption_dir = os.path.join(
+            wildcards.OUTPUT_DIR,
+            "power/by_country",
+            country,
+            "disruption",
+            wildcards.STORM_SET,
+            wildcards.SAMPLE
+        )
+        
+        # If the directory exists, scan for .nc files
+        if os.path.isdir(disruption_dir):
+            nc_files = glob.glob(os.path.join(disruption_dir, "*.nc"))
+            for nc_file in nc_files:
+                # Extract storm ID from filename (e.g., "1992064S10184.nc" -> "1992064S10184")
+                storm_id = os.path.basename(nc_file).replace(".nc", "")
+                storms_found.add(storm_id)
+    
+    # Sort for consistent ordering
+    storms = sorted(list(storms_found))
 
     return expand(
-        "results/power/by_storm_set/{STORM_SET}/{SAMPLE}/by_storm/{STORM_ID}/wind_field.nc",
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/wind_field.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE,  # str
         STORM_ID=storms,  # list of str
-        SAMPLE=wildcards.SAMPLE  # str
     )
 
 

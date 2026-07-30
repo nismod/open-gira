@@ -86,7 +86,7 @@ rule disruption_merge_countries_of_storm:
 
 """
 Test with:
-snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/0/2017260N12310/disruption_by_target.nc
+snakemake -c1 results/power/by_storm_set/IBTrACS/0/2017260N12310/disruption_by_target.nc
 """
 
 
@@ -100,7 +100,8 @@ def disruption_by_target_for_all_storms_in_storm_set(wildcards) -> list[str]:
     has been successfully processed.
     
     This function references the aggregate_disruption_within_sample checkpoint to
-    ensure disruption files are created before globbing the filesystem.
+    ensure disruption files are created before globbing the filesystem. It also
+    triggers creation of merged wind_field.nc files for each storm.
     """
     import glob
     import os
@@ -147,13 +148,24 @@ def disruption_by_target_for_all_storms_in_storm_set(wildcards) -> list[str]:
     # Sort for consistent ordering
     storms = sorted(list(storms_found))
     
-    return expand(
+    # Also request the merged wind field for each storm to trigger their creation
+    # This ensures wind_field.nc files are created alongside disruption files
+    wind_field_paths = expand(
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/wind_field.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+        SAMPLE=wildcards.SAMPLE,
+        STORM_ID=storms,
+    )
+    
+    disruption_paths = expand(
         "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/disruption_by_target.nc",
         OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
         STORM_SET=wildcards.STORM_SET,  # str
         SAMPLE=wildcards.SAMPLE,  # str
         STORM_ID=storms,  # list of str
     )
+    return wind_field_paths + disruption_paths
 
 
 rule merged_disruption_for_storm_set_sample:
