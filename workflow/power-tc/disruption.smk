@@ -10,18 +10,40 @@ from open_gira.io import cached_json_file_read
 
 def country_storm_paths_for_storm(wildcards):
     """
-    Given a STORM_ID and STORM_SET as a wildcard, lookup the countries that storm
-    affects and return paths to their disruption files.
+    Given a STORM_ID and STORM_SET as a wildcard, scan the filesystem to find
+    which country disruption files actually exist for this storm.
+    
+    This allows merging storms that exist on disk even if they're not in the
+    checkpoint data (e.g., from previous runs with different configurations).
     """
+    import glob
+    import os
 
-    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set_by_storm
-    country_set_by_storm = cached_json_file_read(json_file)
-
+    # Get the list of countries that intersect with this storm set
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    countries = cached_json_file_read(json_file)
+    
+    # Find which countries actually have this storm file on disk
+    existing_countries = []
+    for country in countries:
+        file_path = os.path.join(
+            wildcards.OUTPUT_DIR,
+            "power/by_country",
+            country,
+            "disruption",
+            wildcards.STORM_SET,
+            wildcards.SAMPLE,
+            f"{wildcards.STORM_ID}.nc"
+        )
+        if os.path.isfile(file_path):
+            existing_countries.append(country)
+    
     return expand(
-        "results/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
-        COUNTRY_ISO_A3=country_set_by_storm[wildcards.STORM_ID],  # list of str
+        "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/disruption/{STORM_SET}/{SAMPLE}/{STORM_ID}.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        COUNTRY_ISO_A3=existing_countries,  # list of str (filtered)
         STORM_SET=wildcards.STORM_SET,  # str
-        SAMPLE=wilcards.SAMPLE,  # str
+        SAMPLE=wildcards.SAMPLE,  # str
         STORM_ID=wildcards.STORM_ID  # str
     )
 
@@ -29,6 +51,9 @@ def country_storm_paths_for_storm(wildcards):
 rule disruption_merge_countries_of_storm:
     """
     Merge disruption estimates from all countries a storm hit.
+    
+    Only merges countries where the disruption file actually exists,
+    allowing for partial results when some countries failed to process.
     """
     input:
         disruption = country_storm_paths_for_storm
@@ -42,12 +67,17 @@ rule disruption_merge_countries_of_storm:
 
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
-        logging.info("Reading and pooling targets from all country datasets")
-        pooled_targets = xr.concat([xr.open_dataset(path) for path in input.disruption], dim="target")
+        if not input.disruption:
+            logging.warning(f"No disruption files found for storm {wildcards.STORM_ID}")
+            # Create an empty dataset
+            pooled_targets = xr.Dataset()
+        else:
+            logging.info(f"Reading and pooling targets from {len(input.disruption)} country dataset(s)")
+            pooled_targets = xr.concat([xr.open_dataset(path) for path in input.disruption], dim="target")
 
-        # a few targets may have been processed under more than one country, keep the first instance
-        logging.info("Dropping duplicates")
-        pooled_targets = pooled_targets.drop_duplicates("target")
+            # a few targets may have been processed under more than one country, keep the first instance
+            logging.info("Dropping duplicates")
+            pooled_targets = pooled_targets.drop_duplicates("target")
 
         # write to disk
         os.makedirs(os.path.dirname(output.by_target), exist_ok=True)
@@ -60,10 +90,100 @@ snakemake -c1 results/power/by_storm_set/IBTrACS/by_storm/0/2017260N12310/disrup
 """
 
 
-rule aggregate_disruption_within_sample:
+def disruption_by_target_for_all_storms_in_storm_set(wildcards) -> list[str]:
+    """
+    Given STORM_SET and SAMPLE as wildcards, scan the filesystem to find which
+    storms have been successfully processed (i.e., have at least one country's
+    disruption file on disk).
+
+    Return a list of the disruption_by_target.nc file paths for every storm that
+    has been successfully processed.
+    
+    This function references the aggregate_disruption_within_sample checkpoint to
+    ensure disruption files are created before globbing the filesystem.
+    """
+    import glob
+    import os
+
+    # Get the list of countries that intersect with this storm set
+    json_file = checkpoints.countries_intersecting_storm_set.get(**wildcards).output.country_set
+    countries = cached_json_file_read(json_file)
+
+    # Reference the checkpoint outputs to ensure disruption files have been created
+    # This forces Snakemake to complete electricity_grid_damages before globbing
+    checkpoint_outputs = []
+    for country in countries:
+        checkpoint_outputs.append(
+            checkpoints.aggregate_disruption_within_sample.get(
+                OUTPUT_DIR=wildcards.OUTPUT_DIR,
+                COUNTRY_ISO_A3=country,
+                STORM_SET=wildcards.STORM_SET,
+                SAMPLE=wildcards.SAMPLE
+            ).output
+        )
+
+    # Collect all storms that have at least one country's disruption file
+    storms_found = set()
+    
+    for country in countries:
+        # Get the disruption directory for this country/storm_set/sample
+        disruption_dir = os.path.join(
+            wildcards.OUTPUT_DIR,
+            "power/by_country",
+            country,
+            "disruption",
+            wildcards.STORM_SET,
+            wildcards.SAMPLE
+        )
+        
+        # If the directory exists, scan for .nc files
+        if os.path.isdir(disruption_dir):
+            nc_files = glob.glob(os.path.join(disruption_dir, "*.nc"))
+            for nc_file in nc_files:
+                # Extract storm ID from filename (e.g., "1992064S10184.nc" -> "1992064S10184")
+                storm_id = os.path.basename(nc_file).replace(".nc", "")
+                storms_found.add(storm_id)
+    
+    # Sort for consistent ordering
+    storms = sorted(list(storms_found))
+    
+    return expand(
+        "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/{STORM_ID}/disruption_by_target.nc",
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,  # str
+        STORM_SET=wildcards.STORM_SET,  # str
+        SAMPLE=wildcards.SAMPLE,  # str
+        STORM_ID=storms,  # list of str
+    )
+
+
+rule merged_disruption_for_storm_set_sample:
+    """
+    A target rule to generate the disruption netCDFs (across multiple
+    countries) for each storm in a storm set sample.
+    """
+    input:
+        disruption = disruption_by_target_for_all_storms_in_storm_set
+    output:
+        completion_flag = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/{SAMPLE}/disruption_by_target.flag"
+    shell:
+        """
+        # one output file per line
+        echo {input.disruption} | tr ' ' '\n' > {output.completion_flag}
+        """
+
+"""
+Test with:
+snakemake -c1 -- results/power/by_storm_set/IBTrACS/0/disruption_by_target.flag
+"""
+
+
+checkpoint aggregate_disruption_within_sample:
     """
     Take per-event disruption files with per-target rows (for all of a storm set
     sample) and aggregate into a per-target file and a per-event file.
+    
+    This is a checkpoint so we can discover which storms have been successfully
+    processed by scanning the actual output directory.
     """
     input:
         disruption_by_event = rules.electricity_grid_damages.output.disruption
