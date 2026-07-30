@@ -131,73 +131,91 @@ rule disruption_pop_affected_return_periods:
         import pandas as pd
         import numpy as np
 
-        # read in the number of people affected by each event (event rows, threshold columns)
+        # Read in the number of people affected by each event (event rows, threshold columns)
         pop_affected = pd.read_parquet(input.per_event)
         thresholds: np.ndarray = pop_affected.columns.values.copy()
+        if not pop_affected.empty:
 
-        tracks = pd.read_parquet(input.tracks, columns=["track_id", "year"])
-        tracks: pd.DataFrame = tracks.drop_duplicates("track_id").set_index("track_id")
-        n_years: int = tracks.year.max() - tracks.year.min() + 1
+            tracks = pd.read_parquet(input.tracks, columns=["track_id", "year"])
+            track_year: pd.DataFrame = tracks.drop_duplicates("track_id").set_index("track_id")
+            # Filter to tracks that appear in simulated events
+            track_year = track_year.loc[pop_affected.index].sort_values("year")
+            n_years: int = int(track_year.year.max()) - int(track_year.year.min()) + 1
 
-        # bring in year data for the storms (common event_id index)
-        pop_affected: pd.DataFrame = pop_affected.join(tracks)
+            # bring in year data for the storms (common event_id index)
+            pop_affected: pd.DataFrame = pop_affected.join(track_year)
 
-        # year index, threshold columns, values are event_ids of max pop affected that year
-        event_ids_of_annual_max: pd.DataFrame = pop_affected.groupby("year").idxmax()
+            # year index, threshold columns, values are event_ids of max pop affected that year
+            event_ids_of_annual_max: pd.DataFrame = pop_affected.groupby("year").idxmax()
 
-        data_by_threshold: list[pd.DataFrame] = []
-        for threshold in thresholds:
+            data_by_threshold: list[pd.DataFrame] = []
+            for threshold in thresholds:
 
-            # index into pop_affected data with event_ids of largest disruption per year, sort ascending
-            df = pd.DataFrame(pop_affected.loc[event_ids_of_annual_max[threshold], threshold])
+                # index into pop_affected data with event_ids of largest disruption per year, sort ascending
+                df = pd.DataFrame(pop_affected.loc[event_ids_of_annual_max[threshold], threshold])
 
-            # move speed threshold from column name into vales of new `threshold` column
-            df = df.rename(columns={threshold: "pop_affected"})
+                # move speed threshold from column name into vales of new `threshold` column
+                df = df.rename(columns={threshold: "pop_affected"})
 
-            # add zero-valued entries for years with no record in the time span
-            years_with_no_data = pd.DataFrame(
-                index=pd.Index([f"no_data" for i in range(n_years - len(df))], name="event_id"),
-                data={"pop_affected": np.zeros(n_years - len(df))}
+                # add zero-valued entries for years with no record in the time span
+                years_with_no_data = pd.DataFrame(
+                    index=pd.Index([f"no_data" for i in range(n_years - len(df))], name="event_id"),
+                    data={"pop_affected": np.zeros(n_years - len(df))}
+                )
+                # sort to ascending pop_affected
+                df = pd.concat([df, years_with_no_data]).sort_values("pop_affected")
+
+                # store threshold as data (will be set as index later)
+                df["threshold"] = threshold
+
+                # calculate recurrence intervals using 'plotting position' formula
+                # most impactful event gets rank 1
+                df["rank"] = range(n_years, 0, -1)
+
+                # T = n + 1 / m, where T is expected value of return period, n is number of observations and m observation rank
+                # for a derivation of this formula, see Gumbel 1958, §2.1.4 or Makkonen 2006
+                # N.B. this is valid for any underlying distribution
+                df["return_period_years"] = (n_years + 1) / df["rank"]
+
+                # the Annual Exceedance Probability, AEP, is 1 / T
+
+                df = df.reset_index().set_index(["threshold", "event_id"])
+
+                data_by_threshold.append(df)
+
+            data = pd.concat(data_by_threshold)
+
+        else:
+            # No data
+            data = pd.DataFrame(
+                index=pd.MultiIndex.from_product(
+                    (thresholds, ("no_data",)),
+                    names=("threshold", "event_id")
+                ),
+                columns=("pop_affected", "rank", "return_period_years")
             )
-            # sort to ascending pop_affected
-            df = pd.concat([df, years_with_no_data]).sort_values("pop_affected")
-
-            # store threshold as data (will be set as index later)
-            df["threshold"] = threshold
-
-            # calculate recurrence intervals using 'plotting position' formula
-            # most impactful event gets rank 1
-            df["rank"] = range(n_years, 0, -1)
-
-            # T = n + 1 / m, where T is expected value of return period, n is number of observations and m observation rank
-            # for a derivation of this formula, see Gumbel 1958, §2.1.4 or Makkonen 2006
-            # N.B. this is valid for any underlying distribution
-            df["return_period_years"] = (n_years + 1) / df["rank"]
-
-            # the Annual Exceedance Probability, AEP, is 1 / T
-
-            df = df.reset_index().set_index(["threshold", "event_id"])
-
-            data_by_threshold.append(df)
 
         # write out raw return periods as calculated for the largest event in each year
-        data = pd.concat(data_by_threshold)
         data.to_parquet(output.return_periods_raw)
 
         # interpolate between the raw events to find population affected for a given set of return periods
         interpolated_RP_by_threshold = []
         for threshold in thresholds:
+            if not all(data.xs(threshold, level="threshold")["return_period_years"].isna()):
+                pop_affected_interpolated = np.interp(
+                    params.return_periods,
+                    data.xs(threshold, level="threshold")["return_period_years"],
+                    data.xs(threshold, level="threshold")["pop_affected"]
+                )
+            else:
+                pop_affected_interpolated = np.zeros(len(params.return_periods))
             df = pd.DataFrame(
                 {
                     "threshold": threshold,
                     "return_period_years": params.return_periods,
                     # note that numpy interp expects the x grid, i.e.
                     # return_period_years data to be monotonically increasing
-                    "pop_affected": np.interp(
-                        params.return_periods,
-                        data.xs(threshold, level="threshold")["return_period_years"],
-                        data.xs(threshold, level="threshold")["pop_affected"]
-                    )
+                    "pop_affected": pop_affected_interpolated,
                 }
             )
             interpolated_RP_by_threshold.append(df)
