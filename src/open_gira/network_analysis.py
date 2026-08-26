@@ -133,10 +133,10 @@ def _nk_topo_stats(Gc, n_threads, rel_tol=0.01, batch_size=50,
       immediately and discarded — O(N) memory regardless of graph size.
     """
     nk.setNumberOfThreads(n_threads)
-    nkG, _ = _nk_graph(Gc, weight=None)
+    nkG, _ = _nk_graph(Gc, weight="length_m")
     n = nkG.numberOfNodes()
  
-    logging.info("Calculate graph 'distance'")
+    logging.info("Calculate graph 'diameter' (longest shortest path)")
     diam = nk.distance.Diameter(nkG, algo=nk.distance.DiameterAlgo.EXACT)
     diam.run()
     diameter = diam.getDiameter()[0]
@@ -144,10 +144,12 @@ def _nk_topo_stats(Gc, n_threads, rel_tol=0.01, batch_size=50,
     rng = np.random.default_rng(seed)
     order = rng.permutation(n)
  
-    per_source_means = []  # mean distance from each sampled source (unbiased
-                            # sample of the true average path length)
-    inv_means = []          # mean of 1/distance from each sampled source
-                             # (unbiased sample of global efficiency)
+    # mean distance from each sampled source (unbiased
+    # sample of the true average path length)
+    per_source_means = []
+    # mean of 1/distance from each sampled source
+    # (unbiased sample of global efficiency)
+    inv_means = []
     n_used = 0
     idx = 0
     logging.info(f"Sample average shortest path distance until error < {rel_tol * 100}%")
@@ -231,8 +233,6 @@ def connectivity_metrics(G, n_workers=1):
             out["avg_shortest_path_len"] = nx.average_shortest_path_length(Gc)
             out["diameter"] = nx.diameter(Gc)
             out["global_efficiency"] = nx.global_efficiency(Gc)
-        logging.info("Local efficiency")
-        out["local_efficiency"] = nx.local_efficiency(Gc)
         # algebraic connectivity, on giant component only (else always 0)
         logging.info("Algebraic connectivity")
         # tracemin_lu 100x faster than default (tracemin_pcg) for gridfinder type networks
@@ -243,17 +243,6 @@ def connectivity_metrics(G, n_workers=1):
                     ["avg_shortest_path_len", "diameter", "global_efficiency",
                      "local_efficiency", "algebraic_connectivity",
                      "algebraic_connectivity_norm"]})
-
-    # node/edge connectivity can be slow on large graphs; only run on
-    # giant component and skip above a size threshold
-    if 1 < Gc.number_of_nodes() <= 2000:
-        logging.info("Small network, find edge/node connectivity")
-        out["node_connectivity"] = nx.node_connectivity(Gc)
-        out["edge_connectivity"] = nx.edge_connectivity(Gc)
-    else:
-        logging.info("Big network, skip edge/node connectivity")
-        out["node_connectivity"] = np.nan
-        out["edge_connectivity"] = np.nan
 
     return out
 
@@ -294,7 +283,7 @@ def centrality_metrics(G, k_sample=500, n_workers=1):
         logging.info("Large network, use networkit")
         nk.setNumberOfThreads(n_workers)
         logging.info(f"{n_workers} threads")
-        nkG, _ = _nk_graph(G, weight=None)
+        nkG, _ = _nk_graph(G, weight="length_m")
         logging.info(f"Sampling betweenness k={k_sample} times")
         eb = nk.centrality.EstimateBetweenness(nkG, k, normalized=True, parallel=True)
         eb.run()
