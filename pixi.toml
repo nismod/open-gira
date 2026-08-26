@@ -55,6 +55,7 @@ pytest = "*"
 pytest-xdist = "*"
 pulp = ">=2.8.0,<3"
 ruff = "*"
+networkit = ">=11.2,<12"
 
 [pypi-dependencies]
 nismod-snail = "*"

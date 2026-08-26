@@ -141,6 +141,7 @@ include: "power/gridfinder.smk"
 include: "power/wri-powerplants.smk"
 include: "power/gridfinder-targets.smk"
 include: "power/create_network.smk"
+include: "power/analyse_network.smk"
 
 include: "transport/openstreetmap.smk"
 include: "transport/create_bbox_extracts.smk"

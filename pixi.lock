@@ -318,6 +318,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/nest-asyncio-1.6.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.7.2-nompi_py312ha728dd9_101.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/networkit-11.2-py312hf79963d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/networkx-3.6-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-7.5.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-shim-0.2.4-pyhd8ed1ab_1.conda
@@ -787,6 +788,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.5-h0622a9a_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/nest-asyncio-1.6.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/netcdf4-1.7.2-nompi_py312haf04bd4_101.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/networkit-11.2-py312h86abcb1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/networkx-3.6-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-7.5.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-shim-0.2.4-pyhd8ed1ab_1.conda
@@ -7496,6 +7498,39 @@ packages:
   - pkg:pypi/netcdf4?source=hash-mapping
   size: 1046221
   timestamp: 1733253904541
+- conda: https://conda.anaconda.org/conda-forge/linux-64/networkit-11.2-py312hf79963d_0.conda
+  sha256: dc030adde182d9421e36bb1dcd82c8df961618a0d59007343f598d1ea9c6d349
+  md5: abbffafe509e73668fab7dbe713cf600
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=14
+  - libstdcxx >=14
+  - numpy >=1.23,<3
+  - python >=3.12,<3.13.0a0
+  - python_abi 3.12.* *_cp312
+  - scipy
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/networkit?source=hash-mapping
+  size: 11440122
+  timestamp: 1762358284283
+- conda: https://conda.anaconda.org/conda-forge/osx-64/networkit-11.2-py312h86abcb1_0.conda
+  sha256: 88005d006e2d92c9767c0eee5bd9b30f310ca6c2f9c54acde23b1685ddb0c52c
+  md5: 89b30d58259140e16fdad15384f9a2f9
+  depends:
+  - __osx >=10.13
+  - libcxx >=19
+  - numpy >=1.23,<3
+  - python >=3.12,<3.13.0a0
+  - python_abi 3.12.* *_cp312
+  - scipy
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/networkit?source=hash-mapping
+  size: 10175456
+  timestamp: 1762359210779
 - conda: https://conda.anaconda.org/conda-forge/noarch/networkx-3.6-pyhcf101f3_0.conda
   sha256: 57b0bbb72ed5647438a81e7caf4890075390f80030c1333434467f9366762db7
   md5: 6725bfdf8ea7a8bf6415f096f3f1ffa5
