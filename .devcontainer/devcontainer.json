@@ -1,0 +1,39 @@
+{
+  // Development container for open-gira. VS Code (and other Dev Container
+  // tools) build the repository Dockerfile, mount the working tree, and install
+  // the locked pixi environment, giving a ready-to-use development environment.
+  // See https://containers.dev/ for the schema.
+  "name": "open-gira",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+
+  // Mount the repository at the same path the Dockerfile uses as its workdir.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/open-gira,type=bind",
+  "workspaceFolder": "/open-gira",
+
+  // The image's ENTRYPOINT runs commands via `pixi run`. Clear it here so the
+  // container's keep-alive command is not wrapped before the environment has
+  // been installed into the mounted workspace.
+  "overrideCommand": true,
+  "runArgs": ["--entrypoint", ""],
+
+  // The build-time environment lives at the image's /open-gira/.pixi, which the
+  // workspace bind mount shadows, so install once against the mounted source.
+  // This populates ./.pixi in your working tree; it persists between rebuilds.
+  "postCreateCommand": "pixi install --locked",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "snakemake.snakemake-lang"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/open-gira/.pixi/envs/default/bin/python"
+      }
+    }
+  }
+}

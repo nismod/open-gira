@@ -1,0 +1,11 @@
+# Keep local artefacts out of the build context and image.
+.git
+.pixi
+results
+book
+docs/book
+jobs/log
+**/__pycache__
+*.pyc
+.pytest_cache
+.ipynb_checkpoints

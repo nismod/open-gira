@@ -1,16 +1,18 @@
 version: '3.7'
 
 services:
-  # The bundled application Dockerfile was removed; it no longer built and
-  # predated the move to the pixi lockfile. For running open-gira in a
-  # container, see docs/src/user-guide/installation/docker.md, which gives a
-  # fresh, minimal setup based on the maintained pixi image. Once you have
-  # created a Dockerfile from that guide, you can re-add an `app` service here:
-  #
-  # app:
-  #   build: .
-  #   volumes:
-  #     - .:/open-gira
+  # Runs open-gira in the container built from the repository Dockerfile
+  # (pixi image + locked environment). For example:
+  #   docker compose build app
+  #   docker compose run --rm app                       # interactive shell
+  #   docker compose run --rm app snakemake -n --cores 2 -- <target>
+  app:
+    build: .
+    volumes:
+      - .:/open-gira
+      # Preserve the image's installed pixi environment: without this anonymous
+      # volume, the bind mount above would shadow /open-gira/.pixi.
+      - /open-gira/.pixi
 
   # https://github.com/peaceiris/docker-mdbook
   mdbook:
