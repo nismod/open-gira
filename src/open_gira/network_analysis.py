@@ -1,5 +1,5 @@
 """
-Network + spatial metrics for spatial energy transmission/distribution grids.
+Network metrics for spatial energy transmission/distribution grids.
 """
 
 import logging
@@ -17,6 +17,7 @@ def timer(func):
     def wrapper(*args, **kwargs):
         start = time.perf_counter()
         try:
+            logging.info(f"{func.__name__} start")
             return func(*args, **kwargs)
         finally:
             elapsed = time.perf_counter() - start
@@ -25,7 +26,6 @@ def timer(func):
     return wrapper
 
 
-@timer
 def _nx_graph(
     edges, nodes, from_col="from_id", to_col="to_id",
     geometry_col="geometry", id_col="id"
@@ -52,7 +52,6 @@ def _nx_graph(
     return G
 
 
-@timer
 def _nk_graph(G, weight=None):
     """Convert a networkx graph to a NetworKit graph."""
     node_list = list(G.nodes())
@@ -71,30 +70,41 @@ def basic_topology(G):
     return {
         "n_nodes": N,
         "n_edges": E,
-        "avg_degree": degrees.mean() if N else np.nan,
-        "degree_std": degrees.std() if N else np.nan,
-        "max_degree": degrees.max() if N else np.nan,
-        "degree_assortativity": nx.degree_assortativity_coefficient(G) if E else np.nan,
+        "avg_degree": degrees.mean(),
+        "degree_std": degrees.std(),
+        "max_degree": degrees.max(),
+        "degree_assortativity": nx.degree_assortativity_coefficient(G),
     }
 
 
 @timer
-def _nk_topo_stats(
-        Gc, n_threads, rel_tol=0.01, batch_size=50,
-        min_samples=100, max_samples=2000, seed=42
-    ):
-    nk.setNumberOfThreads(n_threads)
+def connectivity_metrics(G, rel_tol=0.01, batch_size=50, min_samples=100, max_samples=5000, seed=42):
+    N = G.number_of_nodes()
+
+    logging.info("Find connected components")
+    components = list(nx.connected_components(G))
+
+    if not components:
+        return {}
+
+    largest_cc_nodes = max(components, key=len)
+    Gc = G.subgraph(largest_cc_nodes).copy()  # work on giant component for path-based stats
+
+    out = {
+        "n_components": len(components),
+        "largest_cc_fraction": len(largest_cc_nodes) / N if N else np.nan,
+    }
+
     nkG, _ = _nk_graph(Gc, weight="length_m")
     n = nkG.numberOfNodes()
 
     logging.info("Calculate graph 'diameter' (longest shortest path)")
-    diam = nk.distance.Diameter(nkG, algo=nk.distance.DiameterAlgo.EXACT)
+    diam = nk.distance.Diameter(nkG, algo=nk.distance.DiameterAlgo.ESTIMATED_SAMPLES, nSamples=max_samples)
     diam.run()
     diameter = diam.getDiameter()[0]
 
     rng = np.random.default_rng(seed)
     order = rng.permutation(n)
-
     per_source_means = []
     inv_means = []
     n_used = 0
@@ -111,76 +121,30 @@ def _nk_topo_stats(
             inv_means.append(np.mean(1.0 / d))
             n_used += 1
         idx = batch_end
-        logging.info(batch_end)
 
         if n_used >= min_samples:
             arr = np.array(per_source_means)
             se = arr.std(ddof=1) / np.sqrt(n_used)
+            logging.debug(f"Samples: {batch_end}, Rel. Error: {se / arr.mean():.3f}")
             if se / arr.mean() < rel_tol:
+                logging.info("Converged")
                 break
-    logging.info("Converged")
 
     avg_dist = float(np.mean(per_source_means))
     avg_inv = float(np.mean(inv_means))
 
-    return {
-        "avg_shortest_path_len": avg_dist,
-        "diameter": diameter,
-        "global_efficiency": avg_inv,
-        "topo_stats_n_samples": n_used,
-    }
+    out.update(
+        {
+            "avg_shortest_path_len": avg_dist,
+            "diameter": diameter,
+            "global_efficiency": avg_inv,
+        }
+    )
 
-
-@timer
-def _nk_circuity(Gc, pos, pairs, n_threads):
-    nkG, node_list = _nk_graph(Gc, weight="length_m")
-    id_to_idx = {nid: i for i, nid in enumerate(node_list)}
-
-    sources = sorted({id_to_idx[u] for u, v in pairs})
-    spsp = nk.distance.SPSP(nkG, sources)
-    spsp.run()
-
-    circuities = []
-    for u, v in pairs:
-        graph_dist = spsp.getDistance(id_to_idx[u], id_to_idx[v])
-        if not np.isfinite(graph_dist):
-            continue
-        lon1, lat1 = pos[u]
-        lon2, lat2 = pos[v]
-        euclid_dist_m = haversine_m(lat1, lon1, lat2, lon2)
-        if euclid_dist_m > 0:
-            circuities.append(graph_dist / euclid_dist_m)
-
-    return float(np.mean(circuities)) if circuities else np.nan
-
-
-@timer
-def connectivity_metrics(G, n_workers=1):
-    N = G.number_of_nodes()
-    logging.info("Find connected components")
-    components = list(nx.connected_components(G))
-    largest_cc_nodes = max(components, key=len)
-    logging.info("Copy largest component")
-    Gc = G.subgraph(largest_cc_nodes).copy()  # work on giant component for path-based stats
-
-    out = {
-        "n_components": len(components),
-        "largest_cc_fraction": len(largest_cc_nodes) / N if N else np.nan,
-    }
-
-    if Gc.number_of_nodes() > 1:
-        logging.info("Large network: use networkit")
-        out.update(_nk_topo_stats(Gc, n_workers))
-        # Algebraic connectivity, on giant component only
-        logging.info("Algebraic connectivity")
-        # N.B. tracemin_lu 100x faster than default (tracemin_pcg) for gridfinder type networks
-        out["algebraic_connectivity"] = nx.algebraic_connectivity(Gc, method="tracemin_lu", tol=1e-6)
-        out["algebraic_connectivity_norm"] = out["algebraic_connectivity"] / Gc.number_of_nodes()
-    else:
-        out.update({k: np.nan for k in
-                    ["avg_shortest_path_len", "diameter", "global_efficiency",
-                     "local_efficiency", "algebraic_connectivity",
-                     "algebraic_connectivity_norm"]})
+    # Algebraic connectivity, on giant component only
+    # N.B. tracemin_lu 100x faster than default (tracemin_pcg) for gridfinder type networks
+    out["algebraic_connectivity"] = nx.algebraic_connectivity(Gc, method="tracemin_lu", tol=1e-3)
+    out["algebraic_connectivity_norm"] = out["algebraic_connectivity"] / Gc.number_of_nodes()
 
     return out
 
@@ -204,13 +168,9 @@ def meshedness_metrics(G):
 
 
 @timer
-def centrality_metrics(G, k_sample=500, n_workers=1):
+def centrality_metrics(G, k_sample=500):
     N = G.number_of_nodes()
-    k = min(k_sample, N) if N > k_sample else None
-
-    logging.info("Large network, use networkit")
-    nk.setNumberOfThreads(n_workers)
-    logging.info(f"{n_workers} threads")
+    k = min(k_sample, N)
     nkG, _ = _nk_graph(G, weight="length_m")
     logging.info(f"Sampling betweenness k={k_sample} times")
     eb = nk.centrality.EstimateBetweenness(nkG, k, normalized=True, parallel=True)
@@ -219,10 +179,10 @@ def centrality_metrics(G, k_sample=500, n_workers=1):
     bc_vals = np.array(eb.scores())
 
     return {
-        "betweenness_mean": bc_vals.mean() if N else np.nan,
-        "betweenness_max": bc_vals.max() if N else np.nan,
-        "betweenness_centralization": (bc_vals.max() - bc_vals.mean()) if N else np.nan,
-        "betweenness_gini": gini(bc_vals) if N else np.nan,
+        "betweenness_mean": bc_vals.mean(),
+        "betweenness_max": bc_vals.max(),
+        "betweenness_centralization": (bc_vals.max() - bc_vals.mean()),
+        "betweenness_gini": gini(bc_vals),
     }
 
 
@@ -236,15 +196,13 @@ def clustering_metrics(G):
 
 @timer
 def community_metrics(G):
-    if G.number_of_edges() == 0:
-        return {"modularity": np.nan, "n_communities": np.nan}
     communities = nx.community.louvain_communities(G, seed=42)
     Q = nx.community.modularity(G, communities)
     return {"modularity": Q, "n_communities": len(communities)}
 
 
 @timer
-def spatial_metrics(G, sample_pairs=2000, seed=42, n_workers=1):
+def spatial_metrics(G, sample_pairs=2000, seed=42):
     """Requires 'pos' (lon, lat) node attrs and 'length_m' edge attrs."""
     pos = nx.get_node_attributes(G, "pos")
     total_len_m = sum(d.get("length_m", 0) or 0 for _, _, d in G.edges(data=True))
@@ -266,7 +224,24 @@ def spatial_metrics(G, sample_pairs=2000, seed=42, n_workers=1):
             pairs.add((u, v))
         pairs = list(pairs)
 
-        avg_circuity = _nk_circuity(Gc, pos, pairs, n_workers)
+        nkG, node_list = _nk_graph(Gc, weight="length_m")
+        id_to_idx = {nid: i for i, nid in enumerate(node_list)}
+        sources = sorted({id_to_idx[u] for u, v in pairs})
+        spsp = nk.distance.SPSP(nkG, sources)
+        spsp.run()
+
+        circuities = []
+        for u, v in pairs:
+            graph_dist = spsp.getDistance(id_to_idx[u], id_to_idx[v])
+            if not np.isfinite(graph_dist):
+                continue
+            lon1, lat1 = pos[u]
+            lon2, lat2 = pos[v]
+            euclid_dist_m = haversine_m(lat1, lon1, lat2, lon2)
+            if euclid_dist_m > 0:
+                circuities.append(graph_dist / euclid_dist_m)
+
+        avg_circuity = float(np.mean(circuities)) if circuities else np.nan
     else:
         avg_circuity = np.nan
 
@@ -300,15 +275,22 @@ def compute_all_metrics(
         id_col="id", n_workers=1,
     ) -> pd.Series:
 
+    if edges.empty or nodes.empty:
+        return pd.Series([])
+
+    nk.setNumberOfThreads(n_workers)
+
     G = _nx_graph(edges, nodes, from_col, to_col, geometry_col, id_col)
 
     metrics = {"n_isolated_nodes": nx.number_of_isolates(G)}
     metrics.update(basic_topology(G))
-    metrics.update(connectivity_metrics(G, n_workers=n_workers))
+    metrics.update(connectivity_metrics(G))
     metrics.update(meshedness_metrics(G))
-    metrics.update(centrality_metrics(G, n_workers=n_workers))
+    metrics.update(centrality_metrics(G))
     metrics.update(clustering_metrics(G))
     metrics.update(community_metrics(G))
-    metrics.update(spatial_metrics(G, n_workers=n_workers))
+    metrics.update(spatial_metrics(G))
 
-    return pd.Series(metrics)
+    metrics = pd.Series(metrics)
+    logging.info(f"\n{metrics}")
+    return metrics
