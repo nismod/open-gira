@@ -8,6 +8,83 @@ in excess of a threshold.
 from open_gira.io import cached_json_file_read
 
 
+rule people_exposed_by_event_for_country:
+    """
+    Sum target population exposed to each event's wind field by failure threshold.
+
+    Test with:
+    snakemake --cores 1 -- results/power/by_country/PRI/exposure/IBTrACS/people_exposed_by_event.pq
+    """
+    input:
+        wind_field = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/storms/{STORM_SET}/0/max_wind_field.nc",
+        nodes = rules.create_power_network.output.nodes,
+    params:
+        thresholds = config["transmission_windspeed_failure"],
+        grid_resolution_deg = config["wind_grid_resolution_deg"],
+    output:
+        by_event = "{OUTPUT_DIR}/power/by_country/{COUNTRY_ISO_A3}/exposure/{STORM_SET}/people_exposed_by_event.pq",
+    script:
+        "./people_exposed_by_event.py"
+
+
+def people_exposed_by_event_by_country_paths(wildcards) -> list[str]:
+    """Return country exposure outputs for the countries impacted by a storm set."""
+    json_file = checkpoints.countries_intersecting_storm_set.get(
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        STORM_SET=wildcards.STORM_SET,
+    ).output.country_set
+    country_set = cached_json_file_read(json_file)
+
+    return expand(
+        rules.people_exposed_by_event_for_country.output.by_event,
+        OUTPUT_DIR=wildcards.OUTPUT_DIR,
+        COUNTRY_ISO_A3=country_set,
+        STORM_SET=wildcards.STORM_SET,
+    )
+
+
+rule people_exposed_by_event_for_storm_set:
+    """
+    Concatenate per-country exposed population data for a storm set.
+
+    Test with:
+    snakemake --cores 1 -- results/power/by_storm_set/IBTrACS/exposure/people_exposed_by_event.pq
+    """
+    input:
+        by_country = people_exposed_by_event_by_country_paths,
+    params:
+        thresholds = config["transmission_windspeed_failure"],
+    output:
+        by_event = "{OUTPUT_DIR}/power/by_storm_set/{STORM_SET}/exposure/people_exposed_by_event.pq",
+    run:
+        import os
+
+        import pandas as pd
+
+        country_frames = []
+        for path in input.by_country:
+            # Country ISO code is the fourth path component from the end:
+            # .../by_country/<ISO_A3>/exposure/<STORM_SET>/people_exposed_by_event.pq
+            iso_a3 = path.split(os.sep)[-4]
+            frame = pd.read_parquet(path)
+            frame["iso_a3"] = iso_a3
+            country_frames.append(frame)
+
+        if country_frames:
+            combined = pd.concat(country_frames, ignore_index=True)
+        else:
+            threshold_columns = [f"{threshold:.1f}" for threshold in params.thresholds]
+            combined = pd.DataFrame(columns=["event_id", "iso_a3", *threshold_columns])
+
+        other_columns = [
+            column for column in combined.columns if column not in {"event_id", "iso_a3"}
+        ]
+        combined = combined[["event_id", "iso_a3", *other_columns]]
+
+        os.makedirs(os.path.dirname(output.by_event), exist_ok=True)
+        combined.to_parquet(output.by_event, index=False)
+
+
 rule aggregate_exposure_within_sample:
     """
     Take per-event exposure files with per-edge rows and aggregate into a per-edge file and a per-event file.
