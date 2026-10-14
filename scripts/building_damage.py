@@ -54,7 +54,6 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     volume_3ss_ul_cr = to_int(~volume_3ss_ds.transform * ul_xy_150ss)
     # lon, lat of that volume_3ss_all pixel - new top left for 3ss purposes (tiny bit offset)
     ul_xy_3ss = volume_3ss_ds.transform * volume_3ss_ul_cr
-    ul_xy_150ss, ul_xy_3ss
 
     # Clip out volume array
     col_idx, row_idx = volume_3ss_ul_cr
@@ -62,13 +61,11 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     volume_3ss = clip_array(volume_3ss, 50)
     # Resample volume to coarse-scale, "sum"
     volume_150ss = resample_sum(volume_3ss, 50)
-    volume_150ss.shape
 
     # Adapt transform to new top-left and resolution
-    a, b, c, d, e, f = volume_3ss_ds.transform[:6]
+    a, b, _c, d, e, _f = volume_3ss_ds.transform[:6]
     t_150ss = Affine(a * 50, b, ul_xy_150ss[0], d, e * 50, ul_xy_150ss[1])
     t_3ss = Affine(a, b, ul_xy_3ss[0], d, e, ul_xy_3ss[1])
-    t_150ss, t_3ss
 
     col_idx, row_idx = value_150ss_ul_cr
     ncols, nrows = volume_150ss.shape
@@ -177,7 +174,6 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     flood_1ss_ul_cr = to_int(~flood_1ss_ds.transform * footprint_ul_xy_3ss)
     # lon, lat of that flood_1ss pixel - new top left for 1ss purposes (tiny bit offset)
     ul_xy_1ss = flood_1ss_ds.transform * flood_1ss_ul_cr
-    flood_1ss_ul_xy, footprint_ul_xy_3ss, ul_xy_1ss
 
     # TODO should new top left be greater, not less, in both x and y values?
 
@@ -219,7 +215,6 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     # Adapt transform to new top-left and resolution
     a, b, _c, d, e, _f = flood_1ss_ds.transform[:6]
     t_1ss = Affine(a, b, ul_xy_1ss[0], d, e, ul_xy_1ss[1])
-    t_1ss
 
     with rasterio.open(
         f"input/giri/THA/{prefix}_dmg_frac_1ss.tif",

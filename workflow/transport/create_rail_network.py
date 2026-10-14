@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Read OSM geoparquet, create network, clean it, write out as geopackage.
 """

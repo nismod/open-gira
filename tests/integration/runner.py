@@ -275,9 +275,10 @@ class OutputChecker:
 
             for col in mismatch_cols:
                 # is the column numeric?
-                if np.issubdtype(expected[col].values.dtype, np.number):
-                    if np.allclose(generated[col].values, expected[col].values):
-                        continue  # numbers are within floating point vagueness, skip to next col
+                if np.issubdtype(expected[col].values.dtype, np.number) and np.allclose(
+                    generated[col].values, expected[col].values
+                ):
+                    continue  # numbers are within floating point vagueness, skip to next col
 
                 # do the discrepancies occur only where there are null values (NaN & None)?
                 unequal_only_where_null = all(

@@ -53,7 +53,7 @@ def polygonise_targets(
                     areas_km2.append(abs(area_m2 / 1e6))
         except ValueError as ex:
             # could be that extent does not overlap dataset
-            logging.info("Extent may not overlap targets", ex)
+            logging.info("Extent may not overlap targets: %s", ex)
 
     targets = gpd.GeoDataFrame(data={"area_km2": areas_km2, "geometry": geoms}, crs=crs)
 

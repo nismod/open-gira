@@ -327,7 +327,7 @@ def interpolate_track(
     if isinstance(track.index, pd.DatetimeIndex):
         interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
     else:
-        raise ValueError("tracks must have a datetime index to interpolate")
+        raise TypeError("tracks must have a datetime index to interpolate")
 
     track["x"] = track.geometry.x
     track["y"] = track.geometry.y

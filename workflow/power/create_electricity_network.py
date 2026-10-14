@@ -15,10 +15,11 @@ from shapely.geometry import LineString, Point
 from open_gira.grid import weighted_allocation
 
 MAX_LINK_DISTANCE = 20_000
+WGS84_GEOD = Geod(ellps="WGS84")
 
 
 def node_to_edge_distance(
-    node: Point, edge: LineString, geoid: Geod = Geod(ellps="WGS84")
+    node: Point, edge: LineString, geoid: Geod = WGS84_GEOD
 ) -> float:
     """
     Calculate the great circle distance from node to nearest point on edge,

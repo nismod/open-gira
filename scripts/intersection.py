@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Split network edges along grid cells, identify raster cell for each split
 geometry, optionally read hazard values for each split geometry.

@@ -42,7 +42,7 @@ def str_to_bool(series: pd.Series) -> pd.Series:
         """
 
         if not isinstance(s, str):
-            raise ValueError(f"{s=} has {type(s)=}, but should be str")
+            raise TypeError(f"{s=} has {type(s)=}, but should be str")
 
         return s.lower() not in FALSE_VALUES
 

@@ -26,7 +26,7 @@ class TestAqueductFlood:
         assert afm.scenario == "rcp8p5"
         assert afm.model == "00000NorESM1-M"
         with pytest.raises(AttributeError):
-            afm.subsidence
+            afm.subsidence  # noqa: B018
         assert afm.year == 2080
         assert afm.return_period_years == 5
         assert afm.annual_probability == 0.2

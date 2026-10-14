@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Shared functions for creating, cleaning, manipulating and analysing networks.
 """

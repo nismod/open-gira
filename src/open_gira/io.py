@@ -41,7 +41,7 @@ def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
     """
 
     if not isinstance(ds, xr.Dataset):
-        raise ValueError(f"ds must be an xarray Dataset, but is instead {type(ds)}")
+        raise TypeError(f"ds must be an xarray Dataset, but is instead {type(ds)}")
 
     per_variable: list[dict] = [
         bit_pack_dataarray_encoding(ds[var_name], n_bits) for var_name in ds.data_vars
@@ -66,7 +66,7 @@ def bit_pack_dataarray_encoding(da: xr.DataArray, n_bits: int = 16) -> dict:
     """
 
     if not isinstance(da, xr.DataArray):
-        raise ValueError(f"da must be an xarray DataArray, but is instead {type(da)}")
+        raise TypeError(f"da must be an xarray DataArray, but is instead {type(da)}")
 
     def defaults() -> tuple[int, int, int]:
         return 1, 0, -1

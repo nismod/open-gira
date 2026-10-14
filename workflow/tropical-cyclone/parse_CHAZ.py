@@ -9,7 +9,7 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    df = gpd.read_parquet(snakemake.input.raw)
+    df = gpd.read_parquet(snakemake.input.raw)  # noqa: F821
 
     logging.info("Relabelling track_id")
     df["track_id"] = (
@@ -33,5 +33,5 @@ if __name__ == "__main__":
     )
 
     logging.info("Writing out to disk")
-    os.makedirs(os.path.dirname(snakemake.output.processed), exist_ok=True)
-    result.to_parquet(snakemake.output.processed)
+    os.makedirs(os.path.dirname(snakemake.output.processed), exist_ok=True)  # noqa: F821
+    result.to_parquet(snakemake.output.processed)  # noqa: F821

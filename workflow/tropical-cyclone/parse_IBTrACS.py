@@ -48,7 +48,7 @@ def saffir_simpson_classifier(wind_speed_ms: float) -> int | float:
     """
 
     if not isinstance(wind_speed_ms, (float, int)):
-        raise ValueError(f"{wind_speed_ms=} must be float or integer")
+        raise TypeError(f"{wind_speed_ms=} must be float or integer")
 
     if wind_speed_ms < 0:
         raise ValueError(f"{wind_speed_ms=} should be positive-valued")
