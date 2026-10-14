@@ -1,17 +1,17 @@
 import geopandas as gpd
-import numpy as np
 import matplotlib
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from open_gira.network_creation import (
-    duplicate_reverse_and_append_edges,
-    preprocess_road_network,
-    preprocess_rail_network,
-    create_edges_to_nearest_nodes,
-    find_importing_node_id,
     create_edges_to_destination_countries,
+    create_edges_to_nearest_nodes,
+    duplicate_reverse_and_append_edges,
+    find_importing_node_id,
+    preprocess_rail_network,
+    preprocess_road_network,
 )
 from open_gira.routing import DESTINATION_LINK_COST_USD_T
 

@@ -3,11 +3,10 @@ Common functionality for reading and writing to disk.
 """
 
 import functools
-import logging
 import json
+import logging
 from glob import glob
-from os.path import splitext, basename, join
-from typing import Optional, Tuple
+from os.path import basename, join, splitext
 
 import geopandas as gpd
 import numpy as np
@@ -19,6 +18,7 @@ from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
+logger = logging.getLogger(__name__)
 
 WGS84_EPSG = 4326
 
@@ -43,7 +43,7 @@ def bit_pack_dataset_encoding(ds: xr.Dataset, n_bits: int = 16) -> dict:
     """
 
     if not isinstance(ds, xr.Dataset):
-        raise ValueError(f"ds must be an xarray Dataset, but is instead {type(ds)}")
+        raise TypeError(f"ds must be an xarray Dataset, but is instead {type(ds)}")
 
     per_variable: list[dict] = [
         bit_pack_dataarray_encoding(ds[var_name], n_bits) for var_name in ds.data_vars
@@ -68,9 +68,9 @@ def bit_pack_dataarray_encoding(da: xr.DataArray, n_bits: int = 16) -> dict:
     """
 
     if not isinstance(da, xr.DataArray):
-        raise ValueError(f"da must be an xarray DataArray, but is instead {type(da)}")
+        raise TypeError(f"da must be an xarray DataArray, but is instead {type(da)}")
 
-    def defaults() -> Tuple[int, int, int]:
+    def defaults() -> tuple[int, int, int]:
         return 1, 0, -1
 
     if da.size == 0:
@@ -96,7 +96,7 @@ def bit_pack_dataarray_encoding(da: xr.DataArray, n_bits: int = 16) -> dict:
 
 def netcdf_packing_parameters(
     minimum: float, maximum: float, n_bits: int
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     Given (floating point) data within a certain range, find the best scale
     factor and offset to use to pack as signed integer values, using most of
@@ -202,7 +202,7 @@ def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
 
         dataframes.append(gdf)
 
-    logging.info("Joining GeoDataFrames")
+    logger.info("Joining GeoDataFrames")
 
     # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
     concatenated = pd.concat(dataframes)
@@ -210,7 +210,7 @@ def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
     return concatenated.reset_index(drop=True)
 
 
-def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> None:
+def write_empty_frames(edges_path: str, nodes_path: str | None = None) -> None:
     """
     If we don't have sufficient / good enough input data, write out empty output.
 
@@ -227,8 +227,6 @@ def write_empty_frames(edges_path: str, nodes_path: Optional[str] = None) -> Non
     # when not passed a nodes_path, do not attempt to write
     if nodes_path:
         empty_gdf.to_parquet(nodes_path)
-
-    return
 
 
 def read_damage_curves(
@@ -261,7 +259,7 @@ def read_damage_curves(
         for path in damage_curve_paths
     }
 
-    for asset_type, damage_curve in damage_curves.items():
+    for damage_curve in damage_curves.values():
         # check hazard intensity and damage fraction values are 0 or positive real
         assert ((damage_curve >= 0).all()).all()
         # check damage fraction is less than or equal to 1

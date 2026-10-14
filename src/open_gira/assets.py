@@ -10,8 +10,6 @@ class StrEnum(str, Enum):
     Enum with strings as values.
     """
 
-    pass
-
 
 class Assets(StrEnum):
     """
@@ -23,7 +21,7 @@ class Assets(StrEnum):
         """
         Return a list of values registered to this enum.
         """
-        return list(map(lambda c: c.value, cls))
+        return [c.value for c in cls]
 
     @classmethod
     def implemented_assets(cls) -> set[str]:

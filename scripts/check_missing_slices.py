@@ -8,6 +8,7 @@ Example usage:
 
 import sys
 from pathlib import Path
+
 import pyarrow.parquet as pq
 from tqdm import tqdm
 

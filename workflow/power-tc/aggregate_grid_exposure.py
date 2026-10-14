@@ -73,7 +73,8 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Compiling exposure lengths per edge per storm")
+    logger = logging.getLogger(__name__)
+    logger.info("Compiling exposure lengths per edge per storm")
 
     # we're using dask so we can concatenate on disk rather than in memory
     # (pd.concat is a disaster in terms of memory usage)

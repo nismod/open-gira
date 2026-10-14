@@ -197,9 +197,21 @@ for more details on usage in general and on configuration.
 
 ## Development
 
+See `pixi` tasks for common commands: `test` runs pytest, `format` and `check` use ruff to
+format and lint the code.
+
 ```bash
-black .  # run black to autoformat Python files
-flake8 .  # run flake8 for further linting - prefer black styles if they conflict
+pixi run test
+pixi run format
+pixi run check
+```
+
+Without `pixi`, these can all be run directly as follows:
+
+```bash
+python -m pytest tests -n4
+ruff format
+ruff check
 ```
 
 ## Documentation

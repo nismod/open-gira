@@ -2,11 +2,13 @@ import logging
 
 import geopandas as gpd
 import pandas as pd
-from pyproj import Geod
 import rasterio
 import rasterio.features
 import rasterio.mask
 import shapely
+from pyproj import Geod
+
+logger = logging.getLogger(__name__)
 
 
 def polygonise_targets(
@@ -53,8 +55,7 @@ def polygonise_targets(
                     areas_km2.append(abs(area_m2 / 1e6))
         except ValueError as ex:
             # could be that extent does not overlap dataset
-            logging.info("Extent may not overlap targets", ex)
-            pass
+            logger.info("Extent may not overlap targets: %s", ex)
 
     targets = gpd.GeoDataFrame(data={"area_km2": areas_km2, "geometry": geoms}, crs=crs)
 

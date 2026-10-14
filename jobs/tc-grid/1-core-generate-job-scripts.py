@@ -5,8 +5,8 @@ Dynamically determines country categories based on target counts.
 """
 
 import argparse
-import json
 import csv
+import json
 import logging
 import subprocess
 from pathlib import Path
@@ -144,8 +144,8 @@ def categorize_countries(target_counts, permitted_countries):
             categories["large"].append(country)
 
     # Sort for consistency
-    for cat in categories:
-        categories[cat].sort()
+    for value in categories.values():
+        value.sort()
 
     return categories
 
@@ -237,6 +237,7 @@ def check_missing_targets(countries, storm_sets, samples, base_dir):
             result = subprocess.run(
                 cmd,
                 cwd=base_dir,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=300,  # 5 minute timeout per batch
@@ -270,10 +271,10 @@ def check_missing_targets(countries, storm_sets, samples, base_dir):
             plan = parts[5] if len(parts) > 5 else ""
 
             # Check if this is one of our disruption targets
-            if target_path in target_metadata:
-                # Target needs building if it's missing or has update pending
-                if status == "missing" or "update pending" in plan:
-                    missing_targets.append(target_metadata[target_path])
+            if target_path in target_metadata and (
+                status == "missing" or "update pending" in plan
+            ):
+                missing_targets.append(target_metadata[target_path])
 
     logger.info(
         f"Found {len(missing_targets)} missing/incomplete targets out of {total_targets}"
@@ -360,7 +361,7 @@ TOTAL_COMBINATIONS=$((NUM_COUNTRIES * NUM_STORM_SETS * NUM_SAMPLES))
 echo "Total combinations ({category}): $TOTAL_COMBINATIONS"
 echo "Countries: $NUM_COUNTRIES, Storm sets: $NUM_STORM_SETS, Samples: $NUM_SAMPLES\""""
 
-        index_calculation = f"""COUNTRY_IDX=$((TASK_ID / (NUM_STORM_SETS * NUM_SAMPLES)))
+        index_calculation = """COUNTRY_IDX=$((TASK_ID / (NUM_STORM_SETS * NUM_SAMPLES)))
 REMAINDER=$((TASK_ID % (NUM_STORM_SETS * NUM_SAMPLES)))
 STORM_SET_IDX=$((REMAINDER / NUM_SAMPLES))
 SAMPLE_IDX=$((REMAINDER % NUM_SAMPLES))"""

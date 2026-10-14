@@ -2,10 +2,9 @@
 Functionality to assist calculating the direct damages to assets due to hazards.
 """
 
-from abc import ABC, abstractmethod
 import logging
 import re
-from typing import Union
+from abc import ABC, abstractmethod
 
 import geopandas as gpd
 import pandas as pd
@@ -13,6 +12,8 @@ from scipy.interpolate import interp1d
 
 from open_gira import fields
 from open_gira.utils import natural_sort
+
+logger = logging.getLogger(__name__)
 
 
 class ReturnPeriodMap(ABC):
@@ -163,7 +164,7 @@ class AqueductFlood(ReturnPeriodMap):
     WITH_SUBSIDENCE = "wtsub"
     WITHOUT_SUBSIDENCE = "nosub"
 
-    def __init__(self, name: str):  # noqa: C901
+    def __init__(self, name: str):
         """
         Infer attributes from name.
 
@@ -245,12 +246,10 @@ class AqueductFlood(ReturnPeriodMap):
             self.year = int(year)
         except ValueError:
             baseline_year = 1980
-            logging.debug("Parsing year %s as %s", year, baseline_year)
+            logger.debug("Parsing year %s as %s", year, baseline_year)
             self.year = baseline_year
         self.return_period_years = float(return_period_years.replace("rp", ""))
         self.scenario = scenario
-
-        return
 
     @property
     def without_model(self) -> str:
@@ -280,7 +279,7 @@ class AqueductFlood(ReturnPeriodMap):
 
 
 def generate_rp_maps(
-    names: list[str], prefix: Union[None, str] = None
+    names: list[str], prefix: None | str = None
 ) -> list[ReturnPeriodMap]:
     """
     Given a list of strings, generate some ReturnPeriodMap objects. Optionally
@@ -435,7 +434,7 @@ def direct_damage(
     # TODO REMOVE PATCH FIX
     exposure.asset_type = exposure.asset_type.fillna("rail_railway")
 
-    logging.info(f"Exposed assets {natural_sort(set(exposure.asset_type))}")
+    logger.info(f"Exposed assets {natural_sort(set(exposure.asset_type))}")
     for asset_type in natural_sort(
         set(exposure.asset_type) & set(damage_curves.keys())
     ):
@@ -447,7 +446,7 @@ def direct_damage(
             exposure.loc[asset_type_mask, hazard_columns]
         )
 
-        logging.info(f"Processing {asset_type=}, with n={len(asset_exposure)}")
+        logger.info(f"Processing {asset_type=}, with n={len(asset_exposure)}")
 
         # create interpolated damage curve for given asset type
         hazard_intensity, damage_fraction = (
@@ -495,7 +494,7 @@ def direct_damage(
 
     # multiply the damage fraction estimates by a cost to rebuild the asset
     # units are: 1 * USD/km * km = USD
-    logging.info("Calculating direct damage costs")
+    logger.info("Calculating direct damage costs")
     direct_damages_only = (
         damage_fraction[hazard_columns]
         .multiply(damage_fraction[fields.REHAB_COST], axis="index")
@@ -503,7 +502,7 @@ def direct_damage(
     )
 
     # join the other fields with the direct damage estimates
-    logging.info("Unifying rasterised segments and summing damage costs")
+    logger.info("Unifying rasterised segments and summing damage costs")
     # grouping on id, sum all direct damage estimates to give a total dollar cost per edge
     direct_damages = pd.concat(
         [direct_damages_only, damage_fraction[id_col]], axis="columns"

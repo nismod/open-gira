@@ -1,12 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import logging
 import os
 import sys
 
 import geopandas as gpd
 import pyogrio
+
+logger = logging.getLogger(__name__)
 
 
 GPKG_EXT = "gpkg"
@@ -54,4 +53,4 @@ if __name__ == "__main__":
         if not (file_ext in PARQUET_EXT or file_ext in GEOPARQUET_EXT):
             raise ValueError("{infile=} does not appear to be geoparquet")
         gpkg_path = geoparquet_to_geopackage(infile)
-        logging.info(gpkg_path)
+        logger.info(gpkg_path)

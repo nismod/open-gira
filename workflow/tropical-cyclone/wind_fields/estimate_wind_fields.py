@@ -3,10 +3,9 @@ Process storm data and write out maximum wind speeds at each grid pixel for
 each storm.
 """
 
-import os
-import multiprocessing
 import logging
-from typing import Optional
+import multiprocessing
+import os
 import sys
 
 import geopandas as gpd
@@ -18,13 +17,15 @@ import xarray as xr
 
 from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
+    ENV_PRESSURE,
+    WIND_COORDS,
+    empty_wind_da,
     estimate_wind_field,
     interpolate_track,
-    empty_wind_da,
-    WIND_COORDS,
-    ENV_PRESSURE,
 )
-from open_gira.wind_plotting import plot_contours, animate_track
+from open_gira.wind_plotting import animate_track, plot_contours
+
+logger = logging.getLogger(__name__)
 
 
 logging.basicConfig(
@@ -48,7 +49,7 @@ def process_track(
     downscaling_factors: np.ndarray,
     plot_max_wind: bool,
     plot_animation: bool,
-    plot_dir: Optional[str],
+    plot_dir: str | None,
     grid_coords: tuple[np.ndarray, np.ndarray],
 ) -> tuple[str, np.ndarray]:
     """
@@ -75,7 +76,7 @@ def process_track(
 
     (track_id,) = set(track.track_id)
 
-    logging.debug(track_id)
+    logger.debug(track_id)
 
     grid_shape: tuple[int, int] = (len(latitude), len(longitude))
 
@@ -90,7 +91,7 @@ def process_track(
     try:
         track: gpd.GeoDataFrame = interpolate_track(track)
     except (AssertionError, ValueError):
-        logging.warning(f"Could not successfully interpolate {track_id}")
+        logger.warning(f"Could not successfully interpolate {track_id}")
         return track_id, np.zeros_like(downscaling_factors)
 
     # forward azimuth angle and distances from track eye to next track eye
@@ -134,7 +135,7 @@ def process_track(
             failed_qa = True
 
     if failed_qa:
-        logging.warning(f"Track {track_id} failed QA")
+        logger.warning(f"Track {track_id} failed QA")
 
     # take factors calculated from surface roughness of region and use to downscale speeds
     downscaled_wind_field = downscaling_factors * wind_field
@@ -177,30 +178,30 @@ if __name__ == "__main__":
     # directory required (snakemake output)
     os.makedirs(plot_dir_path, exist_ok=True)
 
-    logging.info("Reading tracks")
+    logger.info("Reading tracks")
     tracks = gpd.read_parquet(storm_file_path)
     if tracks.empty:
-        logging.info("No intersection between network and tracks, writing empty file.")
+        logger.info("No intersection between network and tracks, writing empty file.")
         cleanup(output_path)
 
     if storm_set:
         # if we have a storm_set, only keep the matching track_ids
-        logging.info("Filtering as per storm set")
+        logger.info("Filtering as per storm set")
         tracks = tracks[tracks.track_id.isin(storm_set)]
 
     if tracks.empty:
-        logging.info("No intersection between network and tracks, writing empty file.")
+        logger.info("No intersection between network and tracks, writing empty file.")
         cleanup(output_path)
 
-    logging.info(f"\n{tracks}")
+    logger.info(f"\n{tracks}")
     grouped_tracks = tracks.groupby("track_id")
 
     # grid to evaluate wind speeds on, rioxarray will return midpoints of raster cells as dims
-    logging.info("Reading wind evaluation grid")
+    logger.info("Reading wind evaluation grid")
     grid: xr.DataArray = rioxarray.open_rasterio(wind_grid_path)
-    logging.info(f"\n{grid}")
+    logger.info(f"\n{grid}")
 
-    logging.info("Reading wind downscaling factors")
+    logger.info("Reading wind downscaling factors")
     downscaling_factors = np.load(downscale_factors_path)
     grid_coords = np.meshgrid(grid.x, grid.y)
 
@@ -219,7 +220,7 @@ if __name__ == "__main__":
         for track in grouped_tracks
     )
 
-    logging.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
+    logger.info(f"Estimating wind fields for {len(grouped_tracks)} storm tracks")
     max_wind_speeds: list[str, np.ndarray] = []
     if n_proc > 1:
         with multiprocessing.Pool(processes=n_proc) as pool:
@@ -231,7 +232,7 @@ if __name__ == "__main__":
     # sort by track_id so we have a reproducible order even after multiprocessing
     max_wind_speeds = sorted(max_wind_speeds, key=lambda pair: pair[0])
 
-    logging.info("Saving maximum wind speeds to disk")
+    logger.info("Saving maximum wind speeds to disk")
     track_ids, fields = zip(*max_wind_speeds)
 
     # write to disk as netCDF with CRS
@@ -243,10 +244,10 @@ if __name__ == "__main__":
             ("latitude", grid.y.values),
             ("longitude", grid.x.values),
         ),
-        attrs=dict(
-            description="Maximum estimated wind speed during event",
-            units="m s-1",
-        ),
+        attrs={
+            "description": "Maximum estimated wind speed during event",
+            "units": "m s-1",
+        },
         name="max_wind_speed",
     )
 
@@ -260,4 +261,4 @@ if __name__ == "__main__":
     # pack floating point data as integers on disk
     da.to_netcdf(output_path, encoding=bit_pack_dataarray_encoding(da))
 
-    logging.info("Done estimating wind fields")
+    logger.info("Done estimating wind fields")

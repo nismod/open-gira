@@ -5,9 +5,11 @@ Plot exposure distributions (over event) for a given country.
 import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def plot_event_distributions(
@@ -34,13 +36,13 @@ def plot_event_distributions(
     x_min_log10 = np.log10(max([1000, 0.1 * min(exposure_by_event.min())]))
     x_max_log10 = np.log10(max(exposure_by_event.max()))
     n_bins = max([10, int(np.ceil(np.sqrt(len(exposure_by_event))))])
-    logging.info(f"Using {n_bins} for {len(exposure_by_event)} events")
+    logger.info(f"Using {n_bins} for {len(exposure_by_event)} events")
     bins = np.logspace(x_min_log10, x_max_log10, n_bins)
 
     # find y (frequency) maxima across thresholds
     y_max = 0
     for threshold in thresholds:
-        frequency, bin_edges = np.histogram(
+        frequency, _bin_edges = np.histogram(
             exposure_by_event.loc[:, threshold], bins=bins
         )
         y_max = max([y_max, max(frequency)])
@@ -86,18 +88,16 @@ def plot_event_distributions(
         f.savefig(os.path.join(plot_dir, threshold.replace(".", "p") + ".png"))
         plt.close(f)
 
-    return
-
 
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Reading exposure data")
+    logger.info("Reading exposure data")
     exposure_by_event = pd.read_parquet(snakemake.input.exposure_by_event)  # noqa: F821
 
-    logging.info("Plotting event distributions")
+    logger.info("Plotting event distributions")
     os.makedirs(snakemake.output.country_event_distributions)  # noqa: F821
     plot_event_distributions(
         list(exposure_by_event.columns),

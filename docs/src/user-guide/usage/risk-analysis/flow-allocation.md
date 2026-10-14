@@ -23,13 +23,13 @@ Where:
 
 This file should be located here:
 ```python
-od = "{OUTPUT_DIR}/input/trade_matrix/{PROJECT_SLUG}/trade_nodes_total.parquet",
+od = "{OUTPUT_DIR}/input/trade_matrix/{PROJECT_SLUG}/trade_nodes_total.parquet"
 ```
 
 1. This workflow can route over intact or disrupted networks. If disrupting a
 network, the raster used to represent the hazard must be available at:
 ```python
-raster = "{OUTPUT_DIR}/hazard/{HAZARD_SLUG}.tif",
+raster = "{OUTPUT_DIR}/hazard/{HAZARD_SLUG}.tif"
 ```
 
 ## Configuration

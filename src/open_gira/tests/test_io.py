@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import tempfile
 
 import numpy as np
@@ -7,11 +7,10 @@ import pytest
 import xarray as xr
 
 from open_gira.io import (
-    netcdf_packing_parameters,
     bit_pack_dataarray_encoding,
     bit_pack_dataset_encoding,
+    netcdf_packing_parameters,
 )
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -213,14 +212,14 @@ class TestPackingFloatsAsInts:
         lat = [[42.25, 42.21], [42.63, 42.59]]
 
         ds = xr.Dataset(
-            data_vars=dict(
-                temperature=(["x", "y"], temperature),
-                precipitation=(["x", "y"], precipitation),
-            ),
-            coords=dict(
-                lon=(["x", "y"], lon),
-                lat=(["x", "y"], lat),
-            ),
+            data_vars={
+                "temperature": (["x", "y"], temperature),
+                "precipitation": (["x", "y"], precipitation),
+            },
+            coords={
+                "lon": (["x", "y"], lon),
+                "lat": (["x", "y"], lat),
+            },
         )
         expected = {
             "temperature": {

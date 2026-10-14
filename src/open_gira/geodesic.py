@@ -4,17 +4,15 @@ points (in this case on a sphere), find the great-circle distances and (foward)
 headings between them.
 """
 
-from typing import Union
-
 import numba
 import numpy as np
 
 
 @numba.njit
 def forward_azimuth(
-    Δλ: Union[float, np.ndarray],
-    φ1: Union[float, np.ndarray],
-    φ2: Union[float, np.ndarray],
+    Δλ: float | np.ndarray,
+    φ1: float | np.ndarray,
+    φ2: float | np.ndarray,
 ):
     """
     Calculate forward azimuth as part of inverse geodesy problem (find azimuths
@@ -38,10 +36,10 @@ def forward_azimuth(
 
 @numba.njit
 def bearing_and_great_circle_distance(
-    longitude1: Union[float, np.ndarray],
-    latitude1: Union[float, np.ndarray],
-    longitude2: Union[float, np.ndarray],
-    latitude2: Union[float, np.ndarray],
+    longitude1: float | np.ndarray,
+    latitude1: float | np.ndarray,
+    longitude2: float | np.ndarray,
+    latitude2: float | np.ndarray,
 ):
     """
     Given pairs of points in decimal degrees, calculate forward azimuth in

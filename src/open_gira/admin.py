@@ -4,9 +4,11 @@ Tools for manipulating administrative region data.
 
 import logging
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 import shapely
+
+logger = logging.getLogger(__name__)
 
 
 def merge_gadm_admin_levels(
@@ -35,7 +37,7 @@ def merge_gadm_admin_levels(
     """
 
     substitute_countries = set(alternative.ISO_A3) - set(preference.ISO_A3)
-    logging.info(f"Gap filling with: {substitute_countries}")
+    logger.info(f"Gap filling with: {substitute_countries}")
 
     substitute_regions: pd.DataFrame = alternative[
         alternative["ISO_A3"].isin(substitute_countries)
@@ -46,7 +48,9 @@ def merge_gadm_admin_levels(
     return merged.sort_values("ISO_A3")
 
 
-def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
+def get_administrative_data(
+    file_path: str, to_epsg: int | None = None
+) -> gpd.GeoDataFrame:
     """
     Read administrative data (country ISO, country geometry) from disk
 

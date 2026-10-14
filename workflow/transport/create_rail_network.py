@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
 """
 Read OSM geoparquet, create network, clean it, write out as geopackage.
 """
@@ -9,13 +7,15 @@ import sys
 import warnings
 
 import geopandas as gpd
-
 from utils import annotate_country
+
 from open_gira.admin import get_administrative_data
 from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames
 from open_gira.network_creation import create_network
 from open_gira.utils import str_to_bool
+
+logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
@@ -50,11 +50,7 @@ if __name__ == "__main__":
 
     # osm_to_pq.py creates these columns but we're not using them, so discard
     edges = edges.drop(
-        [
-            col
-            for col in edges.columns
-            if col.startswith("start_node_") or col.startswith("end_node_")
-        ],
+        [col for col in edges.columns if col.startswith(("start_node_", "end_node_"))],
         axis="columns",
     )
 
@@ -67,7 +63,7 @@ if __name__ == "__main__":
     network = create_network(
         edges=edges, nodes=nodes, id_prefix=f"{dataset_name}_{slice_number}"
     )
-    logging.info(
+    logger.info(
         f"Network contains {len(network.edges)} edges and {len(network.nodes)} nodes"
     )
 
@@ -94,14 +90,14 @@ if __name__ == "__main__":
     network.edges.set_crs(epsg=osm_epsg, inplace=True)
     network.nodes.set_crs(epsg=osm_epsg, inplace=True)
 
-    logging.info("Annotating network with administrative data")
+    logger.info("Annotating network with administrative data")
     network = annotate_country(
         network,
         get_administrative_data(administrative_data_path, to_epsg=osm_epsg),
     )
 
-    logging.info("Writing network to disk")
+    logger.info("Writing network to disk")
     network.edges.to_parquet(edges_output_path)
     network.nodes.to_parquet(nodes_output_path)
 
-    logging.info("Done creating network")
+    logger.info("Done creating network")

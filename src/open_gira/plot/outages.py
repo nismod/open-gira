@@ -6,17 +6,17 @@ import os
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
-from shapely.geometry import Polygon
 import xarray as xr
+from matplotlib.lines import Line2D
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from shapely.geometry import Polygon
 
 
 def map_outage(
     event_id: str,
-    threshold: float | int,
+    threshold: float,
     exposure: xr.Dataset,
     aoi: Polygon,
     aoi_targets: gpd.GeoDataFrame,
@@ -29,7 +29,7 @@ def map_outage(
 
     # preprocess data
     # extract supply factor
-    df = exposure.supply_factor.sel(dict(event_id=event_id, threshold=threshold))
+    df = exposure.supply_factor.sel({"event_id": event_id, "threshold": threshold})
     df = df.to_dataframe().reset_index()[["target", "supply_factor"]]
     df = df.rename(columns={"target": "id"})
 

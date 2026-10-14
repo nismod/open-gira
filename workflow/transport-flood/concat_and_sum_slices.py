@@ -17,6 +17,8 @@ from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
+logger = logging.getLogger(__name__)
+
 
 if __name__ == "__main__":
     try:
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     )
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    logging.info(f"Reading {len(slice_files)} slice files")
+    logger.info(f"Reading {len(slice_files)} slice files")
 
     slice_files = natural_sort(slice_files)
 
@@ -46,23 +48,23 @@ if __name__ == "__main__":
 
         dataframes.append(gdf)
 
-    logging.info("Concatenating files")
+    logger.info("Concatenating files")
 
     # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
     concatenated: gpd.GeoDataFrame = pd.concat(dataframes)
 
     admin_level = int(admin_level_slug.replace("admin-level-", ""))
     area_unique_id_col = f"GID_{admin_level}"
-    logging.info(f"Grouping on {area_unique_id_col=}")
+    logger.info(f"Grouping on {area_unique_id_col=}")
     columns_to_aggregate = [
         col for col in concatenated.columns if re.match(columns_to_aggregate_regex, col)
     ]
     grouped = concatenated.groupby(by=area_unique_id_col)[columns_to_aggregate].sum()
     # after grouping area_unique_id_col is the index -- now move it back to being a non-index column
     grouped = grouped.reset_index(drop=False)
-    logging.info(f"Summed to {len(grouped)} areas")
+    logger.info(f"Summed to {len(grouped)} areas")
 
-    logging.info("Reattach geometry and admin area names")
+    logger.info("Reattach geometry and admin area names")
     area_name_col = f"NAME_{admin_level}"
     non_hazard_columns = list(set(concatenated.columns) - set(columns_to_aggregate))
     # the concatenated dataframe may have had multiple instances of a given area, drop any duplicates
@@ -73,6 +75,6 @@ if __name__ == "__main__":
     if not os.path.exists(folder_path):
         os.path.makedirs(folder_path)
 
-    logging.info(f"Writing {grouped_with_geometry.shape=} to {output_file}")
+    logger.info(f"Writing {grouped_with_geometry.shape=} to {output_file}")
 
     grouped_with_geometry.to_parquet(output_file)

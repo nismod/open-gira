@@ -7,16 +7,15 @@ import json
 import os
 import re
 import shutil
-import sys
 import subprocess as sp
-from pprint import pformat
+import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
-from typing import Tuple
 
 import geopandas as gpd
-import pandas as pd
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 
@@ -29,7 +28,7 @@ def printerr(s: str):
     print(s, file=sys.stderr)
 
 
-def run_snakemake_test(rule_name: str, targets: Tuple[str]):
+def run_snakemake_test(rule_name: str, targets: tuple[str]):
     """
     Create a temporary working directory, copy input files to it, run a
     snakemake rule and compare the outputs of that rule with some expected
@@ -80,7 +79,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
         # or on test failure
         print("\n\nFile system prior to running:")
         os.system(f"tree -l {results_dir}")
-        print("")
+        print()
 
         command_args = [
             "python",
@@ -118,22 +117,22 @@ class OutputChecker:
         self.ignore_folders = ignore_folders
 
     def check(self):
-        input_files = set(
+        input_files = {
             (Path(path) / f).relative_to(self.data_path)
             for path, subdirs, files in os.walk(self.data_path)
             for f in files
-        )
-        expected_files = set(
+        }
+        expected_files = {
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
             for f in files
             if ".snakemake" not in str(f)
-        )
+        }
         unexpected_files = set()
 
         produced_files = []
         for path, subdirs, files in os.walk(self.workdir):
-            if any([folder for folder in self.ignore_folders if folder in path]):
+            if any(folder for folder in self.ignore_folders if folder in path):
                 # skip comparison for these folders
                 continue
             for f in files:
@@ -149,28 +148,23 @@ class OutputChecker:
                     pass
                 else:
                     unexpected_files.add(f)
-        else:
-            # the loop could exit successfully if no files at all are are
-            # found, so check that we've got the right number
-            if len(produced_files) != len(expected_files):
-                produced_files = [
-                    str(file.relative_to(self.workdir)) for file in produced_files
-                ]
-                expected_files = [str(file) for file in expected_files]
-                raise ValueError(
-                    f"\n{len(produced_files)=} but {len(expected_files)=}"
-                    f"\n{set(produced_files) - set(expected_files)=}"
-                    f"\n{set(expected_files) - set(produced_files)=}"
-                )
-
-        if unexpected_files:
+        # the loop could exit successfully if no files at all are are
+        # found, so check that we've got the right number
+        if len(produced_files) != len(expected_files):
+            produced_files = [
+                str(file.relative_to(self.workdir)) for file in produced_files
+            ]
+            expected_files = [str(file) for file in expected_files]
             raise ValueError(
-                "Unexpected files: {}".format(sorted(map(str, unexpected_files)))
+                f"\n{len(produced_files)=} but {len(expected_files)=}"
+                f"\n{set(produced_files) - set(expected_files)=}"
+                f"\n{set(expected_files) - set(produced_files)=}"
             )
 
-    def compare_files(  # noqa: C901
-        self, generated_file: Path, expected_file: Path
-    ) -> None:
+        if unexpected_files:
+            raise ValueError(f"Unexpected files: {sorted(map(str, unexpected_files))}")
+
+    def compare_files(self, generated_file: Path, expected_file: Path) -> None:
         """
         Compare two files to check if they are equal by some definition.
 
@@ -180,13 +174,13 @@ class OutputChecker:
         printerr(f">>> Compare files:\n{generated_file}\n{expected_file}")
         file_ext = str(generated_file).split(".")[-1]
         # PARQUET
-        if any([ext == file_ext for ext in ("pq", "parq", "parquet")]):
+        if any(ext == file_ext for ext in ("pq", "parq", "parquet")):
             generated = pd.read_parquet(generated_file)
             expected = pd.read_parquet(expected_file)
             self.compare_dataframes(generated, expected)
 
         # GEOPARQUET
-        elif any([ext == file_ext for ext in ("gpq", "geoparq", "geoparquet")]):
+        elif any(ext == file_ext for ext in ("gpq", "geoparq", "geoparquet")):
             generated = gpd.read_parquet(generated_file)
             expected = gpd.read_parquet(expected_file)
             self.compare_dataframes(generated, expected)
@@ -217,7 +211,7 @@ class OutputChecker:
             except sp.CalledProcessError as e:
                 printerr(">>> Method: visual hash comparison (imagemagick's identify)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
-                raise e
+                raise
 
         # netCDF
         elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
@@ -225,10 +219,10 @@ class OutputChecker:
             expected = xr.open_dataset(expected_file)
             try:
                 assert generated.equals(expected)
-            except AssertionError as e:
+            except AssertionError:
                 printerr(generated)
                 printerr(expected)
-                raise e
+                raise
 
         # any other file type
         else:
@@ -237,14 +231,12 @@ class OutputChecker:
             except sp.CalledProcessError as e:
                 printerr(">>> Method: binary comparison (cmp)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
-                raise e
+                raise
 
         printerr(">>> Files are a match")
 
     @staticmethod
-    def compare_dataframes(  # noqa: C901
-        generated: pd.DataFrame, expected: pd.DataFrame
-    ) -> None:
+    def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
         """
         Compare two dataframes, raise ValueError if they aren't the same.
         """
@@ -277,9 +269,10 @@ class OutputChecker:
 
             for col in mismatch_cols:
                 # is the column numeric?
-                if np.issubdtype(expected[col].values.dtype, np.number):
-                    if np.allclose(generated[col].values, expected[col].values):
-                        continue  # numbers are within floating point vagueness, skip to next col
+                if np.issubdtype(expected[col].values.dtype, np.number) and np.allclose(
+                    generated[col].values, expected[col].values
+                ):
+                    continue  # numbers are within floating point vagueness, skip to next col
 
                 # do the discrepancies occur only where there are null values (NaN & None)?
                 unequal_only_where_null = all(
@@ -293,10 +286,8 @@ class OutputChecker:
                     MAX_FAILURES_TO_PRINT = 20
                     failures = 0
                     for row in range(len(generated)):
-                        gen_str = str(
-                            generated[col][row : row + 1].values  # noqa: E203
-                        )
-                        exp_str = str(expected[col][row : row + 1].values)  # noqa: E203
+                        gen_str = str(generated[col][row : row + 1].values)
+                        exp_str = str(expected[col][row : row + 1].values)
                         if gen_str != exp_str:
                             failures += 1
                             if failures < MAX_FAILURES_TO_PRINT:

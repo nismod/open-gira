@@ -31,8 +31,8 @@ def grid_point_data(
     # create grid
 
     # unpack and snap extrema to integer number of cells from CRS reference
-    min_x, min_y, max_x, max_y = map(
-        lambda x: np.ceil(x / delta) * delta, point_data.total_bounds
+    min_x, min_y, max_x, max_y = (
+        np.ceil(x / delta) * delta for x in point_data.total_bounds
     )
 
     cells = []

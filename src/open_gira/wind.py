@@ -2,15 +2,13 @@
 For reconstructing wind fields from track data.
 """
 
+import geopandas as gpd
 import numba
 import numpy as np
+import pandas as pd
 import xarray as xr
 
-import geopandas as gpd
-import pandas as pd
-
 from open_gira.geodesic import bearing_and_great_circle_distance
-
 
 # dimensions on which we have maximum wind speeds for
 WIND_COORDS: dict[str, type] = {
@@ -207,7 +205,7 @@ def estimate_wind_field(
     env_pressure_pa: float,
     advection_azimuth_deg: float,
     eye_speed_ms: float,
-    grid_coords: tuple[np.ndarray, np.ndarray] = None,
+    grid_coords: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> np.ndarray:
     """
     Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.
@@ -329,7 +327,7 @@ def interpolate_track(
     if isinstance(track.index, pd.DatetimeIndex):
         interp_index = pd.date_range(track.index[0], track.index[-1], freq=frequency)
     else:
-        raise ValueError("tracks must have a datetime index to interpolate")
+        raise TypeError("tracks must have a datetime index to interpolate")
 
     track["x"] = track.geometry.x
     track["y"] = track.geometry.y

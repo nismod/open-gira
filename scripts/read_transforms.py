@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
-from osgeo import gdal
 
+from osgeo import gdal
 
 gdal.UseExceptions()
 DIRECTORY = sys.argv[1]

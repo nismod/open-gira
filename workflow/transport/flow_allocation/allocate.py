@@ -2,8 +2,7 @@ import geopandas as gpd
 import pandas as pd
 from tqdm import tqdm
 
-from open_gira.routing import route_from_all_nodes, RouteResult
-
+from open_gira.routing import RouteResult, route_from_all_nodes
 
 if __name__ == "__main__":
     print("Reading network...")
