@@ -5,8 +5,8 @@ Plot exposure distributions (over event) for a given country.
 import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 
@@ -86,7 +86,6 @@ def plot_event_distributions(
         f.savefig(os.path.join(plot_dir, threshold.replace(".", "p") + ".png"))
         plt.close(f)
 
-    return
 
 
 if __name__ == "__main__":

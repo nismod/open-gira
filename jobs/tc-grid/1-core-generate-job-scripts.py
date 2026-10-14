@@ -5,8 +5,8 @@ Dynamically determines country categories based on target counts.
 """
 
 import argparse
-import json
 import csv
+import json
 import logging
 import subprocess
 from pathlib import Path
@@ -360,7 +360,7 @@ TOTAL_COMBINATIONS=$((NUM_COUNTRIES * NUM_STORM_SETS * NUM_SAMPLES))
 echo "Total combinations ({category}): $TOTAL_COMBINATIONS"
 echo "Countries: $NUM_COUNTRIES, Storm sets: $NUM_STORM_SETS, Samples: $NUM_SAMPLES\""""
 
-        index_calculation = f"""COUNTRY_IDX=$((TASK_ID / (NUM_STORM_SETS * NUM_SAMPLES)))
+        index_calculation = """COUNTRY_IDX=$((TASK_ID / (NUM_STORM_SETS * NUM_SAMPLES)))
 REMAINDER=$((TASK_ID % (NUM_STORM_SETS * NUM_SAMPLES)))
 STORM_SET_IDX=$((REMAINDER / NUM_SAMPLES))
 SAMPLE_IDX=$((REMAINDER % NUM_SAMPLES))"""

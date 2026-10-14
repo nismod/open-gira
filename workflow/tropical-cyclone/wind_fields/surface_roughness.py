@@ -7,11 +7,10 @@ import logging
 import os
 import sys
 
+import numpy as np
 import pandas as pd
 import rioxarray
 from rasterio.errors import RasterioIOError
-import numpy as np
-
 
 logging.basicConfig(
     format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

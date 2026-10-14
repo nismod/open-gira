@@ -23,7 +23,6 @@ def subset_file_by_intersection(
 
     logging.info(f"Writing subset to {out_path}")
     subset[df.columns].to_parquet(out_path)
-    return
 
 
 if __name__ == "__main__":

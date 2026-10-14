@@ -1,6 +1,6 @@
 import pytest
 
-from open_gira.direct_damages import ReturnPeriodMap, AqueductFlood
+from open_gira.direct_damages import AqueductFlood, ReturnPeriodMap
 
 
 class TestReturnPeriodMap:

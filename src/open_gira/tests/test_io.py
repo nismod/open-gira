@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import tempfile
 
 import numpy as np
@@ -7,11 +7,10 @@ import pytest
 import xarray as xr
 
 from open_gira.io import (
-    netcdf_packing_parameters,
     bit_pack_dataarray_encoding,
     bit_pack_dataset_encoding,
+    netcdf_packing_parameters,
 )
-
 
 LOGGER = logging.getLogger(__name__)
 

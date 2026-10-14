@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Iterable
+from collections.abc import Iterable
 
 import geopandas as gpd
 import pandas as pd

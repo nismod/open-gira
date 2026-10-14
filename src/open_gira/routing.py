@@ -7,11 +7,10 @@ import os
 import tempfile
 import time
 
-import igraph as ig
 import geopandas as gpd
+import igraph as ig
 import pandas as pd
 from tqdm import tqdm
-
 
 # dict containing:
 # 'value_kusd' -> float
@@ -52,7 +51,6 @@ def init_worker(graph_filepath: str, od_filepath: str) -> None:
     graph = ig.Graph.Read_Pickle(graph_filepath)
     global od
     od = pd.read_parquet(od_filepath)
-    return
 
 
 def route_from_node(from_node: str) -> RouteResult:
@@ -82,7 +80,6 @@ def route_from_node(from_node: str) -> RouteResult:
     except ValueError as error:
         if "no such vertex" in str(error):
             print(f"{error}... skipping destination")
-            pass
         else:
             raise error
 

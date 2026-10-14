@@ -8,20 +8,19 @@ For each storm (maximum wind speed field) in storm list:
 """
 
 import logging
-import os
 import multiprocessing
+import os
 import sys
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import snkit
 import xarray as xr
 
 from open_gira import fields
 from open_gira.grid import weighted_allocation
-from open_gira.io import bit_pack_dataset_encoding, bit_pack_dataarray_encoding
-import snkit
-
+from open_gira.io import bit_pack_dataarray_encoding, bit_pack_dataset_encoding
 
 # do not store supply_factor values greater than this
 # a value less than 1 limits the targets stored in disruption files to areas
@@ -111,7 +110,6 @@ def process_event(
         os.path.join(disruption_dir, f"{storm_id}.nc"), encoding=disruption_encoding
     )
 
-    return
 
 
 def subset_network(
@@ -196,7 +194,7 @@ def build_dataset(
     """
 
     dim_coords = {}
-    for dim_name in dim_type.keys():
+    for dim_name in dim_type:
         try:
             dim_coords[dim_name] = kwargs[dim_name]
         except KeyError:

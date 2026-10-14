@@ -6,8 +6,8 @@ slices to list of output files.
 import json
 import math
 import os
-import sys
 import re
+import sys
 from os.path import splitext as splitext_orig
 
 from open_gira.utils import natural_sort

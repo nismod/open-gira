@@ -5,7 +5,7 @@ Plotting tools for analysing network connectedness
 import os
 import sys
 from collections import defaultdict
-from typing import Iterable
+from collections.abc import Iterable
 
 import datashader as ds
 import geopandas as gpd

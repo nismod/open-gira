@@ -5,10 +5,10 @@ Functions for creating animations and static plots of wind fields.
 import geopandas as gpd
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib import animation, colors, colormaps
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import xarray as xr
+from matplotlib import animation, colormaps, colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from open_gira.curves import logistic_min
 
@@ -61,7 +61,6 @@ def plot_quivers(
     fig.savefig(file_path)
     plt.close(fig)
 
-    return
 
 
 def plot_contours(
@@ -101,7 +100,6 @@ def plot_contours(
     fig.savefig(file_path)
     plt.close(fig)
 
-    return
 
 
 def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> None:
@@ -137,7 +135,6 @@ def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> Non
     fig.savefig(file_path)
     plt.close(fig)
 
-    return
 
 
 def animate_track(
@@ -180,4 +177,3 @@ def animate_track(
     anim.save(file_path, fps=7)
     plt.close(fig)
 
-    return

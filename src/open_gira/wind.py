@@ -2,15 +2,13 @@
 For reconstructing wind fields from track data.
 """
 
+import geopandas as gpd
 import numba
 import numpy as np
+import pandas as pd
 import xarray as xr
 
-import geopandas as gpd
-import pandas as pd
-
 from open_gira.geodesic import bearing_and_great_circle_distance
-
 
 # dimensions on which we have maximum wind speeds for
 WIND_COORDS: dict[str, type] = {

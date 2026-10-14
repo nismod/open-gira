@@ -1,10 +1,10 @@
 import numpy as np
 
 from open_gira.wind import (
-    holland_wind_model,
     advective_vector,
-    sigmoid_decay,
     estimate_wind_field,
+    holland_wind_model,
+    sigmoid_decay,
 )
 
 

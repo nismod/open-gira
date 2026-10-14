@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 """
 Split network edges along grid cells, identify raster cell for each split
 geometry, optionally read hazard values for each split geometry.
@@ -38,16 +37,16 @@ def write_empty_files(columns, outputs_path):
     )
 
 
-if __name__ == "__main__":  # noqa: C901
+if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
     tqdm.pandas()
     try:
-        network_edges_path: str = snakemake.input.network  # noqa: F821
-        raster_paths: list[str] = snakemake.input.tif_paths  # noqa: F821
-        copy_raster_values: bool = snakemake.params.copy_raster_values  # noqa: F821
-        output_path: str = snakemake.output.geoparquet  # noqa: F821
+        network_edges_path: str = snakemake.input.network
+        raster_paths: list[str] = snakemake.input.tif_paths
+        copy_raster_values: bool = snakemake.params.copy_raster_values
+        output_path: str = snakemake.output.geoparquet
     except NameError:
         sys.exit("Please run from snakemake")
 
@@ -98,7 +97,7 @@ if __name__ == "__main__":  # noqa: C901
             other_grid = snail.intersection.GridDefinition.from_raster(raster_path)
             if other_grid != grid:
                 raise AttributeError(
-                    (
+                    
                         f"Raster attribute mismatch in file {raster_path}:\n"
                         f"Height: expected={grid.height}; actual={other_grid.height}\n"
                         f"Width: expected={grid.width}; actual={other_grid.width}\n"
@@ -106,7 +105,7 @@ if __name__ == "__main__":  # noqa: C901
                         f"Transform expected= {grid.transform}\n"
                         f"Transform actual= {other_grid.transform}\n"
                         f"CRS equal? {other_grid.crs == grid.crs}"
-                    )
+                    
                 )
 
     # Split edges

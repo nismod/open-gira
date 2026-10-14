@@ -4,7 +4,6 @@ import os
 import geopandas as gpd
 import numpy as np
 
-
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

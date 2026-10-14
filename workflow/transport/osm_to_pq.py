@@ -16,14 +16,13 @@ The process is as follows:
 
 import logging
 from collections import Counter, defaultdict
-from typing import Union
 
 import geopandas
 import osmium
 import pandas
 import shapely
 import shapely.ops as shape_ops
-from shapely.geometry import Point, MultiPoint, LineString, MultiLineString
+from shapely.geometry import LineString, MultiLineString, MultiPoint, Point
 from shapely.geometry import box as shapely_box
 from shapely.geometry.collection import GeometryCollection
 
@@ -137,7 +136,7 @@ class WaySlicer(osmium.SimpleHandler):
         self.tags_to_preserve = tags_to_preserve
         self.bounding_box = bounding_box
 
-    def way(self, way: osmium.osm.Way) -> None:  # noqa: C901
+    def way(self, way: osmium.osm.Way) -> None:
         """
         Slice given way into segments, splitting at junctions. Append processed
         way to `self.output_data`.
@@ -181,7 +180,7 @@ class WaySlicer(osmium.SimpleHandler):
                 )
 
         # Generate linestring and constrain to bounding box
-        way_linestring_cut_to_bbox: Union[Point, LineString, MultiLineString] = (
+        way_linestring_cut_to_bbox: Point | LineString | MultiLineString = (
             self.bounding_box.intersection(LineString(node_locations))
         )
 

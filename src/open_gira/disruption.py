@@ -1,7 +1,6 @@
 import geopandas as gpd
 import pandas as pd
 import rasterio
-
 import snail.intersection
 
 

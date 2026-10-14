@@ -19,13 +19,12 @@ smaller administrative subdivisions such as levels 2, 3 and 4.
 
 import json
 import logging
-import warnings
 import re
 import sys
+import warnings
 
 import geopandas as gpd
 import shapely
-
 
 WGS84_EPSG = 4326
 
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     area_unique_id_col = f"GID_{admin_level}"
     area_name_col = f"NAME_{admin_level}"
     # retain the names of larger, encompassing administrative units
-    contextual_name_cols = [f"NAME_{i}" for i in range(0, admin_level)]
+    contextual_name_cols = [f"NAME_{i}" for i in range(admin_level)]
     admin_areas = admin_areas[
         [area_name_col, area_unique_id_col, *contextual_name_cols, "geometry"]
     ]

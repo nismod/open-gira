@@ -10,7 +10,6 @@ class StrEnum(str, Enum):
     Enum with strings as values.
     """
 
-    pass
 
 
 class Assets(StrEnum):

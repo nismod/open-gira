@@ -5,18 +5,16 @@ into a single geoparquet file.
 Output format shares columns with IBTrACS.
 """
 
-from glob import glob
 import logging
 import os
 import re
-from typing import List
+from glob import glob
 
-import numpy as np
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 
 from open_gira.utils import natural_sort
-
 
 # column names and dtypes for IRIS synthetic tropical cyclone tracks
 IRIS_CSV_SCHEMA = {
@@ -104,7 +102,7 @@ if __name__ == "__main__":
         # this is easiest when we have some temporal index (as in IBTrACS)
         # so make up an artificial one here based on the IRIS reporting frequency
 
-        track_datetimes: List[np.ndarray] = []
+        track_datetimes: list[np.ndarray] = []
         track_lengths: np.ndarray = (
             df.track_id.apply(hash).value_counts(sort=False).values
         )

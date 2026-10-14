@@ -13,8 +13,7 @@ from snail.damages import PiecewiseLinearDamageCurve
 
 from open_gira import fields
 from open_gira.direct_damages import annotate_rehab_cost
-from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_costs
-
+from open_gira.io import read_damage_curves, read_rehab_costs, write_empty_frames
 
 if __name__ == "__main__":
     try:

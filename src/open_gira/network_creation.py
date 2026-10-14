@@ -5,10 +5,9 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
+import snkit
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString
-
-import snkit
 
 
 def create_network(
@@ -118,9 +117,7 @@ def clean_maxspeed(value: str, default_km_h: float, min_km_h=20, max_km_h=140) -
     except ValueError:
         return default_km_h
 
-    if np.isnan(speed_km_h):
-        return default_km_h
-    elif (speed_km_h < min_km_h) or (speed_km_h > max_km_h):
+    if np.isnan(speed_km_h) or (speed_km_h < min_km_h) or (speed_km_h > max_km_h):
         return default_km_h
     elif (speed_km_h >= min_km_h) and (speed_km_h <= max_km_h):
         return speed_km_h

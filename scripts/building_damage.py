@@ -1,6 +1,5 @@
 import numpy as np
 import rasterio
-
 from affine import Affine
 from snail.damages import PiecewiseLinearDamageCurve
 
@@ -74,7 +73,7 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     col_idx, row_idx = value_150ss_ul_cr
     ncols, nrows = volume_150ss.shape
     value_150ss = value_150ss_all[
-        col_idx : col_idx + ncols, row_idx : row_idx + nrows  # noqa: E203
+        col_idx : col_idx + ncols, row_idx : row_idx + nrows
     ]
 
     with rasterio.open(

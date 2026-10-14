@@ -3,7 +3,6 @@ import os.path
 import re
 import subprocess
 
-
 # do not permit values outside this range
 # otherwise, we create many empty slices for the polar regions
 MIN_LAT = -60

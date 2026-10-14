@@ -1,12 +1,11 @@
 import logging
 import sys
 
-from dask.delayed import Delayed
 import xarray as xr
+from dask.delayed import Delayed
 
 from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import empty_wind_da
-
 
 if __name__ == "__main__":
     logging.basicConfig(

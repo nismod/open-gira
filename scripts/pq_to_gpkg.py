@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import logging
 import os
@@ -7,7 +6,6 @@ import sys
 
 import geopandas as gpd
 import pyogrio
-
 
 GPKG_EXT = "gpkg"
 PARQUET_EXT = ("pq", "parq", "parquet")

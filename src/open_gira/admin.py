@@ -4,8 +4,8 @@ Tools for manipulating administrative region data.
 
 import logging
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 import shapely
 
 

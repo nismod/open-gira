@@ -3,10 +3,10 @@ Given an exposure estimate and some damage curves, calculate the damage
 fraction for exposed assets.
 """
 
-from collections import defaultdict
 import logging
 import sys
 import warnings
+from collections import defaultdict
 
 import geopandas as gpd
 import pandas as pd
@@ -15,14 +15,13 @@ from scipy.integrate import simpson
 from open_gira import fields
 from open_gira.direct_damages import (
     ReturnPeriodMap,
-    generate_rp_maps,
     annotate_rehab_cost,
     direct_damage,
+    generate_rp_maps,
 )
-from open_gira.io import write_empty_frames, read_damage_curves, read_rehab_costs
+from open_gira.io import read_damage_curves, read_rehab_costs, write_empty_frames
 
-
-if __name__ == "__main__":  # noqa: C901
+if __name__ == "__main__":
     try:
         unsplit_path: str = snakemake.input["unsplit"]
         exposure_path: str = snakemake.input["exposure"]

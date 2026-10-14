@@ -5,14 +5,11 @@ The output schema is a superset of the STORM synthetic track data
 """
 
 import os
-from typing import Union
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-
 from parse_STORM import STORM_CSV_SCHEMA
-
 
 """
 Wind scale and shift values taken from CLIMADA: climada.hazard.tc_tracks
@@ -43,7 +40,7 @@ IBTRACS_AGENCY_1MIN_WIND_FACTOR = {
 }
 
 
-def saffir_simpson_classifier(wind_speed_ms: float) -> Union[int, float]:  # noqa: C901
+def saffir_simpson_classifier(wind_speed_ms: float) -> int | float:
     """
     Identify the Saffir-Simpson storm category given a wind speed in m/s.
 

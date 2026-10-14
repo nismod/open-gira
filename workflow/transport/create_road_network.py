@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 """
 Read OSM geoparquet, create network, clean it, write out as geopackage.
 """
@@ -11,8 +10,8 @@ import warnings
 import geopandas as gpd
 import pandas as pd
 import snkit
-
 from utils import annotate_country, cast, strip_suffix
+
 from open_gira.admin import get_administrative_data
 from open_gira.assets import RoadAssets
 from open_gira.io import write_empty_frames

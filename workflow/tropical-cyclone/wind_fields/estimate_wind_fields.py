@@ -3,10 +3,9 @@ Process storm data and write out maximum wind speeds at each grid pixel for
 each storm.
 """
 
-import os
-import multiprocessing
 import logging
-from typing import Optional
+import multiprocessing
+import os
 import sys
 
 import geopandas as gpd
@@ -18,14 +17,13 @@ import xarray as xr
 
 from open_gira.io import bit_pack_dataarray_encoding
 from open_gira.wind import (
+    ENV_PRESSURE,
+    WIND_COORDS,
+    empty_wind_da,
     estimate_wind_field,
     interpolate_track,
-    empty_wind_da,
-    WIND_COORDS,
-    ENV_PRESSURE,
 )
-from open_gira.wind_plotting import plot_contours, animate_track
-
+from open_gira.wind_plotting import animate_track, plot_contours
 
 logging.basicConfig(
     format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
@@ -48,7 +46,7 @@ def process_track(
     downscaling_factors: np.ndarray,
     plot_max_wind: bool,
     plot_animation: bool,
-    plot_dir: Optional[str],
+    plot_dir: str | None,
     grid_coords: tuple[np.ndarray, np.ndarray],
 ) -> tuple[str, np.ndarray]:
     """

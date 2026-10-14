@@ -3,17 +3,15 @@ Subset storm tracks by an AOI buffer polygon, taking all points in the track fro
 first arrival to last departure (including voyages outside the AOI).
 """
 
-import os
 import json
 import logging
+import os
 import sys
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import shapely
-from tqdm import tqdm
-
 
 logging.basicConfig(
     format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

@@ -5,9 +5,9 @@ Plot distributions of damage fraction values by asset type
 import os
 import sys
 
-import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from open_gira.utils import natural_sort
 
@@ -61,7 +61,7 @@ def near_square_layout(n: int) -> tuple[int, int]:
     return tuple(sorted(optimum, reverse=True))
 
 
-if __name__ == "__main__":  # noqa: C901
+if __name__ == "__main__":
     try:
         damages_path = snakemake.input["damages"]
         plots_dir = snakemake.output["plots"]

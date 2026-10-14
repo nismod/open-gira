@@ -12,7 +12,6 @@ import sys
 import geopandas as gpd
 import pandas as pd
 
-
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO

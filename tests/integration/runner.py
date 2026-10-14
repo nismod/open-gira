@@ -7,16 +7,15 @@ import json
 import os
 import re
 import shutil
-import sys
 import subprocess as sp
-from pprint import pformat
+import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
-from typing import Tuple
 
 import geopandas as gpd
-import pandas as pd
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 
@@ -29,7 +28,7 @@ def printerr(s: str):
     print(s, file=sys.stderr)
 
 
-def run_snakemake_test(rule_name: str, targets: Tuple[str]):
+def run_snakemake_test(rule_name: str, targets: tuple[str]):
     """
     Create a temporary working directory, copy input files to it, run a
     snakemake rule and compare the outputs of that rule with some expected
@@ -80,7 +79,7 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
         # or on test failure
         print("\n\nFile system prior to running:")
         os.system(f"tree -l {results_dir}")
-        print("")
+        print()
 
         command_args = [
             "python",
@@ -149,26 +148,25 @@ class OutputChecker:
                     pass
                 else:
                     unexpected_files.add(f)
-        else:
-            # the loop could exit successfully if no files at all are are
-            # found, so check that we've got the right number
-            if len(produced_files) != len(expected_files):
-                produced_files = [
-                    str(file.relative_to(self.workdir)) for file in produced_files
-                ]
-                expected_files = [str(file) for file in expected_files]
-                raise ValueError(
-                    f"\n{len(produced_files)=} but {len(expected_files)=}"
-                    f"\n{set(produced_files) - set(expected_files)=}"
-                    f"\n{set(expected_files) - set(produced_files)=}"
-                )
+        # the loop could exit successfully if no files at all are are
+        # found, so check that we've got the right number
+        if len(produced_files) != len(expected_files):
+            produced_files = [
+                str(file.relative_to(self.workdir)) for file in produced_files
+            ]
+            expected_files = [str(file) for file in expected_files]
+            raise ValueError(
+                f"\n{len(produced_files)=} but {len(expected_files)=}"
+                f"\n{set(produced_files) - set(expected_files)=}"
+                f"\n{set(expected_files) - set(produced_files)=}"
+            )
 
         if unexpected_files:
             raise ValueError(
-                "Unexpected files: {}".format(sorted(map(str, unexpected_files)))
+                f"Unexpected files: {sorted(map(str, unexpected_files))}"
             )
 
-    def compare_files(  # noqa: C901
+    def compare_files(
         self, generated_file: Path, expected_file: Path
     ) -> None:
         """
@@ -242,7 +240,7 @@ class OutputChecker:
         printerr(">>> Files are a match")
 
     @staticmethod
-    def compare_dataframes(  # noqa: C901
+    def compare_dataframes(
         generated: pd.DataFrame, expected: pd.DataFrame
     ) -> None:
         """
@@ -294,9 +292,9 @@ class OutputChecker:
                     failures = 0
                     for row in range(len(generated)):
                         gen_str = str(
-                            generated[col][row : row + 1].values  # noqa: E203
+                            generated[col][row : row + 1].values
                         )
-                        exp_str = str(expected[col][row : row + 1].values)  # noqa: E203
+                        exp_str = str(expected[col][row : row + 1].values)
                         if gen_str != exp_str:
                             failures += 1
                             if failures < MAX_FAILURES_TO_PRINT:

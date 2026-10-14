@@ -2,10 +2,9 @@
 Functionality to assist calculating the direct damages to assets due to hazards.
 """
 
-from abc import ABC, abstractmethod
 import logging
 import re
-from typing import Union
+from abc import ABC, abstractmethod
 
 import geopandas as gpd
 import pandas as pd
@@ -163,7 +162,7 @@ class AqueductFlood(ReturnPeriodMap):
     WITH_SUBSIDENCE = "wtsub"
     WITHOUT_SUBSIDENCE = "nosub"
 
-    def __init__(self, name: str):  # noqa: C901
+    def __init__(self, name: str):
         """
         Infer attributes from name.
 
@@ -250,7 +249,6 @@ class AqueductFlood(ReturnPeriodMap):
         self.return_period_years = float(return_period_years.replace("rp", ""))
         self.scenario = scenario
 
-        return
 
     @property
     def without_model(self) -> str:
@@ -280,7 +278,7 @@ class AqueductFlood(ReturnPeriodMap):
 
 
 def generate_rp_maps(
-    names: list[str], prefix: Union[None, str] = None
+    names: list[str], prefix: None | str = None
 ) -> list[ReturnPeriodMap]:
     """
     Given a list of strings, generate some ReturnPeriodMap objects. Optionally

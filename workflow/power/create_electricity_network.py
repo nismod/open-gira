@@ -4,16 +4,15 @@ Create a network from plants, targets and gridfinder line data
 
 import logging
 import os
-from typing import Callable
 import sys
+from collections.abc import Callable
 
 import geopandas as gpd
 import pandas as pd
 from pyproj import Geod
-from shapely.geometry import Point, LineString
+from shapely.geometry import LineString, Point
 
 from open_gira.grid import weighted_allocation
-
 
 MAX_LINK_DISTANCE = 20_000
 
@@ -34,7 +33,7 @@ def node_to_edge_distance(
     return distance
 
 
-def get_proximity_condition(asset_type: str, edge_limit: float | int) -> Callable:
+def get_proximity_condition(asset_type: str, edge_limit: float) -> Callable:
     """
     Return a closure (enclosed function) to check if some node and asset
     pair satisfy a proximity condition.

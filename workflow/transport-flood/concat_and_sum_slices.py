@@ -17,7 +17,6 @@ from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
-
 if __name__ == "__main__":
     try:
         slice_files = snakemake.input["slices"]

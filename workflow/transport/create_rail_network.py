@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 """
 Read OSM geoparquet, create network, clean it, write out as geopackage.
 """
@@ -9,14 +8,13 @@ import sys
 import warnings
 
 import geopandas as gpd
-
 from utils import annotate_country
+
 from open_gira.admin import get_administrative_data
 from open_gira.assets import RailAssets
 from open_gira.io import write_empty_frames
 from open_gira.network_creation import create_network
 from open_gira.utils import str_to_bool
-
 
 if __name__ == "__main__":
     osm_edges_path = snakemake.input["edges"]  # noqa: F821

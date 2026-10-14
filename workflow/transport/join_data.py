@@ -34,7 +34,6 @@ import geopandas as gpd
 
 from open_gira.io import concat_geoparquet
 
-
 if __name__ == "__main__":
     try:
         slice_files = snakemake.input  # type: ignore
