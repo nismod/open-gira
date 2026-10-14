@@ -11,7 +11,7 @@ format = "ruff format"
 check = "ruff check"
 
 [dependencies]
-python = "~=3.12"
+python = "3.12.*"
 pip = "*"
 cython = "*"
 dask = "*"
