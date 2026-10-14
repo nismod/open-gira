@@ -13,7 +13,6 @@ import pandas as pd
 import xarray as xr
 
 
-
 def make_schema(column_dtypes: dict[str, type]) -> pd.DataFrame:
     """
     Make an empty dataframe with column names and dtypes.
@@ -74,8 +73,8 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    # logger = logging.getLogger(__name__)
-    logging.info("Compiling exposure lengths per edge per storm")
+    logger = logging.getLogger(__name__)
+    logger.info("Compiling exposure lengths per edge per storm")
 
     # we're using dask so we can concatenate on disk rather than in memory
     # (pd.concat is a disaster in terms of memory usage)
