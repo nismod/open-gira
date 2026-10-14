@@ -29,7 +29,7 @@ def map_outage(
 
     # preprocess data
     # extract supply factor
-    df = exposure.supply_factor.sel(dict(event_id=event_id, threshold=threshold))
+    df = exposure.supply_factor.sel({"event_id": event_id, "threshold": threshold})
     df = df.to_dataframe().reset_index()[["target", "supply_factor"]]
     df = df.rename(columns={"target": "id"})
 

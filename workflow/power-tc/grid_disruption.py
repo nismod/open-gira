@@ -333,11 +333,11 @@ def degrade_grid_with_storm(
             failed_splits[["length_m"]].groupby("id").sum().reset_index()
         )
         # Store result in dataset
-        indicies = dict(
-            event_id=storm_id,
-            threshold=threshold,
-            edge=exposed_edge_lengths.id.astype(int).values,
-        )
+        indicies = {
+            "event_id": storm_id,
+            "threshold": threshold,
+            "edge": exposed_edge_lengths.id.astype(int).values,
+        }
         exposure.length_m.loc[indicies] = exposed_edge_lengths.length_m
 
         ##############
@@ -404,11 +404,11 @@ def degrade_grid_with_storm(
         )
 
         # assign data to dataset
-        indicies = dict(
-            event_id=storm_id,
-            threshold=threshold,
-            target=targets.target_id.astype(int).values,
-        )
+        indicies = {
+            "event_id": storm_id,
+            "threshold": threshold,
+            "target": targets.target_id.astype(int).values,
+        }
         disruption.supply_factor.loc[indicies] = targets.supply_factor
         disruption.customers_affected.loc[indicies] = targets.customers_affected
 

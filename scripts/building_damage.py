@@ -217,7 +217,7 @@ def main(value_150ss_tif, volume_3ss_tif, flood_1ss_tif, prefix):
     damage_value_1ss = footprint_value_1ss * damage_fraction_1ss
 
     # Adapt transform to new top-left and resolution
-    a, b, c, d, e, f = flood_1ss_ds.transform[:6]
+    a, b, _c, d, e, _f = flood_1ss_ds.transform[:6]
     t_1ss = Affine(a, b, ul_xy_1ss[0], d, e, ul_xy_1ss[1])
     t_1ss
 

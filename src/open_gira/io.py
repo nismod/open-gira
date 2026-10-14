@@ -258,7 +258,7 @@ def read_damage_curves(
         for path in damage_curve_paths
     }
 
-    for asset_type, damage_curve in damage_curves.items():
+    for damage_curve in damage_curves.values():
         # check hazard intensity and damage fraction values are 0 or positive real
         assert ((damage_curve >= 0).all()).all()
         # check damage fraction is less than or equal to 1

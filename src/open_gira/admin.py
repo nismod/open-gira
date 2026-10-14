@@ -46,7 +46,7 @@ def merge_gadm_admin_levels(
     return merged.sort_values("ISO_A3")
 
 
-def get_administrative_data(file_path: str, to_epsg: int = None) -> gpd.GeoDataFrame:
+def get_administrative_data(file_path: str, to_epsg: int | None = None) -> gpd.GeoDataFrame:
     """
     Read administrative data (country ISO, country geometry) from disk
 

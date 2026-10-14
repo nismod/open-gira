@@ -81,7 +81,7 @@ def route_from_node(from_node: str) -> RouteResult:
         if "no such vertex" in str(error):
             print(f"{error}... skipping destination")
         else:
-            raise error
+            raise
 
     routes: RouteResult = {}
 

@@ -117,22 +117,22 @@ class OutputChecker:
         self.ignore_folders = ignore_folders
 
     def check(self):
-        input_files = set(
+        input_files = {
             (Path(path) / f).relative_to(self.data_path)
             for path, subdirs, files in os.walk(self.data_path)
             for f in files
-        )
-        expected_files = set(
+        }
+        expected_files = {
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
             for f in files
             if ".snakemake" not in str(f)
-        )
+        }
         unexpected_files = set()
 
         produced_files = []
         for path, subdirs, files in os.walk(self.workdir):
-            if any([folder for folder in self.ignore_folders if folder in path]):
+            if any(folder for folder in self.ignore_folders if folder in path):
                 # skip comparison for these folders
                 continue
             for f in files:
@@ -178,13 +178,13 @@ class OutputChecker:
         printerr(f">>> Compare files:\n{generated_file}\n{expected_file}")
         file_ext = str(generated_file).split(".")[-1]
         # PARQUET
-        if any([ext == file_ext for ext in ("pq", "parq", "parquet")]):
+        if any(ext == file_ext for ext in ("pq", "parq", "parquet")):
             generated = pd.read_parquet(generated_file)
             expected = pd.read_parquet(expected_file)
             self.compare_dataframes(generated, expected)
 
         # GEOPARQUET
-        elif any([ext == file_ext for ext in ("gpq", "geoparq", "geoparquet")]):
+        elif any(ext == file_ext for ext in ("gpq", "geoparq", "geoparquet")):
             generated = gpd.read_parquet(generated_file)
             expected = gpd.read_parquet(expected_file)
             self.compare_dataframes(generated, expected)
@@ -215,7 +215,7 @@ class OutputChecker:
             except sp.CalledProcessError as e:
                 printerr(">>> Method: visual hash comparison (imagemagick's identify)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
-                raise e
+                raise
 
         # netCDF
         elif re.search(r"\.(nc)$", str(generated_file), re.IGNORECASE):
@@ -223,10 +223,10 @@ class OutputChecker:
             expected = xr.open_dataset(expected_file)
             try:
                 assert generated.equals(expected)
-            except AssertionError as e:
+            except AssertionError:
                 printerr(generated)
                 printerr(expected)
-                raise e
+                raise
 
         # any other file type
         else:
@@ -235,7 +235,7 @@ class OutputChecker:
             except sp.CalledProcessError as e:
                 printerr(">>> Method: binary comparison (cmp)")
                 printerr(f">>> ERROR:\n>>> {e.stdout}")
-                raise e
+                raise
 
         printerr(">>> Files are a match")
 

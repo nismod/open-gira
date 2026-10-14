@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # load curves first so if we fail here, we've failed early
     # and we don't try and load the (potentially large) exposure file
     damage_curves_all = read_damage_curves(
-        damage_curves_dir, HAZARD_TYPE, set((network_type,))
+        damage_curves_dir, HAZARD_TYPE, {network_type}
     )
     damage_curve_data = damage_curves_all[network_type]
     assert "occurrence" in damage_curve_data.columns, (

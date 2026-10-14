@@ -205,7 +205,7 @@ def estimate_wind_field(
     env_pressure_pa: float,
     advection_azimuth_deg: float,
     eye_speed_ms: float,
-    grid_coords: tuple[np.ndarray, np.ndarray] = None,
+    grid_coords: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> np.ndarray:
     """
     Given a spatial domain and tropical cyclone attributes, estimate a vector wind field.

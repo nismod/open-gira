@@ -60,10 +60,7 @@ def chop_at_antimeridian(
         if len(longitudes_near_antimeridian) == 0:
             return False
         hemispheres = np.unique(np.sign(longitudes_near_antimeridian))
-        if (-1 in hemispheres) and (1 in hemispheres):
-            return True
-        else:
-            return False
+        return bool(-1 in hemispheres and 1 in hemispheres)
 
     return split_e_and_w[~split_e_and_w.apply(crosses_antimeridian, axis=1)]
 

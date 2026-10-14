@@ -98,7 +98,7 @@ class NodeParser(osmium.SimpleHandler):
         base_input = {}
         for tag_name in self.tags_to_preserve:
             base_input[f"tag_{tag_name}"] = (
-                node.tags[tag_name] if tag_name in node.tags else None
+                node.tags.get(tag_name, None)
             )
 
         # https://docs.osmcode.org/pyosmium/latest/ref_osm.html#osmium.osm.Location
@@ -155,7 +155,7 @@ class WaySlicer(osmium.SimpleHandler):
         base_input = {}
         for tag_name in self.tags_to_preserve:
             base_input[f"tag_{tag_name}"] = (
-                way.tags[tag_name] if tag_name in way.tags else None
+                way.tags.get(tag_name, None)
             )
 
         node_locations: tuple[float, float] = []
@@ -173,7 +173,7 @@ class WaySlicer(osmium.SimpleHandler):
             nodes_indexed_by_location[node.lon][node.lat] = node
 
             # node is shared between this way and another neighbouring way
-            if node.ref in self.shared_nodes.keys():
+            if node.ref in self.shared_nodes:
                 # add it to the 'used' shared nodes dict
                 shared_nodes_used.append(
                     {"node": node, "point": Point((node.lon, node.lat))}

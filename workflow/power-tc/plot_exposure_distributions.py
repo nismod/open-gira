@@ -40,7 +40,7 @@ def plot_event_distributions(
     # find y (frequency) maxima across thresholds
     y_max = 0
     for threshold in thresholds:
-        frequency, bin_edges = np.histogram(
+        frequency, _bin_edges = np.histogram(
             exposure_by_event.loc[:, threshold], bins=bins
         )
         y_max = max([y_max, max(frequency)])

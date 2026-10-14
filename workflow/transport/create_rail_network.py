@@ -51,7 +51,7 @@ if __name__ == "__main__":
         [
             col
             for col in edges.columns
-            if col.startswith("start_node_") or col.startswith("end_node_")
+            if col.startswith(("start_node_", "end_node_"))
         ],
         axis="columns",
     )

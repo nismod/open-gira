@@ -212,14 +212,14 @@ class TestPackingFloatsAsInts:
         lat = [[42.25, 42.21], [42.63, 42.59]]
 
         ds = xr.Dataset(
-            data_vars=dict(
-                temperature=(["x", "y"], temperature),
-                precipitation=(["x", "y"], precipitation),
-            ),
-            coords=dict(
-                lon=(["x", "y"], lon),
-                lat=(["x", "y"], lat),
-            ),
+            data_vars={
+                "temperature": (["x", "y"], temperature),
+                "precipitation": (["x", "y"], precipitation),
+            },
+            coords={
+                "lon": (["x", "y"], lon),
+                "lat": (["x", "y"], lat),
+            },
         )
         expected = {
             "temperature": {

@@ -241,10 +241,10 @@ if __name__ == "__main__":
             ("latitude", grid.y.values),
             ("longitude", grid.x.values),
         ),
-        attrs=dict(
-            description="Maximum estimated wind speed during event",
-            units="m s-1",
-        ),
+        attrs={
+            "description": "Maximum estimated wind speed during event",
+            "units": "m s-1",
+        },
         name="max_wind_speed",
     )
 
