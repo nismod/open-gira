@@ -62,7 +62,6 @@ def plot_quivers(
     plt.close(fig)
 
 
-
 def plot_contours(
     field: np.ndarray, title: str, colorbar_label: str, file_path: str
 ) -> None:
@@ -101,7 +100,6 @@ def plot_contours(
     plt.close(fig)
 
 
-
 def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> None:
     """Plot a numpy array of a 2D field of [0, 1] and save to disk."""
 
@@ -134,7 +132,6 @@ def plot_downscale_factors(field: np.ndarray, title: str, file_path: str) -> Non
 
     fig.savefig(file_path)
     plt.close(fig)
-
 
 
 def animate_track(
@@ -176,4 +173,3 @@ def animate_track(
 
     anim.save(file_path, fps=7)
     plt.close(fig)
-

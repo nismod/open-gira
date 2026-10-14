@@ -162,13 +162,9 @@ class OutputChecker:
             )
 
         if unexpected_files:
-            raise ValueError(
-                f"Unexpected files: {sorted(map(str, unexpected_files))}"
-            )
+            raise ValueError(f"Unexpected files: {sorted(map(str, unexpected_files))}")
 
-    def compare_files(
-        self, generated_file: Path, expected_file: Path
-    ) -> None:
+    def compare_files(self, generated_file: Path, expected_file: Path) -> None:
         """
         Compare two files to check if they are equal by some definition.
 
@@ -240,9 +236,7 @@ class OutputChecker:
         printerr(">>> Files are a match")
 
     @staticmethod
-    def compare_dataframes(
-        generated: pd.DataFrame, expected: pd.DataFrame
-    ) -> None:
+    def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
         """
         Compare two dataframes, raise ValueError if they aren't the same.
         """
@@ -292,9 +286,7 @@ class OutputChecker:
                     MAX_FAILURES_TO_PRINT = 20
                     failures = 0
                     for row in range(len(generated)):
-                        gen_str = str(
-                            generated[col][row : row + 1].values
-                        )
+                        gen_str = str(generated[col][row : row + 1].values)
                         exp_str = str(expected[col][row : row + 1].values)
                         if gen_str != exp_str:
                             failures += 1

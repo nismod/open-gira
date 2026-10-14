@@ -229,7 +229,6 @@ def write_empty_frames(edges_path: str, nodes_path: str | None = None) -> None:
         empty_gdf.to_parquet(nodes_path)
 
 
-
 def read_damage_curves(
     damage_curves_dir: str, hazard_type: str, asset_types: set
 ) -> dict[str, pd.DataFrame]:

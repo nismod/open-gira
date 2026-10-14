@@ -4,7 +4,6 @@ points (in this case on a sphere), find the great-circle distances and (foward)
 headings between them.
 """
 
-
 import numba
 import numpy as np
 

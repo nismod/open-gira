@@ -11,7 +11,6 @@ class StrEnum(str, Enum):
     """
 
 
-
 class Assets(StrEnum):
     """
     Typology of infrastructure assets for direct damage estimation (and more)
