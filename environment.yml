@@ -52,3 +52,4 @@ dependencies:
   - osmium
   - irv-datapkg
   - -e .
+
