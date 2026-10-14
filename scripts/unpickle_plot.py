@@ -10,6 +10,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
+logger = logging.getLogger(__name__)
+
+
 matplotlib.use("TkAgg")
 
 
@@ -32,7 +35,7 @@ if __name__ == "__main__":
     )
 
     if len(sys.argv) == 1:
-        logging.info(f"Usage:\n{sys.argv[0]} path/to/plot.pickle")
+        logger.info(f"Usage:\n{sys.argv[0]} path/to/plot.pickle")
 
     for path in sys.argv[1:]:
         if path.lower().endswith(".pickle"):
@@ -42,7 +45,7 @@ if __name__ == "__main__":
             show_figure(fig)
 
         else:
-            logging.info(f"Do not recognise {path} as pickle file.")
+            logger.info(f"Do not recognise {path} as pickle file.")
 
     # start the event loop
     plt.show()

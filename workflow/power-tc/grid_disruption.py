@@ -22,6 +22,9 @@ from open_gira import fields
 from open_gira.grid import weighted_allocation
 from open_gira.io import bit_pack_dataarray_encoding, bit_pack_dataset_encoding
 
+logger = logging.getLogger(__name__)
+
+
 # do not store supply_factor values greater than this
 # a value less than 1 limits the targets stored in disruption files to areas
 # negatively affected by storms
@@ -64,7 +67,7 @@ def process_event(
             number of people disconnected)
     """
 
-    logging.debug(storm_id)
+    logger.debug(storm_id)
     exposure, disruption = degrade_grid_with_storm(
         storm_id, wind_fields, splits, speed_thresholds, network
     )
@@ -89,9 +92,9 @@ def process_event(
             ]
         )
     )
-    logging.debug(exposure_summary_str)
+    logger.debug(exposure_summary_str)
 
-    logging.debug("Writing results to disk")
+    logger.debug("Writing results to disk")
 
     # pack floating point data into 16 bit integer types to save space on disk
     exposure.to_netcdf(
@@ -109,7 +112,6 @@ def process_event(
     disruption.to_netcdf(
         os.path.join(disruption_dir, f"{storm_id}.nc"), encoding=disruption_encoding
     )
-
 
 
 def subset_network(
@@ -258,7 +260,7 @@ def degrade_grid_with_storm(
             .values
         )
     except AttributeError:
-        logging.debug("No viable network available, returning null result.")
+        logger.debug("No viable network available, returning null result.")
         return (
             build_dataset(
                 ("length_m",),
@@ -297,7 +299,7 @@ def degrade_grid_with_storm(
             latitude=splits[fields.RASTER_J].to_xarray(),
         )
     except KeyError:
-        logging.debug("No wind field available, returning null result.")
+        logger.debug("No wind field available, returning null result.")
         return exposure, disruption
 
     # index and `id` column need to match as we will select rows by indexing with ids
@@ -314,7 +316,7 @@ def degrade_grid_with_storm(
             n_failed: int = survival_mask.value_counts()[False]
         except KeyError:
             # there is no damage, return early
-            logging.debug(f"No damage detected at {threshold} ms-1")
+            logger.debug(f"No damage detected at {threshold} ms-1")
             return exposure, disruption
 
         ############
@@ -359,7 +361,7 @@ def degrade_grid_with_storm(
 
         fraction_failed: float = n_failed / len(survival_mask)
         failure_str = "{:s} -> {:.2f}% edges failed @ {:.1f} [m/s] threshold, {:d} -> {:d} components"
-        logging.debug(
+        logger.debug(
             failure_str.format(
                 str(storm_id), 100 * fraction_failed, threshold, c_nominal, c_surviving
             )
@@ -434,28 +436,28 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Loading wind speed metadata")
+    logger.info("Loading wind speed metadata")
     wind_fields: xr.Dataset = xr.open_dataset(wind_speeds_path)
 
     if len(wind_fields.variables) == 0:
-        logging.debug("Empty wind speed file, skipping...")
+        logger.debug("Empty wind speed file, skipping...")
         sys.exit(0)
 
-    logging.info("Loading network data")
+    logger.info("Loading network data")
     network = snkit.network.Network(
         edges=gpd.read_parquet(edges_path), nodes=gpd.read_parquet(nodes_path)
     )
     splits: gpd.GeoDataFrame = gpd.read_parquet(splits_path).set_crs(epsg=4326)
     if network.edges.empty or splits.empty:
-        logging.debug("No network, skipping...")
+        logger.debug("No network, skipping...")
         sys.exit(0)
     splits["length_m"] = splits["length_km"] * 1_000
-    logging.debug(f"{len(network.edges)} network edges")
-    logging.debug(f"{len(network.nodes)} network nodes")
+    logger.debug(f"{len(network.edges)} network edges")
+    logger.debug(f"{len(network.nodes)} network nodes")
 
-    logging.debug(f"Using damage thresholds: {speed_thresholds} [m s-1]")
+    logger.debug(f"Using damage thresholds: {speed_thresholds} [m s-1]")
 
-    logging.info(f"Processing {len(wind_fields.event_id)} storms")
+    logger.info(f"Processing {len(wind_fields.event_id)} storms")
     args = (
         (
             storm_id.item(),
@@ -477,14 +479,14 @@ if __name__ == "__main__":
                 process_event_wrapper, args, chunksize=max(1, total // (n_proc * 8))
             ):
                 if i % log_every_i == 0:
-                    logging.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
+                    logger.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
                 i += 1
 
     else:
         for arg in args:
             process_event(*arg)
             if i % log_every_i == 0:
-                logging.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
+                logger.info(f"Completed {i:d} tasks ({100 * i / total:.0f}%)")
             i += 1
 
-    logging.info(f"Completed {total:d} tasks ({100:.0f}%)")
+    logger.info(f"Completed {total:d} tasks ({100:.0f}%)")

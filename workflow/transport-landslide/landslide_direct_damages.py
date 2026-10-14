@@ -15,6 +15,9 @@ from open_gira import fields
 from open_gira.direct_damages import annotate_rehab_cost
 from open_gira.io import read_damage_curves, read_rehab_costs, write_empty_frames
 
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     try:
         unsplit_path: str = snakemake.input["unsplit"]
@@ -63,21 +66,21 @@ if __name__ == "__main__":
                 columns={"occurrence": "intensity", ratio_col: "damage"}
             )
         )
-    logging.info(f"Available damage curves: {damage_curves.keys()}")
+    logger.info(f"Available damage curves: {damage_curves.keys()}")
 
-    logging.info("Reading exposure (network/raster intersection) data")
+    logger.info("Reading exposure (network/raster intersection) data")
     exposure: gpd.GeoDataFrame = gpd.read_parquet(exposure_path)
-    logging.info(f"{exposure.shape=}")
+    logger.info(f"{exposure.shape=}")
 
     if exposure.empty:
-        logging.info("No data in geometry column, writing empty files.")
+        logger.info("No data in geometry column, writing empty files.")
 
         # snakemake requires that output files exist, even if empty
         for path in OUTPUT_FILE_PATHS:
             write_empty_frames(path)
         sys.exit(0)  # exit gracefully so snakemake will continue
 
-    logging.info("Annotate network with rehabilitation costs")
+    logger.info("Annotate network with rehabilitation costs")
     rehab_cost = read_rehab_costs(rehabilitation_costs_path)
     exposure = annotate_rehab_cost(exposure, network_type, rehab_cost)
 
@@ -129,9 +132,9 @@ if __name__ == "__main__":
     # JOINING, VALIDATION AND SERIALIZATION #
     #########################################
 
-    logging.info("Reading raw network data for unsplit geometry")
+    logger.info("Reading raw network data for unsplit geometry")
     unsplit: gpd.GeoDataFrame = gpd.read_parquet(unsplit_path)
-    logging.info(f"{unsplit.shape=}")
+    logger.info(f"{unsplit.shape=}")
 
     # lose columns like "cell_indices" or rastered length measures that are specific to _rastered_ edges
     non_hazard_output_columns = list(set(non_hazard_columns) & set(unsplit.columns))
@@ -146,16 +149,16 @@ if __name__ == "__main__":
     assert len(ead_and_cost_per_trigger) <= len(unsplit_subset)
     assert "id" in ead_and_cost_per_trigger.columns
 
-    logging.info(
+    logger.info(
         f"Writing out {split_ead_and_cost_per_trigger.shape=} "
         "(per unified geometry, hazard RP map and hazard map (integrated RP))"
     )
     split_ead_and_cost_per_trigger.to_parquet(split_ead_and_cost_per_trigger_path)
 
-    logging.info(
+    logger.info(
         f"Writing out {ead_and_cost_per_trigger.shape=} "
         "(per unified geometry, hazard RP map and hazard map (integrated RP))"
     )
     ead_and_cost_per_trigger.to_parquet(ead_and_cost_per_trigger_path)
 
-    logging.info("Done calculating direct damages")
+    logger.info("Done calculating direct damages")

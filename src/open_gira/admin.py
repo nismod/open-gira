@@ -8,6 +8,8 @@ import geopandas as gpd
 import pandas as pd
 import shapely
 
+logger = logging.getLogger(__name__)
+
 
 def merge_gadm_admin_levels(
     preference: pd.DataFrame, alternative: pd.DataFrame
@@ -35,7 +37,7 @@ def merge_gadm_admin_levels(
     """
 
     substitute_countries = set(alternative.ISO_A3) - set(preference.ISO_A3)
-    logging.info(f"Gap filling with: {substitute_countries}")
+    logger.info(f"Gap filling with: {substitute_countries}")
 
     substitute_regions: pd.DataFrame = alternative[
         alternative["ISO_A3"].isin(substitute_countries)

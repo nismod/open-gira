@@ -15,6 +15,9 @@ import pandas as pd
 
 from open_gira.utils import natural_sort
 
+logger = logging.getLogger(__name__)
+
+
 # column names and dtypes for synthetic tropical cyclone tracks
 STORM_CSV_SCHEMA = {
     "year": int,
@@ -53,7 +56,7 @@ if __name__ == "__main__":
     data = []
     # loop over basins for given sample, processing tracks into a common format
     for path in natural_sort(glob(f"{csv_dir}/*_1000_YEARS_{sample}*.csv")):
-        logging.info(path)
+        logger.info(path)
 
         df = pd.read_csv(path, names=STORM_CSV_SCHEMA.keys(), dtype=STORM_CSV_SCHEMA)
 
@@ -84,7 +87,7 @@ if __name__ == "__main__":
         df["point_id"] = df.apply(lambda row: f"{row.track_id}_{row.timestep}", axis=1)
         n_rows_raw = len(df)
         df = df.drop_duplicates(subset="point_id").drop(columns=["point_id"])
-        logging.info(
+        logger.info(
             f"Collated {n_rows_raw} track points, dropped {n_rows_raw - len(df)} as duplicates"
         )
 

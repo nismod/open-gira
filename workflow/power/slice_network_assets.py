@@ -3,6 +3,8 @@ import os
 
 import geopandas as gpd
 
+logger = logging.getLogger(__name__)
+
 
 def subset_file_by_intersection(
     geoms: gpd.GeoDataFrame, in_path: str, out_path: str
@@ -17,11 +19,11 @@ def subset_file_by_intersection(
         out_path: Location to write subset
     """
 
-    logging.info(f"Subsetting {in_path}")
+    logger.info(f"Subsetting {in_path}")
     df: gpd.GeoDataFrame = gpd.read_parquet(in_path)
     subset: gpd.GeoDataFrame = df.sjoin(geoms, how="inner")
 
-    logging.info(f"Writing subset to {out_path}")
+    logger.info(f"Writing subset to {out_path}")
     subset[df.columns].to_parquet(out_path)
 
 

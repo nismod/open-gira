@@ -14,6 +14,9 @@ from shapely.geometry import LineString, Point
 
 from open_gira.grid import weighted_allocation
 
+logger = logging.getLogger(__name__)
+
+
 MAX_LINK_DISTANCE = 20_000
 WGS84_GEOD = Geod(ellps="WGS84")
 
@@ -77,7 +80,7 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Read node data (plants and targets)")
+    logger.info("Read node data (plants and targets)")
     plants = gpd.read_parquet(plants_path)
     plants = plants[["source_id", "power_mw", "asset_type", "geometry"]]
 
@@ -92,33 +95,33 @@ if __name__ == "__main__":
         pd.concat([plants, targets], ignore_index=True), crs=plants.crs
     )
 
-    logging.info("Read edge data (transmission and distribution lines)")
+    logger.info("Read edge data (transmission and distribution lines)")
     edges = gpd.read_parquet(gridfinder_path).reset_index(names="source_id")
     edges["asset_type"] = "transmission"
     edges = edges[["source_id", "asset_type", "geometry", "source"]]
 
     network = snkit.network.Network(nodes, edges)
-    logging.info(f"Raw network contains: {len(nodes)} nodes and {len(edges)} edges")
+    logger.info(f"Raw network contains: {len(nodes)} nodes and {len(edges)} edges")
 
     if len(nodes) == 0 or len(edges) == 0:
-        logging.info("No viable network, writing empty files to disk")
-        logging.info("Writing network to disk")
+        logger.info("No viable network, writing empty files to disk")
+        logger.info("Writing network to disk")
         empty_gdf = gpd.GeoDataFrame({"geometry": []}, crs=4326)
         empty_gdf.to_parquet(edges_path)
         empty_gdf.to_parquet(nodes_path)
 
-        logging.info("Writing network's convex hull to disk")
+        logger.info("Writing network's convex hull to disk")
         empty_gdf.to_file(grid_hull_path)
 
         sys.exit(0)
 
-    logging.info("Cleaning network")
+    logger.info("Cleaning network")
 
-    logging.info("Split multilinestrings")
+    logger.info("Split multilinestrings")
     network = snkit.network.split_multilinestrings(network)
 
     # Connect targets
-    logging.info("Connect targets to grid")
+    logger.info("Connect targets to grid")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.link_nodes_to_nearest_edge(
         network, get_proximity_condition("target", MAX_LINK_DISTANCE)
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_target"
 
     # Connect power plants
-    logging.info("Connect power plants to grid")
+    logger.info("Connect power plants to grid")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.link_nodes_to_nearest_edge(
         network, get_proximity_condition("source", MAX_LINK_DISTANCE)
@@ -134,12 +137,12 @@ if __name__ == "__main__":
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "conn_source"
 
     # Add nodes at line endpoints
-    logging.info("Add nodes at edge ends")
+    logger.info("Add nodes at edge ends")
     network.nodes["id"] = range(len(network.nodes))
     network = snkit.network.add_endpoints(network)
     network.nodes.loc[network.nodes.id.isnull(), "asset_type"] = "intermediate"
 
-    logging.info(
+    logger.info(
         f"Cleaned network contains: {len(network.nodes)} nodes and {len(network.edges)} edges"
     )
 
@@ -148,15 +151,15 @@ if __name__ == "__main__":
     network.edges["id"] = range(len(network.edges))
 
     # add from/to ids
-    logging.info("Infer network topology")
+    logger.info("Infer network topology")
     network = snkit.network.add_topology(network, id_col="id")
 
     # add connected component ids
-    logging.info("Detecting connected components")
+    logger.info("Detecting connected components")
     if "component_id" not in network.nodes.columns:
         network = snkit.network.add_component_ids(network)
 
-    logging.info("Allocating generating capacity to targets")
+    logger.info("Allocating generating capacity to targets")
 
     targets = network.nodes[network.nodes.asset_type == "target"]
 
@@ -209,11 +212,11 @@ if __name__ == "__main__":
                         f"({power_balance} MW) power balance"
                     )
 
-    logging.info("Writing network to disk")
+    logger.info("Writing network to disk")
     network.edges.to_parquet(edges_path)
     network.nodes.to_parquet(nodes_path)
 
-    logging.info("Writing network's convex hull to disk")
+    logger.info("Writing network's convex hull to disk")
     grid_hull = gpd.GeoDataFrame(
         {"geometry": [network.edges.geometry.unary_union.convex_hull]}
     )

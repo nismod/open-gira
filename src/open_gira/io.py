@@ -18,6 +18,8 @@ from tqdm import tqdm
 
 from open_gira.utils import natural_sort
 
+logger = logging.getLogger(__name__)
+
 WGS84_EPSG = 4326
 
 # lines beginning with this character will be ignored by pandas
@@ -200,7 +202,7 @@ def concat_geoparquet(paths: list[str]) -> gpd.GeoDataFrame:
 
         dataframes.append(gdf)
 
-    logging.info("Joining GeoDataFrames")
+    logger.info("Joining GeoDataFrames")
 
     # pandas concat of iterable containing GeoDataFrames will return a GeoDataFrame
     concatenated = pd.concat(dataframes)

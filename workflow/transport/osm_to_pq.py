@@ -26,6 +26,8 @@ from shapely.geometry import LineString, MultiLineString, MultiPoint, Point
 from shapely.geometry import box as shapely_box
 from shapely.geometry.collection import GeometryCollection
 
+logger = logging.getLogger(__name__)
+
 
 class WayParser(osmium.SimpleHandler):
     """
@@ -97,9 +99,7 @@ class NodeParser(osmium.SimpleHandler):
 
         base_input = {}
         for tag_name in self.tags_to_preserve:
-            base_input[f"tag_{tag_name}"] = (
-                node.tags.get(tag_name, None)
-            )
+            base_input[f"tag_{tag_name}"] = node.tags.get(tag_name, None)
 
         # https://docs.osmcode.org/pyosmium/latest/ref_osm.html#osmium.osm.Location
         point: shapely.Point = Point(node.location.lon, node.location.lat)
@@ -154,9 +154,7 @@ class WaySlicer(osmium.SimpleHandler):
         # extract tags for way
         base_input = {}
         for tag_name in self.tags_to_preserve:
-            base_input[f"tag_{tag_name}"] = (
-                way.tags.get(tag_name, None)
-            )
+            base_input[f"tag_{tag_name}"] = way.tags.get(tag_name, None)
 
         node_locations: tuple[float, float] = []
         shared_nodes_used: list[dict] = []
@@ -222,7 +220,7 @@ class WaySlicer(osmium.SimpleHandler):
                     )
                 except KeyError:
                     # no record of a node at this location, must be a way clipped by the bounding box
-                    logging.debug(
+                    logger.debug(
                         f"Clipped way {way.id} to bounding box at ({longitude:.2f}, {latitude:.2f})"
                     )
                     terminus_data = {
@@ -305,7 +303,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.DEBUG
     )
-    logging.info(f"Converting {pbf_path} to .geoparquet.")
+    logger.info(f"Converting {pbf_path} to .geoparquet.")
 
     # Ignore geopandas parquet implementation warnings
     import warnings
@@ -333,7 +331,7 @@ if __name__ == "__main__":
     else:
         edges = empty_gdf()
 
-    logging.info(
+    logger.info(
         f"Complete: {len(way_slicer.output_data)} segments from "
         f"{len(Counter(way['osm_way_id'] for way in way_slicer.output_data))} ways."
     )
@@ -353,7 +351,7 @@ if __name__ == "__main__":
     else:
         nodes = empty_gdf()
 
-    logging.info(f"Complete: {len(node_parser.output_data)} nodes.")
+    logger.info(f"Complete: {len(node_parser.output_data)} nodes.")
 
     # write to disk, empty or not
     edges.to_parquet(edges_path)

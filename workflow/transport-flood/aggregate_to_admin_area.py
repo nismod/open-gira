@@ -26,6 +26,9 @@ import warnings
 import geopandas as gpd
 import shapely
 
+logger = logging.getLogger(__name__)
+
+
 WGS84_EPSG = 4326
 
 
@@ -48,7 +51,7 @@ if __name__ == "__main__":
     # N.B. geoparquet spec is not currently stable, and therefore not a suitable format for archiving
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    logging.info("Reading data to aggregate")
+    logger.info("Reading data to aggregate")
     data_to_aggregate: gpd.GeoDataFrame = gpd.read_parquet(data_to_aggregate_path)
 
     with open(slice_bounds_path, "r") as fp:
@@ -59,7 +62,7 @@ if __name__ == "__main__":
     slice_bbox = shapely.geometry.box(minx, miny, maxx, maxy)
 
     admin_level = int(admin_level_slug.replace("admin-level-", ""))
-    logging.info(f"Reading level {admin_level} admin boundaries")
+    logger.info(f"Reading level {admin_level} admin boundaries")
     admin_areas: gpd.GeoDataFrame = gpd.read_parquet(admin_areas_path)
     area_unique_id_col = f"GID_{admin_level}"
     area_name_col = f"NAME_{admin_level}"
@@ -69,21 +72,21 @@ if __name__ == "__main__":
         [area_name_col, area_unique_id_col, *contextual_name_cols, "geometry"]
     ]
     slice_admin_areas = admin_areas[admin_areas.intersects(slice_bbox)]
-    logging.info(f"Found {len(slice_admin_areas)} admin areas intersecting slice bbox")
+    logger.info(f"Found {len(slice_admin_areas)} admin areas intersecting slice bbox")
 
     if data_to_aggregate.empty:
-        logging.info(
+        logger.info(
             "No damage data; writing admin areas contained slice but no damages"
         )
         slice_admin_areas.to_parquet(aggregated_path)
         sys.exit(0)
 
-    logging.info("Spatially joining input to admin areas")
+    logger.info("Spatially joining input to admin areas")
     # specify left to keep all admin areas for slice (even if they do not appear in the hazard data)
     joined = gpd.sjoin(slice_admin_areas, data_to_aggregate, how="left")
-    logging.info(f"{joined.shape=}")
+    logger.info(f"{joined.shape=}")
 
-    logging.info(f"Aggregating to {len(slice_admin_areas)} admin boundaries")
+    logger.info(f"Aggregating to {len(slice_admin_areas)} admin boundaries")
     # we only want to groupby certain columns... use the column_regex for this
     columns_to_aggregate = [
         col for col in joined.columns if re.match(column_regex, col)
@@ -95,7 +98,7 @@ if __name__ == "__main__":
         aggregated, on=area_unique_id_col
     )
 
-    logging.info(f"Writing {aggregated_with_geometry.shape} to disk")
+    logger.info(f"Writing {aggregated_with_geometry.shape} to disk")
     aggregated_with_geometry.to_parquet(aggregated_path)
 
-    logging.info("Done")
+    logger.info("Done")

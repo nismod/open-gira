@@ -12,6 +12,8 @@ import dask.dataframe
 import pandas as pd
 import xarray as xr
 
+logger = logging.getLogger(__name__)
+
 
 def make_schema(column_dtypes: dict[str, type]) -> pd.DataFrame:
     """
@@ -81,7 +83,7 @@ if __name__ == "__main__":
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Compiling disruption per target per storm")
+    logger.info("Compiling disruption per target per storm")
 
     # we're using dask so we can concatenate on disk rather than in memory
     # (pd.concat is a disaster in terms of memory usage)

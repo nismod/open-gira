@@ -4,6 +4,9 @@ import os
 import geopandas as gpd
 import numpy as np
 
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
@@ -11,14 +14,14 @@ if __name__ == "__main__":
 
     df = gpd.read_parquet(snakemake.input.raw)  # noqa: F821
 
-    logging.info("Relabelling track_id")
+    logger.info("Relabelling track_id")
     df["track_id"] = (
         df["sample"].map(lambda x: f"S{x:03d}")
         + df["year"].map(lambda x: f"Y{x:04d}")
         + df["tc_number"].map(lambda x: f"N{x:03d}")
     )
 
-    logging.info("Wrapping longitudes to -180, 180")
+    logger.info("Wrapping longitudes to -180, 180")
     df["lon"] = df.geometry.x
     df["lat"] = df.geometry.y
     df.lon = np.where(df.lon > 180, df.lon - 360, df.lon)
@@ -28,10 +31,10 @@ if __name__ == "__main__":
     df = df.drop(columns=["lon", "lat"])
 
     result = df.drop_duplicates()
-    logging.info(
+    logger.info(
         f"Dropped {len(df) - len(result)} duplicate points: {len(df)} -> {len(result)}"
     )
 
-    logging.info("Writing out to disk")
+    logger.info("Writing out to disk")
     os.makedirs(os.path.dirname(snakemake.output.processed), exist_ok=True)  # noqa: F821
     result.to_parquet(snakemake.output.processed)  # noqa: F821

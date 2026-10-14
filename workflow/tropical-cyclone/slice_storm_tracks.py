@@ -13,6 +13,9 @@ import numpy as np
 import pandas as pd
 import shapely
 
+logger = logging.getLogger(__name__)
+
+
 logging.basicConfig(
     format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
 )
@@ -34,7 +37,7 @@ if __name__ == "__main__":
     try:
         (shape_dict,) = data["features"]
     except ValueError:
-        logging.info("No network, therefore no intersecting storm tracks")
+        logger.info("No network, therefore no intersecting storm tracks")
         os.makedirs(os.path.dirname(sliced_tracks_path), exist_ok=True)
         gpd.GeoDataFrame({"geometry": []}, crs=4326).to_parquet(sliced_tracks_path)
         sys.exit(0)
@@ -43,10 +46,10 @@ if __name__ == "__main__":
 
     tracks = gpd.read_parquet(global_tracks_path)
 
-    logging.info("Subsetting tracks to those which intersect with grid (+ buffer)")
+    logger.info("Subsetting tracks to those which intersect with grid (+ buffer)")
     aoi_points = tracks[tracks.intersects(hull.buffer(track_slicing_buffer_deg))]
 
-    logging.info("Slicing tracks' first arrival to last departure")
+    logger.info("Slicing tracks' first arrival to last departure")
     if not aoi_points.index.name:
         aoi_points.index.name = "datetime"
     aoi_grouped = (
@@ -73,26 +76,26 @@ if __name__ == "__main__":
             try:
                 assert sliced_track.timestep.is_monotonic_increasing
             except AssertionError:
-                logging.info(f"{track_id} without monotonically increasing timestep")
+                logger.info(f"{track_id} without monotonically increasing timestep")
                 continue
             try:
                 assert np.all(np.diff(sliced_track.timestep) == 1)
             except AssertionError:
-                logging.info(f"{track_id} has gaps, dropping")
+                logger.info(f"{track_id} has gaps, dropping")
                 continue
 
             sliced_tracks_list.append(sliced_track)
 
         sliced_tracks = pd.concat(sliced_tracks_list)
 
-        logging.info(
+        logger.info(
             f"Filtered to {len(sliced_tracks.track_id.unique())} "
             f"valid (n > 1) tracks, with {len(sliced_tracks)} points"
         )
     else:
         sliced_tracks = gpd.GeoDataFrame({"geometry": []}, crs=4326)
-        logging.info("No valid tracks found")
+        logger.info("No valid tracks found")
 
-    logging.info("Writing tracks subset to disk")
+    logger.info("Writing tracks subset to disk")
     os.makedirs(os.path.dirname(sliced_tracks_path), exist_ok=True)
     sliced_tracks.to_parquet(sliced_tracks_path)

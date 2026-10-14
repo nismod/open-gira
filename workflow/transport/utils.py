@@ -11,6 +11,9 @@ import geopandas as gpd
 import pandas as pd
 import snkit
 
+logger = logging.getLogger(__name__)
+
+
 WEB_MERC_EPSG = 3857  # Web Mercator, a projected CRS
 
 
@@ -100,9 +103,7 @@ def annotate_country(
     # drop cruft from merge (i.e. "index_right")
     nodes_with_iso_a3 = nodes_with_iso_a3[desired_node_columns]
     interior_nodes = nodes_with_iso_a3[~nodes_with_iso_a3["iso_a3"].isna()]
-    logging.info(
-        f"Found {len(interior_nodes)} nodes that are within a country geometry"
-    )
+    logger.info(f"Found {len(interior_nodes)} nodes that are within a country geometry")
 
     # for any nodes where sjoin didn't work, drop the iso_a3 and try again with sjoin_nearest
     # reproject to web mercator CRS for this operation
@@ -114,7 +115,7 @@ def annotate_country(
     )
     exterior_nodes = exterior_nodes.to_crs(input_node_crs)
     if not exterior_nodes.empty:
-        logging.info(
+        logger.info(
             f"Found {len(exterior_nodes)} nodes external to all country geometries, labelled "
             "these with their nearest country"
         )

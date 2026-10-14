@@ -34,6 +34,9 @@ import geopandas as gpd
 
 from open_gira.io import concat_geoparquet
 
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     try:
         slice_files = snakemake.input  # type: ignore
@@ -47,7 +50,7 @@ if __name__ == "__main__":
     )
     warnings.filterwarnings("ignore", message=".*initial implementation of Parquet.*")
 
-    logging.info(f"Reading {len(slice_files)=} files")
+    logger.info(f"Reading {len(slice_files)=} files")
 
     joined: gpd.GeoDataFrame = concat_geoparquet(slice_files)
 
@@ -55,6 +58,6 @@ if __name__ == "__main__":
     if not os.path.exists(folder_path):
         os.path.makedirs(folder_path)
 
-    logging.info(f"Writing {joined.shape=} to {output_file}")
+    logger.info(f"Writing {joined.shape=} to {output_file}")
 
     joined.to_parquet(output_file)

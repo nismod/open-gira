@@ -7,12 +7,15 @@ from dask.delayed import Delayed
 from open_gira.io import netcdf_packing_parameters
 from open_gira.wind import empty_wind_da
 
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
     )
 
-    logging.info("Reading wind fields from each sample")
+    logger.info("Reading wind fields from each sample")
     # concatenated xarray dataset is chunked by input file
     # N.B. this is lazily loaded
     # cannot use open_mfdataset here, as event_id coordinates are not monotonically increasing
@@ -25,12 +28,12 @@ if __name__ == "__main__":
     ).sortby("event_id")
 
     if all_samples.event_id.size == 0:
-        logging.info("Input data empty, writing empty file to disk")
+        logger.info("Input data empty, writing empty file to disk")
         # write empty netcdf (with appropriate schema) and exit
         empty_wind_da().to_netcdf(snakemake.output.concat)  # noqa: F821
         sys.exit(0)
 
-    logging.info("Computing packing factors for all samples")
+    logger.info("Computing packing factors for all samples")
     # we used dask to allow for chunked calculation of data min/max and to stream to disk
     # use the synchronous scheduler to limit dask to a single process (reducing memory footprint)
     scheduler = "synchronous"
@@ -44,7 +47,7 @@ if __name__ == "__main__":
         16,
     )
 
-    logging.info("Writing pooled wind fields to disk")
+    logger.info("Writing pooled wind fields to disk")
     serialisation_task: Delayed = all_samples.to_netcdf(
         snakemake.output.concat,  # noqa: F821
         encoding={

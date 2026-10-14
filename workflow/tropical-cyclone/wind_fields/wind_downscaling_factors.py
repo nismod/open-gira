@@ -15,6 +15,9 @@ import xarray as xr
 from open_gira.wind import power_law_scale_factors
 from open_gira.wind_plotting import plot_downscale_factors
 
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO
@@ -29,7 +32,7 @@ if __name__ == "__main__":
     GRADIENT_LEVEL_METRES = 18
     SURFACE_LEVEL_METRES = 10
 
-    logging.info("Calculating downscaling factors from surface roughness raster")
+    logger.info("Calculating downscaling factors from surface roughness raster")
 
     # surface roughness raster for downscaling winds with
     try:
@@ -37,7 +40,7 @@ if __name__ == "__main__":
             snakemake.input.surface_roughness  # noqa: F821
         )
     except rasterio.errors.RasterioIOError:
-        logging.info(
+        logger.info(
             "Surface roughness raster is empty, writing empty downscaling factors matrix."
         )
 
@@ -57,14 +60,14 @@ if __name__ == "__main__":
         surface_roughness, SURFACE_LEVEL_METRES, GRADIENT_LEVEL_METRES
     )
 
-    logging.info("Saving downscaling factors to disk")
+    logger.info("Saving downscaling factors to disk")
     np.save(snakemake.output.downscale_factors, downscaling_factors)  # noqa: F821
 
-    logging.info("Mapping downscaling factors and saving to disk")
+    logger.info("Mapping downscaling factors and saving to disk")
     plot_downscale_factors(
         downscaling_factors,
         "Wind downscaling factors",
         snakemake.output.downscale_factors_plot,  # noqa: F821
     )
 
-    logging.info("Done estimating downscaling factors")
+    logger.info("Done estimating downscaling factors")
