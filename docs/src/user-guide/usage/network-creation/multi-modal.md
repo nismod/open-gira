@@ -21,17 +21,17 @@ For more details, see [composite-networks.md](./composite-networks.md).
 
 However they're created, input land networks should be placed in the following locations:
 ```python
-road_network_nodes = "{OUTPUT_DIR}/input/networks/road/{PROJECT_SLUG}/nodes.gpq",
-road_network_edges = "{OUTPUT_DIR}/input/networks/road/{PROJECT_SLUG}/edges.gpq",
-rail_network_nodes = "{OUTPUT_DIR}/input/networks/rail/{PROJECT_SLUG}/nodes.gpq",
-rail_network_edges = "{OUTPUT_DIR}/input/networks/rail/{PROJECT_SLUG}/edges.gpq",
+road_network_nodes = "{OUTPUT_DIR}/input/networks/road/{PROJECT_SLUG}/nodes.gpq"
+road_network_edges = "{OUTPUT_DIR}/input/networks/road/{PROJECT_SLUG}/edges.gpq"
+rail_network_nodes = "{OUTPUT_DIR}/input/networks/rail/{PROJECT_SLUG}/nodes.gpq"
+rail_network_edges = "{OUTPUT_DIR}/input/networks/rail/{PROJECT_SLUG}/edges.gpq"
 ```
 
 1. We also require input maritime network data:
 
 Network nodes, including ports for import, export and trans-shipment.
 ```python
-nodes = "{OUTPUT_DIR}/input/networks/maritime/nodes.gpq",
+nodes = "{OUTPUT_DIR}/input/networks/maritime/nodes.gpq"
 ```
 Sample node data:
 ```
@@ -44,7 +44,7 @@ port121  port                   Barry_United Kingdom  GBR             EU  POINT 
 Network edges with costs (used for routing over). The referenced port nodes are
 appended with `in` or `out` as the network is bi-directional.
 ```python
-edges_no_geom = "{OUTPUT_DIR}/input/networks/maritime/edges_by_cargo/maritime_base_network_general_cargo.pq",
+edges_no_geom = "{OUTPUT_DIR}/input/networks/maritime/edges_by_cargo/maritime_base_network_general_cargo.pq"
 ```
 Sample edge data:
 ```
@@ -56,7 +56,7 @@ port1005_out   port1099_in       port     port  maritime       ITA     ZAF  1097
 
 Network edges without costs, but with a geometry that can be used for visualising flows over.
 ```python
-edges_visualisation = "{OUTPUT_DIR}/input/networks/maritime/edges.gpq",
+edges_visualisation = "{OUTPUT_DIR}/input/networks/maritime/edges.gpq"
 ```
 Sample visualisation edge data:
 ```
