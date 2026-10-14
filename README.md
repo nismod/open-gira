@@ -103,7 +103,11 @@ To keep the `environment.yml` in sync following `pixi` package updates:
 
 ```bash
 pixi workspace export conda-environment --name open-gira  > environment.yml
+pixi workspace export conda-environment  --from-lock-file --name open-gira  > environment.lock.yml
 ```
+
+The `environment.lock.yml` should pin packages to match `pixi.lock`, which may result in a faster
+solve and install for micromamba/conda to set up the environment.
 
 ### Utilities
 
